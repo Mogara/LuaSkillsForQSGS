@@ -55,7 +55,7 @@ LuaXXiliang = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		if target then
@@ -77,23 +77,23 @@ LuaXiangle = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.TargetConfirming then
-            local use = data:toCardUse()
+			local use = data:toCardUse()
 			local slash = use.card
-            if slash and slash:isKindOf("Slash") then
+			if slash and slash:isKindOf("Slash") then
 				local ai_data = sgs.QVariant()
 				ai_data:setValue(player)
-                if not room:askForCard(use.from, ".Basic", "@xiangle-discard", ai_data, sgs.CardDiscarded) then
-                    player:addMark("xiangle")
+				if not room:askForCard(use.from, ".Basic", "@xiangle-discard", ai_data, sgs.CardDiscarded) then
+					player:addMark("xiangle")
 				end
-            end
-        else
+			end
+		else
 			local count = player:getMark("xiangle")
-            if count > 0 then
-                player:setMark("xiangle", count - 1)
-                return true
-            end
-        end
-        return false
+			if count > 0 then
+				player:setMark("xiangle", count - 1)
+				return true
+			end
+		end
+		return false
 	end
 }
 --[[
@@ -110,7 +110,7 @@ LuaXiaoji = sgs.CreateTriggerSkill{
 		local move = data:toMoveOneTime()
 		local places = move.from_places
 		local source = move.from
-        if source and source:objectName() == player:objectName() then
+		if source and source:objectName() == player:objectName() then
 			if places:contains(sgs.Player_PlaceEquip) then
 				local n = 0
 				for _,place in sgs.qlist(places) do
@@ -125,8 +125,8 @@ LuaXiaoji = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-        end
-        return false
+		end
+		return false
 	end
 }
 --[[
@@ -193,13 +193,13 @@ LuaXianzhen = sgs.CreateViewAsSkill{
 	end, 
 	view_as = function(self, cards)
 		if not sgs.Self:hasUsed("#LuaXianzhenCard") then
-            if #cards == 1 then
+			if #cards == 1 then
 				local card = LuaXianzhenCard:clone()
 				card:addSubcard(cards[1])
 				return card
 			end
-        elseif sgs.Self:hasFlag("xianzhen_success") then
-            if #cards == 0 then
+		elseif sgs.Self:hasFlag("xianzhen_success") then
+			if #cards == 0 then
 				return LuaXianzhenSlashCard:clone()
 			end
 		end
@@ -221,17 +221,17 @@ LuaXianzhenClear = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local tag = room:getTag("XianzhenTarget")
 		local target = tag:toPlayer()
-        if event == sgs.Death or event == sgs.EventPhaseStart then
-            if event == sgs.Death or player:getPhase() == sgs.Player_Finish then
+		if event == sgs.Death or event == sgs.EventPhaseStart then
+			if event == sgs.Death or player:getPhase() == sgs.Player_Finish then
 				if target then
-                    local room = player:getRoom()
-                    room:setFixedDistance(player, target, -1)
-                    room:removeTag("XianzhenTarget")
-                    room:setPlayerFlag(target, "-wuqian")
+					local room = player:getRoom()
+					room:setFixedDistance(player, target, -1)
+					room:removeTag("XianzhenTarget")
+					room:setPlayerFlag(target, "-wuqian")
 				end
-            end
-        end
-        return false
+			end
+		end
+		return false
 	end, 
 	can_trigger = function(self, target)
 		if target then
@@ -332,7 +332,7 @@ LuaXingshang = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		if target then
@@ -408,11 +408,11 @@ LuaXuanfeng = sgs.CreateTriggerSkill{
 	view_as_skill = LuaXuanfengVS, 
 	on_trigger = function(self, event, player, data) 
 		if event == sgs.EventPhaseStart then
-            player:setMark("xuanfeng", 0)
-        elseif event == sgs.CardsMoveOneTime then
-            local move = data:toMoveOneTime()
+			player:setMark("xuanfeng", 0)
+		elseif event == sgs.CardsMoveOneTime then
+			local move = data:toMoveOneTime()
 			local source = move.from
-            if source and source:objectName() == player:objectName() then
+			if source and source:objectName() == player:objectName() then
 				local room = player:getRoom()
 				local markcount = player:getMark("xuanfeng")
 				if move.to_place == sgs.Player_DiscardPile then
@@ -448,8 +448,8 @@ LuaXuanfeng = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-        end
-        return false
+		end
+		return false
 	end
 }
 --[[
@@ -464,8 +464,8 @@ LuaNosXuanfeng = sgs.CreateTriggerSkill{
 	events = {sgs.CardsMoveOneTime}, 
 	on_trigger = function(self, event, player, data) 
 		if event == sgs.CardsMoveOneTime then
-            local move = data:toMoveOneTime()
-            if move.from and move.from:objectName() == player:objectName() then
+			local move = data:toMoveOneTime()
+			if move.from and move.from:objectName() == player:objectName() then
 				if move.from_places:contains(sgs.Player_PlaceEquip) then
 					local room = player:getRoom()
 					local choicecount = 1
@@ -512,9 +512,9 @@ LuaNosXuanfeng = sgs.CreateTriggerSkill{
 						end
 					end
 				end
-            end
-        end
-        return false
+			end
+		end
+		return false
 	end
 }
 --[[
@@ -609,12 +609,12 @@ LuaXuanhuo = sgs.CreateTriggerSkill{
 	view_as_skill = LuaXuanhuoVS, 
 	on_trigger = function(self, event, player, data) --必须
 		local room = player:getRoom()
-        if player:getPhase() == sgs.Player_Draw then
-            if room:askForUseCard(player, "@@LuaXuanhuo", "@xuanhuo-card") then
-                return true
+		if player:getPhase() == sgs.Player_Draw then
+			if room:askForUseCard(player, "@@LuaXuanhuo", "@xuanhuo-card") then
+				return true
 			end
-        end
-        return false
+		end
+		return false
 	end
 }
 --[[
@@ -683,7 +683,7 @@ LuaXuehen = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local xiahou = room:findPlayerBySkillName(self:objectName())
-        if xiahou then
+		if xiahou then
 			if player:getPhase() == sgs.Player_Finish then
 				if xiahou:getMark("@fenyong") > 0 then
 					xiahou:loseMark("@fenyong")
@@ -740,7 +740,7 @@ LuaXuehen = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -758,7 +758,7 @@ LuaXuehenAvoidTriggeringCardsMove = sgs.CreateTriggerSkill{
 				return true
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -838,16 +838,16 @@ LuaXueyi = sgs.CreateMaxCardsSkill{
 	name = "LuaXueyi$",
 	extra_func = function(self, target)
 		local extra = 0
-        local players = target:getSiblings()
-        for _,player in sgs.qlist(players) do
-            if player:isAlive() then
+		local players = target:getSiblings()
+		for _,player in sgs.qlist(players) do
+			if player:isAlive() then
 				if player:getKingdom() == "qun" th
 					extra = extra + 2
 				end
 			end
-        end
-        if target:hasLordSkill(self:objectName()) then
-            return extra
+		end
+		if target:hasLordSkill(self:objectName()) then
+			return extra
 		end
 	end
 }
