@@ -2021,13 +2021,13 @@ LuaYuanhuCard = sgs.CreateSkillCard{
 			local id = self:getSubcards():first()
 			local card = sgs.Sanguosha:getCard(id)
 			if card:isKindOf("Weapon") then
-				return not to_select:getEquip(1)
+				return not to_select:getEquip(0)
 			elseif card:isKindOf("Armor") then
-				return not to_select:getEquip(2)
+				return not to_select:getEquip(1)
 			elseif card:isKindOf("DefensiveHorse") then
-				return not to_select:getEquip(3)
+				return not to_select:getEquip(2)
 			elseif card:isKindOf("OffensiveHorse") then
-				return not to_select:getEquip(4)
+				return not to_select:getEquip(3)
 			end
 		end
 		return false
