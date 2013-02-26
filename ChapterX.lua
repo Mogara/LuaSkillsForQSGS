@@ -345,8 +345,45 @@ LuaXingshang = sgs.CreateTriggerSkill{
 	技能名：修罗
 	相关武将：SP·暴怒战神
 	描述：回合开始阶段开始时，你可以弃置一张手牌，若如此做，你弃置你判定区里的一张与你弃置手牌同花色的延时类锦囊牌。
-	状态：验证失败
+	状态：1111验证通过，和cpp版效果一致
 ]]--
+LuaXiuluo = sgs.CreateTriggerSkill{
+	name = "LuaXiuluo",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local once_success = false
+		repeat
+			once_success = false
+			if not player:askForSkillInvoke(self:objectName()) then return false end
+			local card_id = room:askForCardChosen(player, player, "j", self:objectName())
+			local card = sgs.Sanguosha:getCard(card_id)
+			local suit_str = card:getSuitString()
+			local suittable={"spade","club","heart","diamond"}
+			local suitstr=card:getSuit()+1
+			local pattern=string.format(".|%s|.|.|.",suittable[suitstr])
+			if room:askForCard(player, pattern, "@LuaXiuluoprompt", data, sgs.CardDiscarded) then
+				room:throwCard(card,nil,player)
+				once_success = true
+			end
+		until(not(player:getCards("j"):length() ~= 0 and once_success))
+		return false
+	end,
+	can_trigger = function(self, target)
+		if target then
+			if target:isAlive() and target:hasSkill(self:objectName()) then
+				if target:getPhase() == sgs.Player_Start then
+					if not target:isKongcheng() then
+						local ja = target:getJudgingArea()
+						return ja:length() > 0
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：旋风
 	相关武将：一将成名·凌统
