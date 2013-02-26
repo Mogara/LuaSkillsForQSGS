@@ -133,8 +133,43 @@ LuaMengjin = sgs.CreateTriggerSkill{
 	技能名：秘计
 	相关武将：二将成名·王异
 	描述：回合开始/结束阶段开始时，若你已受伤，你可以进行一次判定，若判定结果为黑色，你观看牌堆顶的X张牌（X为你已损失的体力值），然后将这些牌交给一名角色。
-	状态：验证失败
+	状态：1111验证通过
 ]]--
+LuaMiji = sgs.CreateTriggerSkill{
+	name = "LuaMiji",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+		if player:isWounded() then
+			local phase = player:getPhase()
+			if phase == sgs.Player_Start or phase == sgs.Player_Finish then
+				if player:askForSkillInvoke(self:objectName()) then
+					local room = player:getRoom()
+					local judge = sgs.JudgeStruct()
+					judge.pattern = sgs.QRegExp("(.*):(club|spade):(.*)")
+					judge.good = true
+					judge.reason = self:objectName()
+					judge.who = player
+					room:judge(judge)
+					if judge:isGood() then
+						local x = player:getLostHp()
+						local miji_cards=sgs.CardList()
+						miji_cards=room:getNCards(x,false)
+						local miji_card = sgs.Sanguosha:cloneCard("Slash",sgs.Card_Spade,13)
+						for _,card in sgs.qlist(miji_cards) do
+							miji_card:addSubcard(card)
+						end
+						room:obtainCard(player,miji_card,false)
+						local playerlist = room:getAllPlayers()
+						local target = room:askForPlayerChosen(player, playerlist, self:objectName())
+						room:obtainCard(target,miji_card,false)
+					end
+				end
+			end
+		end
+		return false
+	end,
+}
 --[[
 	技能名：密信
 	相关武将：铜雀台·伏皇后
