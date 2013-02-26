@@ -360,9 +360,7 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 			local card_id = room:askForCardChosen(player, player, "j", self:objectName())
 			local card = sgs.Sanguosha:getCard(card_id)
 			local suit_str = card:getSuitString()
-			local suittable={"spade","club","heart","diamond"}
-			local suitstr=card:getSuit()+1
-			local pattern=string.format(".|%s|.|.|.",suittable[suitstr])
+			local pattern=string.format(".|%s|.|.|.",suit_str)
 			if room:askForCard(player, pattern, "@LuaXiuluoprompt", data, sgs.CardDiscarded) then
 				room:throwCard(card,nil,player)
 				once_success = true
