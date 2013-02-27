@@ -1909,7 +1909,7 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 	技能名：殉志
 	相关武将：倚天·姜伯约
 	描述：出牌阶段，你可以摸三张牌并变身为其他未上场或已阵亡的蜀势力角色，回合结束后你立即死亡 
-	状态：尚未完成（含有QSet<QString>等内容无法转化）
+	状态：验证通过
 ]]--
 LuaXXunzhiCard = sgs.CreateSkillCard{
 	name = "LuaXXunzhiCard", 
@@ -1918,30 +1918,28 @@ LuaXXunzhiCard = sgs.CreateSkillCard{
 	on_use = function(self, room, source, targets) 
 		source:drawCards(3)
 		local players = room:getAlivePlayers()
-		--[[以下C++代码含有QSet<QString>、tag等内容无法转化
-		QSet<QString> general_names;
-		foreach(ServerPlayer *player, players)
-			general_names << player->getGeneralName();
-
-		QStringList all_generals = Sanguosha->getLimitedGeneralNames();
-		QStringList shu_generals;
-		foreach(QString name, all_generals){
-			const General *general = Sanguosha->getGeneral(name);
-			if(general->getKingdom() == "shu" && !general_names.contains(name))
-				shu_generals << name;
-		}
-
-		QString general = room->askForGeneral(source, shu_generals);
-		source->tag["newgeneral"] = general;
-		bool isSecondaryHero = !(source->getGeneralName() == "jiangboyue");
-		room->changeHero(source, general, false, false, isSecondaryHero);
-		room->acquireSkill(source, "xunzhi", false);
-		]]--
+		local general_names = {}
+		for _,player in sgs.qlist(players) do
+			table.insert(general_names, player:getGeneralName())
+		end
+		local all_generals = sgs.Sanguosha:getLimitedGeneralNames()
+		local shu_generals = {}
+		for _,name in ipairs(all_generals) do
+			local general = sgs.Sanguosha:getGeneral(name)
+			if general:getKingdom() == "shu" and not table.contains(general_names, name) then
+				table.insert(shu_generals, name)
+			end
+		end
+		local general = room:askForGeneral(source, table.concat(shu_generals, "+"))
+		source:setTag("newgeneral", sgs.QVariant(general))
+		local isSecondaryHero = source:getGeneralName() ~= "jiangboyue"
+		room:changeHero(source, general, false, false, isSecondaryHero, true)
+		
 		room:setPlayerFlag(source, "LuaXXunzhi")
 	end
 }
 LuaXXunzhiVS = sgs.CreateViewAsSkill{
-	name = "#LuaXXunzhi", 
+	name = "LuaXXunzhi", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaXXunzhiCard:clone()
@@ -1953,16 +1951,14 @@ LuaXXunzhiVS = sgs.CreateViewAsSkill{
 LuaXXunzhi = sgs.CreateTriggerSkill{
 	name = "LuaXXunzhi",  
 	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
+	events = {sgs.EventPhaseChanging},  
 	view_as_skill = LuaXXunzhiVS, 
 	on_trigger = function(self, event, player, data) 
-		if player:getPhase() == sgs.Player_NotActive then
+		if data:toPhaseChange().to == sgs.Player_NotActive then
 			if player:hasFlag("LuaXXunzhi") then
 				local room = player:getRoom()
-				--[[以下C++代码含有tag、parent()等内容无法转化
-				bool isSecondaryHero = !(target->getGeneralName() == target->tag.value("newgeneral", "").toString());
-				room->changeHero(target, parent()->objectName(), false, false, isSecondaryHero);
-				]]--
+				local isSecondaryHero = player:getGeneralName() ~= player:getTag("newgeneral"):toString()
+				room:changeHero(player, "jiangboyue", false, false, isSecondaryHero, true)
 				room:killPlayer(player)
 			end
 		end
