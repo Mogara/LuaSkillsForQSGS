@@ -53,7 +53,7 @@ LuaDahe = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local source = room:findPlayerBySkillName(self:objectName())
-        if source then
+		if source then
 			if event == sgs.SlashProceed then
 				local effect = data:toSlashEffect()
 				local target = effect.to
@@ -79,7 +79,7 @@ LuaDahe = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -93,7 +93,7 @@ LuaDahePindian = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local pindian = data:toPindian()
 		local source = pindian.from
-        if pindian.reason == "LuaDahe" and source:hasSkill("LuaDahe") then
+		if pindian.reason == "LuaDahe" and source:hasSkill("LuaDahe") then
 			if pindian.from_card:getNumber() > pindian.to_card:getNumber() then
 				room:setPlayerFlag(pindian.to, "LuaDahe")
 				local to_givelist = room:getAlivePlayers()
@@ -116,7 +116,7 @@ LuaDahePindian = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -140,15 +140,15 @@ LuaDawuCard = sgs.CreateSkillCard{
 	end,
 	on_use = function(self, room, source, targets)
 		local count = #targets
-        local stars = source:getPile("stars")
-        for i = 0, count, 1 do
-            room:fillAG(stars, source);
-            local card_id = room:askForAG(source, stars, false, "qixing-discard")
-            source:invoke("clearAG")
-            stars:removeOne(card_id)
+		local stars = source:getPile("stars")
+		for i = 0, count, 1 do
+			room:fillAG(stars, source);
+			local card_id = room:askForAG(source, stars, false, "qixing-discard")
+			source:invoke("clearAG")
+			stars:removeOne(card_id)
 			local star = sgs.Sanguosha:getCard(card_id)
-            room:throwCard(star, nil, nil)
-        end
+			room:throwCard(star, nil, nil)
+		end
 		for _,target in ipairs(targets) do
 			target:gainMark("@fog")
 		end
@@ -174,7 +174,7 @@ LuaDawu = sgs.CreateTriggerSkill{
 	view_as_skill = LuaDawuVS, 
 	on_trigger = function(self, event, player, data) 
 		local damage = data:toDamage()
-        return damage.nature ~= sgs.DamageStruct_Thunder
+		return damage.nature ~= sgs.DamageStruct_Thunder
 	end, 
 	can_trigger = function(self, target)
 		if target then
@@ -367,7 +367,7 @@ LuaXDushi = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		if target then
@@ -425,7 +425,7 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
 		local splayer = room:findPlayerBySkillName(self:objectName())
-        if splayer then
+		if splayer then
 			if splayer:getPhase() == sgs.Player_Discard then
 				if splayer:hasFlag("duyi_target") then
 					splayer:jilei(".");
@@ -444,7 +444,7 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -529,7 +529,7 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
 		local splayer = room:findPlayerBySkillName(self:objectName())
-        if splayer then
+		if splayer then
 			local use = data:toCardUse()
 			if use.card:getTypeId() ~= sgs.Card_TypeSkill then
 				local source = use.from
@@ -573,7 +573,7 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -587,11 +587,11 @@ LuaXDuanzhiAvoidTriggeringCardsMove = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local players = room:getAllPlayers()
 		for _,p in sgs.qlist(players) do
-            if p:hasFlag("DuanzhiTarget_InTempMoving") then
-                return true
+			if p:hasFlag("DuanzhiTarget_InTempMoving") then
+				return true
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target

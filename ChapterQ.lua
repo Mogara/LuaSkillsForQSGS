@@ -11,7 +11,7 @@
 ]]--
 Exchange = function(shenzhuge)
 	local stars = shenzhuge:getPile("stars")
-    if stars:length() > 0 then
+	if stars:length() > 0 then
 		local room = shenzhuge:getRoom()
 		local n = 0
 		while stars:length() > 0 do
@@ -38,14 +38,14 @@ end
 DiscardStar = function(shenzhuge, n, skillName)
 	local room = shenzhuge:getRoom();
 	local stars = shenzhuge:getPile("stars")
-    for i = 1, n, 1 do
-        room:fillAG(stars, shenzhuge)
-        local card_id = room:askForAG(shenzhuge, stars, false, "qixing-discard")
-        shenzhuge:invoke("clearAG")
-        stars:removeOne(card_id)
+	for i = 1, n, 1 do
+		room:fillAG(stars, shenzhuge)
+		local card_id = room:askForAG(shenzhuge, stars, false, "qixing-discard")
+		shenzhuge:invoke("clearAG")
+		stars:removeOne(card_id)
 		local card = sgs.Sanguosha:getCard(card_id)
-        room:throwCard(card, nil, nil)
-    end
+		room:throwCard(card, nil, nil)
+	end
 end
 LuaQixing = sgs.CreateTriggerSkill{
 	name = "LuaQixing",  
@@ -61,13 +61,13 @@ LuaQixing = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-        elseif event == EventLoseSkill then
+		elseif event == EventLoseSkill then
 			local name = data:toString()
 			if name == self:objectName() then
 				player:removePileByName("stars")
 			end
-        end
-        return false
+		end
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return (target ~= nil)
@@ -80,11 +80,11 @@ LuaQixingStart = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		room:setPlayerMark(player, "qixingOwner", 1)
-        for i = 1, 7, 1 do
+		for i = 1, 7, 1 do
 			local id = room:drawCard()
 			player:addToPile("stars", id, false)
-        end
-        Exchange(player)
+		end
+		Exchange(player)
 	end,
 	priority = -1
 }
@@ -94,7 +94,7 @@ LuaQixingAsk = sgs.CreateTriggerSkill{
 	events = {sgs.EventPhaseStart},  
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-        if player:getPhase() == sgs.Player_Finish then
+		if player:getPhase() == sgs.Player_Finish then
 			local stars = player:getPile("stars")
 			if stars:length() > 0 then
 				if player:hasSkill("kuangfeng") then
@@ -107,8 +107,8 @@ LuaQixingAsk = sgs.CreateTriggerSkill{
 					room:askForUseCard(player, "@@dawu", "@dawu-card")
 				end
 			end
-        end
-        return false
+		end
+		return false
 	end
 }
 LuaQixingClear = sgs.CreateTriggerSkill{
@@ -118,12 +118,12 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.Death then
-            local players = room:getAllPlayers()
+			local players = room:getAllPlayers()
 			for _,dest in sgs.qlist(players) do
 				dest:loseAllMarks("@gale")
-                dest:loseAllMarks("@fog")
+				dest:loseAllMarks("@fog")
 			end
-        elseif event == sgs.EventPhaseStart then
+		elseif event == sgs.EventPhaseStart then
 			if player:getPhase() == sgs.Player_RoundStart then
 				local players = room:getAllPlayers()
 				for _,dest in sgs.qlist(players) do
@@ -135,8 +135,8 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-        end
-        return false
+		end
+		return false
 	end, 
 	can_trigger = function(self, target)
 		if target then
@@ -270,12 +270,12 @@ LuaQiangxi = sgs.CreateViewAsSkill{
 	end, 
 	view_as = function(self, cards) 
 		if #cards == 0 then
-            return LuaQiangxiCard:clone()
-        elseif #cards == 1 then
-            local card = LuaQiangxiCard:clone()
-            card:addSubcard(cards[1])
-            return card
-        end
+			return LuaQiangxiCard:clone()
+		elseif #cards == 1 then
+			local card = LuaQiangxiCard:clone()
+			card:addSubcard(cards[1])
+			return card
+		end
 	end, 
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaQiangxiCard")
@@ -400,20 +400,20 @@ LuaQiaobian = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local change = data:toPhaseChange()
 		local nextphase = change.to
-        room:setPlayerMark(player, "qiaobianPhase", nextphase)
-        local index = 0
-        if nextphase == sgs.Player_Judge then
+		room:setPlayerMark(player, "qiaobianPhase", nextphase)
+		local index = 0
+		if nextphase == sgs.Player_Judge then
 			index = 1
-        elseif nextphase == sgs.Player_Draw then
+		elseif nextphase == sgs.Player_Draw then
 			index = 2
-        elseif nextphase == sgs.Player_Play then
+		elseif nextphase == sgs.Player_Play then
 			index = 3
-        elseif nextphase == sgs.Player_Discard then
+		elseif nextphase == sgs.Player_Discard then
 			index = 4
 		end
-        local discard_prompt = string.format("#qiaobian-%d", index)
-        local use_prompt = string.format("@qiaobian-%d", index)
-        if index > 0 then
+		local discard_prompt = string.format("#qiaobian-%d", index)
+		local use_prompt = string.format("@qiaobian-%d", index)
+		if index > 0 then
 			if room:askForDiscard(player, self:objectName(), 1, 1, true, false, discard_prompt) then
 				if not player:isSkipped(nextphase) then
 					if index == 2 or index == 3 then
@@ -422,8 +422,8 @@ LuaQiaobian = sgs.CreateTriggerSkill{
 				end
 				player:skip(nextphase)
 			end
-        end
-        return false
+		end
+		return false
 	end, 
 	can_trigger = function(self, target)
 		if target then
@@ -441,20 +441,20 @@ LuaQiaobian = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 perform = function(player, skill_name)
-    local room = player:getRoom()
-    local result = room:askForChoice(player, skill_name, "up+down")
-    local all_players = room:getAllPlayers()
-    if result == "up" then
+	local room = player:getRoom()
+	local result = room:askForChoice(player, skill_name, "up+down")
+	local all_players = room:getAllPlayers()
+	if result == "up" then
 		for _,p in sgs.qlist(all_players) do
 			local recover = sgs.RecoverStruct()
 			recover.who = player
 			room:recover(p, recover)
 		end
-    elseif result == "down" then
+	elseif result == "down" then
 		for _,p in sgs.qlist(all_players) do
 			room:loseHp(p)
 		end
-    end
+	end
 end
 LuaQinyin = sgs.CreateTriggerSkill{
 	name = "LuaQinyin", 
@@ -479,18 +479,18 @@ LuaQinyin = sgs.CreateTriggerSkill{
 								perform(player, self:objectName())
 							end
 						end
-                    end
-                end
+					end
+				end
 			elseif event == sgs.EventPhaseStart then
 				player:setMark("qinyin", 0)
 			end
 		end
-        return false
+		return false
 	end
 }
 --[[
 	技能名：倾国
-	相关武将：标准·甄姬
+	相关武将：标准·甄姬、SP·甄姬
 	描述：你可以将一张黑色手牌当【闪】使用或打出。
 	状态：验证通过
 ]]--
@@ -658,7 +658,7 @@ LuaQuanji = sgs.CreateTriggerSkill{
 	events = {sgs.Damaged}, 
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-        if room:askForSkillInvoke(player, self:objectName(), data) then
+		if room:askForSkillInvoke(player, self:objectName(), data) then
 			local damage = data:toDamage()
 			local x = damage.damage
 			for i=1, x, 1 do
@@ -675,8 +675,8 @@ LuaQuanji = sgs.CreateTriggerSkill{
 					end
 					player:addToPile("power", card_id)
 				end
-            end
-        end
+			end
+		end
 	end
 }
 LuaQuanjiKeep = sgs.CreateMaxCardsSkill{
@@ -684,7 +684,7 @@ LuaQuanjiKeep = sgs.CreateMaxCardsSkill{
 	extra_func = function(self, target) 
 		if target:hasSkill(self:objectName()) then
 			local powers = target:getPile("power")
-            return powers:length()
+			return powers:length()
 		end
 	end
 }
@@ -695,7 +695,7 @@ LuaQuanjiRemove = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local name = data:toString()
 		if name == "LuaQuanji" then
-            player:removePileByName("power")
+			player:removePileByName("power")
 		end
 		return false
 	end, 
