@@ -122,7 +122,36 @@ LuaZaiqi = sgs.CreateTriggerSkill{
 	技能名：昭心
 	相关武将：贴纸·司马昭
 	描述：摸牌阶段结束时，你可以展示所有手牌，若如此做，视为你使用一张【杀】，每阶段限一次。 
+	状态：验证通过
 ]]--
+LuaZhaoXin = sgs.CreateTriggerSkill{
+	name = "LuaZhaoXin",
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseEnd},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Draw then
+			local splist = sgs.SPlayerList()
+			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			slash:setSkillName(self:objectName())
+			for _,p in sgs.qlist(room:getOtherPlayers(player)) do
+				if player:canSlash(p, slash) then
+					splist:append(p)
+				end
+			end
+			if splist:isEmpty() then return false end
+			if room:askForSkillInvoke(player, self:objectName(), sgs.QVariant()) then
+				local target = room:askForPlayerChosen(player, splist, self:objectName())
+				room:showAllCards(player)
+				local use = sgs.CardUseStruct()
+				use.from = player
+				use.to:append(target)
+				use.card = slash
+				room:useCard(use, false)
+			end
+		end
+	end
+}
 --[[
 	技能名：昭烈
 	相关武将：☆SP·刘备
