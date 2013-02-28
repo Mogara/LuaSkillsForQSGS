@@ -134,7 +134,7 @@ LuaBuqu = sgs.CreateTriggerSkill{
 	技能名：称象
 	相关武将：倚天·曹冲
 	描述：每当你受到1次伤害，你可打出X张牌（X小于等于3），它们的点数之和与造成伤害的牌的点数相等，你可令X名角色各恢复1点体力（若其满体力则摸2张牌）
-	状态：验证失败（C stack overflow 错误）
+	状态：验证通过
 ]]--
 LuaXChengxiangCard = sgs.CreateSkillCard{
 	name = "LuaXChengxiangCard", 
@@ -152,16 +152,17 @@ LuaXChengxiangCard = sgs.CreateSkillCard{
 		return #targets <= count
 	end,
 	on_use = function(self, room, source, targets) 
+		local effect = sgs.CardEffectStruct()
+			effect.from = source
+			effect.card = self
 		if #targets == 0 then
-			local to = sgs.SPlayerList()
-			to:append(source)
-			self:use(room, source, to)
+			effect.to = source
+			self:onEffect(effect)
 		else
-			local tos = sgs.SPlayerList()
-			for _,p in pairs(targets) do --C stack overflow
-				tos:append(p)
+			for _,tg in ipairs(targets) do
+				effect.to = tg
+				self:onEffect(effect)
 			end
-			self:use(room, source, tos)
 		end
 	end,
 	on_effect = function(self, effect) 
