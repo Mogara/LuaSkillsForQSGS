@@ -6,8 +6,57 @@
 	☆验证失败：
 		洞察、弓骑、固政、虎啸、护驾、激将、极略、军威、疠火、连理、秘计、神速、探虎、伪帝、武神、修罗、狱刎、援护
 	☆尚未完成：
-		归心、落英、殉志
+		豹变、归心、落英、殉志
 ]]--
+--[[
+	技能名：豹变（锁定技）
+	相关武将：SP·夏侯霸
+	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
+	状态：尚未完成（含有tag无法转化）
+]]--
+BaobianChange = function(room, player, hp, skill_name)
+	--[[以下内容因含有tag而无法转化
+	QStringList baobian_skills = player->tag["BaobianSkills"].toStringList()
+	if player:getHp() <= hp then
+		if (!baobian_skills.contains(skill_name)) then
+			room:acquireSkill(player, skill_name)
+			baobian_skills << skill_name
+		end
+	else
+		room:detachSkillFromPlayer(player, skill_name)
+		baobian_skills.removeOne(skill_name)
+	end
+	player->tag["BaobianSkills"] = QVariant::fromValue(baobian_skills)
+	]]--
+end
+LuaBaobian = sgs.CreateTriggerSkill{
+	name = "LuaBaobian",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.GameStart, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill},  
+	on_trigger = function(self, event, player, data) 
+		if event == sgs.EventLoseSkill then
+			if data:toString() == self:objectName() then
+				--[[以下内容因含有tag而无法转化
+				QStringList baobian_skills = player->tag["BaobianSkills"].toStringList()
+				foreach (QString skill_name, baobian_skills)
+					room->detachSkillFromPlayer(player, skill_name)
+				player->tag["BaobianSkills"] = QVariant()
+				]]--
+			end
+			return false
+		end
+		if player:isAlive() and player:hasSkill(self:objectName()) then
+			BaobianChange(room, player, 1, "shensu")
+			BaobianChange(room, player, 2, "paoxiao")
+			BaobianChange(room, player, 3, "tiaoxin")
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target
+	end, 
+	priority = 
+}
 --[[
 	技能：不屈
 	相关武将：风·周泰
