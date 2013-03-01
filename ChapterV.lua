@@ -549,11 +549,11 @@ LuaXHongyuan = sgs.CreateTriggerSkill{
 	events = {sgs.DrawNCards},  
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
-        if room:askForSkillInvoke(player, self:objectName()) then
-            room:setPlayerFlag(player, self:objectName())
-            local count = data:toInt() - 1
+		if room:askForSkillInvoke(player, self:objectName()) then
+			room:setPlayerFlag(player, self:objectName())
+			local count = data:toInt() - 1
 			data:setValue(count)
-        end
+		end
 	end
 }
 LuaXHongyuanAct = sgs.CreateTriggerSkill{
@@ -564,14 +564,14 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 		if player:getPhase() == sgs.Player_Draw then
 			if player:hasFlag("LuaXHongyuan") then
 				room:setPlayerFlag(player, "-Invoked")
-                for _,other in sgs.qlist(room:getOtherPlayers(player)) do
-                    if sgs.AI_GetRelation3v3(player, other) == sgs.AI_Friend then
-                        other:drawCards(1)
+				for _,other in sgs.qlist(room:getOtherPlayers(player)) do
+					if sgs.AI_GetRelation3v3(player, other) == sgs.AI_Friend then
+						other:drawCards(1)
 					end
-                end
+				end
 			end
 		end
-        return false
+		return false
 	end
 }
 --[[
@@ -614,11 +614,11 @@ LuaXHongyuan = sgs.CreateTriggerSkill{
 	view_as_skill = LuaXHongyuanVS, 
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
-        if room:askForSkillInvoke(player, self:objectName()) then
-            room:setPlayerFlag(player, self:objectName())
-            local count = data:toInt() - 1
+		if room:askForSkillInvoke(player, self:objectName()) then
+			room:setPlayerFlag(player, self:objectName())
+			local count = data:toInt() - 1
 			data:setValue(count)
-        end
+		end
 	end
 }
 LuaXHongyuanAct = sgs.CreateTriggerSkill{
@@ -634,7 +634,7 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end
 }
 --[[
@@ -1909,9 +1909,9 @@ LuaXMingzhe = sgs.CreateTriggerSkill{
 	events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime},  
 	on_trigger = function(self, event, player, data) 
 		if player:getPhase() ~= sgs.Player_NotActive then
-            return false
+			return false
 		end
-        local move = data:toMoveOneTime()
+		local move = data:toMoveOneTime()
 		if move.from and move.from:objectName() == player:objectName() then
 			if event == sgs.BeforeCardsMove then
 				local reason = move.reason
@@ -1945,7 +1945,7 @@ LuaXMingzhe = sgs.CreateTriggerSkill{
 				player:setMark(self:objectName(), 0)
 			end
 		end
-        return false
+		return false
 	end
 }
 --[[
