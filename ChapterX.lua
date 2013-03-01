@@ -890,5 +890,59 @@ LuaXueyi = sgs.CreateMaxCardsSkill{
 	技能名：殉志
 	相关武将：倚天·姜伯约
 	描述：出牌阶段，你可以摸三张牌并变身为其他未上场或已阵亡的蜀势力角色，回合结束后你立即死亡 
-	状态：尚未完成
+	状态：0224验证通过
 ]]--
+LuaXXunzhiCard = sgs.CreateSkillCard{
+	name = "LuaXXunzhiCard", 
+	target_fixed = true, 
+	will_throw = true, 
+	on_use = function(self, room, source, targets) 
+		source:drawCards(3)
+		local players = room:getAlivePlayers()
+		local general_names = {}
+		for _,player in sgs.qlist(players) do
+			table.insert(general_names, player:getGeneralName())
+		end
+		local all_generals = sgs.Sanguosha:getLimitedGeneralNames()
+		local shu_generals = {}
+		for _,name in ipairs(all_generals) do
+			local general = sgs.Sanguosha:getGeneral(name)
+			if general:getKingdom() == "shu" and not table.contains(general_names, name) then
+				table.insert(shu_generals, name)
+			end
+		end
+		local general = room:askForGeneral(source, table.concat(shu_generals, "+"))
+		source:setTag("newgeneral", sgs.QVariant(general))
+		local isSecondaryHero = source:getGeneralName() ~= "jiangboyue"
+		room:changeHero(source, general, false, false, isSecondaryHero, true)
+		
+		room:setPlayerFlag(source, "LuaXXunzhi")
+	end
+}
+LuaXXunzhiVS = sgs.CreateViewAsSkill{
+	name = "LuaXXunzhi", 
+	n = 0, 
+	view_as = function(self, cards) 
+		return LuaXXunzhiCard:clone()
+	end, 
+	enabled_at_play = function(self, player)
+		return not player:hasFlag("LuaXXunzhi")
+	end
+}
+LuaXXunzhi = sgs.CreateTriggerSkill{
+	name = "LuaXXunzhi",  
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseChanging},  
+	view_as_skill = LuaXXunzhiVS, 
+	on_trigger = function(self, event, player, data) 
+		if data:toPhaseChange().to == sgs.Player_NotActive then
+			if player:hasFlag("LuaXXunzhi") then
+				local room = player:getRoom()
+				local isSecondaryHero = player:getGeneralName() ~= player:getTag("newgeneral"):toString()
+				room:changeHero(player, "jiangboyue", false, false, isSecondaryHero, true)
+				room:killPlayer(player)
+			end
+		end
+		return false
+	end
+}
