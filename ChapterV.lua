@@ -14,22 +14,25 @@
 	技能名：豹变（锁定技）
 	相关武将：SP·夏侯霸
 	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
-	状态：尚未完成（含有tag无法转化）
+	状态：验证通过
 ]]--
 BaobianChange = function(room, player, hp, skill_name)
-	--[[以下内容因含有tag而无法转化
-	QStringList baobian_skills = player->tag["BaobianSkills"].toStringList()
+	local room = player:getRoom()
+	local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
 	if player:getHp() <= hp then
-		if (!baobian_skills.contains(skill_name)) then
+		if not table.contains(baobian_skills, skill_name) then
 			room:acquireSkill(player, skill_name)
-			baobian_skills << skill_name
+			table.insert(baobian_skills, skill_name)
 		end
 	else
 		room:detachSkillFromPlayer(player, skill_name)
-		baobian_skills.removeOne(skill_name)
+		for i=1, #baobian_skills, 1 do
+			if baobian_skills[i]==skill_name  then
+				table.remove(baobian_skills, i)
+			end
+		end
 	end
-	player->tag["BaobianSkills"] = QVariant::fromValue(baobian_skills)
-	]]--
+	player:setTag("BaobianSkills", sgs.QVariant(table.concat(baobian_skills, "+")))
 end
 LuaBaobian = sgs.CreateTriggerSkill{
 	name = "LuaBaobian",  
@@ -38,12 +41,11 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		if event == sgs.EventLoseSkill then
 			if data:toString() == self:objectName() then
-				--[[以下内容因含有tag而无法转化
-				QStringList baobian_skills = player->tag["BaobianSkills"].toStringList()
-				foreach (QString skill_name, baobian_skills)
-					room->detachSkillFromPlayer(player, skill_name)
-				player->tag["BaobianSkills"] = QVariant()
-				]]--
+				local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
+				for _,skname in ipairs(baobian_skills) do
+					room:detachSkillFromPlayer(player, skill_name)
+				end
+				player:setTag("BaobianSkills", sgs.QVariant())
 			end
 			return false
 		end
@@ -57,7 +59,6 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		return target
 	end, 
-	priority = 
 }
 --[[
 	技能：不屈
