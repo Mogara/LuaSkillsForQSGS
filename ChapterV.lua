@@ -4,32 +4,35 @@
 	☆源代码转化失败，改写后通过：
 		不屈、称象、龙胆、龙魂、龙魂
 	☆验证失败：
-		洞察、弓骑、固政、虎啸、护驾、激将、极略、军威、疠火、连理、秘计、神速、探虎、伪帝、武神、修罗、狱刎、援护
+		洞察、弓骑、固政、虎啸、护驾、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、武神、修罗、狱刎
 	☆尚未完成：
-		豹变、归心、缓释、缓释、落英
+		豹变、归心、落英
 	☆尚未验证：
-		弘援、弘援、明哲
+		弘援、弘援、明哲、缓释、缓释、军威、援护
 ]]--
 --[[
 	技能名：豹变（锁定技）
 	相关武将：SP·夏侯霸
 	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
-	状态：尚未完成（含有tag无法转化）
+	状态：验证通过
 ]]--
 BaobianChange = function(room, player, hp, skill_name)
-	--[[以下内容因含有tag而无法转化
-	QStringList baobian_skills = player->tag["BaobianSkills"].toStringList()
+	local room = player:getRoom()
+	local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
 	if player:getHp() <= hp then
-		if (!baobian_skills.contains(skill_name)) then
+		if not table.contains(baobian_skills, skill_name) then
 			room:acquireSkill(player, skill_name)
-			baobian_skills << skill_name
+			table.insert(baobian_skills, skill_name)
 		end
 	else
 		room:detachSkillFromPlayer(player, skill_name)
-		baobian_skills.removeOne(skill_name)
+		for i=1, #baobian_skills, 1 do
+			if baobian_skills[i]==skill_name  then
+				table.remove(baobian_skills, i)
+			end
+		end
 	end
-	player->tag["BaobianSkills"] = QVariant::fromValue(baobian_skills)
-	]]--
+	player:setTag("BaobianSkills", sgs.QVariant(table.concat(baobian_skills, "+")))
 end
 LuaBaobian = sgs.CreateTriggerSkill{
 	name = "LuaBaobian",  
@@ -38,12 +41,11 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		if event == sgs.EventLoseSkill then
 			if data:toString() == self:objectName() then
-				--[[以下内容因含有tag而无法转化
-				QStringList baobian_skills = player->tag["BaobianSkills"].toStringList()
-				foreach (QString skill_name, baobian_skills)
-					room->detachSkillFromPlayer(player, skill_name)
-				player->tag["BaobianSkills"] = QVariant()
-				]]--
+				local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
+				for _,skname in ipairs(baobian_skills) do
+					room:detachSkillFromPlayer(player, skill_name)
+				end
+				player:setTag("BaobianSkills", sgs.QVariant())
 			end
 			return false
 		end
@@ -57,7 +59,6 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		return target
 	end, 
-	priority = 
 }
 --[[
 	技能：不屈
@@ -722,7 +723,7 @@ LuaHujia = sgs.CreateTriggerSkill{
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
 	描述：在一名己方角色的判定牌生效前，你可以打出一张牌代替之。
-	状态：尚未完成（含有tag无法转化）
+	状态：尚未验证
 ]]--
 LuaXHuanshiCard = sgs.CreateSkillCard{
 	name = "LuaXHuanshiCard", 
@@ -783,9 +784,7 @@ LuaXHuanshi = sgs.CreateTriggerSkill{
 		end
 		local prompt_list = {"@huanshi-card", judge.who:objectName(), self:objectName(), judge.reason, judge.card:getEffectIdString()}
 		local prompt = table.concat(prompt_list, ":")
-		--[[以下内容含有tag无法转化
-		player->tag["Judge"] = data
-		]]--
+		player:setTag("Judge", data)
 		local pattern = "@LuaXHuanshi"
 		local card = room:askForCard(player, pattern, prompt, data, sgs.Card_MethodResponse, judge.who, true)
 		if card then
@@ -806,7 +805,7 @@ LuaXHuanshi = sgs.CreateTriggerSkill{
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾（身份局）
 	描述：在一名角色的判定牌生效前，你可以令其选择是否由你打出一张牌代替之。
-	状态：尚未完成（含有tag无法转化）
+	状态：尚未验证
 ]]--
 LuaXHuanshiCard = sgs.CreateSkillCard{
 	name = "LuaXHuanshiCard", 
@@ -858,9 +857,7 @@ LuaXHuanshi = sgs.CreateTriggerSkill{
 		end
 		local prompt_list = {"@huanshi-card", judge.who:objectName(), self:objectName(), judge.reason, judge.card:getEffectIdString()}
 		local prompt = table.concat(prompt_list, ":")
-		--[[以下内容含有tag无法转化
-		player->tag["Judge"] = data
-		]]--
+		player:setTag("Judge", data)
 		local pattern = "@LuaXHuanshi"
 		local card = room:askForCard(player, pattern, prompt, data, sgs.Card_MethodResponse, judge.who, true)
 		if card then
@@ -1120,7 +1117,7 @@ LuaJilveClear = sgs.CreateTriggerSkill{
 	技能名：军威
 	相关武将：☆SP·甘宁
 	描述：回合结束阶段开始时，你可以将三张“锦”置入弃牌堆。若如此做，你须指定一名角色并令其选择一项：1.亮出一张【闪】，然后由你交给任意一名角色。2.该角色失去1点体力，然后由你选择将其装备区的一张牌移出游戏。在该角色的回合结束后，将以此法移出游戏的装备牌移回原处。
-	状态：未经验证 (原有bug:（若原位置有其他装备牌，把移出游戏的装备牌移回原处时出错。）)
+	状态：尚未验证 (原有bug:（若原位置有其他装备牌，把移出游戏的装备牌移回原处时出错。）)
 ]]--
 LuaJunwei = sgs.CreateTriggerSkill{
 	name = "LuaJunwei", 
@@ -2309,7 +2306,7 @@ LuaXYuwen = sgs.CreateTriggerSkill{
 		武器牌：弃置与该角色距离为1的一名角色区域中的一张牌；
 		防具牌：该角色摸一张牌；
 		坐骑牌：该角色回复一点体力。
-	状态：验证失败（各装备类型效果可实现，但技能卡的filter部分有问题导致装备区有同类装备时仍可发动技能）
+	状态：尚未验证(原有问题（各装备类型效果可实现，但技能卡的filter部分有问题导致装备区有同类装备时仍可发动技能）)
 ]]--
 LuaYuanhuCard = sgs.CreateSkillCard{
 	name = "LuaYuanhuCard", 
