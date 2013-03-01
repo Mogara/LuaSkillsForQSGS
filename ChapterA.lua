@@ -37,15 +37,15 @@ LuaAnxian = sgs.CreateTriggerSkill{
 			if card and card:isKindOf("Slash") then
 				if room:askForCard(player, ".", "@anxian-discard", sgs.QVariant(), sgs.CardDiscarded) then
 					player:addMark("anxian")
-                    use.from:drawCards(1)
+					use.from:drawCards(1)
 				end
 			end
 		elseif event == sgs.SlashEffected then
 			if player:getMark("anxian") > 0 then
 				local count = player:getMark("anxian") - 1
-                player:setMark("anxian", count)
-                return true
-            end
+				player:setMark("anxian", count)
+				return true
+			end
 			return false
 		end
 	end

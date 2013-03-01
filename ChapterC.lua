@@ -41,8 +41,8 @@ LuaXCangni = sgs.CreateTriggerSkill{
 					return false
 				end
 			end
-        end
-        if event == sgs.CardsMoveOneTime then
+		end
+		if event == sgs.CardsMoveOneTime then
 			if not player:faceUp() then
 				if player:getPhase() == sgs.Player_NotActive then
 					local move = data:toMoveOneTime()
@@ -91,8 +91,8 @@ LuaXCangni = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-        end
-        return false
+		end
+		return false
 	end
 }
 --[[
@@ -112,8 +112,8 @@ LuaXSuperGuanxing = sgs.CreateTriggerSkill{
 				local stars = room:getNCards(5, false)
 				room:askForGuanxing(player, stars, false)
 			end
-        end
-        return false
+		end
+		return false
 	end
 }
 --[[
@@ -216,16 +216,16 @@ LuaXChengxiangVS = sgs.CreateViewAsSkill{
 	end, 
 	view_as = function(self, cards) 
 		local sum = 0
-        for _,card in pairs(cards) do
-            sum = sum + card:getNumber()
-        end
+		for _,card in pairs(cards) do
+			sum = sum + card:getNumber()
+		end
 		local target = sgs.Self:getMark("LuaXChengxiang")
-        if sum == target then
-            local vs_card = LuaXChengxiangCard:clone()
+		if sum == target then
+			local vs_card = LuaXChengxiangCard:clone()
 			for _,card in pairs(cards) do
 				vs_card:addSubcard(card)
 			end
-            return vs_card
+			return vs_card
 		end
 	end, 
 	enabled_at_play = function(self, player)
@@ -244,7 +244,7 @@ LuaXChengxiang = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local damage = data:toDamage()
 		local card = damage.card
-        if card then
+		if card then
 			local point = card:getNumber()
 			if point > 0 then
 				if not player:isNude() then
@@ -339,7 +339,7 @@ LuaChunlao = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end
 }
 --[[
@@ -354,8 +354,8 @@ LuaXChouliang = sgs.CreateTriggerSkill{
 	events = {sgs.EventPhaseStart},   
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
-        local handcardnum = player:getHandcardNum()
-        if player:getPhase() == sgs.Player_Finish then
+		local handcardnum = player:getHandcardNum()
+		if player:getPhase() == sgs.Player_Finish then
 			if handcardnum < 3 then
 				if room:askForSkillInvoke(player, self:objectName()) then
 					for i=1, 4-handcardnum, 1 do
@@ -374,8 +374,8 @@ LuaXChouliang = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-        end
-        return false
+		end
+		return false
 	end
 }
 --[[
@@ -399,7 +399,7 @@ LuaXChizhong = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
 		local splayer = room:findPlayerBySkillName(self:objectName())
-        if splayer then
+		if splayer then
 			if event == sgs.Death then
 				if player:objectName() ~= splayer:objectName() then
 					local maxhp = splayer:getMaxHp() + 1
@@ -407,7 +407,7 @@ LuaXChizhong = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -425,11 +425,11 @@ LuaXConghui = sgs.CreateTriggerSkill{
 	events = {sgs.EventPhaseChanging},  
 	on_trigger = function(self, event, player, data) 
 		local change = data:toPhaseChange()
-        if change.to == sgs.Player_Discard then
+		if change.to == sgs.Player_Discard then
 			if not player:isSkipped(sgs.Player_Discard) then
 				player:skip(sgs.Player_Discard)
 			end
-        end
-        return false
+		end
+		return false
 	end
 }

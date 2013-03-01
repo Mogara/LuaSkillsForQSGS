@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（F区）
 	技能索引：
-		反间、反间、反馈、放权、放逐、飞影、焚心、愤勇、奉印、伏枥、辅佐、父魂
+		反间、反间、反馈、放权、放逐、飞影、焚心、愤勇、奉印、扶乱、伏枥、辅佐、父魂
 ]]--
 --[[
 	技能名：反间
@@ -219,7 +219,7 @@ LuaFeiying = sgs.CreateDistanceSkill{
 }
 --[[
 	技能名：焚心（限定技）
-	相关武将：铜雀台·灵雎
+	相关武将：铜雀台·灵雎、SP·灵雎
 	描述：当你杀死一名非主公角色时，在其翻开身份牌之前，你可以与该角色交换身份牌。（你的身份为主公时不能发动此技能。）
 	状态：验证通过
 ]]--
@@ -284,17 +284,17 @@ LuaFenyong = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
 		if event == sgs.Damaged then
-            if player:getMark("@fenyong") == 0 then
+			if player:getMark("@fenyong") == 0 then
 				if room:askForSkillInvoke(player, self:objectName()) then
 					player:gainMark("@fenyong")
 				end
-            end
-        elseif event == sgs.DamageInflicted then
-            if player:getMark("@fenyong") > 0 then
-                return true
-            end
-        end
-        return false
+			end
+		elseif event == sgs.DamageInflicted then
+			if player:getMark("@fenyong") > 0 then
+				return true
+			end
+		end
+		return false
 	end, 
 }
 LuaFenyongClear = sgs.CreateTriggerSkill{
@@ -358,7 +358,7 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
 		local splayer = room:findPlayerBySkillName(self:objectName())
-        if splayer then
+		if splayer then
 			if event == sgs.EventPhaseChanging then
 				local change = data:toPhaseChange()
 				if change.to == sgs.Player_Start then
@@ -375,12 +375,17 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
 	end
 }
+--[[
+	技能名：扶乱
+	相关武将：贴纸·王元姬
+	描述：出牌阶段，若你未于此阶段使用过【杀】，你可以弃置三张相同花色的牌并选择攻击范围内的一名其他角色，该角色将武将牌翻面，且此阶段你不可使用【杀】，每阶段限一次。 
+]]--
 --[[
 	技能名：伏枥（限定技）
 	相关武将：二将成名·廖化
@@ -424,7 +429,7 @@ LuaFuli = sgs.CreateTriggerSkill{
 				player:turnOver()
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		if target then
@@ -450,7 +455,7 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
 		local zhangzhao = room:findPlayerBySkillName(self:objectName())
-        if zhangzhao then
+		if zhangzhao then
 			local pindian = data:toPindian()
 			local source = pindian.from
 			local target = pindian.to
@@ -478,7 +483,7 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -499,8 +504,8 @@ LuaFuhun = sgs.CreateTriggerSkill{
 		local phase = player:getPhase()
 		if phase == sgs.Player_Draw then
 			if player:askForSkillInvoke(self:objectName()) then
-                local id1 = room:drawCard()
-                local id2 = room:drawCard()
+				local id1 = room:drawCard()
+				local id2 = room:drawCard()
 				local move = sgs.CardsMoveStruct()
 				local move2 = sgs.CardsMoveStruct()
 				move.card_ids:append(id1)
@@ -508,27 +513,27 @@ LuaFuhun = sgs.CreateTriggerSkill{
 				move.to_place = sgs.Player_PlaceTable
 				room:moveCardsAtomic(move, true)
 				room:getThread():delay()
-                move2 = move
-                move2.to_place = sgs.Player_PlaceHand
-                move2.to = player
-                room:moveCardsAtomic(move2, true)
+				move2 = move
+				move2.to_place = sgs.Player_PlaceHand
+				move2.to = player
+				room:moveCardsAtomic(move2, true)
 				local card1 = sgs.Sanguosha:getCard(id1)
 				local card2 = sgs.Sanguosha:getCard(id2)
-                if card1:isBlack() ~= card2:isBlack() then
-                    room:setEmotion(player, "good")
-                    room:acquireSkill(player, "wusheng")
-                    room:acquireSkill(player, "paoxiao")
-                    player:setFlags(self:objectName())
-                else
-                    room:setEmotion(player, "bad")
-                end
-                return true
-            end
+				if card1:isBlack() ~= card2:isBlack() then
+					room:setEmotion(player, "good")
+					room:acquireSkill(player, "wusheng")
+					room:acquireSkill(player, "paoxiao")
+					player:setFlags(self:objectName())
+				else
+					room:setEmotion(player, "bad")
+				end
+				return true
+			end
 		elseif phase == sgs.Player_NotActive then
 			if player:hasFlag(self:objectName()) then
-                room:detachSkillFromPlayer(player, "wusheng")
-                room:detachSkillFromPlayer(player, "paoxiao")
-            end
+				room:detachSkillFromPlayer(player, "wusheng")
+				room:detachSkillFromPlayer(player, "paoxiao")
+			end
 		end
 	end
 }

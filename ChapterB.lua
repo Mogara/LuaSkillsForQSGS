@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（B区）
 	技能索引：
-		八阵、霸刀、霸王、拜印、暴虐、悲歌、北伐、崩坏、笔伐、闭月、补益、不屈
+		八阵、霸刀、霸王、拜印、豹变、暴虐、悲歌、北伐、崩坏、笔伐、闭月、补益、不屈
 ]]--
 --[[
 	技能名：八阵（锁定技）
@@ -62,13 +62,13 @@ LuaXBadao = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local effect = data:toCardEffect()
 		local slash = effect.card
-        if slash:isKindOf("Slash") and slash:isBlack() then
+		if slash:isKindOf("Slash") and slash:isBlack() then
 			local room = player:getRoom()
-            if room:askForSkillInvoke(player, self:objectName(), data) then
-                room:askForUseCard(player, "slash", "@askforslash")
-            end
-        end
-        return false
+			if room:askForSkillInvoke(player, self:objectName(), data) then
+				room:askForUseCard(player, "slash", "@askforslash")
+			end
+		end
+		return false
 	end
 }
 --[[
@@ -142,7 +142,7 @@ LuaXBawang = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        return false
+		return false
 	end, 
 	priority = 2
 }
@@ -159,9 +159,9 @@ LuaBaiyin = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		room:setPlayerMark(player, "baiyin", 1)
-        player:gainMark("@waked")
-        room:loseMaxHp(player)
-        room:acquireSkill(player, "jilve")
+		player:gainMark("@waked")
+		room:loseMaxHp(player)
+		room:acquireSkill(player, "jilve")
 		return false
 	end,
 	can_trigger = function(self, target)
@@ -177,6 +177,12 @@ LuaBaiyin = sgs.CreateTriggerSkill{
 		return false
 	end
 }
+--[[
+	技能名：豹变（锁定技）
+	相关武将：SP·夏侯霸
+	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
+	状态：尚未完成
+]]--
 --[[
 	技能名：暴虐（主公技）
 	相关武将：林·董卓
@@ -301,7 +307,7 @@ LuaXBeifa = sgs.CreateTriggerSkill{
 	events = {sgs.CardsMoveOneTime},  
 	on_trigger = function(self, event, player, data) 
 		if player:isKongcheng() then
-            local move = data:toMoveOneTime()
+			local move = data:toMoveOneTime()
 			if move.from and move.from:objectName() == player:objectName() then
 				if move.from_places:contains(sgs.Player_PlaceHand) then
 					local room = player:getRoom()
@@ -327,8 +333,8 @@ LuaXBeifa = sgs.CreateTriggerSkill{
 					room:useCard(use)
 				end
 			end
-        end
-        return false
+		end
+		return false
 	end
 }
 --[[
@@ -431,7 +437,7 @@ LuaBifa = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-        if player:getPhase() == sgs.Player_RoundStart then
+		if player:getPhase() == sgs.Player_RoundStart then
 			local bifa_list = player:getPile("bifa")
 			if bifa_list:length() > 0 then
 				while (not bifa_list:isEmpty()) do
@@ -491,9 +497,9 @@ LuaBiyue = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		if player:getPhase() == sgs.Player_Finish then
 			local room = player:getRoom()
-            if room:askForSkillInvoke(player, self:objectName()) then
-                player:drawCards(1)
-            end
+			if room:askForSkillInvoke(player, self:objectName()) then
+				player:drawCards(1)
+			end
 		end
 	end
 }

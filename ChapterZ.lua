@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（Z区）
 	技能索引：
-		凿险、早夭、再起、昭烈、贞烈、镇威、争锋、争功、直谏、制霸、制霸、智迟、制衡、志继、智愚、筑楼、追忆、自立、自守、宗室、纵火、醉乡
+		凿险、早夭、再起、昭心、昭烈、贞烈、镇威、争锋、争功、直谏、制霸、制霸、智迟、制衡、志继、智愚、筑楼、追忆、自立、自守、宗室、纵火、醉乡
 ]]--
 --[[
 	技能名：凿险（觉醒技）
@@ -116,6 +116,40 @@ LuaZaiqi = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
+	end
+}
+--[[
+	技能名：昭心
+	相关武将：贴纸·司马昭
+	描述：摸牌阶段结束时，你可以展示所有手牌，若如此做，视为你使用一张【杀】，每阶段限一次。 
+	状态：验证通过
+]]--
+LuaZhaoXin = sgs.CreateTriggerSkill{
+	name = "LuaZhaoXin",
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseEnd},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Draw then
+			local splist = sgs.SPlayerList()
+			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			slash:setSkillName(self:objectName())
+			for _,p in sgs.qlist(room:getOtherPlayers(player)) do
+				if player:canSlash(p, slash) then
+					splist:append(p)
+				end
+			end
+			if splist:isEmpty() then return false end
+			if room:askForSkillInvoke(player, self:objectName(), sgs.QVariant()) then
+				local target = room:askForPlayerChosen(player, splist, self:objectName())
+				room:showAllCards(player)
+				local use = sgs.CardUseStruct()
+				use.from = player
+				use.to:append(target)
+				use.card = slash
+				room:useCard(use, false)
+			end
+		end
 	end
 }
 --[[

@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（S区）
 	技能索引：
-		烧营、涉猎、神愤、神戟、神君、神力、神速、神威、师恩、誓仇、识破、恃才、恃勇、授业、双雄、水箭、水泳、死战、颂词、颂威
+		烧营、涉猎、神愤、神戟、神君、神力、神速、神威、师恩、誓仇、识破、恃才、恃勇、授业、淑德、双雄、水箭、水泳、死战、颂词、颂威
 ]]--
 --[[
 	技能名：烧营
@@ -542,6 +542,25 @@ LuaXShouye = sgs.CreateViewAsSkill{
 			return not player:hasUsed("#LuaXShouyeCard")
 		end
 		return true
+	end
+}
+--[[
+	技能名：淑德
+	相关武将：贴纸·王元姬
+	描述：回合结束阶段开始时，你可以将手牌数补至等同于体力上限的张数。 
+	状态：验证通过
+]]--
+LuaShude = sgs.CreateTriggerSkill{
+	name = "LuaShude",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local x = player:getMaxHp()-player:getHandcardNum()
+		if player:getPhase()~=sgs.Player_Finish or x<=0 then return false end
+		if room:askForSkillInvoke(player, self:objectName()) then
+			player:drawCards(x)
+		end
 	end
 }
 --[[
