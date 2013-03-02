@@ -1938,15 +1938,15 @@ LuaXMingzhe = sgs.CreateTriggerSkill{
 	技能名：神速
 	相关武将：风·夏侯渊
 	描述：你可以选择一至两项：1.跳过你的判定阶段和摸牌阶段。2.跳过你的出牌阶段并弃置一张装备牌。你每选择一项，视为对一名其他角色使用一张【杀】（无距离限制）。
-	状态：验证失败（点击按钮发动技能时currentRoomState()为空，不点击按钮直接发动则能正常发动）
+	状态：0224中测试时不能无视距离，1111无此问题，疑似源码失误，以下代码适用于0224，要在旧版本中使用，请去掉神速2时askForUseCard的最后一个参数
 ]]--
 LuaShensuCard = sgs.CreateSkillCard{
-	name = "LuaShensuCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
+	name = "LuaShensuCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
 		if #targets == 0 then
-			return sgs.Self:canSlash(to_select, nil, false)
+			return sgs.Self:canSlash(to_select,nil,false)
 		end
 		return false
 	end,
@@ -1956,51 +1956,46 @@ LuaShensuCard = sgs.CreateSkillCard{
 		local use = sgs.CardUseStruct()
 		use.card = slash
 		use.from = source
-		use.to = targets
+		for i=1,#targets,1 do
+			use.to:append(targets[i])
+		end
 		room:useCard(use)
 	end
 }
 LuaShensuVS = sgs.CreateViewAsSkill{
-	name = "LuaShensuVS", 
+	name = "LuaShensuVS",
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		local state = sgs.Sanguosha:currentRoomState()
-		local pattern = state:getCurrentCardUsePattern()
-		if not string.find(pattern, "1", string.len(pattern)) then
+		if sgs.Self:hasFlag("shensu2") then
 			if #selected == 0 then
 				return to_select:isKindOf("EquipCard")
 			end
 		end
 		return false
-	end, 
-	view_as = function(self, cards) 
-		local state = sgs.Sanguosha:currentRoomState()
-		local pattern = state:getCurrentCardUsePattern()
-		if string.find(pattern, "1", string.len(pattern)) then
-			if #cards == 0 then
-				return LuaShensuCard:clone()
-			end
-		else
-			if #cards == 1 then
-				local card = LuaShensuCard:clone()
-				card:addSubcard(cards[1])
-				return card
-			end
+	end,
+	view_as = function(self, cards)
+		if #cards == 0 then
+			return LuaShensuCard:clone()
 		end
-	end, 
+		if #cards == 1 then
+			local card = LuaShensuCard:clone()
+			card:addSubcard(cards[1])
+			return card
+		end
+	end,
 	enabled_at_play = function(self, player)
 		return false
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return string.find(pattern, "@@shensu") == 1
 	end
 }
 LuaShensu = sgs.CreateTriggerSkill{
-	name = "LuaShensu",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseChanging},  
-	view_as_skill = LuaShensuVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaShensu",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseChanging},
+	view_as_skill = LuaShensuVS,
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local change = data:toPhaseChange()
 		local nextphase = change.to
@@ -2015,7 +2010,8 @@ LuaShensu = sgs.CreateTriggerSkill{
 			end
 		elseif nextphase == sgs.Player_Play then
 			if not player:isSkipped(sgs.Player_Play) then
-				if room:askForUseCard(player, "@@shensu2", "@shensu2", 2) then
+				room:setPlayerFlag(player,"shensu2")
+				if room:askForUseCard(player, "@@shensu2", "@shensu2",2,sgs.Card_MethodDiscard) then
 					player:skip(sgs.Player_Play)
 				end
 			end
