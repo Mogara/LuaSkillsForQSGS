@@ -254,7 +254,91 @@ LuaXCaizhaojiHujia = sgs.CreateTriggerSkill{
 	技能名：化身
 	相关武将：山·左慈
 	描述：所有人都展示武将牌后，你随机获得两张未加入游戏的武将牌，称为“化身牌”，选一张置于你面前并声明该武将的一项技能，你获得该技能且同时将性别和势力属性变成与该武将相同直到“化身牌”被替换。在你的每个回合开始时和结束后，你可以替换“化身牌”，然后（无论是否替换）你为当前的“化身牌”声明一项技能（你不可以声明限定技、觉醒技或主公技）。
+	状态：验证通过
 ]]--
+function acquireGenerals(zuoci, n)
+	local room = zuoci:getRoom()
+	local Huashens = {}
+	local Hs_String = zuoci:getTag("LuaHuashens"):toString()
+	if Hs_String and Hs_String~="" then
+		Huashens = Hs_String:split("+")
+	end
+	for i=1, n, 1 do
+		local generals = sgs.Sanguosha:getLimitedGeneralNames()
+		local banned = {"zuoci", "guzhielai", "dengshizai", "caochong", "jiangboyue", "bgm_xiahoudun"}
+		for _,p in sgs.qlist(room:getAlivePlayers()) do
+			if not table.contains(banned, p:getGeneralName()) then
+				table.insert(banned, p:getGeneralName())
+			end
+			if p:getGeneral2() and not table.contains(banned, p:getGeneral2Name()) then
+				table.insert(banned, p:getGeneral2Name())
+			end
+		end
+		for i=1, #generals, 1 do
+			if table.contains(banned, generals[i]) then
+				table.remove(generals, i)
+			end
+		end
+		if #generals~=0 then
+			table.insert(Huashens, generals[math.random(1, #generals)])
+		end
+	end
+	zuoci:setTag("LuaHuashens", sgs.QVariant(table.concat(Huashens, "+")))
+end
+
+function askForChooseSkill(zuoci)
+	local room = zuoci:getRoom()
+	local old_skill = zuoci:getTag("LuaHuashensSkill"):toString()
+	if old_skill and zuoci:hasSkill(old_skill) then
+		room:detachSkillFromPlayer(zuoci, old_skill)
+	end
+	zuoci:setTag("LuaHuashensSkill", sgs.QVariant())
+	local Hs_String = zuoci:getTag("LuaHuashens"):toString()
+	if not Hs_String or Hs_String=="" then return end
+	local Huashens = Hs_String:split("+")
+	local general_name = room:askForGeneral(zuoci, table.concat(Huashens, "+"))
+	local general = sgs.Sanguosha:getGeneral(general_name)
+	local kingdom = general:getKingdom()
+	if zuoci:getKingdom() ~= kingdom then
+		if kingdom == "god" then
+			kingdom = room:askForKingdom(zuoci)
+		end
+		room:setPlayerProperty(zuoci, "kingdom", sgs.QVariant(kingdom))
+	end
+	if zuoci:getGender() ~= general:getGender() then
+		zuoci:setGender(general:getGender())
+	end
+	local sks = {}
+	for _,sk in sgs.qlist(general:getVisibleSkillList()) do
+		if not sk:isLordSkill() and sk:getFrequency()~=sgs.Skill_Limited and sk:getFrequency()~=sgs.Skill_Wake then
+			table.insert(sks, sk:objectName())
+		end
+	end
+	local choice = room:askForChoice(zuoci, "LuaHuashen", table.concat(sks, "+"))
+	zuoci:setTag("LuaHuashensSkill", sgs.QVariant(choice))
+	room:acquireSkill(zuoci, choice)
+end	
+
+LuaHuashen = sgs.CreateTriggerSkill{
+	name = "LuaHuashen",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.GameStart, sgs.EventPhaseStart},
+	priority = -1,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.GameStart then
+			acquireGenerals(player, 2)
+			askForChooseSkill(player)
+		else
+			if player:getPhase() == sgs.Player_RoundStart or player:getPhase() == sgs.Player_NotActive then
+				if room:askForSkillInvoke(player, self:objectName()) then
+					askForChooseSkill(player)
+				end
+			end
+		end
+	end
+}
+
 --[[
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
