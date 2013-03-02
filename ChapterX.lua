@@ -244,7 +244,20 @@ LuaXianzhenClear = sgs.CreateTriggerSkill{
 	技能名：新生
 	相关武将：山·左慈
 	描述：每当你受到1点伤害后，你可以获得一张“化身牌”。
+	状态：验证通过
+	备注：需調用ChapterH 的acquieGenerals 函数
 ]]--
+LuaXinSheng = sgs.CreateTriggerSkill{
+	name = "LuaXinSheng",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.Damaged},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if room:askForSkillInvoke(player, self:objectName()) then
+			acquireGenerals(player, data:toDamage().damage)--需調用ChapterH 的acquieGenerals 函数
+		end
+	end
+}
 --[[
 	技能名：心战
 	相关武将：一将成名·马谡
