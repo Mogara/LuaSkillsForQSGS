@@ -2254,14 +2254,15 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 	技能名：狱刎（锁定技）
 	相关武将：智·田丰
 	描述：当你死亡时，凶手视为自己 
-	状态：验证失败（有时不能视为自己）
+	状态：0224验证，除死亡笔记结果不可更改外，其他情况均通过
 ]]--
 LuaXYuwen = sgs.CreateTriggerSkill{
-	name = "LuaXYuwen",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.GameOverJudge},  
-	on_trigger = function(self, event, player, data) 
-		local damage = data:toDamageStar()
+	name = "LuaXYuwen",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.AskForPeachesDone},
+	on_trigger = function(self, event, player, data)
+		local dying=data:toDying()
+		local damage = dying.damage
 		if damage then
 			if damage.from then
 				if damage.from:objectName() == player:objectName() then
@@ -2271,17 +2272,18 @@ LuaXYuwen = sgs.CreateTriggerSkill{
 		else
 			damage = sgs.DamageStruct()
 			damage.to = player
-			data:setValue(damage)
 		end
 		damage.from = player
+		dying.damage=damage
+		data:setValue(dying)
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			return target:hasSkill(self:objectName())
 		end
 		return false
-	end, 
+	end,
 	priority = 3
 }
 --[[
