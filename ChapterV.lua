@@ -973,75 +973,61 @@ LuaJijiang = sgs.CreateTriggerSkill{
 	技能名：极略
 	相关武将：神·司马懿
 	描述：弃一枚“忍”标记发动下列一项技能——“鬼才”、“放逐”、“完杀”、“制衡”、“集智”。
-	状态：验证失败（无法发动鬼才，制衡和完杀选择效果有误）
+	状态：0224验证通过（主触发技隐藏，会导致鬼才改判log格式不对。。囧，不隐藏则log正常，但是有两个技能按钮。。修改name和视为相同提示重复技能）
 ]]--
 LuaJilveCard = sgs.CreateSkillCard{
-	name = "LuaJilveCard", 
-	target_fixed = true, 
-	will_throw = true, 
-	on_use = function(self, room, source, targets) 
-		local choices = ""
-		local count = 0
-		if not source:hasUsed("ZhihengCard") then
-			if not source:hasSkill("zhiheng") then
-				choices = "zhiheng"
-				count = count + 1
-			end
-		end
+	name = "LuaJilveCard",
+	target_fixed = true,
+	will_throw = true,
+	on_use = function(self, room, source, targets)
+		local choices=nil
+		local choice=nil
 		local tag = room:getTag("JilveWansha")
-		if not tag or not tag:toBool() then
-			if not source:hasSkill("wansha") then
-				if count == 0 then
-					choices = "wansha"
-				elseif count == 1 then
-					choices = "zhiheng+wansha"
-				end
+		if tag and tag:toBool() then
+			if not source:hasUsed("ZhihengCard") then
+				choice="zhiheng"
+			end
+		else
+			if not source:hasUsed("ZhihengCard") then
+				choices="zhiheng+wansha"
+			else
+				choice="wansha"
 			end
 		end
-		if choices ~= "" then
-			local choice
-			if count == 1 then
-				choice = choices
-			else
-				choice = room:askForChoice(source, "LuaJilve", "zhiheng+wansha")
-			end
-			source:loseMark("@bear")
-			if choice == "wansha" then
-				room:acquireSkill(source, "wansha")
-				room:setTag("JilveWansha", sgs.QVariant(true))
-			else
-				room:askForUseCard(source, "@zhiheng", "@jilve-zhiheng")
-			end
+		if(choices) then
+			choice = room:askForChoice(source, "LuaJilve", choices)
+		end
+		source:loseMark("@bear")
+		if choice == "wansha" then
+			room:acquireSkill(source, "wansha")
+			room:setTag("JilveWansha", sgs.QVariant(true))
+		else
+			room:askForUseCard(source, "@zhiheng", "@jilve-zhiheng")
 		end
 	end
 }
 LuaJilveVS = sgs.CreateViewAsSkill{
-	name = "LuaJilveVS", 
-	n = 0, 
-	view_as = function(self, cards) 
+	name = "LuaJilveVS",
+	n = 0,
+	view_as = function(self, cards)
 		return LuaJilveCard:clone()
-	end, 
+	end,
 	enabled_at_play = function(self, player)
-		local extra = 0
-		if player:hasSkill("zhiheng") then
-			extra = extra + 1
-		elseif player:hasInnateSkill("wansha") then
-			extra = extra + 1
-		end
-		local times = player:usedTimes("#LuaJilveCard")
-		if times + extra < 2 then
+		if (not player:hasInnateSkill("wansha")) and player:hasSkill("wansha") and player:hasUsed("ZhihengCard") then
+			return false
+		else
 			return player:getMark("@bear") > 0
 		end
-		return false
 	end
 }
 LuaJilve = sgs.CreateTriggerSkill{
-	name = "LuaJilve",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.CardUsed, sgs.CardResponsed, sgs.AskForRetrial, sgs.Damaged},  
-	view_as_skill = LuaJilveVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaJilve",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.CardUsed, sgs.CardResponsed, sgs.AskForRetrial, sgs.Damaged},
+	view_as_skill = LuaJilveVS,
+	on_trigger = function(self, event, player, data)
 		player:setMark("JilveEvent", event)
+		local room=player:getRoom() 
 		if event == sgs.CardUsed or event == sgs.CardResponsed then
 			local card = nil
 			if event == sgs.CardUsed then
@@ -1058,29 +1044,32 @@ LuaJilve = sgs.CreateTriggerSkill{
 				end
 			end
 		elseif event == sgs.AskForRetrial then
-			local guicai = sgs.Sanguosha:getTriggerSkill("guicai")
-			if guicai and not player:isKongcheng() then
+			local judge=data:toJudge()
+			if not player:isKongcheng() then
 				if not player:hasSkill("guicai") then
-					if player:askForSkillInvoke("LuaJilve", data) then
+					local prompt="@jilve-guicai:"..judge.who:objectName()..":"..self:objectName()..":"..judge.reason..":"..judge.card:getEffectIdString()
+					local card=room:askForCard(player, "@guicai",prompt, data, sgs.Card_MethodResponse, judge.who, true)
+					if card then
+						room:broadcastSkillInvoke("jilve", 1)
 						player:loseMark("@bear")
-						guicai:trigger(event, room, player, data)
+						room:retrial(card,player,judge,self:objectName())
 					end
 				end
-			end
+			end		
 		elseif event == sgs.Damaged then
-			local fangzhu = sgs.Sanguosha:getTriggerSkill("fangzhu")
-			if fangzhu and not player:hasSkill("fangzhu") then
-				if player:askForSkillInvoke("LuaJilve", data) then
+			if not player:hasSkill("fangzhu") then
+				local card=room:askForUseCard(player, "@@fangzhu", "@jilve-fangzhu")
+				if card then
 					player:loseMark("@bear")
-					fangzhu:trigger(event, room, player, data)
+					room:broadcastSkillInvoke("jilve",2);
 				end
 			end
 		end
 		player:setMark("JilveEvent", 0)
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
-		if target then 
+		if target then
 			if target:isAlive() and target:hasSkill(self:objectName()) then
 				return target:getMark("@bear") > 0
 			end
@@ -1089,15 +1078,15 @@ LuaJilve = sgs.CreateTriggerSkill{
 	end
 }
 LuaJilveClear = sgs.CreateTriggerSkill{
-	name = "#LuaJilveClear",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaJilveClear",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		room:detachSkillFromPlayer(player, "wansha")
 		room:removeTag("JilveWansha")
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:hasSkill(self:objectName()) and target:isAlive() then
