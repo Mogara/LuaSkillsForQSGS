@@ -356,6 +356,75 @@ LuaHuashen = sgs.CreateTriggerSkill{
 	相关武将：贴纸·刘协
 	描述：每当一张锦囊牌指定了不少于两名目标时，你可以令成为该牌目标的至多X名角色各摸一张牌，则该锦囊牌对这些角色无效。（X为你当前体力值） 
 ]]--
+LuaHuangenCard=sgs.CreateSkillCard{
+	name="LuaHuangenCard",
+	target_fixed=false,
+	filter = function(self, targets, to_select, player)
+		return to_select:hasFlag("huangen") and #targets<player:getHp()
+	end,
+	on_use = function(self, room, source, targets)
+		for _,p in ipairs(targets) do
+			room:setPlayerFlag(p,"huangenremove")
+		end
+	end,
+}
+
+LuaHuangenVS=sgs.CreateViewAsSkill{
+	name="LuaHuangen",
+	n=0,
+	view_as = function(self, cards)
+		return LuaHuangenCard:clone()
+	end,
+	enabled_at_play=function(self, player)
+		return false
+	end,
+	enabled_at_response=function(self,player,pattern)
+		return pattern=="@@LuaHuangen"
+	end,
+}
+
+LuaHuangen=sgs.CreateTriggerSkill{
+	name="huangen",
+	frequency=sgs.Skill_NotFrequent,
+	events={sgs.CardUsed},
+	view_as_skill=LuaHuangenVS,
+	on_trigger=function(self,event,player,data)
+		local use=data:toCardUse()
+		if not use.card:isKindOf("TrickCard") then return end
+		if use.to:length()<2 then return end
+		local room=player:getRoom()
+		if (use.card:subcardsLength()~=0 or use.card:getEffectiveId()~=-1) then
+			room:moveCardTo(use.card,nil,sgs.Player_PlaceTable,true)
+		end
+		local splayer=room:findPlayerBySkillName(self:objectName())
+		if not splayer then return false end
+		for _,p in sgs.qlist(use.to) do
+			room:setPlayerFlag(p,"huangen")
+		end
+		local x = 1
+		local cardname = use.card:objectName()
+		room:setPlayerFlag(splayer,cardname)
+		if room:askForUseCard(splayer,"@@LuaHuangen","@LuaHuangen") then
+			local newtargets=sgs.SPlayerList()
+			for _,p in sgs.qlist(use.to) do
+				room:setPlayerFlag(p,"-huangen")
+				if p:hasFlag("huangenremove") then
+					room:setPlayerFlag(p,"-huangenremove")
+					p:drawCards(1)
+				else
+					newtargets:append(p)
+				end
+			end
+			room:setPlayerFlag(splayer,"-" .. cardname)
+			use.to=newtargets
+			if use.to:isEmpty() then return true end
+			data:setValue(use)
+		end
+	end,
+	can_trigger=function(self,target)
+		return true
+	end,
+}
 --[[
 	技能名：黄天（主公技）
 	相关武将：风·张角
