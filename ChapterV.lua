@@ -292,12 +292,14 @@ LuaXChengxiang = sgs.CreateTriggerSkill{
 	相关武将：倚天·贾文和
 	描述：回合开始阶段开始时，你可以指定一名其他角色：该角色的所有手牌对你处于可见状态，直到你的本回合结束。其他角色都不知道你对谁发动了洞察技能，包括被洞察的角色本身 
 	状态：验证失败（被洞察的角色的手牌不能处于可见状态）
+	验证失败是因为源码在创建手牌按钮时使用Self->hasSkill("dongcha")的命令，
+	将之替换为Self->hasFlag("dongchaer")后重新编译，以下代码通过,这么底层的东西看起来还是要cpp啊
 ]]--
 LuaXDongcha = sgs.CreateTriggerSkill{
-	name = "LuaXDongcha",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXDongcha",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		local phase = player:getPhase()
 		local room = player:getRoom()
 		if phase == sgs.Player_Start then
@@ -305,29 +307,20 @@ LuaXDongcha = sgs.CreateTriggerSkill{
 				local players = room:getOtherPlayers(player)
 				local dongchaee = room:askForPlayerChosen(player, players, self:objectName())
 				room:setPlayerFlag(dongchaee, "dongchaee")
+				room:setPlayerFlag(player, "dongchaer")
 				local tag = sgs.QVariant()
-				tag:setValue(dongchaee:objectName())
+				tag:setValue(dongchaee)
 				room:setTag("Dongchaee", tag)
-				tag:setValue(player:objectName())
+				tag:setValue(player)
 				room:setTag("Dongchaer", tag)
 				room:showAllCards(dongchaee, player)
 			end
 		elseif phase == sgs.Player_Finish then
 			local tag = room:getTag("Dongchaee")
 			if tag then
-				local dongchaee_name = tag:toString()
-				if not dongchaee_name:isEmpty() then
-					local list = room:getOtherPlayers(player)
-					local dongchaee = nil
-					for _,p in sgs.qlist(list) do
-						if p:objectName() == dongchaee_name then
-							dongchaee = p
-							break
-						end
-					end
-					if dongchaee then
-						room:setPlayerFlag(dongchaee, "-dongchaee")
-					end
+				local dongchaee = tag:toPlayer()
+				if dongchaee then
+					room:setPlayerFlag(dongchaee, "-dongchaee")
 					room:setTag("Dongchaee", sgs.QVariant())
 					room:setTag("Dongchaer", sgs.QVariant())
 				end
