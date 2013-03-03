@@ -18,7 +18,6 @@ LuaLanggu = sgs.CreateTriggerSkill{
 			if not damage.from or damage.from:isKongcheng() then
 				return
 			end
-			player:getRoom():broadcastSkillInvoke(self:objectName())
 			local target = damage.from
 			local num = damage.damage
 			local n = 0
