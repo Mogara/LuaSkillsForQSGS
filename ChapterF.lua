@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（F区）
 	技能索引：
-		反间、反间、反馈、放权、放逐、飞影、焚心、愤勇、奉印、扶乱、伏枥、辅佐、父魂
+		反间、反间、反馈、放权、放逐、飞影、焚心、奋迅、愤勇、奉印、扶乱、伏枥、辅佐、父魂
 ]]--
 --[[
 	技能名：反间
@@ -272,6 +272,12 @@ LuaXFenxinStart = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：奋迅
+	相关武将：国战·丁奉
+	描述：出牌阶段，你可以弃置一张牌并选择一名其他角色：若如此做，你拥有以下技能直到回合结束：你无视与该角色的距离。每阶段限一次。 
+	状态：尚未验证	
+]]--
+--[[
 	技能名：愤勇
 	相关武将：☆SP·夏侯惇
 	描述：每当你受到一次伤害后，你可以竖置你的体力牌；当你的体力牌为竖置状态时，防止你受到的所有伤害。
@@ -403,9 +409,9 @@ LuaFuluan = sgs.CreateViewAsSkill{
 	name="LuaFuluan",
 	n=3,
 	view_filter = function(self, selected, to_select)
-        if #selected >0 then
+		if #selected >0 then
 			return to_select:getSuit() == selected[1]:getSuit()
-        else
+		else
 			return true
 		end
 	end,

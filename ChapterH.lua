@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（H区）
 	技能索引：
-		汉统、好施、红颜、弘援、后援、虎啸、胡笳、护驾、化身、缓释、缓释、皇恩、黄天、挥泪、魂姿、火计、祸首
+		汉统、好施、红颜、弘援、后援、虎啸、胡笳、护驾、化身、缓释、缓释、皇恩、黄天、挥泪、魂姿、火计、祸首、祸水
 ]]--
 --[[
 	技能名：汉统
@@ -44,7 +44,7 @@ LuaHantongCard=sgs.CreateSkillCard{
 					room:useCard(use,true)
 					break
 				else
-				    room:setPlayerFlag(p,"sbleba")
+					room:setPlayerFlag(p,"sbleba")
 				end
 			end
 		end
@@ -864,3 +864,9 @@ LuaSavageAssaultAvoid = sgs.CreateTriggerSkill{
 		end
 	end
 }
+--[[
+	技能名：祸水（锁定技）
+	相关武将：国战·邹氏
+	描述：你的回合内，体力值不少于体力上限一半的其他角色所有武将技能无效。 
+	状态：尚未完成
+]]--
