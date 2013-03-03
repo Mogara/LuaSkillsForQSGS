@@ -677,7 +677,7 @@ LuaHuxiaoRemove = sgs.CreateTriggerSkill{
 	技能名：护驾（主公技）
 	相关武将：标准·曹操、铜雀台·曹操
 	描述：当你需要使用或打出一张【闪】时，你可以令其他魏势力角色打出一张【闪】（视为由你使用或打出）。 
-	状态：验证失败（可以实现技能效果，但服务器有指向askForCard函数的AI错误信息）
+	状态：0224验证通过，服务器端未发现异常
 ]]--
 LuaHujia = sgs.CreateTriggerSkill{
 	name = "LuaHujia$",
@@ -694,7 +694,7 @@ LuaHujia = sgs.CreateTriggerSkill{
 					tohelp:setValue(player)
 					for _,p in sgs.qlist(lieges) do
 						local prompt = string.format("@hujia-jink:%s", player:objectName())
-						local jink = room:askForCard(p, "jink", prompt, tohelp, sgs.CardResponsed, player)
+						local jink = room:askForCard(p, "jink", prompt, tohelp, sgs.Card_MethodResponse, player)
 						if jink then
 							room:provide(jink)
 							return true
