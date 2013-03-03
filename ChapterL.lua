@@ -8,6 +8,62 @@
 	相关武将：贴纸·司马昭
 	描述：每当你受到1点伤害后，你可以进行一次判定，然后你可以打出一张手牌代替此判定牌：若如此做，你观看伤害来源的所有手牌，并弃置其中任意数量的与判定牌花色相同的牌。 
 ]]--
+LuaLanggu = sgs.CreateTriggerSkill{
+	name = "LuaLanggu",
+	frequency=sgs.Skill_NotFrequent,
+	events={sgs.Damaged,sgs.AskForRetrial},
+	on_trigger=function(self,event,player,data)
+		if event == sgs.Damaged then
+			local damage = data:toDamage()
+			if not damage.from or damage.from:isKongcheng() then
+				return
+			end
+			local target = damage.from
+			local num = damage.damage
+			local n = 0
+			while n < num do
+				if player:askForSkillInvoke(self:objectName(),data) then
+					local room = player:getRoom()
+					local judge = sgs.JudgeStruct()
+					judge.reason = self:objectName()
+					judge.pattern=sgs.QRegExp("(.*):(.*):(.*)")
+					judge.who = player
+					room:judge(judge)
+					room:fillAG(target:handCards(), player)
+					local mark = judge.card:getSuitString()
+					room:setPlayerFlag(player, mark)
+					while(not target:isKongcheng()) do
+						local card_id = room:askForAG(player, target:handCards(), true, "langgu")
+						if card_id == -1 then
+							player:invoke("clearAG")
+							break
+						end
+						local cc = sgs.Sanguosha:getCard(card_id)
+						if judge.card:getSuit() == cc:getSuit() then
+							room:throwCard(card_id,target)
+						end
+					end
+                    room:setPlayerFlag(player, "-" .. mark)
+				else
+					break
+				end
+				n = n + 1
+			end
+			return
+		elseif event == sgs.AskForRetrial then
+			local room = player:getRoom()
+			local judge = data:toJudge()
+			if judge.reason ~= self:objectName() then
+				return false
+			end
+			local card = room:askForCard(player, ".", "@langgu", data, sgs.AskForRetrial)
+			if card ~= nil then
+				room:retrial(card, player, judge, self:objectName(), false)
+			end
+			return false
+		end
+	end,
+}
 --[[
 	技能名：乐学
 	相关武将：倚天·姜伯约
