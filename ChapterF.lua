@@ -386,6 +386,42 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 	相关武将：贴纸·王元姬
 	描述：出牌阶段，若你未于此阶段使用过【杀】，你可以弃置三张相同花色的牌并选择攻击范围内的一名其他角色，该角色将武将牌翻面，且此阶段你不可使用【杀】，每阶段限一次。 
 ]]--
+LuaFuluanCard = sgs.CreateSkillCard{
+	name="LuafuluanCard",
+	target_fixed=false,
+	will_throw=true,
+	filter = function(self, targets, to_select, player)
+		return #targets == 0 and to_select:objectName()~=player:objectName() and player:inMyAttackRange(to_select)
+	end,
+	on_use = function(self, room, source, targets)
+		targets[1]:turnOver()
+		room:setPlayerFlag(source, "tianyi_failed")
+	end,
+}
+
+LuaFuluan = sgs.CreateViewAsSkill{
+	name="LuaFuluan",
+	n=3,
+	view_filter = function(self, selected, to_select)
+        if #selected >0 then
+			return to_select:getSuit() == selected[1]:getSuit()
+        else
+			return true
+		end
+	end,
+	view_as = function(self, cards)
+		if #cards ~= 3 then	return end
+		local card = fuluancard:clone()
+		card:addSubcard(cards[1])
+		card:addSubcard(cards[2])
+		card:addSubcard(cards[3])
+		card:setSkillName(self:objectName())
+		return card
+	end,
+	enabled_at_play=function(self, player)
+		return not player:hasUsed("#LuaFuluancard")
+	end,
+}
 --[[
 	技能名：伏枥（限定技）
 	相关武将：二将成名·廖化

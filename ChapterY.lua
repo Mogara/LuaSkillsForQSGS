@@ -251,6 +251,58 @@ LuaYicong = sgs.CreateDistanceSkill{
 	相关武将：贴纸·公孙瓒
 	描述：弃牌阶段结束时，你可以将任意数量的牌置于武将牌上，称为“扈”。每有一张“扈”，其他角色计算与你的距离+1。 
 ]]--
+LuaYicongCard = sgs.CreateSkillCard{
+	name = "LuaYicongCard",
+	target_fixed = true,
+	will_throw = false,
+	on_use = function(self, room, source, targets)
+		source:addToPile("yicongpile",self,true)
+	end,
+}
+
+LuaYicongVS = sgs.CreateViewAsSkill{
+	name = "LuaYicong",
+	n = 998,
+	view_filter = function(self, selected, to_select)
+		return true
+	end,
+	view_as = function(self, cards)
+		if #cards == 0 then return end
+		local YCcard = LuaYicongCard:clone()
+		for _,card in ipairs(cards) do
+			YCcard:addSubcard(card)
+		end
+		return YCcard
+	end,
+	enabled_at_play = function(self, player)
+		return false
+	end,
+	enabled_at_response = function(self,player,pattern)
+		return pattern == "@@LuaYicong"
+	end,
+}
+
+LuaYicong = sgs.CreateTriggerSkill{
+	name = "LuaYicong",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseEnd},
+	view_as_skill = LuaYicongVS,
+	on_trigger = function(self,event,player,data)
+		if player:getPhase() ~= sgs.Player_Discard then return end
+		if player:isNude() then return end
+		local room = player:getRoom()
+		room:askForUseCard(player, "@@LuaYicong", "@LuaYicong")
+	end,
+}
+
+LuaYicongDis = sgs.CreateDistanceSkill{
+	name = "#LuaYicong",
+	correct_func=function(self,from,to)
+		if to:hasSkill(self:objectName()) then
+			return to:getPile("yicongpile"):length()
+		end
+	end,
+}
 --[[
 	技能名：义舍
 	相关武将：倚天·张公祺

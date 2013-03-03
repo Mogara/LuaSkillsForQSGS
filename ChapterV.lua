@@ -973,75 +973,61 @@ LuaJijiang = sgs.CreateTriggerSkill{
 	技能名：极略
 	相关武将：神·司马懿
 	描述：弃一枚“忍”标记发动下列一项技能——“鬼才”、“放逐”、“完杀”、“制衡”、“集智”。
-	状态：验证失败（无法发动鬼才，制衡和完杀选择效果有误）
+	状态：0224验证通过（主触发技隐藏，会导致鬼才改判log格式不对。。囧，不隐藏则log正常，但是有两个技能按钮。。修改name和视为相同提示重复技能）
 ]]--
 LuaJilveCard = sgs.CreateSkillCard{
-	name = "LuaJilveCard", 
-	target_fixed = true, 
-	will_throw = true, 
-	on_use = function(self, room, source, targets) 
-		local choices = ""
-		local count = 0
-		if not source:hasUsed("ZhihengCard") then
-			if not source:hasSkill("zhiheng") then
-				choices = "zhiheng"
-				count = count + 1
-			end
-		end
+	name = "LuaJilveCard",
+	target_fixed = true,
+	will_throw = true,
+	on_use = function(self, room, source, targets)
+		local choices=nil
+		local choice=nil
 		local tag = room:getTag("JilveWansha")
-		if not tag or not tag:toBool() then
-			if not source:hasSkill("wansha") then
-				if count == 0 then
-					choices = "wansha"
-				elseif count == 1 then
-					choices = "zhiheng+wansha"
-				end
+		if tag and tag:toBool() then
+			if not source:hasUsed("ZhihengCard") then
+				choice="zhiheng"
+			end
+		else
+			if not source:hasUsed("ZhihengCard") then
+				choices="zhiheng+wansha"
+			else
+				choice="wansha"
 			end
 		end
-		if choices ~= "" then
-			local choice
-			if count == 1 then
-				choice = choices
-			else
-				choice = room:askForChoice(source, "LuaJilve", "zhiheng+wansha")
-			end
-			source:loseMark("@bear")
-			if choice == "wansha" then
-				room:acquireSkill(source, "wansha")
-				room:setTag("JilveWansha", sgs.QVariant(true))
-			else
-				room:askForUseCard(source, "@zhiheng", "@jilve-zhiheng")
-			end
+		if(choices) then
+			choice = room:askForChoice(source, "LuaJilve", choices)
+		end
+		source:loseMark("@bear")
+		if choice == "wansha" then
+			room:acquireSkill(source, "wansha")
+			room:setTag("JilveWansha", sgs.QVariant(true))
+		else
+			room:askForUseCard(source, "@zhiheng", "@jilve-zhiheng")
 		end
 	end
 }
 LuaJilveVS = sgs.CreateViewAsSkill{
-	name = "LuaJilveVS", 
-	n = 0, 
-	view_as = function(self, cards) 
+	name = "LuaJilveVS",
+	n = 0,
+	view_as = function(self, cards)
 		return LuaJilveCard:clone()
-	end, 
+	end,
 	enabled_at_play = function(self, player)
-		local extra = 0
-		if player:hasSkill("zhiheng") then
-			extra = extra + 1
-		elseif player:hasInnateSkill("wansha") then
-			extra = extra + 1
-		end
-		local times = player:usedTimes("#LuaJilveCard")
-		if times + extra < 2 then
+		if (not player:hasInnateSkill("wansha")) and player:hasSkill("wansha") and player:hasUsed("ZhihengCard") then
+			return false
+		else
 			return player:getMark("@bear") > 0
 		end
-		return false
 	end
 }
 LuaJilve = sgs.CreateTriggerSkill{
-	name = "LuaJilve",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.CardUsed, sgs.CardResponsed, sgs.AskForRetrial, sgs.Damaged},  
-	view_as_skill = LuaJilveVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaJilve",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.CardUsed, sgs.CardResponsed, sgs.AskForRetrial, sgs.Damaged},
+	view_as_skill = LuaJilveVS,
+	on_trigger = function(self, event, player, data)
 		player:setMark("JilveEvent", event)
+		local room=player:getRoom() 
 		if event == sgs.CardUsed or event == sgs.CardResponsed then
 			local card = nil
 			if event == sgs.CardUsed then
@@ -1058,29 +1044,32 @@ LuaJilve = sgs.CreateTriggerSkill{
 				end
 			end
 		elseif event == sgs.AskForRetrial then
-			local guicai = sgs.Sanguosha:getTriggerSkill("guicai")
-			if guicai and not player:isKongcheng() then
+			local judge=data:toJudge()
+			if not player:isKongcheng() then
 				if not player:hasSkill("guicai") then
-					if player:askForSkillInvoke("LuaJilve", data) then
+					local prompt="@jilve-guicai:"..judge.who:objectName()..":"..self:objectName()..":"..judge.reason..":"..judge.card:getEffectIdString()
+					local card=room:askForCard(player, "@guicai",prompt, data, sgs.Card_MethodResponse, judge.who, true)
+					if card then
+						room:broadcastSkillInvoke("jilve", 1)
 						player:loseMark("@bear")
-						guicai:trigger(event, room, player, data)
+						room:retrial(card,player,judge,self:objectName())
 					end
 				end
-			end
+			end		
 		elseif event == sgs.Damaged then
-			local fangzhu = sgs.Sanguosha:getTriggerSkill("fangzhu")
-			if fangzhu and not player:hasSkill("fangzhu") then
-				if player:askForSkillInvoke("LuaJilve", data) then
+			if not player:hasSkill("fangzhu") then
+				local card=room:askForUseCard(player, "@@fangzhu", "@jilve-fangzhu")
+				if card then
 					player:loseMark("@bear")
-					fangzhu:trigger(event, room, player, data)
+					room:broadcastSkillInvoke("jilve",2);
 				end
 			end
 		end
 		player:setMark("JilveEvent", 0)
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
-		if target then 
+		if target then
 			if target:isAlive() and target:hasSkill(self:objectName()) then
 				return target:getMark("@bear") > 0
 			end
@@ -1089,15 +1078,15 @@ LuaJilve = sgs.CreateTriggerSkill{
 	end
 }
 LuaJilveClear = sgs.CreateTriggerSkill{
-	name = "#LuaJilveClear",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaJilveClear",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		room:detachSkillFromPlayer(player, "wansha")
 		room:removeTag("JilveWansha")
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:hasSkill(self:objectName()) and target:isAlive() then
@@ -1949,15 +1938,15 @@ LuaXMingzhe = sgs.CreateTriggerSkill{
 	技能名：神速
 	相关武将：风·夏侯渊
 	描述：你可以选择一至两项：1.跳过你的判定阶段和摸牌阶段。2.跳过你的出牌阶段并弃置一张装备牌。你每选择一项，视为对一名其他角色使用一张【杀】（无距离限制）。
-	状态：验证失败（点击按钮发动技能时currentRoomState()为空，不点击按钮直接发动则能正常发动）
+	状态：0224中测试时不能无视距离，1111无此问题，疑似源码失误，以下代码适用于0224，要在旧版本中使用，请去掉神速2时askForUseCard的最后一个参数
 ]]--
 LuaShensuCard = sgs.CreateSkillCard{
-	name = "LuaShensuCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
+	name = "LuaShensuCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
 		if #targets == 0 then
-			return sgs.Self:canSlash(to_select, nil, false)
+			return sgs.Self:canSlash(to_select,nil,false)
 		end
 		return false
 	end,
@@ -1967,51 +1956,46 @@ LuaShensuCard = sgs.CreateSkillCard{
 		local use = sgs.CardUseStruct()
 		use.card = slash
 		use.from = source
-		use.to = targets
+		for i=1,#targets,1 do
+			use.to:append(targets[i])
+		end
 		room:useCard(use)
 	end
 }
 LuaShensuVS = sgs.CreateViewAsSkill{
-	name = "LuaShensuVS", 
+	name = "LuaShensuVS",
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		local state = sgs.Sanguosha:currentRoomState()
-		local pattern = state:getCurrentCardUsePattern()
-		if not string.find(pattern, "1", string.len(pattern)) then
+		if sgs.Self:hasFlag("shensu2") then
 			if #selected == 0 then
 				return to_select:isKindOf("EquipCard")
 			end
 		end
 		return false
-	end, 
-	view_as = function(self, cards) 
-		local state = sgs.Sanguosha:currentRoomState()
-		local pattern = state:getCurrentCardUsePattern()
-		if string.find(pattern, "1", string.len(pattern)) then
-			if #cards == 0 then
-				return LuaShensuCard:clone()
-			end
-		else
-			if #cards == 1 then
-				local card = LuaShensuCard:clone()
-				card:addSubcard(cards[1])
-				return card
-			end
+	end,
+	view_as = function(self, cards)
+		if #cards == 0 then
+			return LuaShensuCard:clone()
 		end
-	end, 
+		if #cards == 1 then
+			local card = LuaShensuCard:clone()
+			card:addSubcard(cards[1])
+			return card
+		end
+	end,
 	enabled_at_play = function(self, player)
 		return false
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return string.find(pattern, "@@shensu") == 1
 	end
 }
 LuaShensu = sgs.CreateTriggerSkill{
-	name = "LuaShensu",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseChanging},  
-	view_as_skill = LuaShensuVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaShensu",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseChanging},
+	view_as_skill = LuaShensuVS,
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local change = data:toPhaseChange()
 		local nextphase = change.to
@@ -2026,7 +2010,8 @@ LuaShensu = sgs.CreateTriggerSkill{
 			end
 		elseif nextphase == sgs.Player_Play then
 			if not player:isSkipped(sgs.Player_Play) then
-				if room:askForUseCard(player, "@@shensu2", "@shensu2", 2) then
+				room:setPlayerFlag(player,"shensu2")
+				if room:askForUseCard(player, "@@shensu2", "@shensu2",2,sgs.Card_MethodDiscard) then
 					player:skip(sgs.Player_Play)
 				end
 			end
