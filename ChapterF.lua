@@ -394,7 +394,6 @@ LuaFuluanCard = sgs.CreateSkillCard{
 		return #targets == 0 and to_select:objectName()~=player:objectName() and player:inMyAttackRange(to_select)
 	end,
 	on_use = function(self, room, source, targets)
-		room:broadcastSkillInvoke("LuaFuluan")
 		targets[1]:turnOver()
 		room:setPlayerFlag(source, "tianyi_failed")
 	end,
