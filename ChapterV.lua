@@ -1062,6 +1062,7 @@ LuaXHuoshui = sgs.CreateTriggerSkill{
 				if current and current:objectName() == player:objectName() then
 					setHuoshuiFlag(room, player, false)
 				end
+			end
 		elseif event == sgs.PostHpReduced then
 			if player:hasFlag(self:objectName()) then
 				local reduce = 0
@@ -1439,13 +1440,14 @@ LuaJunweiGot = sgs.CreateTriggerSkill{
 	技能名：狂斧
 	相关武将：国战·潘凤
 	描述：每当你使用的【杀】对一名角色造成一次伤害后，你可以将其装备区里的一张牌弃置或置入你的装备区。 
-	状态：尚未完成
+	状态：0224验证通过
 ]]--
 LuaXKuangfu = sgs.CreateTriggerSkill{
 	name = "LuaXKuangfu",  
 	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.Damage},  
 	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
 		local damage = data:toDamage()
 		local target = damage.to
 		local slash = damage.card
@@ -1454,19 +1456,15 @@ LuaXKuangfu = sgs.CreateTriggerSkill{
 				if not damage.chain and not damage.transfer then
 					if player:askForSkillInvoke(self:objectName(), data) then
 						local card_id = room:askForCardChosen(player, target , "e", "LuaXKuangfu")
-						local card = sgs.Sanguosha:getCard(card_id);
+						local card = sgs.Sanguosha:getCard(card_id)
 						local equip_index = -1
-						--[[以下C++代码含有qobject_cast等内容无法转化
-						const EquipCard *equip = qobject_cast<const EquipCard *>(card->getRealCard());
-						equip_index = static_cast<int>(equip->location());
-						
-						QStringList choicelist;
-						choicelist << "throw";
-						if (equip_index > -1 && panfeng->getEquip(equip_index) == NULL)
-							choicelist << "move";
-
-						QString choice = room->askForChoice(panfeng, "kuangfu", choicelist.join("+"));
-						]]--
+						local equip = card:getRealCard():toEquipCard()
+						equip_index = equip:location()
+						local choicelist = "throw"
+						if equip_index>-1 and not player:getEquip(equip_index) then
+							choicelist = choicelist.."+move"
+						end
+						local choice = room:askForChoice(player, "LuaXKuangfu", choicelist)
 						if choice == "move" then
 							room:moveCardTo(card, player, sgs.Player_PlaceEquip)
 						else
