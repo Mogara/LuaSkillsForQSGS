@@ -333,46 +333,32 @@ LuaXDongcha = sgs.CreateTriggerSkill{
 	技能名：度势
 	相关武将：国战·陆逊
 	描述：出牌阶段，你可以弃置一张红色手牌并选择任意数量的其他角色：若如此做，你与这些角色各摸两张牌并弃置两张牌。 
-	状态：尚未验证
+	状态：0224验证通过，按照dadao.net修改，依次摸牌，然后再依次弃牌，而不是某人摸2弃2，再结算下一个
 ]]--
 LuaXDuoshiCard = sgs.CreateSkillCard{
-	name = "LuaXDuoshiCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
-		return true
+	name = "LuaXDuoshiCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select,player)
+		return to_select:objectName()~=player:objectName()
 	end,
 	feasible = function(self, targets)
 		return true
 	end,
-	on_use = function(self, room, source, targets) 
-		local effect = sgs.CardEffectStruct()
-		effect.from = source
-		effect.card = self
-		local flag = true
-		if #targets > 0 then
-			for _,target in pairs(targets) do
-				if target:objectName() == source:objectName() then
-					flag = false
-				end
-				effect.to = target
-				self:onEffect(effect)
-			end
+	on_use = function(self, room, source, targets)
+		source:drawCards(2)
+		for i=1,#targets,1 do
+			targets[i]:drawCards(2)
 		end
-		if flag then
-			effect.to = source
-			self:onEffect(effect)
+		room:askForDiscard(source, "LuaXDuoshi", 2, 2, false, true,"#LuaXDuoshi-discard")
+		for i=1,#targets,1 do
+			room:askForDiscard(targets[i], "LuaXDuoshi", 2, 2, false, true,"#LuaXDuoshi-discard")
 		end
 	end,
-	on_effect = function(self, effect) 
-		local room = effect.from:getRoom()
-		effect.to:drawCards(2)
-		room:askForDiscard(effect.to, "LuaXDuoshi", 2, 2, false, true)
-	end
 }
 LuaXDuoshi = sgs.CreateViewAsSkill{
-	name = "LuaXDuoshi", 
-	n = 1, 
+	name = "LuaXDuoshi",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		if to_select:isRed() then
 			if not to_select:isEquipped() then
@@ -380,8 +366,8 @@ LuaXDuoshi = sgs.CreateViewAsSkill{
 			end
 		end
 		return false
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local await = LuaXDuoshiCard:clone()
 			await:addSubcard(cards[1])
