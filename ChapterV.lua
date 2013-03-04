@@ -380,19 +380,19 @@ LuaXDuoshi = sgs.CreateViewAsSkill{
 	技能名：奋迅
 	相关武将：国战·丁奉
 	描述：出牌阶段，你可以弃置一张牌并选择一名其他角色：若如此做，你拥有以下技能直到回合结束：你无视与该角色的距离。每阶段限一次。  
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXFenxunCard = sgs.CreateSkillCard{
-	name = "LuaXFenxunCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
+	name = "LuaXFenxunCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
 		if #targets == 0 then
 			return to_select:objectName() ~= sgs.Self:objectName()
 		end
 		return false
 	end,
-	on_effect = function(self, effect) 
+	on_effect = function(self, effect)
 		local room = effect.from:getRoom()
 		local tag = sgs.QVariant()
 		tag:setValue(effect.to)
@@ -401,32 +401,33 @@ LuaXFenxunCard = sgs.CreateSkillCard{
 	end
 }
 LuaXFenxunVS = sgs.CreateViewAsSkill{
-	name = "LuaXFenxun", 
-	n = 1, 
+	name = "LuaXFenxunVS",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		return not sgs.Self:isJilei(to_select)
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local first = LuaXFenxunCard:clone()
 			first:addSubcard(cards[1])
 			first:setSkillName(self:objectName())
 			return first
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaXFenxunCard")
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return false
 	end
 }
 LuaXFenxun = sgs.CreateTriggerSkill{
-	name = "LuaXFenxun",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseChanging, sgs.Death, sgs.EventLoseSkill},  
-	view_as_skill = LuaXFenxunVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaXFenxun",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseChanging, sgs.Death, sgs.EventLoseSkill},
+	view_as_skill = LuaXFenxunVS,
+	on_trigger = function(self, event, player, data)
+		local room=player:getRoom()
 		if event == sgs.EventPhaseChanging then
 			local change = data:toPhaseChange()
 			if change.to ~= sgs.Player_NotActive then
@@ -440,6 +441,12 @@ LuaXFenxun = sgs.CreateTriggerSkill{
 				return false
 			end
 		end
+		if event == sgs.EventLoseSkill then
+			player:speak(data:toString())
+			if data:toString()~="LuaXFenxunVS" then
+				return false
+			end
+		end
 		local tag = player:getTag("FenxunTarget")
 		if tag then
 			local target = tag:toPlayer()
@@ -449,7 +456,7 @@ LuaXFenxun = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			local tag = target:getTag("FenxunTarget")
