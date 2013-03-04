@@ -4,9 +4,9 @@
 	☆源代码转化失败，改写后通过：
 		不屈、称象、龙胆、龙魂、龙魂
 	☆验证失败：
-		洞察、弓骑、固政、虎啸、护驾、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、武神、修罗、狱刎
+		洞察、固政、虎啸、护驾、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗、狱刎
 	☆尚未完成：
-		豹变、归心、祸水、狂斧、落英、倾城
+		豹变、归心、祸水、落英、倾城
 	☆尚未验证：
 		度势、奋迅、弘援、弘援、明哲、缓释、缓释、军威、礼让、神智、淑慎、双刃、死谏、随势、骁果、雄异、援护
 ]]--
@@ -471,12 +471,16 @@ LuaXFenxun = sgs.CreateTriggerSkill{
 	技能名：弓骑
 	相关武将：怀旧·韩当
 	描述：你可以将一张装备牌当【杀】使用或打出；你以此法使用【杀】时无距离限制。
-	状态：验证失败（cloneCard的结果是nil，怀疑武神杀是否由此法产生）
+	状态：1221验证通过
 ]]--
 LuaGongqi = sgs.CreateViewAsSkill{
 	name = "LuaGongqi", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
+		local weapon = sgs.Self:getWeapon()
+		if weapon and to_select:objectName() == weapon:objectName() and to_select:objectName() == "Crossbow" then
+			return sgs.Self:canSlashWithoutCrossbow()
+		end
 		return to_select:getTypeId() == sgs.Card_Equip
 	end, 
 	view_as = function(self, cards) 
@@ -485,7 +489,7 @@ LuaGongqi = sgs.CreateViewAsSkill{
 			local suit = card:getSuit()
 			local point = card:getNumber()
 			local id = card:getId()
-			local slash = sgs.Sanguosha:cloneCard("wushen_slash", suit, point)
+			local slash = sgs.Sanguosha:cloneCard("WushenSlash", suit, point)
 			slash:addSubcard(id)
 			slash:setSkillName(self:objectName())
 			return slash
@@ -496,6 +500,52 @@ LuaGongqi = sgs.CreateViewAsSkill{
 	end, 
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "slash"
+	end
+}
+
+--[[
+	技能名：弓骑
+	相关武将：怀旧·韩当
+	描述：你可以将一张装备牌当【杀】使用或打出；你以此法使用【杀】时无距离限制。
+	状态：0224验证通过
+]]--
+LuaGongqi = sgs.CreateViewAsSkill{
+	name = "LuaGongqi", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		local weapon = sgs.Self:getWeapon()
+		if weapon and to_select:objectName() == weapon:objectName() and to_select:objectName() == "Crossbow" then
+			return sgs.Self:canSlashWithoutCrossbow()
+		end
+		return to_select:getTypeId() == sgs.Card_Equip
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local card = cards[1]
+			local suit = card:getSuit()
+			local point = card:getNumber()
+			local id = card:getId()
+			local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
+			slash:addSubcard(id)
+			slash:setSkillName(self:objectName())
+			return slash
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return sgs.Slash_IsAvailable(player)
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "slash"
+	end
+}
+LuaGongqiTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaGongqi-target",
+	distance_limit_func = function(self, from, card)
+        if from:hasSkill("LuaGongqi") and card:getSkillName() == "LuaGongqi" then
+            return 1000
+        else
+            return 0
+		end
 	end
 }
 --[[
