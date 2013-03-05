@@ -1956,8 +1956,6 @@ LuaLuoying = sgs.CreateTriggerSkill{
 							local id = ids[i]
 							local place = places[i]
 							local suit = sgs.Sanguosha:getCard(id):getSuit()
-							player:speak("here")
-							player:speak(id)
 							if suit == sgs.Card_Club then
 								if place ~= sgs.Player_PlaceDelayedTrick then
 									if place ~= sgs.Player_PlaceSpecial then
