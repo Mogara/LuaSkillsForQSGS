@@ -1924,14 +1924,15 @@ LuaLihuo = sgs.CreateTriggerSkill{
 	技能名：落英
 	相关武将：一将成名·曹植
 	描述：当其他角色的梅花牌因弃置或判定而置入弃牌堆时，你可以获得之。
-	状态：尚未验证（因为按位与操作无法验证）
+	状态：0224验证通过，需要bit.lua
 ]]--
-require("bit")--按位操作所需库文件
+require("bit")--按位操作所需
 LuaLuoying = sgs.CreateTriggerSkill{
-	name = "LuaLuoying", 
-	frequency = sgs.Skill_Frequent, 
+	name = "LuaLuoying",
+	frequency = sgs.Skill_Frequent,
 	events = {sgs.CardsMoveOneTime},
-	on_trigger = function(self, event, player, data) 
+	on_trigger = function(self, event, player, data)
+		local room=player:getRoom()
 		local move = data:toMoveOneTime()
 		local source = move.from
 		if source then
@@ -1939,7 +1940,7 @@ LuaLuoying = sgs.CreateTriggerSkill{
 				if move.to_place == sgs.Player_DiscardPile then
 					local reason = move.reason.m_reason
 					local flag = false
-					if bit.band(reason, sgs.CardMoveReason_S_MARK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
+					if bit:_and(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
 						flag = true
 					end
 					if reason == sgs.CardMoveReason_S_REASON_JUDGEDONE then
@@ -1949,12 +1950,14 @@ LuaLuoying = sgs.CreateTriggerSkill{
 						local luoyingMove = sgs.CardsMoveStruct()
 						luoyingMove.to = player
 						luoyingMove.to_place = sgs.Player_PlaceHand
-						local ids = move.card_ids
+						local ids = sgs.QList2Table(move.card_ids)
 						local places = move.from_places
-						for i=0, ids:length()-1, 1 do
+						for i=1, #ids, 1 do
 							local id = ids[i]
 							local place = places[i]
 							local suit = sgs.Sanguosha:getCard(id):getSuit()
+							player:speak("here")
+							player:speak(id)
 							if suit == sgs.Card_Club then
 								if place ~= sgs.Player_PlaceDelayedTrick then
 									if place ~= sgs.Player_PlaceSpecial then
@@ -1965,7 +1968,7 @@ LuaLuoying = sgs.CreateTriggerSkill{
 								end
 							end
 						end
-						if not luoyingMove.card_ids:empty() then
+						if not luoyingMove.card_ids:isEmpty() then
 							if player:askForSkillInvoke(self:objectName(), data) then
 								if luoyingMove.card_ids:length() > 1 then
 									while (not luoyingMove.card_ids:isEmpty()) do
@@ -1977,7 +1980,7 @@ LuaLuoying = sgs.CreateTriggerSkill{
 										end
 										luoyingMove.card_ids:removeOne(card_id)
 									end
-									if luoyingMove.card_ids:empty() then
+									if luoyingMove.card_ids:isEmpty() then
 										return false
 									end
 								end
@@ -1989,7 +1992,7 @@ LuaLuoying = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	priority = 4
 }
 --[[
