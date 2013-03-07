@@ -6,9 +6,11 @@
 	☆验证失败：
 		洞察、固政、虎啸、护驾、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗、狱刎
 	☆尚未完成：
-		豹变、归心、祸水、落英、倾城
+		归心、祸水、落英、倾城
 	☆尚未验证：
-		度势、奋迅、弘援、弘援、明哲、缓释、缓释、军威、礼让、神智、淑慎、双刃、死谏、随势、骁果、雄异、援护
+		度势、奋迅、弘援、弘援、明哲、缓释、缓释、军威、礼让、淑慎、双刃、死谏、随势、骁果、雄异、援护
+	☆验证通过：
+		豹变、神智、名士
 ]]--
 --[[
 	技能名：豹变（锁定技）
@@ -1679,7 +1681,7 @@ LuaLonghun = sgs.CreateViewAsSkill{
 			if suit == sgs.Card_Spade then
 				new_card = sgs.Sanguosha:cloneCard("nullification", suit, number)
 			elseif suit == sgs.Card_Heart then
-				new_card = sgs.Sanguosha:cloneCard("each", suit, number)
+				new_card = sgs.Sanguosha:cloneCard("peach", suit, number)
 			elseif suit == sgs.Card_Club then
 				new_card = sgs.Sanguosha:cloneCard("jink", suit, number)
 			elseif suit == sgs.Card_Diamond then
@@ -2307,13 +2309,14 @@ LuaMiji = sgs.CreateTriggerSkill{
 	技能名：名士（锁定技）
 	相关武将：国战·孔融
 	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXMingshi = sgs.CreateTriggerSkill{
 	name = "LuaXMingshi",  
 	frequency = sgs.Skill_Compulsory, 
 	events = {sgs.DamageInflicted},  
-	on_trigger = function(self, event, player, data) 
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local damage = data:toDamage()
 		local source = damage.from
 		if source then
@@ -2570,7 +2573,7 @@ LuaShensu = sgs.CreateTriggerSkill{
 	技能名：神智
 	相关武将：国战·甘夫人
 	描述：回合开始阶段开始时，你可以弃置所有手牌：若你以此法弃置的牌不少于X张，你回复1点体力。（X为你当前的体力值） 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXShenzhi = sgs.CreateTriggerSkill{
 	name = "LuaXShenzhi",  
