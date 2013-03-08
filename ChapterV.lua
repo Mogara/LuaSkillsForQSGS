@@ -2657,13 +2657,13 @@ LuaXShushen = sgs.CreateTriggerSkill{
 	技能名：双刃
 	相关武将：国战·纪灵
 	描述：出牌阶段开始时，你可以与一名其他角色拼点：若你赢，视为你一名其他角色使用一张无距离限制的普通【杀】（此【杀】不计入出牌阶段使用次数的限制）；若你没赢，你结束出牌阶段。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXShuangrenCard = sgs.CreateSkillCard{
 	name = "LuaXShuangrenCard", 
 	target_fixed = false, 
 	will_throw = false, 
-	handling_method = sgs.Card_MethodPindian
+	handling_method = sgs.Card_MethodPindian,
 	filter = function(self, targets, to_select) 
 		if #targets == 0 then
 			if not to_select:isKongcheng() then
@@ -2677,8 +2677,8 @@ LuaXShuangrenCard = sgs.CreateSkillCard{
 		local success = effect.from:pindian(effect.to, "LuaXShuangren", self)
 		if success then
 			local targets = sgs.SPlayerList()
-			local alives = room->getAlivePlayers()
-			for _,target in sgs.qlist(alives) do
+			local others = room:getOtherPlayers(effect.from)
+			for _,target in sgs.qlist(others) do
 				if effect.from:canSlash(target, nil, false) then
 					targets:append(target)
 				end
