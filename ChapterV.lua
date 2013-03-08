@@ -2823,11 +2823,11 @@ LuaXSijian = sgs.CreateTriggerSkill{
 	技能：随势
 	相关武将：国战·田丰
 	描述：每当其他角色进入濒死状态时，伤害来源可以令你摸一张牌；每当其他角色死亡时，伤害来源可以令你失去1点体力。
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXSuishi = sgs.CreateTriggerSkill{
 	name = "LuaXSuishi",  
-	frequency = sgs.Skill_NotFrequent, 
+	frequency = sgs.Skill_Compulsory,
 	events = {sgs.Dying, sgs.Death},  
 	on_trigger = function(self, event, player, data) 
 		local target = nil
@@ -2839,7 +2839,7 @@ LuaXSuishi = sgs.CreateTriggerSkill{
 				target = damage.from
 			end
 			local victim = dying.who
-			if not victim or victim:objectName() ~= player:objectＮame() then
+			if not victim or victim:objectName() ~= player:objectName() then
 				if target then
 					if room:askForChoice(target, "suishi1", "draw+no") == "draw" then
 						player:drawCards(1)
@@ -2853,7 +2853,7 @@ LuaXSuishi = sgs.CreateTriggerSkill{
 				target = damage.from
 			end
 			if target then
-				if room:askForChoice(target, "suishi2", "damage+no") == "damage" then
+				if room:askForChoice(target, "suishi2", "loseHp+no") == "loseHp" then
 					room:loseHp(player)
 				end
 			end
