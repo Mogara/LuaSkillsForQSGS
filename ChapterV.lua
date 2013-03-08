@@ -2607,7 +2607,7 @@ LuaXShenzhi = sgs.CreateTriggerSkill{
 	技能名：淑慎
 	相关武将：国战·甘夫人
 	描述：每当你回复1点体力后，你可以令一名其他角色摸一张牌。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXShushenCard = sgs.CreateSkillCard{
 	name = "LuaXShushenCard", 
@@ -2642,6 +2642,7 @@ LuaXShushen = sgs.CreateTriggerSkill{
 	events = {sgs.HpRecover},  
 	view_as_skill = LuaXShushenVS, 
 	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
 		local recover_struct = data:toRecover()
 		local recover = recover_struct.recover
 		for i=1, recover, 1 do
