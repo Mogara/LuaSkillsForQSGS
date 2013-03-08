@@ -444,7 +444,6 @@ LuaXFenxun = sgs.CreateTriggerSkill{
 			end
 		end
 		if event == sgs.EventLoseSkill then
-			player:speak(data:toString())
 			if data:toString()~="LuaXFenxunVS" then
 				return false
 			end
@@ -1852,9 +1851,9 @@ LuaXDuojian = sgs.CreateTriggerSkill{
 	技能名：礼让
 	相关武将：国战·孔融
 	描述：当你的牌因弃置而置入弃牌堆时，你可以将其中任意数量的牌以任意分配方式交给任意数量的其他角色。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
-require "bit"
+require ("bit")
 LuaXLirang = sgs.CreateTriggerSkill{
 	name = "LuaXLirang",  
 	frequency = sgs.Skill_NotFrequent, 
@@ -1862,17 +1861,18 @@ LuaXLirang = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local move = data:toMoveOneTime()
 		local source = move.from
+		if player:hasFlag("lirang_InTempMoving") then return false end--防止不完全给出时二次触发
 		if source and source:objectName() == player:objectName() then
 			if move.to_place == sgs.Player_DiscardPile then
 				local reason = move.reason
-				local basic = bit.band(reason.m_reason, sgs.CardMoveReason_S_MARK_BASIC_REASON) 
+				local basic = bit:_and(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) 
 				if basic == sgs.CardMoveReason_S_REASON_DISCARD then
 					local room = player:getRoom()
 					local i = 0
 					local lirang_card = sgs.IntList()
 					for _,card_id in sgs.qlist(move.card_ids) do
 						if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
-							local place = move.from_places[i]
+							local place = move.from_places:at(i)
 							if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
 								lirang_card:append(card_id)
 							end
