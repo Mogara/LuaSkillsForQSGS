@@ -545,6 +545,7 @@ LuaHuashen = sgs.CreateTriggerSkill{
 	技能名：皇恩
 	相关武将：贴纸·刘协
 	描述：每当一张锦囊牌指定了不少于两名目标时，你可以令成为该牌目标的至多X名角色各摸一张牌，则该锦囊牌对这些角色无效。（X为你当前体力值） 
+	状态：验证通过
 ]]--
 LuaHuangenCard=sgs.CreateSkillCard{
 	name="LuaHuangenCard",
@@ -574,7 +575,7 @@ LuaHuangenVS=sgs.CreateViewAsSkill{
 }
 
 LuaHuangen=sgs.CreateTriggerSkill{
-	name="huangen",
+	name="LuaHuangen",
 	frequency=sgs.Skill_NotFrequent,
 	events={sgs.CardUsed},
 	view_as_skill=LuaHuangenVS,
