@@ -7,10 +7,11 @@
 	技能名：狼顾
 	相关武将：贴纸·司马昭
 	描述：每当你受到1点伤害后，你可以进行一次判定，然后你可以打出一张手牌代替此判定牌：若如此做，你观看伤害来源的所有手牌，并弃置其中任意数量的与判定牌花色相同的牌。 
+	状态：验证通过
 ]]--
 LuaLanggu = sgs.CreateTriggerSkill{
 	name = "LuaLanggu",
-	frequency=sgs.Skill_NotFrequent,
+	frequency=sgs.Skill_Frequent,
 	events={sgs.Damaged,sgs.AskForRetrial},
 	on_trigger=function(self,event,player,data)
 		if event == sgs.Damaged then
@@ -53,7 +54,7 @@ LuaLanggu = sgs.CreateTriggerSkill{
 		elseif event == sgs.AskForRetrial then
 			local room = player:getRoom()
 			local judge = data:toJudge()
-			if judge.reason ~= self:objectName() then
+			if judge.reason ~= self:objectName() or judge.who:objectName() ~= player:objectName() then
 				return false
 			end
 			local card = room:askForCard(player, ".", "@langgu", data, sgs.AskForRetrial)
