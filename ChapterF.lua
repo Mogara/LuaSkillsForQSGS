@@ -390,34 +390,37 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 --[[
 	技能名：扶乱
 	相关武将：贴纸·王元姬
-	描述：出牌阶段，若你未于此阶段使用过【杀】，你可以弃置三张相同花色的牌并选择攻击范围内的一名其他角色，该角色将武将牌翻面，且此阶段你不可使用【杀】，每阶段限一次。 
+	描述：出牌阶段，若你未于此阶段使用过【杀】，你可以弃置三张相同花色的牌并选择攻击范围内的一名其他角色，该角色将武将牌翻面，且此阶段你不可使用【杀】，每阶段限一次。
+	状态：验证通过
 ]]--
 LuaFuluanCard = sgs.CreateSkillCard{
-	name="LuafuluanCard",
+	name="LuaFuluanCard",
 	target_fixed=false,
 	will_throw=true,
 	filter = function(self, targets, to_select, player)
 		return #targets == 0 and to_select:objectName()~=player:objectName() and player:inMyAttackRange(to_select)
 	end,
 	on_use = function(self, room, source, targets)
+		local room = source:getRoom()
 		targets[1]:turnOver()
-		room:setPlayerFlag(source, "tianyi_failed")
+		room:setPlayerCardLimitation(source, "use", "Slash", true)
 	end,
 }
 
-LuaFuluan = sgs.CreateViewAsSkill{
+
+LuaFuluanVS = sgs.CreateViewAsSkill{
 	name="LuaFuluan",
 	n=3,
 	view_filter = function(self, selected, to_select)
-		if #selected >0 then
+        if #selected >0 then
 			return to_select:getSuit() == selected[1]:getSuit()
-		else
+        else
 			return true
 		end
 	end,
 	view_as = function(self, cards)
 		if #cards ~= 3 then	return end
-		local card = fuluancard:clone()
+		local card = LuaFuluanCard:clone()
 		card:addSubcard(cards[1])
 		card:addSubcard(cards[2])
 		card:addSubcard(cards[3])
@@ -425,7 +428,28 @@ LuaFuluan = sgs.CreateViewAsSkill{
 		return card
 	end,
 	enabled_at_play=function(self, player)
-		return not player:hasUsed("#LuaFuluancard")
+		if player:hasUsed("#LuaFuluanCard") or player:hasFlag("cannotDoFuluan") then
+			return false
+		end
+		return true
+	end,
+}
+
+LuaFuluan = sgs.CreateTriggerSkill{
+	name = "LuaFuluan",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.TargetConfirmed},
+	view_as_skill = LuaFuluanVS,
+	on_trigger = function(self, event, player, data)
+		local use = data:toCardUse()
+		local source = use.from
+		if source:objectName() == player:objectName() then
+			local card = use.card
+			if card:isKindOf("Slash") then
+				local room = player:getRoom()
+				room:setPlayerFlag(player, "cannotDoFuluan")
+			end
+		end
 	end,
 }
 --[[
