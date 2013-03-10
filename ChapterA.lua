@@ -24,9 +24,8 @@ LuaAnxian = sgs.CreateTriggerSkill{
 					if room:askForSkillInvoke(player, self:objectName(), data) then
 						if not dest:isKongcheng() then
 							room:askForDiscard(dest, self:objectName(), 1, 1)
-						else
-							player:drawCards(1)
 						end
+						player:drawCards(1)
 						return true
 					end
 				end
