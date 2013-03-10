@@ -250,6 +250,7 @@ LuaYicong = sgs.CreateDistanceSkill{
 	技能名：义从
 	相关武将：贴纸·公孙瓒
 	描述：弃牌阶段结束时，你可以将任意数量的牌置于武将牌上，称为“扈”。每有一张“扈”，其他角色计算与你的距离+1。 
+	状态：验证通过
 ]]--
 LuaYicongCard = sgs.CreateSkillCard{
 	name = "LuaYicongCard",
@@ -259,7 +260,6 @@ LuaYicongCard = sgs.CreateSkillCard{
 		source:addToPile("yicongpile",self,true)
 	end,
 }
-
 LuaYicongVS = sgs.CreateViewAsSkill{
 	name = "LuaYicong",
 	n = 998,
@@ -281,7 +281,6 @@ LuaYicongVS = sgs.CreateViewAsSkill{
 		return pattern == "@@LuaYicong"
 	end,
 }
-
 LuaYicong = sgs.CreateTriggerSkill{
 	name = "LuaYicong",
 	frequency = sgs.Skill_NotFrequent,
@@ -294,7 +293,6 @@ LuaYicong = sgs.CreateTriggerSkill{
 		room:askForUseCard(player, "@@LuaYicong", "@LuaYicong")
 	end,
 }
-
 LuaYicongDis = sgs.CreateDistanceSkill{
 	name = "#LuaYicong",
 	correct_func=function(self,from,to)
