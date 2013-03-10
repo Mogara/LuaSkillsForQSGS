@@ -519,7 +519,8 @@ LuaXToudu = sgs.CreateTriggerSkill{
 --[[
 	技能名：突骑（锁定技）
 	相关武将：贴纸·公孙瓒
-	描述：回合开始阶段开始时，若你的武将牌上有“扈”：你计算与其他角色的距离-X，直到回合结束，若X不大于2，你摸一张牌（X为你武将牌上“扈”的数量），然后你将所有“扈”置入弃牌堆。 
+	描述：回合开始阶段开始时，若你的武将牌上有“扈”：你计算与其他角色的距离-X，直到回合结束，若X不大于2，你摸一张牌（X为你武将牌上“扈”的数量），然后你将所有“扈”置入弃牌堆。
+	状态：验证通过
 ]]--
 LuaTuqi = sgs.CreateTriggerSkill{
 	name = "LuaTuqi",
@@ -543,7 +544,6 @@ LuaTuqi = sgs.CreateTriggerSkill{
 		end
 	end,
 }
-
 LuaTuqiDis = sgs.CreateDistanceSkill{
 	name = "#LuaTuqi",
 	correct_func=function(self,from,to)
