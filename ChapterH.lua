@@ -7,6 +7,7 @@
 	技能名：汉统
 	相关武将：贴纸·刘协
 	描述：弃牌阶段，你可以将你弃置的手牌置于武将牌上，称为“诏”。你可以将一张“诏”置入弃牌堆，然后你拥有并发动以下技能之一：“护驾”、“激将”、“救援”、“血裔”，直到当前回合结束。 
+	状态：验证通过
 ]]--
 LuaHantongRemove=function(room,player)
 	local card_ids=player:getPile("hantongpile")
@@ -27,15 +28,12 @@ LuaHantongCard=sgs.CreateSkillCard{
 		if not source:hasFlag("hantongjijiang") then
 			local card_id=LuaHantongRemove(room,source)
 			if card_id==-1 then return end
-			local reason=sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", nil, "LuaHantong", "")
-			room:moveCardTo(sgs.Sanguosha:getCard(card_id),nil,sgs.Player_DiscardPile,reason,true)
-			room:setPlayerFlag(source,"hantong")
-			room:setPlayerFlag(source,"hantongjijiang")
+			local re=sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE,"","LuaHantong","") 
+			room:throwCard(sgs.Sanguosha:getCard(card_id),re,nil)
 		end
 		for _,p in sgs.qlist(room:getOtherPlayers(source)) do
-			local slash
 			if(p:getKingdom() == "shu") then
-				slash = room:askForCard(p, "slash", "@jijiang-slash" , sgs.QVariant() , sgs.CardResponsed)
+				local slash = room:askForCard(p, "slash", "@jijiang-slash" , sgs.QVariant() , sgs.CardResponsed)
 				if(slash) then
 					local use=sgs.CardUseStruct()
 						use.card=slash
@@ -50,7 +48,6 @@ LuaHantongCard=sgs.CreateSkillCard{
 		end
 	end,
 }
-
 LuaHantongVS=sgs.CreateViewAsSkill{
 	name="LuaHantong",
 	n=0,
@@ -58,36 +55,53 @@ LuaHantongVS=sgs.CreateViewAsSkill{
 		return LuaHantongCard:clone()
 	end,
 	enabled_at_play=function(self, player)
-		return ((player:canSlashWithoutCrossbow()) or (player:getWeapon() and player:getWeapon():getClassName() == "Crossbow")) and (not player:getPile("hantongpile"):isEmpty() or player:hasFlag("hantongjijiang"))
+		return ((player:canSlashWithoutCrossbow()) or (player:getWeapon() and player:getWeapon():getClassName() == "Crossbow")) and not player:getPile("hantongpile"):isEmpty()
 	end,
 }
-
 LuaHantong=sgs.CreateTriggerSkill{
 	name="LuaHantong",
 	frequency=sgs.Skill_NotFrequent,
-	events={sgs.CardDiscarded,sgs.EventPhaseStart,sgs.CardAsked,sgs.HpRecover},
-	view_as_skill=LuaHantong,
+	events={sgs.CardsMoving,sgs.EventPhaseStart,sgs.CardAsked,sgs.PreHpRecover,sgs.TargetConfirmed},
+	view_as_skill=LuaHantongVS,
 	on_trigger=function(self,event,player,data)
-		local card_id
-		local room=player:getRoom()
-		local reason=sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", nil, "LuaHantong", "")
-		if event==sgs.CardDiscarded then
-			if player:getPhase() ~= sgs.Player_Discard then return end
-			if not player:askForSkillInvoke(self:objectName()) then return end
-			player:addToPile("hantongpile", data:toCard(), true)
-			return
+		local room = player:getRoom()
+		local re=sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE,"","LuaHantong","") 
+		if event==sgs.CardsMoving then
+			if player:getPhase() == sgs.Player_Discard then
+				local move = data:toMoveOneTime()
+				local source = move.from
+				if source and source:objectName() == player:objectName() then
+					local place = move.to_place 
+					if place == sgs.Player_DiscardPile and move.from_places:contains(sgs.Player_PlaceHand) then
+						if player:askForSkillInvoke(self:objectName()) then
+							local ids =  move.card_ids
+							local dummy = {}
+							local i = 0
+							for _,card in sgs.qlist(ids) do
+								local id = sgs.Sanguosha:getCard(card)
+								table.insert(dummy, id)
+							end
+							local count = #dummy
+							if count > 0 then
+								for _,c in pairs(dummy) do
+									local cid = c:getEffectiveId()
+									player:addToPile("hantongpile", cid)
+								end
+							end
+						end
+					end
+				end
+			end
 		end
 		if (player:getPile("hantongpile"):isEmpty() and not player:hasFlag("hantong")) then return end
 		if event==sgs.CardAsked then
 			if(data:toString() == "jink") then
-				if not player:hasFlag("hantonghujia") and player:getPile("hantongpile"):isEmpty() then return end
+				if player:getPile("hantongpile"):isEmpty() then return end
 				if not player:askForSkillInvoke("hujia") then return end
 				if not player:hasFlag("hantonghujia") then
-					card_id=LuaHantongRemove(room,player)
+					local card_id=LuaHantongRemove(room,player)
 					if card_id==-1 then return end
-					room:moveCardTo(sgs.Sanguosha:getCard(card_id),nil,sgs.Player_DiscardPile,reason,true)
-					room:setPlayerFlag(player,"hantong")
-					room:setPlayerFlag(player,"hantonghujia")
+					room:throwCard(sgs.Sanguosha:getCard(card_id),re,nil)
 				end
 				for _,p in sgs.qlist(room:getOtherPlayers(player)) do
 					local jink
@@ -103,13 +117,10 @@ LuaHantong=sgs.CreateTriggerSkill{
 			end
 			if(data:toString() == "slash") then
 				if not player:hasFlag("hantongjijiang") and player:getPile("hantongpile"):isEmpty() then return end
-				if not player:askForSkillInvoke("jijiang") then return end
-				if not player:hasFlag("hantongjijiang") then
-					card_id=LuaHantongRemove(room,player)
+				if player:askForSkillInvoke("jijiang") then
+					local card_id=LuaHantongRemove(room,player)
 					if card_id==-1 then return end
-					room:moveCardTo(sgs.Sanguosha:getCard(card_id),nil,sgs.Player_DiscardPile,reason,true)
-					room:setPlayerFlag(player,"hantong")
-					room:setPlayerFlag(player,"hantongjijiang")
+					room:throwCard(sgs.Sanguosha:getCard(card_id),re,nil)
 				end
 				for _,p in sgs.qlist(room:getOtherPlayers(player)) do
 					local slash
@@ -125,38 +136,47 @@ LuaHantong=sgs.CreateTriggerSkill{
 			end
 			return
 		end
-		if event==sgs.HpRecover then
-			local recover=data:toRecover()
-			if not (recover.card:isKindOf("Peach") and player:hasFlag("dying") and recover.who:getKingdom() == "wu" and recover.who:objectName()~=player:objectName()) then return end
-			if not player:hasFlag("hantongjiuyuan") then
-				if player:getPile("hantongpile"):isEmpty() then return end
-				if not player:askForSkillInvoke("jiuyuan") then return end
-				card_id=LuaHantongRemove(room,player)
-				if card_id==-1 then return end
-				room:moveCardTo(sgs.Sanguosha:getCard(card_id),nil,sgs.Player_DiscardPile,reason,true)
-				room:setPlayerFlag(player,"hantong")
-				room:setPlayerFlag(player,"hantongjiuyuan")
+		if event == sgs.TargetConfirmed then
+			local use = data:toCardUse()
+			local peach = use.card
+			local source = use.from
+			if peach:isKindOf("Peach") then
+				if source then
+					if source:getKingdom() == "wu" then
+						if source:objectName() ~= player:objectName() then
+							if player:hasFlag("dying") then
+								room:setPlayerFlag(player, "jiuyuan-hantong")
+								room:setCardFlag(peach, "jiuyuan-hantong")
+							end
+						end
+					end
+				end
 			end
-			local index
-			if recover.who:isMale() then
-				index=2
-			else
-				index=3
+		end
+		if event == sgs.PreHpRecover then
+			local recover = data:toRecover()
+			local peach = recover.card
+			if peach then
+				if peach:hasFlag("jiuyuan-hantong") then
+					if player:getPile("hantongpile"):isEmpty() then return end
+					if player:askForSkillInvoke("jiuyuan") then
+						local card_id=LuaHantongRemove(room,player)
+						if card_id==-1 then return end
+						room:throwCard(sgs.Sanguosha:getCard(card_id),re,nil)
+						recover.recover = recover.recover + 1
+						data:setValue(recover)
+					end
+				end
 			end
-			recover.recover=recover.recover+1
-			data:setValue(recover)
 		end
 		if event==sgs.EventPhaseStart then
-			if player:getPhase()~=sgs.Player_Discard then return end
-			room:setPlayerMark(player,"hantong",0)
-			if not player:hasFlag("hantongxueyi") then
+			if player:getPhase() == sgs.Player_Discard then
+				room:setPlayerMark(player,"hantong",0)
 				if player:getPile("hantongpile"):isEmpty() then return end
 				if not player:askForSkillInvoke("xueyi") then return end
-				card_id=hantongremove(room,player)
+				local card_id = LuaHantongRemove(room,player)
 				if card_id==-1 then return end
-				room:moveCardTo(sgs.Sanguosha:getCard(card_id),nil,sgs.Player_DiscardPile,reason,true)
-				room:setPlayerFlag(player,"hantong")
-				room:setPlayerFlag(player,"hantongxueyi")
+				room:throwCard(sgs.Sanguosha:getCard(card_id),re,nil)
 				local qunnum=0
 				for _,p in sgs.qlist(room:getOtherPlayers(player)) do
 					if(p:getKingdom() == "qun") then
@@ -168,35 +188,12 @@ LuaHantong=sgs.CreateTriggerSkill{
 		end
 	end,
 }
-
 LuaHantongMax=sgs.CreateMaxCardsSkill{
 	name="#LuaHantongMax",
 	extra_func=function(self,target)
 		if not target:hasSkill(self:objectName()) then return 0 end
 		return 2*target:getMark("hantong")
 	end
-}
-
-LuaHantongClear=sgs.CreateTriggerSkill{
-	name="#LuaHantongClear",
-	frequency=sgs.Skill_NotFrequent,
-	events={sgs.EventPhaseChanging},
-	can_trigger=function()
-		return true
-	end,
-	on_trigger=function(self,event,player,data)
-		local change=data:toPhaseChange()
-		if change.to~=sgs.Player_NotActive then return end
-		local room=player:getRoom()
-		local splayer=room:findPlayerBySkillName(self:objectName())
-		if splayer:hasFlag("hantong") then
-			room:setPlayerFlag(splayer,"-hantong")
-			room:setPlayerFlag(splayer,"-hantongjijiang")
-			room:setPlayerFlag(splayer,"-hantonghujia")
-			room:setPlayerFlag(splayer,"-hantongjiuyuan")
-			room:setPlayerFlag(splayer,"-hantongxueyi")
-		end
-	end,
 }
 --[[
 	技能名：好施
