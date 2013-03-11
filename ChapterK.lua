@@ -252,6 +252,35 @@ LuaKuangfeng = sgs.CreateTriggerSkill{
 	描述：每当你使用的【杀】对一名角色造成一次伤害后，你可以将其装备区里的一张牌弃置或置入你的装备区。 
 	状态：尚未完成
 ]]--
+function EquipInt(card) 
+local cardx = sgs.Sanguosha:getCard(card:getEffectiveId())
+if cardx:isKindOf("Weapon") then return 0 elseif cardx:isKindOf("Armor") then return 1
+elseif cardx:isKindOf("DefensiveHorse") then return 2 elseif cardx:isKindOf("OffensiveHorse") then return 3 
+else return -1  end
+end
+gzkuangfu=sgs.CreateTriggerSkill{
+name="gzkuangfu",
+events={sgs.Damage},	
+on_trigger=function(self,event,player,data)
+local room=player:getRoom()
+local damage=data:toDamage()
+if damage.card==nil or not damage.card:isKindOf("Slash") or damage.to:getEquips():isEmpty() then return end
+if damage.chain or damage.transfer then return end
+if not player:askForSkillInvoke(self:objectName(),data) then return end
+local card_id=room:askForCardChosen(player,damage.to,"e",self:objectName())
+local card=sgs.Sanguosha:getCard(card_id)
+local index=EquipInt(card)
+local choicelist={}
+table.insert(choicelist,"throw")
+if (index >-1 and player:getEquip(index)==nil) then table.insert(choicelist,"move") end
+local option=room:askForChoice(player,self:objectName(),table.concat(choicelist,"+"))          
+if option=="move" then room:moveCardTo(card,player,sgs.Player_PlaceEquip,true)
+else room:throwCard(card,damage.to,player) end
+return
+end,
+}
+
+
 --[[
 	技能名：狂骨（锁定技）
 	相关武将：风·魏延
