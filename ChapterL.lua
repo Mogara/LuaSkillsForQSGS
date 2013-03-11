@@ -9,11 +9,11 @@
 	描述：每当你受到1点伤害后，你可以进行一次判定，然后你可以打出一张手牌代替此判定牌：若如此做，你观看伤害来源的所有手牌，并弃置其中任意数量的与判定牌花色相同的牌。 
 	状态：验证通过
 ]]--
-LuaLanggu = sgs.CreateTriggerSkill{
-	name = "LuaLanggu",
-	frequency=sgs.Skill_Frequent,
-	events={sgs.Damaged,sgs.AskForRetrial},
-	on_trigger=function(self,event,player,data)
+LuaXLanggu = sgs.CreateTriggerSkill{
+	name = "LuaXLanggu",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.Damaged, sgs.AskForRetrial},
+	on_trigger = function(self, event, player, data)
 		if event == sgs.Damaged then
 			local damage = data:toDamage()
 			if not damage.from or damage.from:isKongcheng() then
@@ -23,25 +23,25 @@ LuaLanggu = sgs.CreateTriggerSkill{
 			local num = damage.damage
 			local n = 0
 			while n < num do
-				if player:askForSkillInvoke(self:objectName(),data) then
+				if player:askForSkillInvoke(self:objectName(), data) then
 					local room = player:getRoom()
 					local judge = sgs.JudgeStruct()
 					judge.reason = self:objectName()
-					judge.pattern=sgs.QRegExp("(.*):(.*):(.*)")
+					judge.pattern = sgs.QRegExp("(.*):(.*):(.*)")
 					judge.who = player
 					room:judge(judge)
 					room:fillAG(target:handCards(), player)
 					local mark = judge.card:getSuitString()
 					room:setPlayerFlag(player, mark)
-					while(not target:isKongcheng()) do
-						local card_id = room:askForAG(player, target:handCards(), true, "langgu")
+					while (not target:isKongcheng()) do
+						local card_id = room:askForAG(player, target:handCards(), true, "LuaXLanggu")
 						if card_id == -1 then
 							player:invoke("clearAG")
 							break
 						end
 						local cc = sgs.Sanguosha:getCard(card_id)
 						if judge.card:getSuit() == cc:getSuit() then
-							room:throwCard(card_id,target)
+							room:throwCard(card_id, target)
 						end
 					end
 					room:setPlayerFlag(player, "-" .. mark)
@@ -57,7 +57,7 @@ LuaLanggu = sgs.CreateTriggerSkill{
 			if judge.reason ~= self:objectName() or judge.who:objectName() ~= player:objectName() then
 				return false
 			end
-			local card = room:askForCard(player, ".", "@langgu", data, sgs.AskForRetrial)
+			local card = room:askForCard(player, ".", "@LuaXLanggu", data, sgs.AskForRetrial)
 			if card ~= nil then
 				room:retrial(card, player, judge, self:objectName(), false)
 			end
@@ -582,11 +582,61 @@ LuaXLongluo = sgs.CreateTriggerSkill{
 	状态：验证失败
 ]]--
 --[[
-	技能：礼让
+	技能名：礼让
 	相关武将：国战·孔融
-	描述：当你的牌因弃置而置入弃牌堆时，你可以将其中任意数量的牌以任意分配方式交给任意数量的其他角色。  
-	状态：尚未验证
+	描述：当你的牌因弃置而置入弃牌堆时，你可以将其中任意数量的牌以任意分配方式交给任意数量的其他角色。 
+	状态：0224验证通过
 ]]--
+require ("bit")
+LuaXLirang = sgs.CreateTriggerSkill{
+	name = "LuaXLirang",  
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.CardsMoving},  
+	on_trigger = function(self, event, player, data) 
+		local move = data:toMoveOneTime()
+		local source = move.from
+		if player:hasFlag("lirang_InTempMoving") then return false end --防止不完全给出时二次触发
+		if source and source:objectName() == player:objectName() then
+			if move.to_place == sgs.Player_DiscardPile then
+				local reason = move.reason
+				local basic = bit:_and(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) 
+				if basic == sgs.CardMoveReason_S_REASON_DISCARD then
+					local room = player:getRoom()
+					local i = 0
+					local lirang_card = sgs.IntList()
+					for _,card_id in sgs.qlist(move.card_ids) do
+						if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
+							local place = move.from_places:at(i)
+							if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
+								lirang_card:append(card_id)
+							end
+						end
+						i = i + 1
+					end
+					if not lirang_card:isEmpty() then
+						if player:askForSkillInvoke(self:objectName(), data) then
+							room:setPlayerFlag(player, "lirang_InTempMoving")
+							local move2 = sgs.CardsMoveStruct()
+							move2.card_ids = lirang_card
+							move2.to_place = sgs.Player_PlaceHand
+							move2.to = player
+							room:moveCardsAtomic(move2, true)
+							while room:askForYiji(player, lirang_card, false, true) do
+							end
+							local move3 = sgs.CardsMoveStruct()
+							move3.card_ids = lirang_card
+							move3.to_place = sgs.Player_DiscardPile
+							move3.reason = reason
+							room:moveCardsAtomic(move3, true)
+							room:setPlayerFlag(player, "-lirang_InTempMoving")
+						end
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：乱击
 	相关武将：火·袁绍
@@ -840,8 +890,75 @@ LuaLuoshen = sgs.CreateTriggerSkill{
 	技能名：落英
 	相关武将：一将成名·曹植
 	描述：当其他角色的梅花牌因弃置或判定而置入弃牌堆时，你可以获得之。
-	状态：尚未完成
+	状态：0224验证通过
 ]]--
+require("bit")
+LuaLuoying = sgs.CreateTriggerSkill{
+	name = "LuaLuoying",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.CardsMoveOneTime},
+	on_trigger = function(self, event, player, data)
+		local room=player:getRoom()
+		local move = data:toMoveOneTime()
+		local source = move.from
+		if source then
+			if source:objectName() ~= player:objectName() then
+				if move.to_place == sgs.Player_DiscardPile then
+					local reason = move.reason.m_reason
+					local flag = false
+					if bit:_and(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
+						flag = true
+					end
+					if reason == sgs.CardMoveReason_S_REASON_JUDGEDONE then
+						flag = true
+					end
+					if flag then
+						local luoyingMove = sgs.CardsMoveStruct()
+						luoyingMove.to = player
+						luoyingMove.to_place = sgs.Player_PlaceHand
+						local ids = sgs.QList2Table(move.card_ids)
+						local places = move.from_places
+						for i=1, #ids, 1 do
+							local id = ids[i]
+							local place = places[i]
+							local suit = sgs.Sanguosha:getCard(id):getSuit()
+							if suit == sgs.Card_Club then
+								if place ~= sgs.Player_PlaceDelayedTrick then
+									if place ~= sgs.Player_PlaceSpecial then
+										if room:getCardPlace(id) == sgs.Player_DiscardPile then
+											luoyingMove.card_ids:append(id)
+										end
+									end
+								end
+							end
+						end
+						if not luoyingMove.card_ids:isEmpty() then
+							if player:askForSkillInvoke(self:objectName(), data) then
+								if luoyingMove.card_ids:length() > 1 then
+									while (not luoyingMove.card_ids:isEmpty()) do
+										room:fillAG(luoyingMove.card_ids, player)
+										local card_id = room:askForAG(player, luoyingMove.card_ids, true, self:objectName())
+										player:invoke("clearAG")
+										if card_id == -1 then
+											break
+										end
+										luoyingMove.card_ids:removeOne(card_id)
+									end
+									if luoyingMove.card_ids:isEmpty() then
+										return false
+									end
+								end
+								room:moveCardsAtomic(luoyingMove, true)
+							end
+						end
+					end
+				end
+			end
+		end
+		return false
+	end,
+	priority = 4
+}
 --[[
 	技能名：离魂
 	相关武将：☆SP·貂蝉

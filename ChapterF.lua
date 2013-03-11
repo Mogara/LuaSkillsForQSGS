@@ -274,9 +274,93 @@ LuaXFenxinStart = sgs.CreateTriggerSkill{
 --[[
 	技能名：奋迅
 	相关武将：国战·丁奉
-	描述：出牌阶段，你可以弃置一张牌并选择一名其他角色：若如此做，你拥有以下技能直到回合结束：你无视与该角色的距离。每阶段限一次。 
-	状态：尚未验证	
+	描述：出牌阶段，你可以弃置一张牌并选择一名其他角色：若如此做，你拥有以下技能直到回合结束：你无视与该角色的距离。每阶段限一次。  
+	状态：0224验证通过
 ]]--
+LuaXFenxunCard = sgs.CreateSkillCard{
+	name = "LuaXFenxunCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
+		if #targets == 0 then
+			return to_select:objectName() ~= sgs.Self:objectName()
+		end
+		return false
+	end,
+	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
+		local tag = sgs.QVariant()
+		tag:setValue(effect.to)
+		effect.from:setTag("FenxunTarget", tag)
+		room:setFixedDistance(effect.from, effect.to, 1)
+	end
+}
+LuaXFenxunVS = sgs.CreateViewAsSkill{
+	name = "LuaXFenxunVS",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		return not sgs.Self:isJilei(to_select)
+	end,
+	view_as = function(self, cards)
+		if #cards == 1 then
+			local first = LuaXFenxunCard:clone()
+			first:addSubcard(cards[1])
+			first:setSkillName(self:objectName())
+			return first
+		end
+	end,
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("#LuaXFenxunCard")
+	end,
+	enabled_at_response = function(self, player, pattern)
+		return false
+	end
+}
+LuaXFenxun = sgs.CreateTriggerSkill{
+	name = "#LuaXFenxun",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseChanging, sgs.Death, sgs.EventLoseSkill},
+	view_as_skill = LuaXFenxunVS,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then
+				return false
+			end
+		end
+		if event == sgs.Death then
+			local death = data:toDeath()
+			local victim = death.who
+			if not victim or victim:objectName() ~= player:objectName() then
+				return false
+			end
+		end
+		if event == sgs.EventLoseSkill then
+			if data:toString()~="LuaXFenxunVS" then
+				return false
+			end
+		end
+		local tag = player:getTag("FenxunTarget")
+		if tag then
+			local target = tag:toPlayer()
+			if target then
+				room:setFixedDistance(player, target, -1)
+				player:removeTag("FenxunTarget")
+			end
+		end
+		return false
+	end,
+	can_trigger = function(self, target)
+		if target then
+			local tag = target:getTag("FenxunTarget")
+			if tag then
+				return tag:toPlayer()
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：愤勇
 	相关武将：☆SP·夏侯惇
@@ -393,12 +477,12 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 	描述：出牌阶段，若你未于此阶段使用过【杀】，你可以弃置三张相同花色的牌并选择攻击范围内的一名其他角色，该角色将武将牌翻面，且此阶段你不可使用【杀】，每阶段限一次。
 	状态：验证通过
 ]]--
-LuaFuluanCard = sgs.CreateSkillCard{
-	name="LuaFuluanCard",
-	target_fixed=false,
-	will_throw=true,
+LuaXFuluanCard = sgs.CreateSkillCard{
+	name = "LuaXFuluanCard",
+	target_fixed = false,
+	will_throw = true,
 	filter = function(self, targets, to_select, player)
-		return #targets == 0 and to_select:objectName()~=player:objectName() and player:inMyAttackRange(to_select)
+		return #targets == 0 and to_select:objectName() ~= player:objectName() and player:inMyAttackRange(to_select)
 	end,
 	on_use = function(self, room, source, targets)
 		local room = source:getRoom()
@@ -406,11 +490,9 @@ LuaFuluanCard = sgs.CreateSkillCard{
 		room:setPlayerCardLimitation(source, "use", "Slash", true)
 	end,
 }
-
-
-LuaFuluanVS = sgs.CreateViewAsSkill{
-	name="LuaFuluan",
-	n=3,
+LuaXFuluanVS = sgs.CreateViewAsSkill{
+	name = "LuaXFuluan",
+	n = 3,
 	view_filter = function(self, selected, to_select)
         if #selected >0 then
 			return to_select:getSuit() == selected[1]:getSuit()
@@ -420,7 +502,7 @@ LuaFuluanVS = sgs.CreateViewAsSkill{
 	end,
 	view_as = function(self, cards)
 		if #cards ~= 3 then	return end
-		local card = LuaFuluanCard:clone()
+		local card = LuaXFuluanCard:clone()
 		card:addSubcard(cards[1])
 		card:addSubcard(cards[2])
 		card:addSubcard(cards[3])
@@ -428,18 +510,17 @@ LuaFuluanVS = sgs.CreateViewAsSkill{
 		return card
 	end,
 	enabled_at_play=function(self, player)
-		if player:hasUsed("#LuaFuluanCard") or player:hasFlag("cannotDoFuluan") then
+		if player:hasUsed("#LuaXFuluanCard") or player:hasFlag("cannotDoFuluan") then
 			return false
 		end
 		return true
 	end,
 }
-
-LuaFuluan = sgs.CreateTriggerSkill{
-	name = "LuaFuluan",
+LuaXFuluan = sgs.CreateTriggerSkill{
+	name = "LuaXFuluan",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.TargetConfirmed},
-	view_as_skill = LuaFuluanVS,
+	view_as_skill = LuaXFuluanVS,
 	on_trigger = function(self, event, player, data)
 		local use = data:toCardUse()
 		local source = use.from
@@ -512,7 +593,7 @@ LuaFuli = sgs.CreateTriggerSkill{
 	技能名：辅佐
 	相关武将：智·张昭
 	描述：当有角色拼点时，你可以打出一张点数小于8的手牌，让其中一名角色的拼点牌加上这张牌点数的二分之一（向下取整）
-	状态：验证通过（但并不能实际影响拼点结果）
+	状态：验证通过
 ]]--
 LuaXFuzuo = sgs.CreateTriggerSkill{
 	name = "LuaXFuzuo",  

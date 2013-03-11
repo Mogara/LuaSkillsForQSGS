@@ -522,20 +522,20 @@ LuaXToudu = sgs.CreateTriggerSkill{
 	描述：回合开始阶段开始时，若你的武将牌上有“扈”：你计算与其他角色的距离-X，直到回合结束，若X不大于2，你摸一张牌（X为你武将牌上“扈”的数量），然后你将所有“扈”置入弃牌堆。
 	状态：验证通过
 ]]--
-LuaTuqi = sgs.CreateTriggerSkill{
-	name = "LuaTuqi",
+LuaXTuqi = sgs.CreateTriggerSkill{
+	name = "LuaXTuqi",
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.EventPhaseStart},
-	on_trigger = function(self,event,player,data)
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_NotActive then
 			room:setPlayerMark(player, "yicong", 0)
 		end
 		if player:getPhase() ~= sgs.Player_Start then return end
-		local n = player:getPile("yicongpile"):length()
+		local n = player:getPile("retinue"):length()
 		if n < 1 then return end
-		local reason=sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", nil, "LuaYicong", "")
-		for _,card_id in sgs.qlist(player:getPile("yicongpile")) do
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", nil, "LuaXYicong", "")
+		for _,card_id in sgs.qlist(player:getPile("retinue")) do
 			room:moveCardTo(sgs.Sanguosha:getCard(card_id), nil, sgs.Player_DiscardPile, reason, true)
 		end
 		room:setPlayerMark(player, "yicong", n)
@@ -544,9 +544,9 @@ LuaTuqi = sgs.CreateTriggerSkill{
 		end
 	end,
 }
-LuaTuqiDis = sgs.CreateDistanceSkill{
-	name = "#LuaTuqi",
-	correct_func=function(self,from,to)
+LuaXTuqiDist = sgs.CreateDistanceSkill{
+	name = "#LuaXTuqi",
+	correct_func = function(self, from, to)
 		if from:hasSkill(self:objectName()) then
 			return -from:getMark("yicong")
 		end

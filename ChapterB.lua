@@ -181,8 +181,52 @@ LuaBaiyin = sgs.CreateTriggerSkill{
 	技能名：豹变（锁定技）
 	相关武将：SP·夏侯霸
 	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
-	状态：尚未完成
-]]--
+	状态：0224验证通过
+]]--÷
+BaobianChange = function(room, player, hp, skill_name)
+	local room = player:getRoom()
+	local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
+	if player:getHp() <= hp then
+		if not table.contains(baobian_skills, skill_name) then
+			room:acquireSkill(player, skill_name)
+			table.insert(baobian_skills, skill_name)
+		end
+	else
+		room:detachSkillFromPlayer(player, skill_name)
+		for i=1, #baobian_skills, 1 do
+			if baobian_skills[i]==skill_name  then
+				table.remove(baobian_skills, i)
+			end
+		end
+	end
+	player:setTag("BaobianSkills", sgs.QVariant(table.concat(baobian_skills, "+")))
+end
+LuaBaobian = sgs.CreateTriggerSkill{
+	name = "LuaBaobian",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.GameStart, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill},  
+	on_trigger = function(self, event, player, data) 
+		if event == sgs.EventLoseSkill then
+			if data:toString() == self:objectName() then
+				local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
+				for _,skname in ipairs(baobian_skills) do
+					room:detachSkillFromPlayer(player, skill_name)
+				end
+				player:setTag("BaobianSkills", sgs.QVariant())
+			end
+			return false
+		end
+		if player:isAlive() and player:hasSkill(self:objectName()) then
+			BaobianChange(room, player, 1, "shensu")
+			BaobianChange(room, player, 2, "paoxiao")
+			BaobianChange(room, player, 3, "tiaoxin")
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target
+	end, 
+}
 --[[
 	技能名：暴虐（主公技）
 	相关武将：林·董卓
@@ -615,116 +659,137 @@ LuaBuqu = sgs.CreateTriggerSkill{
 }
 --这是0224版的【不屈】
 ----
-FBbuqux=sgs.CreateTriggerSkill{ 
-name="FBbuqux",
-events={sgs.PostHpReduced,sgs.AskForPeachesDone},
-on_trigger=function(self,event,player,data)
-local room=player:getRoom()
-if event==sgs.PostHpReduced and player:getHp()<1 then 
-if room:askForSkillInvoke(player,self:objectName()) then 
-room:setTag(self:objectName(),sgs.QVariant(player:objectName()))
-local buqu = player:getPile("FBbuqux")
-local lack=1 - player:getHp()
-local n=lack - buqu:length()
-if n > 0 then 
-local CAS=room:getNCards(n,false)
-for _,id in sgs.qlist(CAS) do player:addToPile("FBbuqux",id) end
-end
-local buqun = player:getPile("FBbuqux")
-local duplicate_numbers = sgs.IntList()
-local nub={}
-for _,id in sgs.qlist(buqun) do
-local card=sgs.Sanguosha:getCard(id)
-local Nm=card:getNumber()
-if table.contains(nub, Nm) then 
-duplicate_numbers:append(Nm) else table.insert(nub, Nm) end
-end
-if duplicate_numbers:isEmpty() then 
-room:setTag(self:objectName(),sgs.QVariant()) return true end
-end
-end
-if event==sgs.AskForPeachesDone then 
-local buqun = player:getPile("FBbuqux")
-if (player:getHp()>0) then return end
-if room:getTag(self:objectName()):toString()~=player:objectName() then return endlocal duplicate_numbers = sgs.IntList()
-local nub={}
-for _,id in sgs.qlist(buqun) do
-local card=sgs.Sanguosha:getCard(id)
-local Nm=card:getNumber()
-if table.contains(nub, Nm) and not duplicate_numbers:contains(Nm) then 
-duplicate_numbers:append(Nm) else table.insert(nub,Nm) end
-end
-if duplicate_numbers:isEmpty() then room:setPlayerFlag(player,"-dying") 
-return true 
-else
-for i=0,duplicate_numbers:length()-1 do 
-local number=duplicate_numbers:at(i)
-local log = sgs.LogMessage()
-log.type = "#BuquDuplicateGroup"
-log.from = playerlog.arg = tonumber(i+1)
-log.arg2 = sgs.Card_Number2String(number)
-room:sendLog(log)
-for _,id in sgs.qlist(buqun) do
-local card=sgs.Sanguosha:getCard(id)
-if card:getNumber()==number then 
-local log = sgs.LogMessage()
-log.type = "$BuquDuplicateItem"
-log.from = player
-log.card_str = tonumber(id)
-room:sendLog(log) end
-end
-end
-end
-return
-end
-end,
+FBbuqux = sgs.CreateTriggerSkill{ 
+	name = "FBbuqux",
+	events = {sgs.PostHpReduced, sgs.AskForPeachesDone},
+	on_trigger = function(self,event,player,data)
+		local room = player:getRoom()
+		if event == sgs.PostHpReduced and player:getHp() < 1 then 
+			if room:askForSkillInvoke(player, self:objectName()) then 
+				room:setTag(self:objectName(), sgs.QVariant(player:objectName()))
+				local buqu = player:getPile("FBbuqux")
+				local lack = 1 - player:getHp()
+				local n = lack - buqu:length()
+				if n > 0 then 
+					local CAS = room:getNCards(n,false)
+					for _,id in sgs.qlist(CAS) do 
+						player:addToPile("FBbuqux", id) 
+					end
+				end
+				local buqun = player:getPile("FBbuqux")
+				local duplicate_numbers = sgs.IntList()
+				local nub = {}
+				for _,id in sgs.qlist(buqun) do
+					local card = sgs.Sanguosha:getCard(id)
+					local Nm = card:getNumber()
+					if table.contains(nub, Nm) then 
+						duplicate_numbers:append(Nm) 
+					else 
+						table.insert(nub, Nm) 
+					end
+				end
+				if duplicate_numbers:isEmpty() then 
+					room:setTag(self:objectName(), sgs.QVariant()) 
+					return true 
+				end
+			end
+		end
+		if event == sgs.AskForPeachesDone then 
+			local buqun = player:getPile("FBbuqux")
+			if (player:getHp() > 0) then 
+				return 
+			end
+			if room:getTag(self:objectName()):toString() ~= player:objectName() then 
+				return 
+			end
+			local duplicate_numbers = sgs.IntList()
+			local nub = {}
+			for _,id in sgs.qlist(buqun) do
+				local card = sgs.Sanguosha:getCard(id)
+				local Nm = card:getNumber()
+				if table.contains(nub, Nm) and not duplicate_numbers:contains(Nm) then 
+					duplicate_numbers:append(Nm) 
+				else 
+					table.insert(nub, Nm) 
+				end
+			end
+			if duplicate_numbers:isEmpty() then 
+				room:setPlayerFlag(player, "-dying") 
+				return true 
+			else
+				for i=0, duplicate_numbers:length()-1 do 
+					local number = duplicate_numbers:at(i)
+					local log = sgs.LogMessage()
+					log.type = "#BuquDuplicateGroup"
+					log.from = playerlog.arg = tonumber(i+1)
+					log.arg2 = sgs.Card_Number2String(number)
+					room:sendLog(log)
+					for _,id in sgs.qlist(buqun) do
+						local card = sgs.Sanguosha:getCard(id)
+						if card:getNumber() == number then 
+							local log = sgs.LogMessage()
+							log.type = "$BuquDuplicateItem"
+							log.from = player
+							log.card_str = tonumber(id)
+							room:sendLog(log) 
+						end
+					end
+				end
+			end
+			return
+		end
+	end,
 }
 function Remove(SP) 
-local room = SP:getRoom()
-local card_ids = SP:getPile("FBbuqux")
-local re=sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE,"","FBbuqux","") 
-local lack=1 - SP:getHp()
-if (lack <= 0) then
-for _,id in sgs.qlist(card_ids) do
-local card=sgs.Sanguosha:getCard(id)
-local log = sgs.LogMessage()
-log.type = "$BuquRemove"
-log.from = SP
-log.card_str = card:toString()
-room:sendLog(log) 
-room:throwCard(card,re,nil) end
-else
-local to_remove = card_ids:length() - lack
-for var=1,to_remove do
-if not card_ids:isEmpty() then 
-room:fillAG(card_ids)
-local card_id = room:askForAG(SP, card_ids, false, "FBbuqux")
-if card_id ~= -1 then 
-card_ids:removeOne(card_id)
-room:throwCard(sgs.Sanguosha:getCard(card_id),re,nil) end
-room:broadcastInvoke("clearAG") end
-end
-end
+	local room = SP:getRoom()
+	local card_ids = SP:getPile("FBbuqux")
+	local re = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", "FBbuqux", "") 
+	local lack = 1 - SP:getHp()
+	if (lack <= 0) then
+		for _,id in sgs.qlist(card_ids) do
+			local card = sgs.Sanguosha:getCard(id)
+			local log = sgs.LogMessage()
+			log.type = "$BuquRemove"
+			log.from = SP
+			log.card_str = card:toString()
+			room:sendLog(log) 
+			room:throwCard(card, re, nil) 
+		end
+	else
+		local to_remove = card_ids:length() - lack
+		for var = 1, to_remove do
+			if not card_ids:isEmpty() then 
+				room:fillAG(card_ids)
+				local card_id = room:askForAG(SP, card_ids, false, "FBbuqux")
+				if card_id ~= -1 then 
+					card_ids:removeOne(card_id)
+					room:throwCard(sgs.Sanguosha:getCard(card_id), re, nil) 
+				end
+				room:broadcastInvoke("clearAG") 
+			end
+		end
+	end
 end
 --
-exremove=sgs.CreateTriggerSkill{
-name="#example",
-events={sgs.HpRecover,sgs.EventLoseSkill},
-can_trigger=function(self,player)
-return player~=nil end,
-on_trigger=function(self,event,player,data)
-local room=player:getRoom()
-if event == sgs.HpRecover and player:hasSkill("FBbuqux") then
-if player:getPile("FBbuqux"):length()>0 then Remove(player) end
-end
-if event==sgs.EventLoseSkill and data:toString()=="FBbuqux" then
-player:removePileByName("FBbuqux")
-if player:getHp()<=0 then room:enterDying(player,nil) end
-end
-end,
+exremove = sgs.CreateTriggerSkill{
+	name = "#example",
+	events = {sgs.HpRecover, sgs.EventLoseSkill},
+	can_trigger = function(self, player)
+		return player ~= nil 
+	end,
+	on_trigger = function(self,event,player,data)
+		local room = player:getRoom()
+		if event == sgs.HpRecover and player:hasSkill("FBbuqux") then
+			if player:getPile("FBbuqux"):length()>0 then 
+				Remove(player) 
+			end
+		end
+		if event == sgs.EventLoseSkill and data:toString() == "FBbuqux" then
+			player:removePileByName("FBbuqux")
+			if player:getHp() <= 0 then 
+				room:enterDying(player, nil) 
+			end
+		end
+	end,
 }
 ----
-
-
-
-

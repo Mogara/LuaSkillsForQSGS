@@ -406,11 +406,39 @@ LuaMingce = sgs.CreateViewAsSkill{
 	end
 }
 --[[
-	技能：名士（锁定技）
+	技能名：名士（锁定技）
 	相关武将：国战·孔融
 	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
+LuaXMingshi = sgs.CreateTriggerSkill{
+	name = "LuaXMingshi",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.DamageInflicted},  
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local damage = data:toDamage()
+		local source = damage.from
+		if source then
+			local choice
+			if not source:isKongcheng() then
+				choice = room:askForChoice(source, self:objectName(), "yes+no", data)
+			else
+				choice = "yes"
+			end
+			if choice == "no" then
+				damage.damage = damage.damage - 1
+				if damage.damage < 1 then
+					return true
+				end
+				data:setValue(damage)
+			else
+				room:showAllCards(source)
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：明哲
 	相关武将：新3V3·诸葛瑾

@@ -252,23 +252,23 @@ LuaYicong = sgs.CreateDistanceSkill{
 	描述：弃牌阶段结束时，你可以将任意数量的牌置于武将牌上，称为“扈”。每有一张“扈”，其他角色计算与你的距离+1。 
 	状态：验证通过
 ]]--
-LuaYicongCard = sgs.CreateSkillCard{
-	name = "LuaYicongCard",
+LuaXYicongCard = sgs.CreateSkillCard{
+	name = "LuaXYicongCard",
 	target_fixed = true,
 	will_throw = false,
 	on_use = function(self, room, source, targets)
-		source:addToPile("yicongpile",self,true)
+		source:addToPile("retinue", self, true)
 	end,
 }
-LuaYicongVS = sgs.CreateViewAsSkill{
-	name = "LuaYicong",
+LuaXYicongVS = sgs.CreateViewAsSkill{
+	name = "LuaXYicong",
 	n = 998,
 	view_filter = function(self, selected, to_select)
 		return true
 	end,
 	view_as = function(self, cards)
 		if #cards == 0 then return end
-		local YCcard = LuaYicongCard:clone()
+		local YCcard = LuaXYicongCard:clone()
 		for _,card in ipairs(cards) do
 			YCcard:addSubcard(card)
 		end
@@ -278,26 +278,26 @@ LuaYicongVS = sgs.CreateViewAsSkill{
 		return false
 	end,
 	enabled_at_response = function(self,player,pattern)
-		return pattern == "@@LuaYicong"
+		return pattern == "@@LuaXYicong"
 	end,
 }
-LuaYicong = sgs.CreateTriggerSkill{
-	name = "LuaYicong",
+LuaXYicong = sgs.CreateTriggerSkill{
+	name = "LuaXYicong",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.EventPhaseEnd},
 	view_as_skill = LuaYicongVS,
-	on_trigger = function(self,event,player,data)
+	on_trigger = function(self, event, player, data)
 		if player:getPhase() ~= sgs.Player_Discard then return end
 		if player:isNude() then return end
 		local room = player:getRoom()
-		room:askForUseCard(player, "@@LuaYicong", "@LuaYicong")
+		room:askForUseCard(player, "@@LuaXYicong", "@LuaXYicong")
 	end,
 }
-LuaYicongDis = sgs.CreateDistanceSkill{
-	name = "#LuaYicong",
-	correct_func=function(self,from,to)
+LuaXYicongDist = sgs.CreateDistanceSkill{
+	name = "#LuaXYicong",
+	correct_func = function(self, from, to)
 		if to:hasSkill(self:objectName()) then
-			return to:getPile("yicongpile"):length()
+			return to:getPile("retinue"):length()
 		end
 	end,
 }
@@ -639,8 +639,39 @@ LuaYingzi = sgs.CreateTriggerSkill{
 	技能名：狱刎（锁定技）
 	相关武将：智·田丰
 	描述：当你死亡时，凶手视为自己 
-	状态：验证失败
+	状态：0224验证
+	附注：除死亡笔记结果不可更改外，其他情况均通过
 ]]--
+LuaXYuwen = sgs.CreateTriggerSkill{
+	name = "LuaXYuwen",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.AskForPeachesDone},
+	on_trigger = function(self, event, player, data)
+		local dying = data:toDying()
+		local damage = dying.damage
+		if damage then
+			if damage.from then
+				if damage.from:objectName() == player:objectName() then
+					return false
+				end
+			end
+		else
+			damage = sgs.DamageStruct()
+			damage.to = player
+		end
+		damage.from = player
+		dying.damage = damage
+		data:setValue(dying)
+		return false
+	end,
+	can_trigger = function(self, target)
+		if target then
+			return target:hasSkill(self:objectName())
+		end
+		return false
+	end,
+	priority = 3
+}
 --[[
 	技能名：援护
 	相关武将：SP·曹洪

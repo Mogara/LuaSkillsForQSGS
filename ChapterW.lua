@@ -750,5 +750,37 @@ LuaWusheng = sgs.CreateViewAsSkill{
 	技能名：武神（锁定技）
 	相关武将：神·关羽
 	描述：你的红桃手牌均视为【杀】；你使用红桃【杀】时无距离限制。
-	状态：验证失败
+	状态：0224验证通过
 ]]--
+LuaWushen = sgs.CreateFilterSkill{
+	name = "LuaWushen",
+	view_filter = function(self, to_select)
+		local room = sgs.Sanguosha:currentRoom()
+		local id = to_select:getEffectiveId()
+		local place = room:getCardPlace(id)
+		if to_select:getSuit() == sgs.Card_Heart then
+			return place == sgs.Player_PlaceHand
+		end
+		return false
+	end, 
+	view_as = function(self, card)
+		local suit = card:getSuit()
+		local point = card:getNumber()
+		local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
+		slash:setSkillName(self:objectName())
+		local id = card:getId()
+		local vs_card = sgs.Sanguosha:getWrappedCard(id)
+		vs_card:takeOver(slash)
+		return vs_card
+	end
+}
+LuaWushenTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaWushen-target",
+	distance_limit_func = function(self, from, card)
+        if from:hasSkill("LuaWushen") and card:getSuit() == sgs.Card_Heart then
+            return 1000
+        else
+            return 0
+		end
+	end
+}

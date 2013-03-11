@@ -157,8 +157,47 @@ LuaXNeoGanglie = sgs.CreateTriggerSkill{
 	技能名：弓骑
 	相关武将：怀旧·韩当
 	描述：你可以将一张装备牌当【杀】使用或打出；你以此法使用【杀】时无距离限制。
-	状态：验证失败
+	状态：0224验证通过
 ]]--
+LuaGongqi = sgs.CreateViewAsSkill{
+	name = "LuaGongqi", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		local weapon = sgs.Self:getWeapon()
+		if weapon and to_select:objectName() == weapon:objectName() and to_select:objectName() == "Crossbow" then
+			return sgs.Self:canSlashWithoutCrossbow()
+		end
+		return to_select:getTypeId() == sgs.Card_Equip
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local card = cards[1]
+			local suit = card:getSuit()
+			local point = card:getNumber()
+			local id = card:getId()
+			local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
+			slash:addSubcard(id)
+			slash:setSkillName(self:objectName())
+			return slash
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return sgs.Slash_IsAvailable(player)
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "slash"
+	end
+}
+LuaGongqiTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaGongqi-target",
+	distance_limit_func = function(self, from, card)
+        if from:hasSkill("LuaGongqi") and card:getSkillName() == "LuaGongqi" then
+            return 1000
+        else
+            return 0
+		end
+	end
+}
 --[[
 	技能名：攻心
 	相关武将：神·吕蒙
@@ -301,8 +340,155 @@ LuaXGushou = sgs.CreateTriggerSkill{
 	技能名：固政
 	相关武将：山·张昭张纮
 	描述：其他角色的弃牌阶段结束时，你可以将该角色于此阶段中弃置的一张牌从弃牌堆返回其手牌，若如此做，你可以获得弃牌堆里其余于此阶段中弃置的牌。
-	状态：验证失败
+	状态：0224验证通过
+	附注：以字符串形式保存卡牌id
 ]]--
+require("bit") --位运算所需
+function strcontain(a, b)
+	if a == "" then return false end
+	local c = a:split("+")
+	local k = false
+	for i=1, #c, 1 do
+		if a[i] == b then
+			k = true
+			break
+		end
+	end
+	return k
+end 
+LuaGuzheng = sgs.CreateTriggerSkill{
+	name = "LuaGuzheng",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.CardsMoveOneTime},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local erzhang = room:findPlayerBySkillName(self:objectName())
+		local current = room:getCurrent()
+		local move = data:toMoveOneTime()
+		local source = move.from
+		if source == nil then return false end
+		if((player:objectName() ~= source:objectName()) or (erzhang == nil) or (erzhang:objectName() == current:objectName()))then
+			return false
+		end
+		if current:getPhase() == sgs.Player_Discard then
+			local tag = room:getTag("GuzhengToGet")
+			local guzhengToGet= tag:toString()
+			tag = room:getTag("GuzhengOther")
+			local guzhengOther = tag:toString()
+			if guzhengToGet == nil then
+				guzhengToGet = ""
+			end
+			if guzhengOther == nil then
+				guzhengOther = ""
+			end
+			for _,card_id in sgs.qlist(move.card_ids) do
+				local flag = bit:_and(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+				if flag == sgs.CardMoveReason_S_REASON_DISCARD then
+					if source:objectName() == current:objectName() then
+						if guzhengToGet == "" then
+							guzhengToGet = tostring(card_id)
+						else
+							guzhengToGet = guzhengToGet.."+"..tostring(card_id)
+						end
+					elseif not strcontain(guzhengToGet, tostring(card_id)) then
+						if guzhengOther == "" then
+							guzhengOther = tostring(card_id)
+						else
+							guzhengOther = guzhengOther.."+"..tostring(card_id)
+						end
+					end
+				end
+			end
+			if guzhengToGet then
+				room:setTag("GuzhengToGet", sgs.QVariant(guzhengToGet))
+			end
+			if guzhengOther then
+				room:setTag("GuzhengOther", sgs.QVariant(guzhengOther))
+			end
+		end
+		return false
+	end,
+	can_trigger = function(self, target)
+		return target
+	end
+}
+LuaGuzhengGet = sgs.CreateTriggerSkill{
+	name = "#LuaGuzhengGet",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.EventPhaseEnd},
+	on_trigger = function(self, event, player, data)
+		if not player:isDead() then
+			local room = player:getRoom()
+			local erzhang = room:findPlayerBySkillName(self:objectName())
+			if erzhang then
+				local tag = room:getTag("GuzhengToGet")
+				local guzheng_cardsToGet
+				local guzheng_cardsOther
+				if tag then
+					guzheng_cardsToGet = tag:toString():split("+")
+				else
+					return false
+				end
+				tag = room:getTag("GuzhengOther")
+				if tag then
+					guzheng_cardsOther = tag:toString():split("+")
+				end
+				room:removeTag("GuzhengToGet")
+				room:removeTag("GuzhengOther")
+				local cardsToGet = sgs.IntList()
+				local cards = sgs.IntList()
+				for i=1,#guzheng_cardsToGet, 1 do
+					local card_data = guzheng_cardsToGet[i]
+					if card_data == nil then return false end
+					if card_data ~= "" then --弃牌阶段没弃牌则字符串为""
+						local card_id = tonumber(card_data)
+						if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
+							cardsToGet:append(card_id)
+							cards:append(card_id)
+						end
+					end
+				end
+				if guzheng_cardsOther then
+					for i=1, #guzheng_cardsOther, 1 do
+						local card_data = guzheng_cardsOther[i]
+						if card_data == nil then return false end
+						if card_data ~= "" then
+							local card_id = tonumber(card_data)
+							if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
+								cardsToGet:append(card_id)
+								cards:append(card_id)
+							end
+						end
+					end
+				end
+				if cardsToGet:length() > 0 then
+					local ai_data = sgs.QVariant()
+					ai_data:setValue(cards:length())
+					if erzhang:askForSkillInvoke(self:objectName(), ai_data) then
+						room:fillAG(cards, erzhang)
+						local to_back = room:askForAG(erzhang, cardsToGet, false, self:objectName())
+						local backcard = sgs.Sanguosha:getCard(to_back)
+						player:obtainCard(backcard)
+						cards:removeOne(to_back)
+						erzhang:invoke("clearAG")
+						local move = sgs.CardsMoveStruct()
+						move.card_ids = cards
+						move.to = erzhang
+						move.to_place = sgs.Player_PlaceHand
+						room:moveCardsAtomic(move, true)
+					end
+				end
+			end
+		end
+		return false
+	end,
+	can_trigger = function(self, target)
+		if target then
+			return target:getPhase() == sgs.Player_Discard
+		end
+		return false
+	end
+}
 --[[
 	技能名：观星
 	相关武将：标准·诸葛亮、山·姜维

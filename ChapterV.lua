@@ -4,64 +4,14 @@
 	☆源代码转化失败，改写后通过：
 		不屈、称象、龙胆、龙魂、龙魂
 	☆验证失败：
-		洞察、固政、虎啸、护驾、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗、狱刎
+		洞察、虎啸、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗
 	☆尚未完成：
-		归心、祸水、落英、倾城
+		归心、祸水、倾城
 	☆尚未验证：
-		度势、奋迅、弘援、弘援、明哲、缓释、缓释、军威、礼让、淑慎、双刃、死谏、随势、骁果、雄异、援护
+		弘援、弘援、明哲、缓释、缓释、军威、死谏、骁果、雄异、援护
 	☆验证通过：
-		豹变、神智、名士
+		弓骑
 ]]--
---[[
-	技能名：豹变（锁定技）
-	相关武将：SP·夏侯霸
-	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
-	状态：验证通过
-]]--
-BaobianChange = function(room, player, hp, skill_name)
-	local room = player:getRoom()
-	local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
-	if player:getHp() <= hp then
-		if not table.contains(baobian_skills, skill_name) then
-			room:acquireSkill(player, skill_name)
-			table.insert(baobian_skills, skill_name)
-		end
-	else
-		room:detachSkillFromPlayer(player, skill_name)
-		for i=1, #baobian_skills, 1 do
-			if baobian_skills[i]==skill_name  then
-				table.remove(baobian_skills, i)
-			end
-		end
-	end
-	player:setTag("BaobianSkills", sgs.QVariant(table.concat(baobian_skills, "+")))
-end
-LuaBaobian = sgs.CreateTriggerSkill{
-	name = "LuaBaobian",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.GameStart, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill},  
-	on_trigger = function(self, event, player, data) 
-		if event == sgs.EventLoseSkill then
-			if data:toString() == self:objectName() then
-				local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
-				for _,skname in ipairs(baobian_skills) do
-					room:detachSkillFromPlayer(player, skill_name)
-				end
-				player:setTag("BaobianSkills", sgs.QVariant())
-			end
-			return false
-		end
-		if player:isAlive() and player:hasSkill(self:objectName()) then
-			BaobianChange(room, player, 1, "shensu")
-			BaobianChange(room, player, 2, "paoxiao")
-			BaobianChange(room, player, 3, "tiaoxin")
-		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		return target
-	end, 
-}
 --[[
 	技能名：不屈
 	相关武将：风·周泰
@@ -332,143 +282,6 @@ LuaXDongcha = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：度势
-	相关武将：国战·陆逊
-	描述：出牌阶段，你可以弃置一张红色手牌并选择任意数量的其他角色：若如此做，你与这些角色各摸两张牌并弃置两张牌。 
-	状态：0224验证通过，按照dadao.net修改，依次摸牌，然后再依次弃牌，而不是某人摸2弃2，再结算下一个
-]]--
-LuaXDuoshiCard = sgs.CreateSkillCard{
-	name = "LuaXDuoshiCard",
-	target_fixed = false,
-	will_throw = true,
-	filter = function(self, targets, to_select,player)
-		return to_select:objectName()~=player:objectName()
-	end,
-	feasible = function(self, targets)
-		return true
-	end,
-	on_use = function(self, room, source, targets)
-		source:drawCards(2)
-		for i=1,#targets,1 do
-			targets[i]:drawCards(2)
-		end
-		room:askForDiscard(source, "LuaXDuoshi", 2, 2, false, true,"#LuaXDuoshi-discard")
-		for i=1,#targets,1 do
-			room:askForDiscard(targets[i], "LuaXDuoshi", 2, 2, false, true,"#LuaXDuoshi-discard")
-		end
-	end,
-}
-LuaXDuoshi = sgs.CreateViewAsSkill{
-	name = "LuaXDuoshi",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		if to_select:isRed() then
-			if not to_select:isEquipped() then
-				return not sgs.Self:isJilei(to_select)
-			end
-		end
-		return false
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local await = LuaXDuoshiCard:clone()
-			await:addSubcard(cards[1])
-			await:setSkillName(self:objectName())
-			return await
-		end
-	end
-}
---[[
-	技能名：奋迅
-	相关武将：国战·丁奉
-	描述：出牌阶段，你可以弃置一张牌并选择一名其他角色：若如此做，你拥有以下技能直到回合结束：你无视与该角色的距离。每阶段限一次。  
-	状态：0224验证通过
-]]--
-LuaXFenxunCard = sgs.CreateSkillCard{
-	name = "LuaXFenxunCard",
-	target_fixed = false,
-	will_throw = true,
-	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
-	end,
-	on_effect = function(self, effect)
-		local room = effect.from:getRoom()
-		local tag = sgs.QVariant()
-		tag:setValue(effect.to)
-		effect.from:setTag("FenxunTarget", tag)
-		room:setFixedDistance(effect.from, effect.to, 1)
-	end
-}
-LuaXFenxunVS = sgs.CreateViewAsSkill{
-	name = "LuaXFenxunVS",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return not sgs.Self:isJilei(to_select)
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local first = LuaXFenxunCard:clone()
-			first:addSubcard(cards[1])
-			first:setSkillName(self:objectName())
-			return first
-		end
-	end,
-	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaXFenxunCard")
-	end,
-	enabled_at_response = function(self, player, pattern)
-		return false
-	end
-}
-LuaXFenxun = sgs.CreateTriggerSkill{
-	name = "#LuaXFenxun",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseChanging, sgs.Death, sgs.EventLoseSkill},
-	view_as_skill = LuaXFenxunVS,
-	on_trigger = function(self, event, player, data)
-		local room=player:getRoom()
-		if event == sgs.EventPhaseChanging then
-			local change = data:toPhaseChange()
-			if change.to ~= sgs.Player_NotActive then
-				return false
-			end
-		end
-		if event == sgs.Death then
-			local death = data:toDeath()
-			local victim = death.who
-			if not victim or victim:objectName() ~= player:objectName() then
-				return false
-			end
-		end
-		if event == sgs.EventLoseSkill then
-			if data:toString()~="LuaXFenxunVS" then
-				return false
-			end
-		end
-		local tag = player:getTag("FenxunTarget")
-		if tag then
-			local target = tag:toPlayer()
-			if target then
-				room:setFixedDistance(player, target, -1)
-				player:removeTag("FenxunTarget")
-			end
-		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			local tag = target:getTag("FenxunTarget")
-			if tag then
-				return tag:toPlayer()
-			end
-		end
-		return false
-	end
-}
---[[
 	技能名：弓骑
 	相关武将：怀旧·韩当
 	描述：你可以将一张装备牌当【杀】使用或打出；你以此法使用【杀】时无距离限制。
@@ -501,204 +314,6 @@ LuaGongqi = sgs.CreateViewAsSkill{
 	end, 
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "slash"
-	end
-}
-
---[[
-	技能名：弓骑
-	相关武将：怀旧·韩当
-	描述：你可以将一张装备牌当【杀】使用或打出；你以此法使用【杀】时无距离限制。
-	状态：0224验证通过
-]]--
-LuaGongqi = sgs.CreateViewAsSkill{
-	name = "LuaGongqi", 
-	n = 1, 
-	view_filter = function(self, selected, to_select)
-		local weapon = sgs.Self:getWeapon()
-		if weapon and to_select:objectName() == weapon:objectName() and to_select:objectName() == "Crossbow" then
-			return sgs.Self:canSlashWithoutCrossbow()
-		end
-		return to_select:getTypeId() == sgs.Card_Equip
-	end, 
-	view_as = function(self, cards) 
-		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local id = card:getId()
-			local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
-			slash:addSubcard(id)
-			slash:setSkillName(self:objectName())
-			return slash
-		end
-	end, 
-	enabled_at_play = function(self, player)
-		return sgs.Slash_IsAvailable(player)
-	end, 
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "slash"
-	end
-}
-LuaGongqiTargetMod = sgs.CreateTargetModSkill{
-	name = "#LuaGongqi-target",
-	distance_limit_func = function(self, from, card)
-        if from:hasSkill("LuaGongqi") and card:getSkillName() == "LuaGongqi" then
-            return 1000
-        else
-            return 0
-		end
-	end
-}
---[[
-	技能名：固政
-	相关武将：山·张昭张纮
-	描述：其他角色的弃牌阶段结束时，你可以将该角色于此阶段中弃置的一张牌从弃牌堆返回其手牌，若如此做，你可以获得弃牌堆里其余于此阶段中弃置的牌。
-	状态：0224验证通过（以字符串形式保存卡牌id）
-]]--
-require("bit")--位运算所需
-function strcontain(a,b)
-	if a=="" then return false end
-	local c=a:split("+")
-	local k=false
-	for i=1,#c,1 do
-		if a[i]==b then
-			k=true
-			break
-		end
-	end
-	return k
-end 
-LuaGuzheng = sgs.CreateTriggerSkill{
-	name = "LuaGuzheng",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.CardsMoveOneTime},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local erzhang = room:findPlayerBySkillName(self:objectName())
-		local current = room:getCurrent()
-		local move = data:toMoveOneTime()
-		local source = move.from
-		if source == nil then return false end
-		if((player:objectName() ~= source:objectName()) or (erzhang == nil) or (erzhang:objectName() == current:objectName()))then
-			return false
-		end
-		if current:getPhase() == sgs.Player_Discard then
-			local tag = room:getTag("GuzhengToGet")
-			local guzhengToGet= tag:toString()
-			tag = room:getTag("GuzhengOther")
-			local guzhengOther = tag:toString()
-			if guzhengToGet==nil then
-				guzhengToGet=""
-			end
-			if guzhengOther==nil then
-				guzhengOther=""
-			end
-			for _,card_id in sgs.qlist(move.card_ids) do
-				local flag = bit:_and(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
-				if flag == sgs.CardMoveReason_S_REASON_DISCARD then
-					if source:objectName() == current:objectName() then
-						if guzhengToGet=="" then
-							guzhengToGet=tostring(card_id)
-						else
-							guzhengToGet=guzhengToGet.."+"..tostring(card_id)
-						end
-					elseif not strcontain(guzhengToGet,tostring(card_id)) then
-						if guzhengOther=="" then
-							guzhengOther=tostring(card_id)
-						else
-							guzhengOther=guzhengOther.."+"..tostring(card_id)
-						end
-					end
-				end
-			end
-			if guzhengToGet then
-				room:setTag("GuzhengToGet", sgs.QVariant(guzhengToGet))
-			end
-			if guzhengOther then
-				room:setTag("GuzhengOther", sgs.QVariant(guzhengOther))
-			end
-		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		return target
-	end
-}
-LuaGuzhengGet = sgs.CreateTriggerSkill{
-	name = "#LuaGuzhengGet",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventPhaseEnd},
-	on_trigger = function(self, event, player, data)
-		if not player:isDead() then
-			local room = player:getRoom()
-			local erzhang = room:findPlayerBySkillName(self:objectName())
-			if erzhang then
-				local tag = room:getTag("GuzhengToGet")
-				local guzheng_cardsToGet
-				local guzheng_cardsOther
-				if tag then
-					guzheng_cardsToGet = tag:toString():split("+")
-				else
-					return false
-				end
-				tag = room:getTag("GuzhengOther")
-				if tag then
-					guzheng_cardsOther = tag:toString():split("+")
-				end
-				room:removeTag("GuzhengToGet")
-				room:removeTag("GuzhengOther")
-				local cardsToGet = sgs.IntList()
-				local cards = sgs.IntList()
-				for i=1,#guzheng_cardsToGet,1 do
-					local card_data=guzheng_cardsToGet[i]
-					if card_data==nil then return false end
-					if card_data~="" then--弃牌阶段没弃牌则字符串为""
-						local card_id = tonumber(card_data)
-						if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
-							cardsToGet:append(card_id)
-							cards:append(card_id)
-						end
-					end
-				end
-				if guzheng_cardsOther then
-					for i=1,#guzheng_cardsOther,1 do
-						local card_data=guzheng_cardsOther[i]
-						if card_data==nil then return false end
-						if card_data~="" then
-							local card_id = tonumber(card_data)
-							if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
-								cardsToGet:append(card_id)
-								cards:append(card_id)
-							end
-						end
-					end
-				end
-				if cardsToGet:length() > 0 then
-					local ai_data = sgs.QVariant()
-					ai_data:setValue(cards:length())
-					if erzhang:askForSkillInvoke(self:objectName(), ai_data) then
-						room:fillAG(cards, erzhang)
-						local to_back = room:askForAG(erzhang, cardsToGet, false, self:objectName())
-						local backcard = sgs.Sanguosha:getCard(to_back)
-						player:obtainCard(backcard)
-						cards:removeOne(to_back)
-						erzhang:invoke("clearAG")
-						local move = sgs.CardsMoveStruct()
-						move.card_ids = cards
-						move.to = erzhang
-						move.to_place = sgs.Player_PlaceHand
-						room:moveCardsAtomic(move, true)
-					end
-				end
-			end
-		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return target:getPhase() == sgs.Player_Discard
-		end
-		return false
 	end
 }
 --[[
@@ -904,45 +519,6 @@ LuaHuxiaoRemove = sgs.CreateTriggerSkill{
 	end, 
 	can_trigger = function(self, target)
 		return target
-	end
-}
---[[
-	技能名：护驾（主公技）
-	相关武将：标准·曹操、铜雀台·曹操
-	描述：当你需要使用或打出一张【闪】时，你可以令其他魏势力角色打出一张【闪】（视为由你使用或打出）。 
-	状态：0224验证通过，服务器端未发现异常
-]]--
-LuaHujia = sgs.CreateTriggerSkill{
-	name = "LuaHujia$",
-	frequency = sgs.NotFrequent,
-	events = {sgs.CardAsked},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local pattern = data:toString()
-		if pattern == "jink" then
-			local lieges = room:getLieges("wei", player)
-			if not lieges:isEmpty() then
-				if room:askForSkillInvoke(player, self:objectName()) then
-					local tohelp = sgs.QVariant()
-					tohelp:setValue(player)
-					for _,p in sgs.qlist(lieges) do
-						local prompt = string.format("@hujia-jink:%s", player:objectName())
-						local jink = room:askForCard(p, "jink", prompt, tohelp, sgs.Card_MethodResponse, player)
-						if jink then
-							room:provide(jink)
-							return true
-						end
-					end
-				end
-			end
-		end
-		return false
-	end,
-	can_trigger = function(self, player)
-		if player then
-			return player:hasLordSkill(self:objectName())
-		end
-		return false
 	end
 }
 --[[
@@ -1535,42 +1111,53 @@ LuaJunweiGot = sgs.CreateTriggerSkill{
 	技能名：狂斧
 	相关武将：国战·潘凤
 	描述：每当你使用的【杀】对一名角色造成一次伤害后，你可以将其装备区里的一张牌弃置或置入你的装备区。 
-	状态：0224验证通过
+	状态：尚未验证
 ]]--
-LuaXKuangfu = sgs.CreateTriggerSkill{
-	name = "LuaXKuangfu",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Damage},  
-	on_trigger = function(self, event, player, data) 
+function EquipInt(card) 
+	local cardx = sgs.Sanguosha:getCard(card:getEffectiveId())
+	if cardx:isKindOf("Weapon") then 
+		return 0 
+	elseif cardx:isKindOf("Armor") then 
+		return 1
+	elseif cardx:isKindOf("DefensiveHorse") then 
+		return 2 
+	elseif cardx:isKindOf("OffensiveHorse") then 
+		return 3 
+	else 
+		return -1  
+	end
+end
+gzkuangfu=sgs.CreateTriggerSkill{
+	name = "gzkuangfu",
+	events = {sgs.Damage},	
+	on_trigger = function(self,event,player,data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
-		local target = damage.to
-		local slash = damage.card
-		if slash and slash:isKindOf("Slash") then
-			if target:hasEquip() then
-				if not damage.chain and not damage.transfer then
-					if player:askForSkillInvoke(self:objectName(), data) then
-						local card_id = room:askForCardChosen(player, target , "e", "LuaXKuangfu")
-						local card = sgs.Sanguosha:getCard(card_id)
-						local equip_index = -1
-						local equip = card:getRealCard():toEquipCard()
-						equip_index = equip:location()
-						local choicelist = "throw"
-						if equip_index>-1 and not player:getEquip(equip_index) then
-							choicelist = choicelist.."+move"
-						end
-						local choice = room:askForChoice(player, "LuaXKuangfu", choicelist)
-						if choice == "move" then
-							room:moveCardTo(card, player, sgs.Player_PlaceEquip)
-						else
-							room:throwCard(card, target, player)
-						end
-					end
-				end
-			end
+		if damage.card == nil or not damage.card:isKindOf("Slash") or damage.to:getEquips():isEmpty() then 
+			return 
 		end
-		return false
-	end
+		if damage.chain or damage.transfer then 
+			return 
+		end
+		if not player:askForSkillInvoke(self:objectName(), data) then 
+			return 
+		end
+		local card_id = room:askForCardChosen(player, damage.to, "e", self:objectName())
+		local card = sgs.Sanguosha:getCard(card_id)
+		local index = EquipInt(card)
+		local choicelist={}
+		table.insert(choicelist, "throw")
+		if (index >-1 and player:getEquip(index)==nil) then 
+			table.insert(choicelist,"move") 
+		end
+		local option = room:askForChoice(player, self:objectName(), table.concat(choicelist,"+"))          
+		if option == "move" then 
+			room:moveCardTo(card, player, sgs.Player_PlaceEquip, true)
+		else 
+			room:throwCard(card, damage.to, player) 
+		end
+		return
+	end,
 }
 --[[
 	技能名：龙胆
@@ -1848,62 +1435,6 @@ LuaXDuojian = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：礼让
-	相关武将：国战·孔融
-	描述：当你的牌因弃置而置入弃牌堆时，你可以将其中任意数量的牌以任意分配方式交给任意数量的其他角色。 
-	状态：0224验证通过
-]]--
-require ("bit")
-LuaXLirang = sgs.CreateTriggerSkill{
-	name = "LuaXLirang",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.CardsMoving},  
-	on_trigger = function(self, event, player, data) 
-		local move = data:toMoveOneTime()
-		local source = move.from
-		if player:hasFlag("lirang_InTempMoving") then return false end--防止不完全给出时二次触发
-		if source and source:objectName() == player:objectName() then
-			if move.to_place == sgs.Player_DiscardPile then
-				local reason = move.reason
-				local basic = bit:_and(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) 
-				if basic == sgs.CardMoveReason_S_REASON_DISCARD then
-					local room = player:getRoom()
-					local i = 0
-					local lirang_card = sgs.IntList()
-					for _,card_id in sgs.qlist(move.card_ids) do
-						if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
-							local place = move.from_places:at(i)
-							if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
-								lirang_card:append(card_id)
-							end
-						end
-						i = i + 1
-					end
-					if not lirang_card:isEmpty() then
-						if player:askForSkillInvoke(self:objectName(), data) then
-							room:setPlayerFlag(player, "lirang_InTempMoving")
-							local move2 = sgs.CardsMoveStruct()
-							move2.card_ids = lirang_card
-							move2.to_place = sgs.Player_PlaceHand
-							move2.to = player
-							room:moveCardsAtomic(move2, true)
-							while room:askForYiji(player, lirang_card, false, true) do
-							end
-							local move3 = sgs.CardsMoveStruct()
-							move3.card_ids = lirang_card
-							move3.to_place = sgs.Player_DiscardPile
-							move3.reason = reason
-							room:moveCardsAtomic(move3, true)
-							room:setPlayerFlag(player, "-lirang_InTempMoving")
-						end
-					end
-				end
-			end
-		end
-		return false
-	end
-}
---[[
 	技能名：疠火
 	相关武将：二将成名·程普
 	描述：你可以将一张普通【杀】当火【杀】使用，若以此法使用的【杀】造成了伤害，在此【杀】结算后你失去1点体力；你使用火【杀】时，可以额外选择一个目标。
@@ -1965,79 +1496,6 @@ LuaLihuo = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		return target ~= nil
 	end
-}
---[[
-	技能名：落英
-	相关武将：一将成名·曹植
-	描述：当其他角色的梅花牌因弃置或判定而置入弃牌堆时，你可以获得之。
-	状态：0224验证通过，需要bit.lua
-]]--
-require("bit")--按位操作所需
-LuaLuoying = sgs.CreateTriggerSkill{
-	name = "LuaLuoying",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardsMoveOneTime},
-	on_trigger = function(self, event, player, data)
-		local room=player:getRoom()
-		local move = data:toMoveOneTime()
-		local source = move.from
-		if source then
-			if source:objectName() ~= player:objectName() then
-				if move.to_place == sgs.Player_DiscardPile then
-					local reason = move.reason.m_reason
-					local flag = false
-					if bit:_and(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
-						flag = true
-					end
-					if reason == sgs.CardMoveReason_S_REASON_JUDGEDONE then
-						flag = true
-					end
-					if flag then
-						local luoyingMove = sgs.CardsMoveStruct()
-						luoyingMove.to = player
-						luoyingMove.to_place = sgs.Player_PlaceHand
-						local ids = sgs.QList2Table(move.card_ids)
-						local places = move.from_places
-						for i=1, #ids, 1 do
-							local id = ids[i]
-							local place = places[i]
-							local suit = sgs.Sanguosha:getCard(id):getSuit()
-							if suit == sgs.Card_Club then
-								if place ~= sgs.Player_PlaceDelayedTrick then
-									if place ~= sgs.Player_PlaceSpecial then
-										if room:getCardPlace(id) == sgs.Player_DiscardPile then
-											luoyingMove.card_ids:append(id)
-										end
-									end
-								end
-							end
-						end
-						if not luoyingMove.card_ids:isEmpty() then
-							if player:askForSkillInvoke(self:objectName(), data) then
-								if luoyingMove.card_ids:length() > 1 then
-									while (not luoyingMove.card_ids:isEmpty()) do
-										room:fillAG(luoyingMove.card_ids, player)
-										local card_id = room:askForAG(player, luoyingMove.card_ids, true, self:objectName())
-										player:invoke("clearAG")
-										if card_id == -1 then
-											break
-										end
-										luoyingMove.card_ids:removeOne(card_id)
-									end
-									if luoyingMove.card_ids:isEmpty() then
-										return false
-									end
-								end
-								room:moveCardsAtomic(luoyingMove, true)
-							end
-						end
-					end
-				end
-			end
-		end
-		return false
-	end,
-	priority = 4
 }
 --[[
 	技能名：连理
@@ -2306,40 +1764,6 @@ LuaMiji = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：名士（锁定技）
-	相关武将：国战·孔融
-	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。 
-	状态：0224验证通过
-]]--
-LuaXMingshi = sgs.CreateTriggerSkill{
-	name = "LuaXMingshi",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.DamageInflicted},  
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local damage = data:toDamage()
-		local source = damage.from
-		if source then
-			local choice
-			if not source:isKongcheng() then
-				choice = room:askForChoice(source, self:objectName(), "yes+no", data)
-			else
-				choice = "yes"
-			end
-			if choice == "no" then
-				damage.damage = damage.damage - 1
-				if damage.damage < 1 then
-					return true
-				end
-				data:setValue(damage)
-			else
-				room:showAllCards(source)
-			end
-		end
-		return false
-	end
-}
---[[
 	技能名：明哲
 	相关武将：新3V3·诸葛瑾
 	描述：你的回合外，当你因使用、打出或弃置而失去一张红色牌时，你可以摸一张牌。 
@@ -2570,181 +1994,6 @@ LuaShensu = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：神智
-	相关武将：国战·甘夫人
-	描述：回合开始阶段开始时，你可以弃置所有手牌：若你以此法弃置的牌不少于X张，你回复1点体力。（X为你当前的体力值） 
-	状态：0224验证通过
-]]--
-LuaXShenzhi = sgs.CreateTriggerSkill{
-	name = "LuaXShenzhi",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Start then
-			if not player:isKongcheng() then
-				local handcards = player:getHandcards()
-				for _,card in sgs.qlist(handcards) do
-					if player:isJilei(card) then
-						return false
-					end
-				end
-				if room:askForSkillInvoke(player, self:objectName()) then
-					local handcard_num = player:getHandcardNum()
-					player:throwAllHandCards()
-					if handcard_num >= player:getHp() then
-						local recover = sgs.RecoverStruct()
-						recover.who = player
-						room:recover(player, recover)
-					end
-				end
-			end
-		end
-		return false
-	end
-}
---[[
-	技能名：淑慎
-	相关武将：国战·甘夫人
-	描述：每当你回复1点体力后，你可以令一名其他角色摸一张牌。 
-	状态：0224验证通过
-]]--
-LuaXShushenCard = sgs.CreateSkillCard{
-	name = "LuaXShushenCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
-	end,
-	on_effect = function(self, effect) 
-		effect.to:drawCards(1)
-	end
-}
-LuaXShushenVS = sgs.CreateViewAsSkill{
-	name = "LuaXShushen", 
-	n = 0, 
-	view_as = function(self, cards) 
-		return LuaXShushenCard:clone()
-	end, 
-	enabled_at_play = function(self, player)
-		return false
-	end, 
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@shushen"
-	end
-}
-LuaXShushen = sgs.CreateTriggerSkill{
-	name = "LuaXShushen",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.HpRecover},  
-	view_as_skill = LuaXShushenVS, 
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
-		local recover_struct = data:toRecover()
-		local recover = recover_struct.recover
-		for i=1, recover, 1 do
-			if not room:askForUseCard(player, "@@shushen", "@shushen-draw") then
-				break
-			end
-		end
-		return false
-	end
-}
---[[
-	技能名：双刃
-	相关武将：国战·纪灵
-	描述：出牌阶段开始时，你可以与一名其他角色拼点：若你赢，视为你一名其他角色使用一张无距离限制的普通【杀】（此【杀】不计入出牌阶段使用次数的限制）；若你没赢，你结束出牌阶段。 
-	状态：0224验证通过
-]]--
-LuaXShuangrenCard = sgs.CreateSkillCard{
-	name = "LuaXShuangrenCard", 
-	target_fixed = false, 
-	will_throw = false, 
-	handling_method = sgs.Card_MethodPindian,
-	filter = function(self, targets, to_select) 
-		if #targets == 0 then
-			if not to_select:isKongcheng() then
-				return to_select:objectName() ~= sgs.Self:objectName()
-			end
-		end
-		return false
-	end,
-	on_effect = function(self, effect) 
-		local room = effect.from:getRoom()
-		local success = effect.from:pindian(effect.to, "LuaXShuangren", self)
-		if success then
-			local targets = sgs.SPlayerList()
-			local others = room:getOtherPlayers(effect.from)
-			for _,target in sgs.qlist(others) do
-				if effect.from:canSlash(target, nil, false) then
-					targets:append(target)
-				end
-			end
-			if not targets:isEmpty() then
-				local target = room:askForPlayerChosen(effect.from, targets, "shuangren-slash")
-				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-				slash:setSkillName("LuaXShuangren")
-				local card_use = sgs.CardUseStruct()
-				card_use.card = slash
-				card_use.from = effect.from
-				card_use.to:append(target)
-				room:useCard(card_use, false)
-			end
-		else
-			room:setPlayerFlag(effect.from, "SkipPlay")
-		end
-	end
-}
-LuaXShuangrenVS = sgs.CreateViewAsSkill{
-	name = "LuaXShuangren", 
-	n = 1, 
-	view_filter = function(self, selected, to_select)
-		return not to_select:isEquipped()
-	end, 
-	view_as = function(self, cards) 
-		if #cards == 1 then
-			local card = LuaXShuangrenCard:clone()
-			card:addSubcard(cards[1])
-			return card
-		end
-	end, 
-	enabled_at_play = function(self, player)
-		return false
-	end, 
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaXShuangren"
-	end
-}
-LuaXShuangren = sgs.CreateTriggerSkill{
-	name = "LuaXShuangren",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
-	view_as_skill = LuaXShuangrenVS, 
-	on_trigger = function(self, event, player, data) 
-		if player:getPhase() == sgs.Player_Play then
-			local room = player:getRoom()
-			local can_invoke = false
-			local other_players = room:getOtherPlayers(player)
-			for _,p in sgs.qlist(other_players) do
-				if not player:isKongcheng() then
-					can_invoke = true
-					break
-				end
-			end
-			if can_invoke then
-				room:askForUseCard(player, "@@LuaXShuangren", "@shuangren-card", -1, sgs.Card_MethodPindian)
-			end
-			if player:hasFlag("SkipPlay") then
-				return true
-			end
-		end
-		return false
-	end
-}
---[[
 	技能名：死谏
 	相关武将：国战·田丰
 	描述：每当你失去最后的手牌后，你可以弃置一名其他角色的一张牌。 
@@ -2813,48 +2062,6 @@ LuaXSijian = sgs.CreateTriggerSkill{
 							room:askForUseCard(player, "@@LuaXSijian", "@sijian-discard")
 						end
 					end
-				end
-			end
-		end
-		return false
-	end
-}
---[[
-	技能：随势
-	相关武将：国战·田丰
-	描述：每当其他角色进入濒死状态时，伤害来源可以令你摸一张牌；每当其他角色死亡时，伤害来源可以令你失去1点体力。
-	状态：0224验证通过
-]]--
-LuaXSuishi = sgs.CreateTriggerSkill{
-	name = "LuaXSuishi",  
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.Dying, sgs.Death},  
-	on_trigger = function(self, event, player, data) 
-		local target = nil
-		local room = player:getRoom()
-		if event == sgs.Dying then
-			local dying = data:toDying()
-			local damage = dying.damage
-			if damage and damage.from then
-				target = damage.from
-			end
-			local victim = dying.who
-			if not victim or victim:objectName() ~= player:objectName() then
-				if target then
-					if room:askForChoice(target, "suishi1", "draw+no") == "draw" then
-						player:drawCards(1)
-					end
-				end
-			end
-		elseif event == sgs.Death then
-			local death = data:toDeath()
-			local damage = death.damage
-			if damage and damage.from then
-				target = damage.from
-			end
-			if target then
-				if room:askForChoice(target, "suishi2", "loseHp+no") == "loseHp" then
-					room:loseHp(player)
 				end
 			end
 		end
@@ -3048,44 +2255,6 @@ LuaWushen = sgs.CreateFilterSkill{
 	end
 }
 --[[
-	技能名：武神（锁定技）
-	相关武将：神·关羽
-	描述：你的红桃手牌均视为【杀】；你使用红桃【杀】时无距离限制。
-	状态：0224验证通过
-]]--
-LuaWushen = sgs.CreateFilterSkill{
-	name = "LuaWushen",
-	view_filter = function(self, to_select)
-		local room = sgs.Sanguosha:currentRoom()
-		local id = to_select:getEffectiveId()
-		local place = room:getCardPlace(id)
-		if to_select:getSuit() == sgs.Card_Heart then
-			return place == sgs.Player_PlaceHand
-		end
-		return false
-	end, 
-	view_as = function(self, card)
-		local suit = card:getSuit()
-		local point = card:getNumber()
-		local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
-		slash:setSkillName(self:objectName())
-		local id = card:getId()
-		local vs_card = sgs.Sanguosha:getWrappedCard(id)
-		vs_card:takeOver(slash)
-		return vs_card
-	end
-}
-LuaWushenTargetMod = sgs.CreateTargetModSkill{
-	name = "#LuaWushen-target",
-	distance_limit_func = function(self, from, card)
-        if from:hasSkill("LuaWushen") and card:getSuit() == sgs.Card_Heart then
-            return 1000
-        else
-            return 0
-		end
-	end
-}
---[[
 	技能：骁果
 	相关武将：国战·乐进
 	描述：其他角色的回合结束阶段开始时，你可以弃置一张基本牌：若如此做，该角色可以弃置一张装备牌，否则受到你造成的1点伤害。 
@@ -3244,42 +2413,6 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 		end
 		return false
 	end
-}
---[[
-	技能名：狱刎（锁定技）
-	相关武将：智·田丰
-	描述：当你死亡时，凶手视为自己 
-	状态：0224验证，除死亡笔记结果不可更改外，其他情况均通过
-]]--
-LuaXYuwen = sgs.CreateTriggerSkill{
-	name = "LuaXYuwen",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.AskForPeachesDone},
-	on_trigger = function(self, event, player, data)
-		local dying=data:toDying()
-		local damage = dying.damage
-		if damage then
-			if damage.from then
-				if damage.from:objectName() == player:objectName() then
-					return false
-				end
-			end
-		else
-			damage = sgs.DamageStruct()
-			damage.to = player
-		end
-		damage.from = player
-		dying.damage=damage
-		data:setValue(dying)
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return target:hasSkill(self:objectName())
-		end
-		return false
-	end,
-	priority = 3
 }
 --[[
 	技能名：援护

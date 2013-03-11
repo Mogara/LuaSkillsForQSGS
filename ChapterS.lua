@@ -261,11 +261,39 @@ LuaShenweiKeep = sgs.CreateMaxCardsSkill{
 	end
 }
 --[[
-	技能：神智
+	技能名：神智
 	相关武将：国战·甘夫人
 	描述：回合开始阶段开始时，你可以弃置所有手牌：若你以此法弃置的牌不少于X张，你回复1点体力。（X为你当前的体力值） 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
+LuaXShenzhi = sgs.CreateTriggerSkill{
+	name = "LuaXShenzhi",  
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseStart},  
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Start then
+			if not player:isKongcheng() then
+				local handcards = player:getHandcards()
+				for _,card in sgs.qlist(handcards) do
+					if player:isJilei(card) then
+						return false
+					end
+				end
+				if room:askForSkillInvoke(player, self:objectName()) then
+					local handcard_num = player:getHandcardNum()
+					player:throwAllHandCards()
+					if handcard_num >= player:getHp() then
+						local recover = sgs.RecoverStruct()
+						recover.who = player
+						room:recover(player, recover)
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：师恩
 	相关武将：智·司马徽
@@ -573,14 +601,143 @@ LuaShude = sgs.CreateTriggerSkill{
 	技能名：淑慎
 	相关武将：国战·甘夫人
 	描述：每当你回复1点体力后，你可以令一名其他角色摸一张牌。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
+LuaXShushenCard = sgs.CreateSkillCard{
+	name = "LuaXShushenCard", 
+	target_fixed = false, 
+	will_throw = true, 
+	filter = function(self, targets, to_select) 
+		if #targets == 0 then
+			return to_select:objectName() ~= sgs.Self:objectName()
+		end
+		return false
+	end,
+	on_effect = function(self, effect) 
+		effect.to:drawCards(1)
+	end
+}
+LuaXShushenVS = sgs.CreateViewAsSkill{
+	name = "LuaXShushen", 
+	n = 0, 
+	view_as = function(self, cards) 
+		return LuaXShushenCard:clone()
+	end, 
+	enabled_at_play = function(self, player)
+		return false
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@@shushen"
+	end
+}
+LuaXShushen = sgs.CreateTriggerSkill{
+	name = "LuaXShushen",  
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.HpRecover},  
+	view_as_skill = LuaXShushenVS, 
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		local recover_struct = data:toRecover()
+		local recover = recover_struct.recover
+		for i=1, recover, 1 do
+			if not room:askForUseCard(player, "@@shushen", "@shushen-draw") then
+				break
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：双刃
 	相关武将：国战·纪灵
 	描述：出牌阶段开始时，你可以与一名其他角色拼点：若你赢，视为你一名其他角色使用一张无距离限制的普通【杀】（此【杀】不计入出牌阶段使用次数的限制）；若你没赢，你结束出牌阶段。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
+LuaXShuangrenCard = sgs.CreateSkillCard{
+	name = "LuaXShuangrenCard", 
+	target_fixed = false, 
+	will_throw = false, 
+	handling_method = sgs.Card_MethodPindian,
+	filter = function(self, targets, to_select) 
+		if #targets == 0 then
+			if not to_select:isKongcheng() then
+				return to_select:objectName() ~= sgs.Self:objectName()
+			end
+		end
+		return false
+	end,
+	on_effect = function(self, effect) 
+		local room = effect.from:getRoom()
+		local success = effect.from:pindian(effect.to, "LuaXShuangren", self)
+		if success then
+			local targets = sgs.SPlayerList()
+			local others = room:getOtherPlayers(effect.from)
+			for _,target in sgs.qlist(others) do
+				if effect.from:canSlash(target, nil, false) then
+					targets:append(target)
+				end
+			end
+			if not targets:isEmpty() then
+				local target = room:askForPlayerChosen(effect.from, targets, "shuangren-slash")
+				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+				slash:setSkillName("LuaXShuangren")
+				local card_use = sgs.CardUseStruct()
+				card_use.card = slash
+				card_use.from = effect.from
+				card_use.to:append(target)
+				room:useCard(card_use, false)
+			end
+		else
+			room:setPlayerFlag(effect.from, "SkipPlay")
+		end
+	end
+}
+LuaXShuangrenVS = sgs.CreateViewAsSkill{
+	name = "LuaXShuangren", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		return not to_select:isEquipped()
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local card = LuaXShuangrenCard:clone()
+			card:addSubcard(cards[1])
+			return card
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return false
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@@LuaXShuangren"
+	end
+}
+LuaXShuangren = sgs.CreateTriggerSkill{
+	name = "LuaXShuangren",  
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseStart},  
+	view_as_skill = LuaXShuangrenVS, 
+	on_trigger = function(self, event, player, data) 
+		if player:getPhase() == sgs.Player_Play then
+			local room = player:getRoom()
+			local can_invoke = false
+			local other_players = room:getOtherPlayers(player)
+			for _,p in sgs.qlist(other_players) do
+				if not player:isKongcheng() then
+					can_invoke = true
+					break
+				end
+			end
+			if can_invoke then
+				room:askForUseCard(player, "@@LuaXShuangren", "@shuangren-card", -1, sgs.Card_MethodPindian)
+			end
+			if player:hasFlag("SkipPlay") then
+				return true
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：双雄
 	相关武将：火·颜良文丑
@@ -852,5 +1009,41 @@ LuaSongwei = sgs.CreateTriggerSkill{
 	技能：随势
 	相关武将：国战·田丰
 	描述：每当其他角色进入濒死状态时，伤害来源可以令你摸一张牌；每当其他角色死亡时，伤害来源可以令你失去1点体力。
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
+LuaXSuishi = sgs.CreateTriggerSkill{
+	name = "LuaXSuishi",  
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.Dying, sgs.Death},  
+	on_trigger = function(self, event, player, data) 
+		local target = nil
+		local room = player:getRoom()
+		if event == sgs.Dying then
+			local dying = data:toDying()
+			local damage = dying.damage
+			if damage and damage.from then
+				target = damage.from
+			end
+			local victim = dying.who
+			if not victim or victim:objectName() ~= player:objectName() then
+				if target then
+					if room:askForChoice(target, "suishi1", "draw+no") == "draw" then
+						player:drawCards(1)
+					end
+				end
+			end
+		elseif event == sgs.Death then
+			local death = data:toDeath()
+			local damage = death.damage
+			if damage and damage.from then
+				target = damage.from
+			end
+			if target then
+				if room:askForChoice(target, "suishi2", "loseHp+no") == "loseHp" then
+					room:loseHp(player)
+				end
+			end
+		end
+		return false
+	end
+}
