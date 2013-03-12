@@ -1767,9 +1767,9 @@ LuaMiji = sgs.CreateTriggerSkill{
 	技能名：明哲
 	相关武将：新3V3·诸葛瑾
 	描述：你的回合外，当你因使用、打出或弃置而失去一张红色牌时，你可以摸一张牌。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
-require "bit"
+require ("bit")
 LuaXMingzhe = sgs.CreateTriggerSkill{
 	name = "LuaXMingzhe",  
 	frequency = sgs.Skill_Frequent, 
@@ -1782,7 +1782,7 @@ LuaXMingzhe = sgs.CreateTriggerSkill{
 		if move.from and move.from:objectName() == player:objectName() then
 			if event == sgs.BeforeCardsMove then
 				local reason = move.reason
-				local basic = bit.band(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+				local basic = bit:_and(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
 				local flag = (basic == sgs.CardMoveReason_S_REASON_USE)
 				flag = flag or (basic == sgs.CardMoveReason_S_REASON_DISCARD)
 				flag = flag or (basic == sgs.CardMoveReason_S_REASON_RESPONSE)
@@ -1792,7 +1792,7 @@ LuaXMingzhe = sgs.CreateTriggerSkill{
 					for _,card_id in sgs.qlist(move.card_ids) do
 						card = sgs.Sanguosha:getCard(card_id)
 						if card:isRed() then
-							local places = move.from_places[i]
+							local places = move.from_places:at(i)
 							if places == sgs.Player_PlaceHand or places == sgs.Player_PlaceEquip then
 								player:addMark(self:objectName())
 							end
@@ -1802,7 +1802,7 @@ LuaXMingzhe = sgs.CreateTriggerSkill{
 				end
 			else
 				local count = player:getMark(self:objectName())
-				for i=0, count, 1 do
+				for i=1, count, 1 do
 					if player:askForSkillInvoke(self:objectName(), data) then
 						player:drawCards(1)
 					else
