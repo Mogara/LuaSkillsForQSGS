@@ -2293,7 +2293,7 @@ LuaXXiaoguo = sgs.CreateTriggerSkill{
 	技能：雄异（限定技）
 	相关武将：国战·马腾
 	描述：出牌阶段，你可以令你与任意数量的角色摸三张牌：若以此法摸牌的角色数不大于全场角色数的一半，你回复1点体力。
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXXiongyiCard = sgs.CreateSkillCard{
 	name = "LuaXXiongyiCard", 
@@ -2354,6 +2354,7 @@ LuaXXiongyiRecover = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Frequent, 
 	events = {sgs.CardFinished},  
 	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
 		if player:getMark("@arise") < 1 then
 			local count = player:getMark("xiongyi")
 			if count > 0 then
