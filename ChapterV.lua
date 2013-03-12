@@ -1997,7 +1997,7 @@ LuaShensu = sgs.CreateTriggerSkill{
 	技能名：死谏
 	相关武将：国战·田丰
 	描述：每当你失去最后的手牌后，你可以弃置一名其他角色的一张牌。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXSijianCard = sgs.CreateSkillCard{
 	name = "LuaXSijianCard", 
@@ -2036,6 +2036,7 @@ LuaXSijian = sgs.CreateTriggerSkill{
 	events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime},  
 	view_as_skill = LuaXSijianVS, 
 	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
 		local move = data:toMoveOneTime()
 		local source = move.from
 		if source and source:objectName() == player:objectName() then
