@@ -2258,7 +2258,7 @@ LuaWushen = sgs.CreateFilterSkill{
 	技能：骁果
 	相关武将：国战·乐进
 	描述：其他角色的回合结束阶段开始时，你可以弃置一张基本牌：若如此做，该角色可以弃置一张装备牌，否则受到你造成的1点伤害。 
-	状态：尚未验证
+	状态：0224验证通过
 ]]--
 LuaXXiaoguo = sgs.CreateTriggerSkill{
 	name = "LuaXXiaoguo",  
@@ -2270,8 +2270,8 @@ LuaXXiaoguo = sgs.CreateTriggerSkill{
 			local yuejin = room:findPlayerBySkillName(self:objectName())
 			if yuejin and yuejin:objectName() ~= player:objectName() then
 				if not yuejin:isKongcheng() then
-					if room:askForCard(yuejin, ".Basic", "@xiaoguo", sgs.QVariant(), self:objectName()) then
-						if not room:askForCard(player, ".Equip", "@xiaoguo-discard", sgs.QVariant()) then
+					if room:askForCard(yuejin, ".Basic", "@xiaoguo", sgs.QVariant(),sgs.Card_MethodDiscard)) then
+						if not room:askForCard(player, ".Equip", "@xiaoguo-discard", sgs.QVariant(),sgs.Card_MethodDiscard) then
 							local damage = sgs.DamageStruct()
 							damage.card = nil
 							damage.from = yuejin
