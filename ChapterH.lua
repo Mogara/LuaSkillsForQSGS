@@ -900,3 +900,56 @@ LuaSavageAssaultAvoid = sgs.CreateTriggerSkill{
 	描述：你的回合内，体力值不少于体力上限一半的其他角色所有武将技能无效。 
 	状态：尚未完成
 ]]--
+--适用于0224版
+function setHuoshuiFlag(room,player,is_lose) 
+for _,pl in sgs.qlist(room:getOtherPlayers(player)) do
+room:setPlayerFlag(pl, is_lose and "-huoshui" or "huoshui")
+room:filterCards(pl, pl:getCards("he"), not is_lose) end
+end
+
+Luahuoshui = sgs.CreateTriggerSkill {
+name = "Luahuoshui",
+events={sgs.EventPhaseStart,sgs.EventPhaseChanging,sgs.PostHpReduced,sgs.Death,sgs.MaxHpChanged,
+sgs.EventAcquireSkill,sgs.EventLoseSkill,sgs.HpRecover,sgs.PreHpLost},
+priority =4,	
+frequency = sgs.Skill_Compulsory,
+can_trigger=function(self,player)
+return player~=nil end,
+on_trigger = function(self,event,player,data)
+if player==nil or player:isDead() then return end
+local room=player:getRoom()
+if event==sgs.EventPhaseStart and player:getPhase()==sgs.Player_RoundStart and player:hasSkill(self:objectName()) then
+setHuoshuiFlag(room,player,false) end
+if event==sgs.EventPhaseChanging and data:toPhaseChange().to==sgs.Player_NotActive and player:hasSkill(self:objectName()) then 
+setHuoshuiFlag(room,player,true) end
+if event==sgs.Death then 
+local SI = data:toDeath()
+if player:objectName()==SI.who:objectName() then return end
+if player:hasSkill(self:objectName()) then setHuoshuiFlag(room,player,true) end
+end
+if event==sgs.EventLoseSkill and data:toString()==self:objectName() and room:getCurrent() and
+room:getCurrent():objectName()==player:objectName() then setHuoshuiFlag(room, player, true) end
+if event==sgs.EventAcquireSkill and data:toString()==self:objectName() and room:getCurrent() and
+room:getCurrent():objectName()==player:objectName() then setHuoshuiFlag(room, player, false) end
+if event==sgs.PostHpReduced or event==sgs.PreHpLost then
+if not player:hasFlag("huoshui") then return end
+local x=0
+if event==sgs.PostHpReduced then
+x=data:toDamage().damage
+else x=data:toInt() end
+local lhp=player:getHp()
+local xhp=(player:getMaxHp() + 1) / 2
+if (lhp < xhp and lhp + x >= xhp) then room:filterCards(player,player:getCards("he"), false) end
+end
+if event==sgs.MaxHpChanged and player:hasFlag("huoshui") then room:filterCards(player,player:getCards("he"),true) end
+if event==sgs.HpRecover then 
+local recov = data:toRecover()
+local nnx=recov.recover
+if player:hasFlag("huoshui") then
+local hp = player:getHp()
+local maxhp_2 = (player:getMaxHp() + 1) / 2
+if (hp >= maxhp_2 and hp - nnx < maxhp_2) then room:filterCards(player,player:getCards("he"),true) end
+end 
+end
+end,
+}
