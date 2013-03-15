@@ -454,7 +454,36 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 	技能名：短兵
 	相关武将：国战·丁奉
 	描述：你使用【杀】可以额外选择一名距离1的目标。 
+	状态：验证通过
 ]]--
+LuaDuanbing = sgs.CreateTriggerSkill{
+	name = "gzduanbing",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.CardUsed},
+	on_trigger = function(self, event, player, data)
+		local use = data:toCardUse()
+		if not use.card:isKindOf("Slash") then return end
+		local room = player:getRoom()
+		local targets = sgs.SPlayerList()
+		for _,p in sgs.qlist(room:getOtherPlayers(player)) do
+			if player:distanceTo(p) == 1 and not use.to:contains(p) and not sgs.Sanguosha:isProhibited(player, p, sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)) then
+				room:setPlayerFlag(p, "duanbingslash")
+				targets:append(p)
+			end
+		end
+		if targets:isEmpty() then return end
+		if not player:askForSkillInvoke(self:objectName()) then return end
+		local target = room:askForPlayerChosen(player, targets, self:objectName())
+		for _,p in sgs.qlist(room:getOtherPlayers(player)) do
+			if p:hasFlag("duanbingslash") then
+				room:setPlayerFlag(p, "-duanbingslash")
+			end
+		end
+		use.to:append(target)
+		data:setValue(use)
+		room:broadcastSkillInvoke(self:objectName())
+	end,
+}
 --[[
 	技能名：断肠（锁定技）
 	相关武将：山·蔡文姬、SP·蔡文姬
