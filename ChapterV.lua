@@ -2,9 +2,9 @@
 	代码速查手册（V区）
 	技能索引：（本区用于收录尚未实现或有争议的技能）
 	☆源代码转化失败，改写后通过：
-		不屈、称象、龙胆、龙魂、龙魂
+		不屈、称象、虎啸、龙胆、龙魂、龙魂
 	☆验证失败：
-		洞察、弘援、虎啸、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗
+		洞察、弘援、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗
 	☆尚未完成：
 		蛊惑、归心、祸水、倾城
 	☆尚未验证：
@@ -677,44 +677,35 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 	技能名：虎啸
 	相关武将：SP·关银屏
 	描述：你于出牌阶段每使用一张【杀】被【闪】抵消，此阶段你可以额外使用一张【杀】。 
-	状态：验证失败（不能额外使用杀）
+	状态：验证通过
 ]]--
 LuaHuxiao = sgs.CreateTriggerSkill{
-	name = "LuaHuxiao", 
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.SlashMissed, sgs.EventPhaseChanging},  
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
+	name = "LuaHuxiao",
+	events = {sgs.SlashMissed,sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		if event == sgs.SlashMissed then
-			if player:getPhase() == sgs.Player_Play then
-				local count = player:getMark(self:objectName())
-				room:setPlayerMark(player, "huxiao", count + 1)
-			end
-		elseif event == sgs.EventPhaseChanging then
-			local change = data:toPhaseChange()
-			if change.from == sgs.Player_Play then
-				if player:getMark(self:objectName()) > 0 then
-					room:setPlayerMark(player, "huxiao", 0)
+			player:gainMark("Huxiao", 1)
+		elseif event == sgs.EventPhaseStart then	
+			if player:getPhase() == sgs.Player_Finish then
+				local x = player:getMark("Huxiao")
+				if x > 0 then
+					player:loseMark("Huxiao", x)
 				end
 			end
 		end
-		return false
-	end
+	end,
 }
-LuaHuxiaoRemove = sgs.CreateTriggerSkill{
-	name = "#LuaHuxiao", 
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.EventLoseSkill},   
-	on_trigger = function(self, event, player, data) 
-		if data:toString() == "LuaHuxiao" then
-			room:setPlayerMark(player, "huxiao", 0)
+LuaHuxiaoHid = sgs.CreateTargetModSkill{
+	name = "#LuaHuxiaoHid",
+	pattern = "Slash",
+	residue_func = function(self, player)
+		local num = player:getMark("Huxiao")
+		if player:hasSkill(self:objectName()) then
+			return num
 		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		return target
-	end
+	end,
 }
+testRobo
 --[[
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
