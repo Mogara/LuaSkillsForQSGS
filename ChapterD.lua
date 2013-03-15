@@ -455,6 +455,7 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 	相关武将：国战·丁奉
 	描述：你使用【杀】可以额外选择一名距离1的目标。 
 	状态：验证通过
+	附注：原技能涉及修改源码。Lua的版本以此法可实现，但体验感略微欠佳。
 ]]--
 LuaDuanbing = sgs.CreateTriggerSkill{
 	name = "gzduanbing",
