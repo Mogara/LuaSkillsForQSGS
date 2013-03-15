@@ -8,9 +8,9 @@
 	☆尚未完成：
 		蛊惑、归心、祸水、倾城
 	☆尚未验证：
-		弘援、明哲、缓释、缓释、军威、死谏、骁果、雄异、援护
+		明哲、缓释、缓释、军威、死谏、骁果、雄异、援护
 	☆验证通过：
-		弓骑
+		弓骑、弘援
 ]]--
 --[[
 	技能名：不屈
@@ -595,6 +595,7 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Frequent, 
 	events = {sgs.AfterDrawNCards},  
 	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Draw then
 			if player:hasFlag("LuaXHongyuan") then
 				room:setPlayerFlag(player, "-Invoked")
@@ -612,7 +613,7 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾（身份局）
 	描述：摸牌阶段，你可以少摸一张牌，令一至两名其他角色各摸一张牌。
-	状态：尚未验证
+	状态：验证通过
 ]]--
 LuaXHongyuanCard = sgs.CreateSkillCard{
 	name = "LuaXHongyuanCard", 
@@ -660,6 +661,7 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Frequent, 
 	events = {sgs.AfterDrawNCards},  
 	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Draw then
 			if player:hasFlag("LuaXHongyuan") then
 				room:setPlayerFlag(player, "-Invoked")
