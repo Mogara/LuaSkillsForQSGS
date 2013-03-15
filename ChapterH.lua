@@ -439,8 +439,34 @@ LuaXHouyuan = sgs.CreateViewAsSkill{
 	技能名：虎啸
 	相关武将：SP·关银屏
 	描述：你于出牌阶段每使用一张【杀】被【闪】抵消，此阶段你可以额外使用一张【杀】。 
-	状态：验证失败
+	状态：验证通过
 ]]--
+LuaHuxiao = sgs.CreateTriggerSkill{
+	name = "LuaHuxiao",
+	events = {sgs.SlashMissed,sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+		if event == sgs.SlashMissed then
+			player:gainMark("Huxiao", 1)
+		elseif event == sgs.EventPhaseStart then	
+			if player:getPhase() == sgs.Player_Finish then
+				local x = player:getMark("Huxiao")
+				if x > 0 then
+					player:loseMark("Huxiao", x)
+				end
+			end
+		end
+	end,
+}
+LuaHuxiaoHid = sgs.CreateTargetModSkill{
+	name = "#LuaHuxiaoHid",
+	pattern = "Slash",
+	residue_func = function(self, player)
+		local num = player:getMark("Huxiao")
+		if player:hasSkill(self:objectName()) then
+			return num
+		end
+	end,
+}
 --[[
 	技能名：胡笳
 	相关武将：倚天·蔡昭姬
