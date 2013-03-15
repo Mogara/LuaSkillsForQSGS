@@ -322,43 +322,6 @@ LuaGongqi = sgs.CreateViewAsSkill{
 	描述： 你可以说出一张基本牌或非延时类锦囊牌的名称，并背面朝上使用或打出一张手牌。若无其他角色质疑，则亮出此牌并按你所述之牌结算。若有其他角色质疑则亮出验明：若为真，质疑者各失去1点体力；若为假，质疑者各摸一张牌。除非被质疑的牌为红桃且为真，此牌仍然进行结算，否则无论真假，将此牌置入弃牌堆。
 	状态：尚未完成（莫名闪退，改日排查，暂搁置于此。）
 ]]--
-LuaGuhuoAskForNull = sgs.CreateTriggerSkill{
-	name = "#LuaGuhuoAskForNull",
-	events = {sgs.CardEffected},
-	priority = 0 ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local effect = data:toCardEffect()
-		local card = effect.card
-		if not card:isKindOf("TrickCard") then return false end
-		local num = 0
-		local t = true
-		while t do
-			t = false
-			for _,theplayer in sgs.qlist(room:getAllPlayers()) do
-				if not t and (theplayer:getMark("cannull") == 1 or theplayer:hasNullification()) then
-					local nullcard = nil
-					if num%2 == 0 then
-						nullcard = room:askForCard(theplayer, "nullification", "askfornullification1", data)
-					else
-						nullcard = room:askForCard(theplayer, "nullification", "askfornullification2", data)
-					end
-					if nullcard then
-						t = true
-						num = num + 1
-					end
-				end
-			end
-		end
-		if num%2 == 1 then return true end
-		if card:isKindOf("Collateral") or card:isKindOf("Lightning") then return false end
-		card:onEffect(effect)
-		return true
-	end,
-	can_trigger = function(self,player)
-		return player and player:isAlive()
-	end,
-}
 function askforLuaGuhuoQuery(room, player, oldcard, newcard, suit)
 	local query = false
 	for _,theplayer in sgs.qlist(room:getOtherPlayers(player)) do
@@ -443,9 +406,12 @@ LuaGuhuoCard = sgs.CreateSkillCard{
 LuaGuhuo=sgs.CreateViewAsSkill{
 	name = "LuaGuHuo",
 	n = 0,
-	view_as = function()
+	view_as = function(self, cards)
 		acard = LuaGuhuoCard:clone()
 		return acard
+	end,
+	enabled_at_nullification = function(self, player)
+		return true
 	end,
 }
 LuaGuhuoFT = sgs.CreateFilterSkill{
