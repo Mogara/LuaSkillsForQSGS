@@ -596,69 +596,6 @@ LuaBuyi = sgs.CreateTriggerSkill{
 	描述：每当你扣减1点体力后，若你当前的体力值为0：你可以从牌堆顶亮出一张牌置于你的武将牌上，若此牌的点数与你武将牌上已有的任何一张牌都不同，你不会死亡；若出现相同点数的牌，你进入濒死状态。
 	状态：验证通过
 ]]--
-LuaBuqu = sgs.CreateTriggerSkill{
-	name = "LuaBuqu",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Dying, sgs.HpRecover, sgs.AskForPeachesDone},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.Dying then
-			local buqu = player:getPile("buqu")
-			local need = 1 - player:getHp()
-			local n = need - buqu:length()
-			if n <= 0 then
-				return false
-			end
-			if not room:askForSkillInvoke(player, self:objectName(), data) then
-				return false
-			end
-			local ids = room:getNCards(n)
-			for _,id in sgs.qlist(ids) do
-				player:addToPile("buqu", id)
-			end
-			buqu = player:getPile("buqu")
-			local numlist = {0,0,0,0,0,0,0,0,0,0,0,0,0}
-			for _,id in sgs.qlist(buqu) do
-				local card = sgs.Sanguosha:getCard(id)
-				local num = card:getNumber()
-				if numlist[num] then
-					return false
-				else
-					numlist[num] = 1
-				end
-			end
-			return true	
-		elseif event == sgs.HpRecover then
-			local recover = data:toRecover()
-			local buqu = player:getPile("buqu")
-			local count = buqu:length()
-			if count > 0 then
-				room:fillAG(buqu, player)
-				for var=1,recover.recover,1 do
-					local id_t = room:askForAG(player, buqu, false, self:objectName())
-					room:throwCard(id_t, player)
-				end
-				player:invoke("clearAG")
-			end
-		elseif event == sgs.AskForPeachesDone then
-			local buqu = player:getPile("buqu")
-			local numlist = {0,0,0,0,0,0,0,0,0,0,0,0,0}
-			local b = false
-			for _,id_t in sgs.qlist(buqu) do
-				local card = sgs.Sanguosha:getCard(id_t)
-				local num = card:getNumber()
-				if numlist[num] then
-					return false
-				else
-					numlist[num] = 1
-				end
-			end
-			return true
-		end
-	end
-}
---这是0224版的【不屈】
-----
 FBbuqux = sgs.CreateTriggerSkill{ 
 	name = "FBbuqux",
 	events = {sgs.PostHpReduced, sgs.AskForPeachesDone},
@@ -770,7 +707,6 @@ function Remove(SP)
 		end
 	end
 end
---
 exremove = sgs.CreateTriggerSkill{
 	name = "#example",
 	events = {sgs.HpRecover, sgs.EventLoseSkill},
@@ -792,4 +728,3 @@ exremove = sgs.CreateTriggerSkill{
 		end
 	end,
 }
-----
