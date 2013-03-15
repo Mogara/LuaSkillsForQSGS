@@ -458,7 +458,7 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 	附注：原技能涉及修改源码。Lua的版本以此法可实现，但体验感略微欠佳。
 ]]--
 LuaDuanbing = sgs.CreateTriggerSkill{
-	name = "gzduanbing",
+	name = "LuaDuanbing",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.CardUsed},
 	on_trigger = function(self, event, player, data)
