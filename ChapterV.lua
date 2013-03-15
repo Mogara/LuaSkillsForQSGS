@@ -6,7 +6,7 @@
 	☆验证失败：
 		洞察、虎啸、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗
 	☆尚未完成：
-		归心、祸水、倾城
+		蛊惑、归心、祸水、倾城
 	☆尚未验证：
 		弘援、弘援、明哲、缓释、缓释、军威、死谏、骁果、雄异、援护
 	☆验证通过：
@@ -316,6 +316,232 @@ LuaGongqi = sgs.CreateViewAsSkill{
 		return pattern == "slash"
 	end
 }
+--[[
+	技能名：蛊惑
+	相关武将：风·于吉
+	描述： 你可以说出一张基本牌或非延时类锦囊牌的名称，并背面朝上使用或打出一张手牌。若无其他角色质疑，则亮出此牌并按你所述之牌结算。若有其他角色质疑则亮出验明：若为真，质疑者各失去1点体力；若为假，质疑者各摸一张牌。除非被质疑的牌为红桃且为真，此牌仍然进行结算，否则无论真假，将此牌置入弃牌堆。
+	状态：尚未完成（莫名闪退，改日排查，暂搁置于此。）
+]]--
+LuaGuhuoAskForNull = sgs.CreateTriggerSkill{
+	name = "#LuaGuhuoAskForNull",
+	events = {sgs.CardEffected},
+	priority = 0 ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local effect = data:toCardEffect()
+		local card = effect.card
+		if not card:isKindOf("TrickCard") then return false end
+		local num = 0
+		local t = true
+		while t do
+			t = false
+			for _,theplayer in sgs.qlist(room:getAllPlayers()) do
+				if not t and (theplayer:getMark("cannull") == 1 or theplayer:hasNullification()) then
+					local nullcard = nil
+					if num%2 == 0 then
+						nullcard = room:askForCard(theplayer, "nullification", "askfornullification1", data)
+					else
+						nullcard = room:askForCard(theplayer, "nullification", "askfornullification2", data)
+					end
+					if nullcard then
+						t = true
+						num = num + 1
+					end
+				end
+			end
+		end
+		if num%2 == 1 then return true end
+		if card:isKindOf("Collateral") or card:isKindOf("Lightning") then return false end
+		card:onEffect(effect)
+		return true
+	end,
+	can_trigger = function(self,player)
+		return player and player:isAlive()
+	end,
+}
+function askforLuaGuhuoQuery(room, player, oldcard, newcard, suit)
+	local query = false
+	for _,theplayer in sgs.qlist(room:getOtherPlayers(player)) do
+		room:setPlayerFlag(theplayer, "-LuaGuhuoQuery")
+		if theplayer:getHp() > 0 then
+			if room:askForSkillInvoke(theplayer, "LuaGuhuoQuery") then
+				room:setPlayerFlag(theplayer, "LuaGuhuoQuery")
+				query = true
+			end
+		end
+	end
+	if not query then return false end
+	local istrue = false
+	if newcard == oldcard then istrue = true end
+	for _,theplayer in sgs.qlist(room:getOtherPlayers(player)) do
+		if theplayer:hasFlag("LuaGuhuoQuery") then
+			if istrue then
+				room:loseHp(theplayer)
+			else
+				theplayer:drawCards(1)
+			end
+		end
+		room:setPlayerFlag(theplayer, "-LuaGuhuoQuery")
+	end
+	return not (suit==sgs.Card_Heart and istrue)
+end
+LuaGuhuoCard = sgs.CreateSkillCard{
+	name = "LuaGuhuoCard",
+	target_fixed = true,
+	on_use = function(self, room, source, targets)
+		local choices = "cancel"
+		local card = nil
+		local n = 0
+		local new = false
+		local choicetable = {}
+		for cardid = 0,165,1 do
+			card = nil
+			card = sgs.Sanguosha:getCard(cardid)
+			if card and (card:isKindOf("BasicCard") or card:isNDTrick()) and not(card:isKindOf("Nullification") or card:isKindOf("Jink") or (card:isKindOf("Peach") and source:getLostHp() == 0)) then
+				choicetable = {}
+				choicetable = choices:split("+");
+				n = #choicetable
+				new = true
+				for var = 1, n, 1 do
+					if choicetable[var] == card:objectName() then new = false end
+				end
+				if new then choices = choices.."+"..card:objectName() end
+			end
+		end
+		local choice = room:askForChoice(source, "LuaGuhuo", choices)
+		local marknum = 0
+		for cardid = 0, 165, 1 do
+			card = nil
+			card = sgs.Sanguosha:getCard(cardid)
+			if card and card:objectName() == choice then 
+				marknum = cardid + 1
+				break
+			end
+		end
+		room:setPlayerMark(source, "@LuaGuhuo", marknum)
+		if marknum ~= 0 then
+			room:acquireSkill(source, "LuaGuhuoFT")
+			local carduse = sgs.CardUseStruct()
+			room:activate(source, carduse)
+			room:setPlayerMark(source, "@LuaGuhuo", 0)
+			room:detachSkillFromPlayer(source, "LuaGuhuoFT")
+			if carduse:isValid() and not (carduse.card:isKindOf("IronChain") and carduse.to:isEmpty()) then
+				local carda = sgs.Sanguosha:getCard(carduse.card:getSubcards():at(0))
+				carduse.card = sgs.Sanguosha:cloneCard(choice, sgs.Card_NoSuit, 0)
+				carduse.card:setSkillName("LuaGuhuoForLog")
+				room:useCard(carduse, false)
+				carduse.card = sgs.Sanguosha:cloneCard(choice, carda:getSuit(), carda:getNumber())
+				carduse.card:addSubcard(carda:getId())
+				carduse.card:setSkillName("LuaGuhuo")
+				local useless = askforLuaGuhuoQuery(room, source, choice, carda:objectName(), carda:getSuit())
+				room:throwCard(carda)
+				if not useless then room:useCard(carduse) end
+			end
+		end
+	end,
+}
+LuaGuhuo=sgs.CreateViewAsSkill{
+	name = "LuaGuHuo",
+	n = 0,
+	view_as = function()
+		acard = LuaGuhuoCard:clone()
+		return acard
+	end,
+}
+LuaGuhuoFT = sgs.CreateFilterSkill{
+	name = "LuaGuhuoFT",
+	view_filter = function(self, to_select)
+		return not to_select:isEquipped()
+	end,
+	view_as = function(self, card)
+		local mark = sgs.Self:getMark("@LuaGuhuo")
+		if mark == 0 then return card end
+		local oldcard = sgs.Sanguosha:getCard(mark-1)
+		local newcard = sgs.Sanguosha:cloneCard(oldcard:objectName(), card:getSuit(), card:getNumber())
+		newcard:addSubcard(card:getId())
+		newcard:setSkillName("LuaGuhuo")
+		return newcard
+	end,
+}
+LuaGuhuoTR = sgs.CreateTriggerSkill{
+	name = "#LuaGuhuoTR",
+	events = {sgs.CardAsked, sgs.CardUsed, sgs.AskForPeaches, sgs.GameStart},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.GameStart then
+			player:gainMark("cannull",1)
+			return false
+		end
+		if event == sgs.CardUsed then
+			local use = data:toCardUse()
+			return use.card:getSkillName() == "LuaGuhuoForLog"
+		end
+		local str = ""
+		if event == sgs.CardAsked then
+			str = data:toString()
+			if str == "slash" then str = "slash+fire_slash+thunder_slash" end
+		end
+		local dying = nil
+		if event == sgs.AskForPeaches then
+			dying = data:toDying()
+			if dying.who:getSeat() == player:getSeat() then
+				str = "peach+analeptic"
+			else
+				str = "peach"
+			end
+		end
+		if player:isKongcheng() or not room:askForSkillInvoke(player, "LuaGuhuo") then return false end
+		local choice = ""
+		local choicetable = {}
+		choicetable = str:split("+");
+		n = #choicetable
+		if n == 1 then choice = str else choice = room:askForChoice(player, "LuaGuhuo", str) end
+		local canvs = 0
+		local card = nil
+		for cardid = 0, 165, 1 do
+			card = nil
+			card = sgs.Sanguosha:getCard(cardid)
+			if card and card:objectName() == choice then 
+				canvs = 1
+				break
+			end
+		end
+		if canvs == 0 then return false end
+		if marknum ~= 0 then
+			while true do
+				local carda = room:askForCardShow(player, player,"LuaGuhuo")
+				local carduse = sgs.CardUseStruct()
+				carduse.card = sgs.Sanguosha:cloneCard(choice, sgs.Card_NoSuit, 0)
+				carduse.card:setSkillName("LuaGuhuoForLog")
+				carduse.from = player
+				room:useCard(carduse)
+				local useless = askforLuaGuhuoQuery(room, player, choice, carda:objectName(), carda:getSuit())
+				room:throwCard(carda)
+				if not useless then
+					local s = sgs.Sanguosha:cloneCard(choice, carda:getSuit(), carda:getNumber())
+					s:addSubcard(carda:getId())
+					s:setSkillName("LuaGuhuo")
+					if event == sgs.CardAsked then room:provide(s) end
+					if event == sgs.AskForPeaches then
+						local recover = sgs.RecoverStruct()
+						recover.recover = 1
+						recover.who = player
+						room:recover(dying.who, recover)
+					end
+					return false
+				else
+					if player:isKongcheng() or not room:askForSkillInvoke(player, "LuaGuhuo") then return false end
+				end
+			end
+		end
+	end,
+}
+local skill = sgs.Sanguosha:getSkill("LuaGuhuoFT")
+if not skill then
+	local skillList = sgs.SkillList()
+	skillList:append(LuaGuhuoFT)
+	sgs.Sanguosha:addSkills(skillList)
+end
 --[[
 	技能名：归心
 	相关武将：倚天·魏武帝
