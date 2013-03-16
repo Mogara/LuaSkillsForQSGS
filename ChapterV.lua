@@ -4,13 +4,13 @@
 	☆源代码转化失败，改写后通过：
 		不屈、称象、虎啸、祸水、龙胆、龙魂、龙魂
 	☆验证失败：
-		洞察、弘援、缓释、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗
+		洞察、弘援、缓释、激将、极略、连理、秘计、神速、探虎、伪帝、修罗
 	☆尚未完成：
 		蛊惑、归心、倾城
 	☆尚未验证：
 		明哲、军威、死谏、骁果、雄异、援护
 	☆验证通过：
-		弓骑、弘援、缓释
+		弓骑、弘援、缓释、疠火
 ]]--
 --[[
 	技能名：不屈
@@ -1600,10 +1600,10 @@ LuaXDuojian = sgs.CreateTriggerSkill{
 	技能名：疠火
 	相关武将：二将成名·程普
 	描述：你可以将一张普通【杀】当火【杀】使用，若以此法使用的【杀】造成了伤害，在此【杀】结算后你失去1点体力；你使用火【杀】时，可以额外选择一个目标。
-	状态：验证失败（不能选择额外的目标，不能流失体力）
+	状态：验证通过
 ]]--
 LuaLihuoVS = sgs.CreateViewAsSkill{
-	name = "LuaLihuoVS", 
+	name = "LuaLihuo", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		return to_select:objectName() == "slash"
@@ -1658,6 +1658,17 @@ LuaLihuo = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		return target ~= nil
 	end
+}
+LuaLihuoTarget = sgs.CreateTargetModSkill{
+	name = "#LuaLihuoTarget",
+	pattern = "FireSlash",
+	extra_target_func = function(self, player)
+		if player:hasSkill(self:objectName()) then
+			return 1
+		else
+			return 0
+		end
+	end,
 }
 --[[
 	技能名：连理
