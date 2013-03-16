@@ -61,7 +61,17 @@ LuaPaiyi = sgs.CreateViewAsSkill{
 	技能名：咆哮（锁定技）
 	相关武将：标准·张飞、翼·张飞
 	描述：你在出牌阶段内使用【杀】时无次数限制。
+	状态：验证通过
 ]]--
+LuaPaoxiao = sgs.CreateTargetModSkill{
+	name = "LuaPaoxiao",
+	pattern = "Slash",
+	residue_func = function(self, player)
+		if player:hasSkill(self:objectName()) then
+			return 998
+		end
+	end,
+}
 --[[
 	技能名：破军
 	相关武将：一将成名·徐盛
