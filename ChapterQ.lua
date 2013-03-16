@@ -150,7 +150,17 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 	技能名：奇才（锁定技）
 	相关武将：标准·黄月英
 	描述：你使用锦囊牌时无距离限制。
+	状态：验证通过
 ]]--
+LuaQicai = sgs.CreateTargetModSkill{
+	name = "LuaQicai",
+	pattern = "TrickCard",
+	distance_limit_func = function(self, player)
+		if player:hasSkill(self:objectName()) then
+			return 1000
+		end
+	end,
+}
 --[[
 	技能名：奇策
 	相关武将：二将成名·荀攸
