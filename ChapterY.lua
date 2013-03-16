@@ -672,6 +672,33 @@ LuaXYuwen = sgs.CreateTriggerSkill{
 	end,
 	priority = 3
 }
+
+luaYw=sgs.CreateTriggerSkill{
+name = "luaYw",
+events=sgs.GameOverJudge, --为什么时机不跟源代码的一样？这样用死亡笔记，凶手仍然还是自己...
+frequency = sgs.Skill_Compulsory,
+priority = 4,
+can_trigger=function(self,player)
+return player and player:hasSkill(self:objectName()) end,
+on_trigger=function(self,event,player,data)
+local room = player:getRoom()
+local damage = data:toDamageStar()
+if damage then
+if (damage.from and damage.from:objectName()==player:objectName()) then return end
+else                
+damage=sgs.DamageStruct()
+damage.to = player
+data:setValue(damage)
+end
+damage.from = player
+local log = sgs.LogMessage()
+log.type = "#TriggerSkill"
+log.from = player
+log.arg  = self:objectName()
+room:sendLog(log) 
+return
+end
+}	
 --[[
 	技能名：援护
 	相关武将：SP·曹洪
