@@ -575,8 +575,14 @@ LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾
 	描述：摸牌阶段，你可以少摸一张牌，令其他己方角色各摸一张牌。
-	状态：验证失败（源码AI::GetRelation3v3(zhugejin, other)无法转化）
+	状态：0224验证通过（源码AI::GetRelation3v3(zhugejin, other)无法转化，直接使用身份判断是否为队友）
 ]]--
+Lua3V3_isFriend = function(player,other)
+	if player:getRole()=="lord" then return other:getRole()=="loyalist" end
+	if player:getRole()=="loyalist" then return other:getRole()=="lord" end
+	if player:getRole()=="renegade" then return other:getRole()=="rebel" end
+	if player:getRole()=="rebel" then return other:getRole()=="renegade" end
+end
 LuaXHongyuan = sgs.CreateTriggerSkill{
 	name = "LuaXHongyuan",  
 	frequency = sgs.Skill_NotFrequent, 
@@ -600,7 +606,7 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 			if player:hasFlag("LuaXHongyuan") then
 				room:setPlayerFlag(player, "-Invoked")
 				for _,other in sgs.qlist(room:getOtherPlayers(player)) do
-					if sgs.AI_GetRelation3v3(player, other) == sgs.AI_Friend then
+					if Lua3V3_isFriend(player, other) then
 						other:drawCards(1)
 					end
 				end
@@ -712,8 +718,15 @@ LuaHuxiaoHid = sgs.CreateTargetModSkill{
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
 	描述：在一名己方角色的判定牌生效前，你可以打出一张牌代替之。
-	状态：验证失败（源码AI::GetRelation3v3(zhugejin, other)无法转化）
+	状态：0224验证通过（源码AI::GetRelation3v3(zhugejin, other)无法转化，使用身份判断是否为队友）
 ]]--
+Lua3V3_isFriend = function(player,other)
+	if player:getRole()=="lord" then return other:getRole()=="loyalist" end
+	if player:getRole()=="loyalist" then return other:getRole()=="lord" end
+	if player:getRole()=="renegade" then return other:getRole()=="rebel" end
+	if player:getRole()=="rebel" then return other:getRole()=="renegade" end
+end
+
 LuaXHuanshiCard = sgs.CreateSkillCard{
 	name = "LuaXHuanshiCard", 
 	target_fixed = true, 
@@ -741,18 +754,7 @@ LuaXHuanshiVS = sgs.CreateViewAsSkill{
 		return pattern == "@LuaXHuanshi"
 	end
 }
-getTeammates = function(zhugejin)
-	local room = zhugejin:getRoom()
-	local teammates = sgs.SPlayerList()
-	teammates:append(zhugejin)
-	local others = room:getOtherPlayers(zhugejin)
-	for _,other in sgs.qlist(others) do
-		if sgs.AI_GetRelation3v3(zhugejin, other) == sgs.AI_Friend then
-			teammates:append(other)
-		end
-	end
-	return teammates
-end
+
 LuaXHuanshi = sgs.CreateTriggerSkill{
 	name = "LuaXHuanshi",  
 	frequency = sgs.Skill_NotFrequent, 
@@ -761,12 +763,9 @@ LuaXHuanshi = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local judge = data:toJudge()
 		local can_invoke = false
-		local mates = getTeammates(player)
-		for _,teammate in sgs.qlist(mates) do
-			if teammate:objectName() == judge.who:objectName() then
-				can_invoke = true
-				break
-			end
+		local room = player:getRoom()
+		if Lua3V3_isFriend(player,judge.who) then
+			can_invoke = true
 		end
 		if not can_invoke then
 			return false
