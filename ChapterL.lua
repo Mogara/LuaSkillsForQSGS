@@ -1188,54 +1188,31 @@ LuaLianpoDo = sgs.CreateTriggerSkill{
 	priority = -3
 }
 --[[
-	技能名：联营
+	技能名：连营
 	相关武将：标准·陆逊、倚天·陆抗
 	描述：当你失去最后的手牌时，你可以摸一张牌。
 	状态：验证通过
 ]]--
-LuaLianying = sgs.CreateTriggerSkill{
-	name = "LuaLianying",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.CardsMoveOneTime},
-	on_trigger = function(self, event, player, data) 
+LuaLianYing = sgs.CreateTriggerSkill{
+	name = "LuaLianYing",
+	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local move = data:toMoveOneTime()
-		local source = move.from
-		if source then
-			if source:objectName() == player:objectName() then
-				if player:isKongcheng() then
-					if move.from_places:contains(sgs.Player_PlaceHand) then
-						if player:askForSkillInvoke(self:objectName(), data) then
-							player:drawCards(1)
-						end
-					end
-				end
+		if move.from and move.from:hasSkill(self:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
+			if event == sgs.BeforeCardsMove then 
+				for _, rh in sgs.qlist(player:handCards()) do 
+				if not move.card_ids:contains(rh) then return end
 			end
+			player:addMark(self:objectName())
+		else
+			if player:getMark(self:objectName()) == 0 then return end
+			player:removeMark(self:objectName())             
+			if not room:askForSkillInvoke(player,self:objectName(),data) then return end  
+			room:broadcastSkillInvoke("lianying");player:drawCards(1) end
 		end
-		return false
-	end
-}
---0224连营
-LuaLianYing=sgs.CreateTriggerSkill{--连营
-name="LuaLianYing",
-events={sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
-on_trigger=function(self,event,player,data)
-local room=player:getRoom()	
-local move=data:toMoveOneTime()
-if move.from and move.from:hasSkill(self:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
-if event==sgs.BeforeCardsMove then 
-for _, rh in sgs.qlist(player:handCards()) do 
-if not move.card_ids:contains(rh) then return end
-end
-player:addMark(self:objectName())
-else
-if player:getMark(self:objectName()) == 0 then return end
-player:removeMark(self:objectName())             
-if not room:askForSkillInvoke(player,self:objectName(),data) then return end  
-room:broadcastSkillInvoke("lianying");player:drawCards(1) end
-end
-end,
-}  
-
+	end,
+} 
 --[[
 	技能名：烈弓
 	相关武将：风·黄忠
