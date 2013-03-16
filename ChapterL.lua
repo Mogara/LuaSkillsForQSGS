@@ -579,8 +579,76 @@ LuaXLongluo = sgs.CreateTriggerSkill{
 	技能名：疠火
 	相关武将：二将成名·程普
 	描述：你可以将一张普通【杀】当火【杀】使用，若以此法使用的【杀】造成了伤害，在此【杀】结算后你失去1点体力；你使用火【杀】时，可以额外选择一个目标。
-	状态：验证失败
+	状态：验证通过
 ]]--
+LuaLihuoVS = sgs.CreateViewAsSkill{
+	name = "LuaLihuo", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		return to_select:objectName() == "slash"
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local card = cards[1]
+			local suit = card:getSuit()
+			local number = card:getNumber()
+			local id = card:getId()
+			local acard = sgs.Sanguosha:cloneCard("fire_slash", suit, number)
+			acard:addSubcard(id)
+			acard:setSkillName(self:objectName())
+			return acard
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return sgs.Slash_IsAvailable(player)
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "slash"
+	end
+}
+LuaLihuo = sgs.CreateTriggerSkill{
+	name = "LuaLihuo",
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.DamageDone, sgs.CardFinished}, 
+	view_as_skill = LuaLihuoVS, 
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.DamageDone then
+			local damage = data:toDamage()
+			local card = damage.card
+			if card then
+				if card:isKindOf("Slash") then
+					if card:getSkillName() == self:objectName() then
+						room:setTag("Invokelihuo", sgs.QVariant(true))
+					end
+				end
+			end
+		elseif event == sgs.CardFinished then
+			if player:hasSkill(self:objectName()) then
+				local tag = room:getTag("Invokelihuo")
+				if tag:toBool() then
+					room:setTag("Invokelihuo", sgs.QVariant(false))
+					room:loseHp(player, 1)
+				end
+			end
+		end
+		return false;
+	end, 
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
+LuaLihuoTarget = sgs.CreateTargetModSkill{
+	name = "#LuaLihuoTarget",
+	pattern = "FireSlash",
+	extra_target_func = function(self, player)
+		if player:hasSkill(self:objectName()) then
+			return 1
+		else
+			return 0
+		end
+	end,
+}
 --[[
 	技能名：礼让
 	相关武将：国战·孔融
