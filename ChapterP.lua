@@ -68,7 +68,7 @@ LuaPaoxiao = sgs.CreateTargetModSkill{
 	pattern = "Slash",
 	residue_func = function(self, player)
 		if player:hasSkill(self:objectName()) then
-			return 998
+			return 1000
 		end
 	end,
 }
