@@ -1060,8 +1060,6 @@ function setHuoshuiFlag(room, player, is_lose)
 		room:filterCards(pl, pl:getCards("he"), not is_lose)
 	end
 end
-
-
 LuaHuoshui = sgs.CreateTriggerSkill{
 	name = "LuaHuoshui",
 	events	= {sgs.EventPhaseStart,sgs.EventPhaseChanging,sgs.PostHpReduced,sgs.Death,sgs.MaxHpChanged,sgs.EventAcquireSkill,sgs.EventLoseSkill,sgs.HpRecover,sgs.PreHpLost},
