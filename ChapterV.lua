@@ -2,11 +2,11 @@
 	代码速查手册（V区）
 	技能索引：（本区用于收录尚未实现或有争议的技能）
 	☆源代码转化失败，改写后通过：
-		不屈、称象、虎啸、龙胆、龙魂、龙魂
+		不屈、称象、虎啸、祸水、龙胆、龙魂、龙魂
 	☆验证失败：
 		洞察、弘援、缓释、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗
 	☆尚未完成：
-		蛊惑、归心、祸水、倾城
+		蛊惑、归心、倾城
 	☆尚未验证：
 		明哲、军威、死谏、骁果、雄异、援护
 	☆验证通过：
@@ -867,100 +867,75 @@ LuaXHuanshi = sgs.CreateTriggerSkill{
 	技能名：祸水（锁定技）
 	相关武将：国战·邹氏
 	描述：你的回合内，体力值不少于体力上限一半的其他角色所有武将技能无效。 
-	状态：尚未完成
+	状态：验证通过
 ]]--
-function setHuoshuiFlag(room, player, is_lose)
-	local others = room:getOtherPlayers(player)
-	for _,p in sgs.qlist(others) do
-		if is_lose then
-			room:setPlayerFlag(p, "-huoshui") 
-		else
-			room:setPlayerFlag(p, "huoshui")
-		end
-		local cards = p:getCards("he")
-		room:filterCards(p, cards, not is_lose)
+function setHuoshuiFlag(room, player, is_lose) 
+	for _,pl in sgs.qlist(room:getOtherPlayers(player)) do
+		room:setPlayerFlag(pl, is_lose and "-huoshui" or "huoshui")
+		room:filterCards(pl, pl:getCards("he"), not is_lose)
 	end
 end
-LuaXHuoshui = sgs.CreateTriggerSkill{
-	name = "LuaXHuoshui",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.EventPhaseStart, sgs.EventPhaseChanging, sgs.Death, sgs.EventLoseSkill, sgs.EventAcquireSkill, sgs.ostHpReduced, sgs.HpRecover, sgs.MaxHpChanged},  
-	on_trigger = function(self, event, player, data) 
+
+
+LuaHuoshui = sgs.CreateTriggerSkill{
+	name = "LuaHuoshui",
+	events	= {sgs.EventPhaseStart,sgs.EventPhaseChanging,sgs.PostHpReduced,sgs.Death,sgs.MaxHpChanged,sgs.EventAcquireSkill,sgs.EventLoseSkill,sgs.HpRecover,sgs.PreHpLost},
+	priority = 4,	
+	frequency = sgs.Skill_Compulsory,
+	can_trigger = function(self, player)
+		return player ~= nil
+	end,
+	on_trigger = function(self, event, player, data)
+		if player == nil or player:isDead() then return end
 		local room = player:getRoom()
-		if event == sgs.EventPhaseStart then
-			if player:isAlive() and player:hasSkill(self:objectName()) then
-				if player:getPhase() == sgs.Player_RoundStart then
-					setHuoshuiFlag(room, player, false)
-				end
-			end
-		elseif event == sgs.EventPhaseChanging then
-			local change = data:toPhaseChange()
-			if player:isAlive() and player:hasSkill(self:objectName()) then
-				if change.to == sgs.Player_NotActive then
-					setHuoshuiFlag(room, player, true)
-				end
-			end
-		elseif event == sgs.Death then
-			local death = data:toDeath()
-			if death.who:objectName() == player:objectName() then
-				if player:hasSkill(self:objectName()) then
-					setHuoshuiFlag(room, player, true)
-				end
-			end
-		elseif event == sgs.EventLoseSkill then
-			if data:toString() == self:objectName() then
-				local current = room:getCurrent()
-				if current and current:objectName() == player:objectName() then
-					setHuoshuiFlag(room, player, true)
-				end
-			end
-		elseif event == sgs.EventAcquireSkill then
-			if data:toString() == self:objectName() then
-				local current = room:getCurrent()
-				if current and current:objectName() == player:objectName() then
-					setHuoshuiFlag(room, player, false)
-				end
-			end
-		elseif event == sgs.PostHpReduced then
-			if player:hasFlag(self:objectName()) then
-				local reduce = 0
-				--[[以下代码含有canConvert等无法转化
-				if (data.canConvert<DamageStruct>()) {
-					DamageStruct damage = data.value<DamageStruct>()
-					reduce = damage.damage
-				} else
-					reduce = data.toInt()
-				]]--
-				local hp = player:getHp()
-				local maxhp_2 = (player:getMaxHp() + 1) / 2
-				if hp < maxhp_2 and hp + reduce >= maxhp_2 then
-					local cards = player:getCards("he")
-					room:filterCards(player, cards, false)
-				end
-			end
-		elseif event == sgs.MaxHpChanged then
-			if player:hasFlag(self:objectName()) then
-				local cards = player:getCards("he")
-				room:filterCards(player, cards, true)
-			end
-		elseif event == sgs.HpRecover then
-			local recover_struct = data:toRecover()
-			local recover = recover_struct.recover
-			if player:hasFlag(self:objectName()) then
-				local hp = player:getHp()
-				local maxhp_2 = (player:getMaxHp() + 1) / 2
-				if hp >= maxhp_2 and hp - recover < maxhp_2 then
-					local cards = player->getCards("he")
-					room:filterCards(player, cards, true)
-				end
+		if event == sgs.EventPhaseStart and player:getPhase() == sgs.Player_RoundStart and player:hasSkill(self:objectName()) then
+			setHuoshuiFlag(room, player, false)
+		end
+		if event == sgs.EventPhaseChanging and data:toPhaseChange().to == sgs.Player_NotActive and player:hasSkill(self:objectName()) then 
+			setHuoshuiFlag(room, player, true)
+		end
+		if event == sgs.Death then 
+			local SI = data:toDeath()
+			if player:objectName() == SI.who:objectName() then return end
+			if player:hasSkill(self:objectName()) then
+				setHuoshuiFlag(room, player, true)
 			end
 		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		return target
-	end, 
-	priority = 4
+		if event == sgs.EventLoseSkill and data:toString() == self:objectName() and room:getCurrent() and room:getCurrent():objectName() == player:objectName() then
+			setHuoshuiFlag(room, player, true)
+		end
+		if event == sgs.EventAcquireSkill and data:toString() == self:objectName() and room:getCurrent() and room:getCurrent():objectName() == player:objectName()then
+			setHuoshuiFlag(room, player, false)
+		end
+		if event == sgs.PostHpReduced or event == sgs.PreHpLost then
+			if not player:hasFlag("huoshui") then return end
+			local x=0
+			if event == sgs.PostHpReduced then
+				x = data:toDamage().damage
+			else
+				x=data:toInt()
+			end
+			local lhp=player:getHp()
+			local xhp=(player:getMaxHp() + 1) / 2
+			if (lhp < xhp and lhp + x >= xhp) then
+				room:filterCards(player, player:getCards("he"), false)
+			end
+		end
+		if event == sgs.MaxHpChanged and player:hasFlag("huoshui") then
+			room:filterCards(player, player:getCards("he"), true)
+		end
+		if event == sgs.HpRecover then 
+			local recov = data:toRecover()
+			local nnx=recov.recover
+			if player:hasFlag("huoshui") then
+				local hp = player:getHp()
+				local maxhp_2 = (player:getMaxHp() + 1) / 2
+				if (hp >= maxhp_2 and hp - nnx < maxhp_2) then
+					room:filterCards(player, player:getCards("he"), true)
+				end
+			end 
+		end
+	end,
 }
 --[[
 	技能名：激将（主公技）
