@@ -443,12 +443,15 @@ LuaXHouyuan = sgs.CreateViewAsSkill{
 ]]--
 LuaHuxiao = sgs.CreateTriggerSkill{
 	name = "LuaHuxiao",
-	events = {sgs.SlashMissed,sgs.EventPhaseStart},
+	events = {sgs.SlashMissed,sgs.EventPhaseChanging},
 	on_trigger = function(self, event, player, data)
 		if event == sgs.SlashMissed then
-			player:gainMark("Huxiao", 1)
-		elseif event == sgs.EventPhaseStart then	
-			if player:getPhase() == sgs.Player_Finish then
+			if player:getPhase() == sgs.Player_Play then
+				player:gainMark("Huxiao", 1)
+			end
+		elseif event == sgs.EventPhaseChanging then	
+			local change = data:toPhaseChange()
+			if change.from == sgs.Player_Play then
 				local x = player:getMark("Huxiao")
 				if x > 0 then
 					player:loseMark("Huxiao", x)
