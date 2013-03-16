@@ -34,27 +34,27 @@ LuaXHantongCard = sgs.CreateSkillCard{
 			if(p:getKingdom() == "shu") then
 				local slash = room:askForCard(p, "slash", "@jijiang-slash" , sgs.QVariant() , sgs.CardResponsed)
 				if (slash) then
-					local use = sgs.CardUseStruct()
+					local use = sgs.CardUseStruc()
 						use.card = slash
 						use.to:append(targets[1])
 						use.from = source
 					room:useCard(use, true)
-					break
+					br
 				else
-					room:setPlayerFlag(p, "sbleba")
+					room:setPlayerFlag(p, "Hantongjj_failed")
 				end
 			end
 		end
 	end,
 }
 LuaXHantongVS = sgs.CreateViewAsSkill{
-	name = "LuaXHantong",
+	name = "LuaXFHantong",
 	n = 0,
 	view_as = function(self, cards)
 		return LuaXHantongCard:clone()
 	end,
 	enabled_at_play = function(self, player)
-		return ((player:canSlashWithoutCrossbow()) or (player:getWeapon() and player:getWeapon():getClassName() == "Crossbow")) and not player:getPile("hantongpile"):isEmpty()
+		return ((player:canSlashWithoutCrossbow()) or (player:getWeapon() and player:getWeapon():getClassName() == "Crossbow")) and not player:getPile("hantongpile"):isEmpty() and not player:hasFlag("Hantongjj_failed")
 	end,
 }
 LuaXHantong = sgs.CreateTriggerSkill{
