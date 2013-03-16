@@ -649,14 +649,81 @@ LuaHuashen = sgs.CreateTriggerSkill{
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
 	描述：在一名己方角色的判定牌生效前，你可以打出一张牌代替之。
-	状态：尚未完成
+	状态:验证失败
 ]]--
 --[[
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾（身份局）
 	描述：在一名角色的判定牌生效前，你可以令其选择是否由你打出一张牌代替之。
-	状态：尚未完成
+	状态：验证通过
 ]]--
+LuaXHuanshiCard = sgs.CreateSkillCard{
+	name = "LuaXHuanshiCard", 
+	target_fixed = true, 
+	will_throw = false, 
+	handling_method = sgs.Card_MethodResponse
+}
+LuaXHuanshiVS = sgs.CreateViewAsSkill{
+	name = "LuaXHuanshi", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		return not sgs.Self:isCardLimited(to_select, sgs.Card_MethodResponse)
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local card = LuaXHuanshiCard:clone()
+			card:setSuit(cards[1]:getSuit())
+			card:addSubcard(cards[1])
+			return card
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return false
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@LuaXHuanshi"
+	end
+}
+LuaXHuanshi = sgs.CreateTriggerSkill{
+	name = "LuaXHuanshi",  
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.AskForRetrial},  
+	view_as_skill = LuaXHuanshiVS, 
+	on_trigger = function(self, event, player, data) 
+		local judge = data:toJudge()
+		local can_invoke = false
+		local room = player:getRoom()
+		if judge.who:objectName() ~= player:objectName() then
+			if room:askForSkillInvoke(player, self:objectName()) then
+				if room:askForChoice(judge.who, self:objectName(), "yes+no") == "yes" then
+					can_invoke = true;
+				end
+			end
+		else 
+			can_invoke = true
+		end
+		if not can_invoke then
+			return false
+		end
+		local prompt_list = {"@huanshi-card", judge.who:objectName(), self:objectName(), judge.reason, judge.card:getEffectIdString()}
+		local prompt = table.concat(prompt_list, ":")
+		player:setTag("Judge", data)
+		local pattern = "@LuaXHuanshi"
+		local card = room:askForCard(player, pattern, prompt, data, sgs.Card_MethodResponse, judge.who, true)
+		if card then
+			room:retrial(card, player, judge, self:objectName())
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		if target then
+			if target:isAlive() and target:hasSkill(self:objectName()) then
+				return not target:isNude()
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：皇恩
 	相关武将：贴纸·刘协
