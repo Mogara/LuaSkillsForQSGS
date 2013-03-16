@@ -631,55 +631,58 @@ LuaGuixin = sgs.CreateTriggerSkill{
 	描述：回合结束阶段，你可以做以下二选一：
 		1. 永久改变一名其他角色的势力
 		2. 永久获得一项未上场或已死亡角色的主公技。(获得后即使你不是主公仍然有效) 
-	状态：尚未完成
+	状态：验证通过
 ]]--
-YTguixin = sgs.CreateTriggerSkill{--我不知道怎么排版才合适？？？
-name = "YTguixin",
-events = {sgs.EventPhaseProceeding},
-on_trigger = function(self, event, player, data)
-local room = player:getRoom()
-if player:getPhase()~=sgs.Player_Finish then return end
-if (room:askForSkillInvoke(player,self:objectName())~=true) then return end
-local tc=room:askForChoice(player,"YTguixin", "modify+obtain")	
-if (tc == "modify") then
-local to_modify = room:askForPlayerChosen(player,room:getOtherPlayers(player), "YTguixin")
-local data = sgs.QVariant()
-data:setValue(to_modify)
-room:setTag("Guixin2Modify", data)
-local kingdom=room:askForChoice(player,"YTguixin","wei+shu+wu+qun")
-room:removeTag("Guixin2Modify")           
-local old_kingdom = to_modify:getKingdom()
-room:setPlayerProperty(to_modify,"kingdom",sgs.QVariant(kingdom))
-local log = sgs.LogMessage()
-log.type = "#ChangeKingdom"
-log.from = player
-log.to:append(to_modify)
-log.arg = old_kingdom
-log.arg2 = kingdom
-room:sendLog(log)
-elseif (tc == "obtain") then
-local lords=sgs.Sanguosha:getLords()
-local players=room:getOtherPlayers(player)
-for _, rh in sgs.qlist(players) do table.removeOne(lords,rh:getGeneralName()) end
-local lord_skills={}
-for _, rhx in ipairs(lords) do 
-local general = sgs.Sanguosha:getGeneral(rhx)
-local skills = general:getSkillList()
-for _, skill in sgs.qlist(skills) do 
-if skill:isLordSkill() and not player:hasSkill(skill:objectName()) then
-table.insert(lord_skills,skill:objectName()) end
-end	
-end
-if (#lord_skills>0) then
-local skill_name = room:askForChoice(player,self:objectName(),table.concat(lord_skills,"+"))
-local skill = sgs.Sanguosha:getSkill(skill_name)           
-room:acquireSkill(player,skill) 
-local jiemingEX = sgs.Sanguosha:getTriggerSkill(skill:objectName())
-jiemingEX:trigger(sgs.GameStart, room, player, sgs.QVariant())
-end
-end
-return
-end,
+LuaGuixin = sgs.CreateTriggerSkill{
+	name = "LuaGuixin",
+	events = {sgs.EventPhaseProceeding},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() ~= sgs.Player_Finish then return end
+		if (room:askForSkillInvoke(player, self:objectName()) ~= true) then return end
+		local tc = room:askForChoice(player, "LuaGuixin", "modify+obtain")	
+		if (tc == "modify") then
+			local to_modify = room:askForPlayerChosen(player, room:getOtherPlayers(player), "YTguixin")
+			local data = sgs.QVariant()
+			data:setValue(to_modify)
+			room:setTag("Guixin2Modify", data)
+			local kingdom = room:askForChoice(player, "LuaGuixin", "wei+shu+wu+qun")
+			room:removeTag("Guixin2Modify")           
+			local old_kingdom = to_modify:getKingdom()
+			room:setPlayerProperty(to_modify, "kingdom", sgs.QVariant(kingdom))
+			local log = sgs.LogMessage()
+			log.type = "#ChangeKingdom"
+			log.from = player
+			log.to:append(to_modify)
+			log.arg = old_kingdom
+			log.arg2 = kingdom
+			room:sendLog(log)
+		elseif (tc == "obtain") then
+			local lords = sgs.Sanguosha:getLords()
+			local players = room:getOtherPlayers(player)
+			for _, rh in sgs.qlist(players) do
+				table.removeOne(lords, rh:getGeneralName())
+			end
+			local lord_skills = {}
+			for _, rhx in ipairs(lords) do 
+				local general = sgs.Sanguosha:getGeneral(rhx)
+				local skills = general:getSkillList()
+				for _, skill in sgs.qlist(skills) do 
+					if skill:isLordSkill() and not player:hasSkill(skill:objectName()) then
+						table.insert(lord_skills, skill:objectName())
+					end
+				end	
+			end
+			if (#lord_skills>0) then
+				local skill_name = room:askForChoice(player, self:objectName(), table.concat(lord_skills, "+"))
+				local skill = sgs.Sanguosha:getSkill(skill_name)           
+				room:acquireSkill(player, skill) 
+				local jiemingEX = sgs.Sanguosha:getTriggerSkill(skill:objectName())
+				jiemingEX:trigger(sgs.GameStart, room, player, sgs.QVariant())
+			end
+		end
+		return
+	end,
 }
 --[[
 	技能名：鬼道
