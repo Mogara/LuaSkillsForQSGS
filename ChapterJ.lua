@@ -1183,17 +1183,6 @@ LuaJuxiangSavageAssaultAvoid = sgs.CreateTriggerSkill{
 		end
 	end
 }
-LuaJuxiangSavageAssaultAvoid = sgs.CreateTriggerSkill{
-	name = "#LuaJuxiangSavageAssaultAvoid",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.CardEffected},
-	on_trigger = function(self, event, player, data)
-		local effect = data:toCardEffect()
-		if effect.card:isKindOf("SavageAssault") then
-			return true
-		end
-	end
-}
 --[[
 	技能名：绝汲
 	相关武将：倚天·张儁乂
