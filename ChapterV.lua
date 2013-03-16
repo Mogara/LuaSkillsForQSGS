@@ -2675,3 +2675,41 @@ LuaYuanhu = sgs.CreateTriggerSkill{
 		return false
 	end
 }
+--
+--0224焚心【】
+LuaXFenxin = sgs.CreateTriggerSkill{
+name = "LuaXFenxin",  
+frequency = sgs.Skill_Limited, 
+events = {sgs.BeforeGameOverJudge,sgs.GameStart},  
+can_trigger = function(self, target)
+return target~=nil end,
+on_trigger = function(self, event, player, data) 
+local room = player:getRoom()
+if (event==sgs.BeforeGameOverJudge) then
+local mode = room:getMode()
+if string.sub(mode, -1)~="p" and string.sub(mode, -2) ~= "pd" and string.sub(mode, -2) ~= "pz" then return end
+local damage = data:toDamageStar()
+if damage==nil then return end
+local killer = damage.from
+if not killer or killer:isLord() or player:isLord() or player:getHp()>0 then return end
+if not killer:hasSkill(self:objectName()) or killer:getMark("@burnheart")==0 then return end
+room:setPlayerFlag(player, "FenxinTarget")						
+local ai_data = sgs.QVariant()
+ai_data:setValue(player)
+if room:askForSkillInvoke(killer,self:objectName(),ai_data) then
+--room:broadcastInvoke("animate", "lightbox:$FenxinAnimate")
+--room:getThread():delay(1500)
+killer:loseMark("@burnheart")
+local role1 = killer:getRole()									
+killer:setRole(player:getRole())								
+room:setPlayerProperty(killer, "role", sgs.QVariant(killer:setRole(player:getRole())))									
+player:setRole(role1)									
+room:setPlayerProperty(player, "role", sgs.QVariant(role1))									
+end										
+room:setPlayerFlag(player, "-FenxinTarget")	
+end			
+if (event==sgs.GameStart and player:hasSkill(self:objectName())) then player:gainMark("@burnheart", 1)
+return
+end						
+end,								 
+}
