@@ -1135,42 +1135,52 @@ LuaXNeoJushou = sgs.CreateTriggerSkill{
 LuaJuxiang = sgs.CreateTriggerSkill{
 	name = "LuaJuxiang",
 	frequency = sgs.Skill_Compulsory,
-	events = {sgs.PostCardEffected},
+	events = {sgs.CardsMoving,sgs.CardUsed},
 	on_trigger = function(self, event, player, data)
-		local use = data:toCardUse()
-		local card = use.card
-		if card:isKindOf("SavageAssault") then
-			if card:isVirtualCard() then
-				return false
+		local room = player:getRoom()
+		if event == sgs.CardUsed then
+			local use = data:toCardUse()
+			if use.card:isVirtualCard() then
+				if use.card:isKindOf("SavageAssault") then
+					if use.card:subcardsLength() == 1 then
+						if sgs.Sanguosha:getCard(use.card:getSubcards():first()):isKindOf("SavageAssault") then
+							 room:setCardFlag(use.card:getSubcards():first(), "real_SA")
+						end
+					end
+				end
+			elseif use.card:isKindOf("SavageAssault") then
+				room:setCardFlag(use.card:getId(), "real_SA")
 			end
-			local ids = card:getSubcards()
-			if ids:length() == 1 then
-				local id = ids:first()
-				local sa_card = sgs.Sanguosha:getCard(id)
-				if sa_card:isKindOf("SavageAssault") then
-					if player then
-						local room = player:getRoom()
-						local place = room:getCardPlace(id)
-						if place == sgs.Player_DiscardPile then
-							local targets = room:getAllPlayers()
-							for _,p in sgs.qlist(targets) do
-								if p:hasSkill(self:objectName()) then
-									p:obtainCard(card)
-									break
-								end
+		elseif event == sgs.CardsMoving then
+			local move = data:toMoveOneTime()
+			if move.card_ids:length() == 1 and move.from_places:contains(sgs.Player_PlaceTable) and move.to_place == sgs.Player_DiscardPile then
+				if move.reason.m_reason == sgs.CardMoveReason_S_REASON_USE then
+					local card = sgs.Sanguosha:getCard(move.card_ids:first())
+					if card:hasFlag("real_SA") then
+						local targets = room:getAllPlayers()
+						for _,p in sgs.qlist(targets) do
+							if p:hasSkill(self:objectName()) and p:objectName() ~= move.from:objectName() then
+								p:obtainCard(card)
 							end
 						end
 					end
 				end
 			end
 		end
-		return false
 	end,
 	can_trigger = function(self, target)
-		if target then
-			return not target:hasSkill(self:objectName())
+		return target ~= nil
+	end
+}
+LuaJuxiangSavageAssaultAvoid = sgs.CreateTriggerSkill{
+	name = "#LuaJuxiangSavageAssaultAvoid",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.CardEffected},
+	on_trigger = function(self, event, player, data)
+		local effect = data:toCardEffect()
+		if effect.card:isKindOf("SavageAssault") then
+			return true
 		end
-		return false
 	end
 }
 LuaJuxiangSavageAssaultAvoid = sgs.CreateTriggerSkill{
