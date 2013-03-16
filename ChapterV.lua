@@ -4,11 +4,11 @@
 	☆源代码转化失败，改写后通过：
 		不屈、称象、虎啸、龙胆、龙魂、龙魂
 	☆验证失败：
-		洞察、弘援、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗
+		洞察、弘援、缓释、激将、极略、疠火、连理、秘计、神速、探虎、伪帝、修罗
 	☆尚未完成：
 		蛊惑、归心、祸水、倾城
 	☆尚未验证：
-		明哲、缓释、缓释、军威、死谏、骁果、雄异、援护
+		明哲、缓释、军威、死谏、骁果、雄异、援护
 	☆验证通过：
 		弓骑、弘援
 ]]--
@@ -575,7 +575,7 @@ LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾
 	描述：摸牌阶段，你可以少摸一张牌，令其他己方角色各摸一张牌。
-	状态：验证失败（源码AI::GetRelation3v3(zhugejin, other)无法转换）
+	状态：验证失败（源码AI::GetRelation3v3(zhugejin, other)无法转化）
 ]]--
 LuaXHongyuan = sgs.CreateTriggerSkill{
 	name = "LuaXHongyuan",  
@@ -712,7 +712,7 @@ LuaHuxiaoHid = sgs.CreateTargetModSkill{
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
 	描述：在一名己方角色的判定牌生效前，你可以打出一张牌代替之。
-	状态：尚未验证
+	状态：验证失败（源码AI::GetRelation3v3(zhugejin, other)无法转化）
 ]]--
 LuaXHuanshiCard = sgs.CreateSkillCard{
 	name = "LuaXHuanshiCard", 
