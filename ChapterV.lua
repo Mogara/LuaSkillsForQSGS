@@ -578,10 +578,8 @@ LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
 	状态：0224验证通过（源码AI::GetRelation3v3(zhugejin, other)无法转化，直接使用身份判断是否为队友）
 ]]--
 Lua3V3_isFriend = function(player,other)
-	if player:getRole()=="lord" then return other:getRole()=="loyalist" end
-	if player:getRole()=="loyalist" then return other:getRole()=="lord" end
-	if player:getRole()=="renegade" then return other:getRole()=="rebel" end
-	if player:getRole()=="rebel" then return other:getRole()=="renegade" end
+	local tb={["lord"]="warm",["loyalist"]="warm",["renegade"]="cold",["rebel"]="cold"}
+	return tb[player:getRole()]==tb[other:getRole()]
 end
 LuaXHongyuan = sgs.CreateTriggerSkill{
 	name = "LuaXHongyuan",  
@@ -721,10 +719,8 @@ LuaHuxiaoHid = sgs.CreateTargetModSkill{
 	状态：0224验证通过（源码AI::GetRelation3v3(zhugejin, other)无法转化，使用身份判断是否为队友）
 ]]--
 Lua3V3_isFriend = function(player,other)
-	if player:getRole()=="lord" then return other:getRole()=="loyalist" end
-	if player:getRole()=="loyalist" then return other:getRole()=="lord" end
-	if player:getRole()=="renegade" then return other:getRole()=="rebel" end
-	if player:getRole()=="rebel" then return other:getRole()=="renegade" end
+	local tb={["lord"]="warm",["loyalist"]="warm",["renegade"]="cold",["rebel"]="cold"}
+	return tb[player:getRole()]==tb[other:getRole()]
 end
 
 LuaXHuanshiCard = sgs.CreateSkillCard{
