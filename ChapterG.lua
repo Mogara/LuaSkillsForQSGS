@@ -640,13 +640,13 @@ LuaGuixin = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		if player:getPhase() ~= sgs.Player_Finish then return end
 		if (room:askForSkillInvoke(player, self:objectName()) ~= true) then return end
-		local tc = room:askForChoice(player, "LuaGuixin", "modify+obtain")	
+		local tc = room:askForChoice(player, self:objectName(), "modify+obtain")	
 		if (tc == "modify") then
-			local to_modify = room:askForPlayerChosen(player, room:getOtherPlayers(player), "YTguixin")
+			local to_modify = room:askForPlayerChosen(player, room:getOtherPlayers(player), self:objectName())
 			local data = sgs.QVariant()
 			data:setValue(to_modify)
 			room:setTag("Guixin2Modify", data)
-			local kingdom = room:askForChoice(player, "LuaGuixin", "wei+shu+wu+qun")
+			local kingdom = room:askForChoice(player, self:objectName(), "wei+shu+wu+qun")
 			room:removeTag("Guixin2Modify")           
 			local old_kingdom = to_modify:getKingdom()
 			room:setPlayerProperty(to_modify, "kingdom", sgs.QVariant(kingdom))
