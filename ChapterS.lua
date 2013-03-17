@@ -157,7 +157,32 @@ LuaShenfen = sgs.CreateViewAsSkill{
 	技能名：神戟
 	相关武将：SP·暴怒战神
 	描述：若你的装备区没有武器牌，当你使用【杀】时，你可以额外选择至多两个目标。 
+	附注：由于TargetModSkill为锁定技，与描述有出入，所以创建一个仅提供按键图标的空壳视为技，功能由TargetModSkill实现。
 ]]--
+LuaShenji = sgs.CreateViewAsSkill{
+	name = "LuaShenji",
+	n = 0,
+	view_filter = function(self, selected, to_select)
+		return false
+	end,
+	view_as = function(self, cards)
+		return false
+	end,
+	enabled_at_play = function(self, player)
+		return false
+	end,
+}
+LuaShenjiHid = sgs.CreateTargetModSkill{
+	name = "#LuaShenjiHid",
+	pattern = "Slash",
+	extra_target_func = function(self, player)
+		if player:hasSkill(self:objectName()) then
+			if player:getWeapon() == nil then
+				return 2
+			end
+		end
+	end,
+}
 --[[
 	技能名：神君（锁定技）
 	相关武将：倚天·陆伯言
