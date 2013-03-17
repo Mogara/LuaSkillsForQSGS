@@ -482,7 +482,6 @@ LuaDuanbing = sgs.CreateTriggerSkill{
 		end
 		use.to:append(target)
 		data:setValue(use)
-		room:broadcastSkillInvoke(self:objectName())
 	end,
 }
 --[[
