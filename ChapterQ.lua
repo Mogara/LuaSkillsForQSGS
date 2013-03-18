@@ -504,6 +504,83 @@ LuaQinyin = sgs.CreateTriggerSkill{
 	描述：出牌阶段，你可以弃置一张装备牌，令一名其他角色的一项武将技能无效，直到其下回合开始。
 	状态：尚未完成
 ]]--
+LuaXQingchengCard = sgs.CreateSkillCard{--倾城
+name = "LuaXQingchengCard", 
+will_throw = false, 
+handling_method = sgs.Card_MethodDiscard, 
+filter = function(self, targets, to_select) 
+return #targets == 0 and to_select:objectName()~=sgs.Self:objectName()
+end,
+on_effect = function(self, effect) 
+local room = effect.from:getRoom()
+local skill_list = {}
+for _,skill in sgs.qlist(effect.to:getVisibleSkillList()) do
+if not table.contains(skill_list,skill:objectName()) and not skill:inherits("SPConvertSkill") 
+and not skill:isAttachedLordSkill()  then
+	table.insert(skill_list,skill:objectName())
+	end
+end
+local skill_qc
+		if #skill_list>0 then
+		local data_for_ai = sgs.QVariant()
+		data_for_ai:setValue(effect.to)
+			skill_qc = room:askForChoice(effect.from, "LuaXQingcheng",table.concat(skill_list,"+"), data_for_ai)
+		end
+		room:throwCard(self, effect.from)
+if skill_qc ~= "" then
+     local card_ids = {}--用了“Table”的办法，应该没什么Bug...
+	 table.insert(card_ids,skill_qc) 	
+     local card_id = table.concat(card_ids, "+")
+	 effect.to:setTag("QingchengList",sgs.QVariant(card_id)) 
+     room:setPlayerMark(effect.to, "Qingcheng"..skill_qc, 1)
+     room:filterCards(effect.to, effect.to:getCards("he"), true)
+	end
+	end
+}
+LuaXQingchengVS = sgs.CreateViewAsSkill{
+	name = "LuaXQingcheng", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		if to_select:isKindOf("EquipCard") then
+			return not sgs.Self:isJilei(to_select)
+		end
+		return false
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local first = LuaXQingchengCard:clone()
+			first:addSubcard(cards[1])
+			first:setSkillName(self:objectName())
+			return first
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return not player:isNude()
+	end
+}
+LuaXQingcheng = sgs.CreateTriggerSkill{
+name = "LuaXQingcheng",  
+frequency = sgs.Skill_NotFrequent, 
+events = {sgs.EventPhaseStart},  
+view_as_skill = LuaXQingchengVS, 
+on_trigger = function(self, event, player, data) 
+local room = player:getRoom()
+if player:getPhase() == sgs.Player_RoundStart then
+local guzhu_list = player:getTag("QingchengList"):toString()
+guzhu_list = guzhu_list:split("+")
+for _, id in ipairs (guzhu_list) do
+room:setPlayerMark(player, "Qingcheng"..id, 0)
+end  
+player:setTag("QingchengList",sgs.QVariant())   
+local cards = player:getCards("he")
+room:filterCards(player, cards, false)
+end
+return false
+end, 
+can_trigger = function(self, target)
+return target end, 
+priority = 4,
+}
 --[[
 	技能名：倾国
 	相关武将：标准·甄姬、SP·甄姬
