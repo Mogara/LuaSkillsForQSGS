@@ -1137,6 +1137,53 @@ LuaLihun = sgs.CreateTriggerSkill{
 	技能名：离间
 	相关武将：标准·貂蝉、SP·貂蝉
 	描述：出牌阶段，你可以弃置一张牌并选择两名男性角色，视为其中一名男性角色对另一名男性角色使用一张【决斗】。此【决斗】不能被【无懈可击】响应。每阶段限一次。
+Lualijian = sgs.CreateViewAsSkill{
+	name = "Lualijian",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		return true
+	end,
+	view_as = function(self, cards)
+		if #cards ~= 1  then return nil end
+		local card = Lualijian_card:clone()
+		card:addSubcard(cards[1])
+		card:setSkillName(self:objectName())
+		return card
+	end,
+	enabled_at_play = function()
+		return not sgs.Self:hasFlag("Lualijian-used")
+	end
+}
+
+Lualijian_card = sgs.CreateSkillCard{
+	name = "Lualijian_card",
+	target_fixed = false,
+	will_throw = true,
+	
+	feasible = function(self, targets)
+		return #targets == 2
+	end,
+	filter = function(self, targets, to_select,player)
+	if #targets ~= 2 then
+	return to_select:getGeneral():isMale() and not to_select:hasSkill("kongcheng") and not to_select:isKongcheng() end
+	if #targets == 2 then
+	player:setTag("LualijianTarget", sgs.QVariant(targets[1]:objectName()))
+	return true
+	end
+	end,
+	on_use = function(self, room, source, targets)
+		local toN = source:getTag("LualijianTarget"):toString()
+		if not toN == "" then return end
+		local to = toN == targets[1]:objectName() and targets[2] or targets[1]
+		local from = to == targets[1] and targets[2] or targets[1]
+		local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
+		duel:toTrick():setCancelable(false)
+		duel:setSkillName("Lualijian")
+		room:cardEffect(duel,from,to)
+		room:removeTag("LualijianTarget")
+		room:setPlayerFlag(source, "Lualijian-used")
+end	
+}
 ]]--
 --[[
 	技能名：连环
