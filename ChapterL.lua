@@ -1136,7 +1136,7 @@ LuaLihun = sgs.CreateTriggerSkill{
 --[[
 	技能名：离间
 	相关武将：标准·貂蝉、SP·貂蝉
-	描述：出牌阶段，你可以弃置一张牌并选择两名男性角色，视为其中一名男性角色对另一名男性角色使用一张【决斗】。此【决斗】不能被【无懈可击】响应。每阶段限一次。
+	描述：出牌阶段，你可以弃置一张牌并选择两名男性角色，视为其中一名男性角色对另一名男性角色使用一张【决斗】。此【决斗】不能被【无懈可击】响应。每阶段限一次。]]--
 Lualijian = sgs.CreateViewAsSkill{
 	name = "Lualijian",
 	n = 1,
@@ -1184,7 +1184,6 @@ Lualijian_card = sgs.CreateSkillCard{
 		room:setPlayerFlag(source, "Lualijian-used")
 end	
 }
-]]--
 --[[
 	技能名：连环
 	相关武将：火·庞统
