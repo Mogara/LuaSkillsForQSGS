@@ -1143,7 +1143,7 @@ Lualijian = sgs.CreateViewAsSkill{
 	name = "Lualijian",
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		return false
+		return true
 	end,
 	view_as = function(self, cards)
 		if #cards ~= 1  then return nil end
@@ -1170,7 +1170,7 @@ Lualijian_card = sgs.CreateSkillCard{
 	return to_select:getGeneral():isMale() and not to_select:hasSkill("kongcheng") and not to_select:isKongcheng() end
 	if #targets == 2 then
 	player:setTag("LualijianTarget", sgs.QVariant(targets[1]:objectName()))
-	return true
+	return false
 	end
 	end,
 	on_use = function(self, room, source, targets)
