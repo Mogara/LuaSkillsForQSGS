@@ -1143,7 +1143,7 @@ Lualijian = sgs.CreateViewAsSkill{
 	name = "Lualijian",
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		return true
+		return false
 	end,
 	view_as = function(self, cards)
 		if #cards ~= 1  then return nil end
