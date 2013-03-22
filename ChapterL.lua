@@ -1174,7 +1174,7 @@ Lualijian_card = sgs.CreateSkillCard{
 	end
 	end,
 	on_use = function(self, room, source, targets)
-		local toN = source:getTag("LualijianTarget"):toString()
+		local toN = sgs.Self:getTag("LualijianTarget"):toString()
 		if not toN == "" then return end
 		local to = toN == targets[1]:objectName() and targets[2] or targets[1]
 		local from = to == targets[1] and targets[2] or targets[1]
