@@ -696,7 +696,7 @@ GuidaoCard = sgs.CreateSkillCard{
 	will_throw = false
 }
 LuaGuidaoVS = sgs.CreateViewAsSkill{
-	name = "LuaGuidaoVS",
+	name = "LuaGuidao",
 	n = 1,
 	view_filter = function(self, selected, to_select)
 		if #selected == 0 then
@@ -767,7 +767,7 @@ GuicaiCard = sgs.CreateSkillCard{
 	end
 }
 LuaGuicaiVS = sgs.CreateViewAsSkill{
-	name = "LuaGuicaiVS",
+	name = "LuaGuicai",
 	n = 1,
 	view_filter = function(self, selected, to_select)
 		if #selected == 0 then
