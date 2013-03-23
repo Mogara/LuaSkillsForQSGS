@@ -39,7 +39,6 @@ LuaXHantongCard = sgs.CreateSkillCard{
 						use.to:append(targets[1])
 						use.from = source
 					room:useCard(use, true)
-					br
 				else
 					room:setPlayerFlag(p, "Hantongjj_failed")
 				end
