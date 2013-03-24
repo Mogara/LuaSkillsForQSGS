@@ -677,7 +677,7 @@ LuaFuhun = sgs.CreateTriggerSkill{
 				return true
 			end
 		elseif phase == sgs.Player_NotActive then
-			if player:hasFlag(self:objectName()) then
+			if not (player:hasInnateSkill("wusheng") and player:hasInnateSkill("paoxiao")) then
 				room:detachSkillFromPlayer(player, "wusheng")
 				room:detachSkillFromPlayer(player, "paoxiao")
 			end
