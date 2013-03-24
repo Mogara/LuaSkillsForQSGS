@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（J区）
 	代码索引：
-		激昂、激将、鸡肋、疾恶、急救、极略、急速、急袭、集智、坚守、奸雄、将驰、节命、竭缘、结姻、解烦、解惑、尽瘁、禁酒、酒池、酒诗、救援、举荐、举荐、倨傲、据守、据守、巨象、绝汲、绝境、绝境、军威
+		激昂、激将、鸡肋、疾恶、急救、极略、急速、急袭、集智、坚守、奸雄、将驰、节命、竭缘、结姻、解烦、解惑、尽瘁、禁酒、酒池、酒诗、救援、举荐、举荐、倨傲、据守、据守、巨象、绝汲、绝境、绝境、绝情、军威
 ]]--
 --[[
 	技能名：激昂
@@ -1325,6 +1325,28 @@ LuaXNosJuejing = sgs.CreateTriggerSkill{
 		end
 		return false
 	end
+}
+--[[
+	技能名：绝情（锁定技）
+	相关武将：一将成名·张春华、怀旧·张春华
+	描述：你即将造成的伤害均视为失去体力。
+	状态：验证通过
+]]--
+LuaJueqing = sgs.CreateTriggerSkill{
+	name = "LuaJueqing",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.Predamage},
+	on_trigger = function(self, event, player, data)
+		local log = sgs.LogMessage()
+		local damage = data:toDamage()
+		local room = player:getRoom()
+        	log.from = player
+        	log.type = "#TriggerSkill"
+       		log.arg = self:objectName()
+        	room:sendLog(log)	
+		room:loseHp(damage.to, damage.damage)
+		return true
+	end,
 }
 --[[
 	技能名：军威
