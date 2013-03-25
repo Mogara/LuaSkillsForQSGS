@@ -1410,7 +1410,7 @@ on_trigger = function(self, event, player, data)
 	end
 	if player:getMark("junwei") > 0 then
 		player:loseAllMarks("junwei")
-		local junwei = player:getPile("junwei")--junwei:at(0),junwei:first(),junwei:last(),自动崩溃.
+		local junwei = player:getPile("junwei")--junwei:at(0),junwei:first(),junwei:last(),自动崩溃
 		local tag = room:getTag("junwei")
 		local id = tag:toInt()
 		local card = sgs.Sanguosha:getCard(id)
