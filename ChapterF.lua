@@ -640,19 +640,21 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 	技能名：父魂
 	相关武将：二将成名·关兴张苞
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为从牌堆顶亮出两张牌并获得之，若亮出的牌颜色不同，你获得技能“武圣”、“咆哮”，直到回合结束。
-	状态：验证通过
+	状态：0224验证通过
 ]]--
 LuaFuhun = sgs.CreateTriggerSkill{
-	name = "LuaFuhun",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
-	on_trigger = function(self, event, player, data)
+name = "LuaFuhun",
+events = {sgs.EventPhaseStart,sgs.EventPhaseChanging},
+on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local phase = player:getPhase()
-		if phase == sgs.Player_Draw then
+		if event==sgs.EventPhaseStart and phase == sgs.Player_Draw then
 			if player:askForSkillInvoke(self:objectName()) then
 				local id1 = room:drawCard()
 				local id2 = room:drawCard()
+				local card1 = sgs.Sanguosha:getCard(id1)
+				local card2 = sgs.Sanguosha:getCard(id2)
+				local diff = card1:isBlack() ~= card2:isBlack()
 				local move = sgs.CardsMoveStruct()
 				local move2 = sgs.CardsMoveStruct()
 				move.card_ids:append(id1)
@@ -664,9 +666,7 @@ LuaFuhun = sgs.CreateTriggerSkill{
 				move2.to_place = sgs.Player_PlaceHand
 				move2.to = player
 				room:moveCardsAtomic(move2, true)
-				local card1 = sgs.Sanguosha:getCard(id1)
-				local card2 = sgs.Sanguosha:getCard(id2)
-				if card1:isBlack() ~= card2:isBlack() then
+				if (diff) then
 					room:setEmotion(player, "good")
 					room:acquireSkill(player, "wusheng")
 					room:acquireSkill(player, "paoxiao")
@@ -676,11 +676,10 @@ LuaFuhun = sgs.CreateTriggerSkill{
 				end
 				return true
 			end
-		elseif phase == sgs.Player_NotActive then
-			if not player:hasInnateSkill("wusheng") then
+		elseif event==sgs.EventPhaseChanging then
+			local change=data:toPhaseChange()
+			if change.to==sgs.Player_NotActive and player:hasFlag(self:objectName()) then
 				room:detachSkillFromPlayer(player, "wusheng")
-			end
-			if not player:hasInnateSkill("paoxiao") then
 				room:detachSkillFromPlayer(player, "paoxiao")
 			end
 		end
