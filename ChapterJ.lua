@@ -1352,5 +1352,79 @@ LuaJueqing = sgs.CreateTriggerSkill{
 	技能名：军威
 	相关武将：☆SP·甘宁
 	描述：回合结束阶段开始时，你可以将三张“锦”置入弃牌堆。若如此做，你须指定一名角色并令其选择一项：1.亮出一张【闪】，然后由你交给任意一名角色。2.该角色失去1点体力，然后由你选择将其装备区的一张牌移出游戏。在该角色的回合结束后，将以此法移出游戏的装备牌移回原处。
-	状态：验证失败
-]]--
+	状态：验证通过]]--
+LuaJunwei = sgs.CreateTriggerSkill{
+name = "LuaJunwei",
+events = sgs.EventPhaseStart,
+can_trigger = function(self, target)
+	if target:getPhase() == sgs.Player_Finish then
+		return true
+	else
+		return false
+	end
+end,
+on_trigger = function(self, event, player, data)
+	local room = player:getRoom()
+	local brocade = player:getPile("brocade")
+	if player:hasSkill(self:objectName()) then
+		if (brocade:length() >= 3)then
+			if (room:askForSkillInvoke(player,self:objectName(),data)) then
+				local n = 3
+				while (n > 0) do
+					room:fillAG(brocade,player)
+					local card_id = room:askForAG(player,brocade,false,self:objectName())
+					room:throwCard(card_id,player)
+					brocade:removeOne(card_id)
+					n = n - 1
+					player:invoke("clearAG")
+				end
+				if n == 0 then
+					local target = room:askForPlayerChosen(player,room:getAllPlayers(),self:objectName())
+					if target then
+						local choice = room:askForChoice(target,self:objectName(),"show_jink+lose_hp",data)
+						if choice == "show_jink" then
+							local jink = room:askForCard(target,"jink",self:objectName(),data)
+							if jink then
+								local target2 = room:askForPlayerChosen(player,room:getAllPlayers(),self:objectName())
+								target2:obtainCard(jink)
+							else
+								choice = "lose_hp"
+							end
+						end
+						if choice == "lose_hp" then
+							room:loseHp(target,1)
+							if target:hasEquip() then
+								local equip_id = room:askForCardChosen(player,target,"e",self:objectName())
+								local junwei = player:getPile("junwei")
+								player:addToPile("junwei",equip_id) --junwei:at(0),junwei:first(),junwei:last(),自动崩溃
+								local value = sgs.QVariant()
+								value:setValue(equip_id)
+								room:setTag("junwei", value)
+								room:setPlayerMark(target,"junwei",1)
+							end
+						end	
+					end
+				end
+			end
+		end
+	end
+	if player:getMark("junwei") > 0 then
+		player:loseAllMarks("junwei")
+		local junwei = player:getPile("junwei")--junwei:at(0),junwei:first(),junwei:last(),自动崩溃
+		local tag = room:getTag("junwei")
+		local id = tag:toInt()
+		local card = sgs.Sanguosha:getCard(id)
+		if card:isKindOf("Weapon") then
+			player:removeEquip(player:getWeapon())
+		elseif card:isKindOf("Armor") then
+			player:removeEquip(player:getArmor())
+		elseif card:isKindOf("DefensiveHorse") then
+			player:removeEquip(player:getDefensiveHorse())
+		elseif card:isKindOf("OffensiveHorse") then
+			player:removeEquip(player:getOffensiveHorse())
+		end
+		
+		room:moveCardTo(card, player, sgs.Player_PlaceEquip,true)--CardMoveReason(CardMoveReason::S_REASON_PUT, player:objectName(), "junqei", data))
+	end
+end
+}
