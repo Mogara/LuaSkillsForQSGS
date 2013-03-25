@@ -1153,7 +1153,7 @@ Lualijian = sgs.CreateViewAsSkill{
 		return card
 	end,
 	enabled_at_play = function()
-		return not sgs.Self:hasFlag("Lualijian-used")
+		return not sgs.Self:hasUsed("#Lualijian_card")
 	end
 }
 
@@ -1166,25 +1166,26 @@ Lualijian_card = sgs.CreateSkillCard{
 		return #targets == 2
 	end,
 	filter = function(self, targets, to_select,player)
-	if #targets ~= 2 then
-	return to_select:getGeneral():isMale() and not to_select:hasSkill("kongcheng") and not to_select:isKongcheng() end
-	if #targets == 2 then
-	player:setTag("LualijianTarget", sgs.QVariant(targets[1]:objectName()))
-	return false
-	end
+		if #targets ~= 2 then
+			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
+			return to_select:getGeneral():isMale() and not player:isProhibited(to_select, duel) 
+		end
+		if #targets == 2 then
+			player:setTag("LualijianTarget", sgs.QVariant(targets[1]:objectName()))
+			return false
+		end
 	end,
 	on_use = function(self, room, source, targets)
 		local toN = sgs.Self:getTag("LualijianTarget"):toString()
 		if not toN == "" then return end
-		local to = toN == targets[1]:objectName() and targets[2] or targets[1]
+		local to = toN == targets[1]:objectName() and targets[1] or targets[2]
 		local from = to == targets[1] and targets[2] or targets[1]
 		local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
 		duel:toTrick():setCancelable(false)
 		duel:setSkillName("Lualijian")
 		room:cardEffect(duel,from,to)
 		room:removeTag("LualijianTarget")
-		room:setPlayerFlag(source, "Lualijian-used")
-end	
+	end	
 }
 --[[
 	技能名：连环
