@@ -643,19 +643,21 @@ LuaXJiehuo = sgs.CreateTriggerSkill{
 	技能名：尽瘁
 	相关武将：智·张昭
 	描述：当你死亡时，可令一名角色摸取或者弃置三张牌 
-	状态：验证通过
+	状态：0224验证通过
 ]]--
 LuaXJincui = sgs.CreateTriggerSkill{
 	name = "LuaXJincui",  
-	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.Death},  
 	on_trigger = function(self, event, player, data) 
-		if player then
-			local room = player:getRoom()
-			if room:askForSkillInvoke(player, self:objectName(), data) then
-				local allplayers = room:getAllPlayers()
-				local target = room:askForPlayerChosen(player, allplayers, self:objectName())
-				local choice = room:askForChoice(player, self:objectName(), "draw+throw")
+		local room = player:getRoom()
+		local SI = data:toDeath()
+		local allplayers = room:getAlivePlayers()
+        if player:objectName()~=SI.who:objectName() then return end
+		    if (not allplayers:isEmpty()) and room:askForSkillInvoke(player, self:objectName(), data) then
+			    local target = room:askForPlayerChosen(player, allplayers, self:objectName())
+			    local t_data=sgs.QVariant()
+                   	    t_data:setValue(target) --for AI
+			    local choice = room:askForChoice(player, self:objectName(), "draw+throw", t_data)
 				if choice == "draw" then
 					target:drawCards(3)
 				else
@@ -663,14 +665,11 @@ LuaXJincui = sgs.CreateTriggerSkill{
 					room:askForDiscard(target, self:objectName(), count, count, false, true)
 				end
 			end
-		end
-		return false
+		
+		return 
 	end, 
 	can_trigger = function(self, target)
-		if target then
-			return target:hasSkill(self:objectName())
-		end
-		return false
+         return target and target:hasSkill(self:objectName()) 
 	end
 }
 --[[
