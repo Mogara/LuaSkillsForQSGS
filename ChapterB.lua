@@ -551,44 +551,32 @@ LuaBiyue = sgs.CreateTriggerSkill{
 	技能名：补益
 	相关武将：一将成名·吴国太
 	描述：当一名角色进入濒死状态时，你可以展示该角色的一张手牌，若此牌不为基本牌，该角色弃置之，然后回复1点体力。
-	状态：验证通过
+	状态：0224验证通过
 ]]--
-LuaBuyi = sgs.CreateTriggerSkill{
-	name = "LuaBuyi",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Dying},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local list = room:getAlivePlayers()
-		for _,doctor in sgs.qlist(list) do
-			if doctor:hasSkill(self:objectName()) then
-				if room:askForSkillInvoke(doctor, self:objectName(), data) then
-					local card
-					if player:objectName() == doctor:objectName() then
-						card = room:askForCardShow(player, doctor, self:objectName())
-					else
-						id = room:askForCardChosen(doctor, player, "h", self:objectName())
-						card = sgs.Sanguosha:getCard(id)
-					end
-					room:showCard(player, card:getEffectiveId())
-					local cardtype = card:getTypeId()
-					if cardtype ~= sgs.Card_Basic then
-						room:throwCard(card, player)
-						local recover = sgs.RecoverStruct()
-						recover.who = doctor
-						room:recover(player, recover)
-					end
-				end
-			end
-		end
-		return false
+LuaBuyi=sgs.CreateTriggerSkill{ --补益
+	name="LuaBuyi",
+	events={sgs.Dying},
+	on_trigger=function(self, event, doctor, data)
+		local room = doctor:getRoom()
+		local dying = data:toDying()
+          	local SP = dying.who
+          if SP:getHp() > 0 or SP:isKongcheng() then return end
+          if (room:askForSkillInvoke(doctor,self:objectName(),data) ~= true) then return end
+		           local card
+		           if doctor:objectName() == SP:objectName() then 
+		                   card = room:askForCardShow(SP, doctor, "LuaBuyi")
+                   	   else 
+		                   card = sgs.Sanguosha:getCard(room:askForCardChosen(doctor, SP, "h", self:objectName())) 
+		           end
+                   	   room:showCard(SP,card:getEffectiveId())
+                   	   if card:getTypeId() ~= sgs.Card_TypeBasic and not SP:isJilei(card) then 
+                   	        room:throwCard(card, SP)
+                   	   	local recover = sgs.RecoverStruct()
+                   	   	recover.who = doctor
+                   	   	room:recover(SP, recover) 
+			   end
+		return SP:getHp() > 0 
 	end,
-	can_trigger = function(self, target)
-		if target then
-			return not target:isKongcheng()
-		end
-		return false
-	end
 }
 --[[
 	技能名：不屈
