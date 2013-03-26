@@ -349,18 +349,17 @@ LuaJianxiong = sgs.CreateTriggerSkill{
 	技能名：将驰
 	相关武将：二将成名·曹彰
 	描述：摸牌阶段，你可以选择一项：1、额外摸一张牌，若如此做，你不能使用或打出【杀】，直到回合结束。2、少摸一张牌，若如此做，出牌阶段你使用【杀】时无距离限制且你可以额外使用一张【杀】，直到回合结束。
-	状态：验证通过
+	状态：0224验证通过
 ]]--
 LuaJiangchi = sgs.CreateTriggerSkill{
 	name = "LuaJiangchi", 
-	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.DrawNCards}, 
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local count = data:toInt()
 		local choice = room:askForChoice(player, self:objectName(), "jiang+chi+cancel")
 		if choice == "jiang" then
-			room:setPlayerCardLock(player, "Slash")
+			room:setPlayerCardLimitation(player,"use,response","Slash",true)
 			count = count + 1
 			data:setValue(count)
 		elseif choice == "chi" then
@@ -370,27 +369,15 @@ LuaJiangchi = sgs.CreateTriggerSkill{
 		end
 	end
 }
-LuaJiangchiClear = sgs.CreateTriggerSkill{
-	name = "#LuaJiangchiClear",
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.EventPhaseStart}, 
-	on_trigger = function(self, event, player, data) 
-		if player:getPhase() == sgs.Player_NotActive then
-			if player:hasCardLock("Slash") then
-				local room = player:getRoom()
-				room:setPlayerCardLock(player, "-Slash")
-			end
-		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() then
-				return target:hasSkill(self:objectName())
-			end
-		end
-		return false
-	end
+JiangchiMod=sgs.CreateTargetModSkill{
+	name="#JiangchiMod",
+	frequency = sgs.Skill_NotFrequent,
+	residue_func=function(self, target)
+		if target:hasSkill("LuaJiangchi") and target:hasFlag("jiangchi_invoke") then return 1 end
+	end,
+	distance_limit_func=function(self, from, card)
+		if from:hasSkill("LuaJiangchi") and from:hasFlag("jiangchi_invoke") then return 1000 end
+	end,
 }
 --[[
 	技能名：节命
