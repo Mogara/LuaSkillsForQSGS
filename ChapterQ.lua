@@ -505,36 +505,46 @@ LuaQinyin = sgs.CreateTriggerSkill{
 	状态：尚未完成
 ]]--
 LuaXQingchengCard = sgs.CreateSkillCard{--倾城
-name = "LuaXQingchengCard", 
-will_throw = false, 
-handling_method = sgs.Card_MethodDiscard, 
-filter = function(self, targets, to_select) 
-return #targets == 0 and to_select:objectName()~=sgs.Self:objectName()
-end,
-on_effect = function(self, effect) 
-local room = effect.from:getRoom()
-local skill_list = {}
-for _,skill in sgs.qlist(effect.to:getVisibleSkillList()) do
-if not table.contains(skill_list,skill:objectName()) and not skill:inherits("SPConvertSkill") 
-and not skill:isAttachedLordSkill()  then
-	table.insert(skill_list,skill:objectName())
-	end
-end
-local skill_qc
-		if #skill_list>0 then
-		local data_for_ai = sgs.QVariant()
-		data_for_ai:setValue(effect.to)
-			skill_qc = room:askForChoice(effect.from, "LuaXQingcheng",table.concat(skill_list,"+"), data_for_ai)
+	name = "LuaXQingchengCard", 
+	will_throw = false, 
+	handling_method = sgs.Card_MethodDiscard, 
+	filter = function(self, targets, to_select) 
+		if #targets == 0 then
+			return to_select:objectName() ~= sgs.Self:objectName()
+		end
+		return false
+	end,
+	on_effect = function(self, effect) 
+		local room = effect.from:getRoom()
+		local skill_list = {}
+		local skills = effect.to:getVisibleSkillList()
+		for _,skill in sgs.qlist(skills) do
+			if not table.contains(skill_list, skill:objectName()) then
+				if not skill:inherits("SPConvertSkill") then
+					if not skill:isAttachedLordSkill() then
+						table.insert(skill_list, skill:objectName())
+					end
+				end
+			end
+		end
+		local skill_qc
+		if #skill_list > 0 then
+			local ai_data = sgs.QVariant()
+			ai_data:setValue(effect.to)
+			local choices = table.concat(skill_list, "+")
+			skill_qc = room:askForChoice(effect.from, "LuaXQingcheng", choices, ai_data)
 		end
 		room:throwCard(self, effect.from)
-if skill_qc ~= "" then
-     local card_ids = {}--用了“Table”的办法，应该没什么Bug...
-	 table.insert(card_ids,skill_qc) 	
-     local card_id = table.concat(card_ids, "+")
-	 effect.to:setTag("QingchengList",sgs.QVariant(card_id)) 
-     room:setPlayerMark(effect.to, "Qingcheng"..skill_qc, 1)
-     room:filterCards(effect.to, effect.to:getCards("he"), true)
-	end
+		if skill_qc ~= "" then
+			local card_ids = {}--用了“Table”的办法，应该没什么Bug...
+			table.insert(card_ids, skill_qc) 	
+			local card_id = table.concat(card_ids, "+")
+			effect.to:setTag("QingchengList", sgs.QVariant(card_id))
+			local mark = "Qingcheng"..skill_qc
+			room:setPlayerMark(effect.to, mark, 1)
+			local cards = effect.to:getCards("he")
+			room:filterCards(effect.to, cards, true)
+		end
 	end
 }
 LuaXQingchengVS = sgs.CreateViewAsSkill{
@@ -559,27 +569,29 @@ LuaXQingchengVS = sgs.CreateViewAsSkill{
 	end
 }
 LuaXQingcheng = sgs.CreateTriggerSkill{
-name = "LuaXQingcheng",  
-frequency = sgs.Skill_NotFrequent, 
-events = {sgs.EventPhaseStart},  
-view_as_skill = LuaXQingchengVS, 
-on_trigger = function(self, event, player, data) 
-local room = player:getRoom()
-if player:getPhase() == sgs.Player_RoundStart then
-local guzhu_list = player:getTag("QingchengList"):toString()
-guzhu_list = guzhu_list:split("+")
-for _, id in ipairs (guzhu_list) do
-room:setPlayerMark(player, "Qingcheng"..id, 0)
-end  
-player:setTag("QingchengList",sgs.QVariant())   
-local cards = player:getCards("he")
-room:filterCards(player, cards, false)
-end
-return false
-end, 
-can_trigger = function(self, target)
-return target end, 
-priority = 4,
+	name = "LuaXQingcheng",  
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseStart},  
+	view_as_skill = LuaXQingchengVS, 
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_RoundStart then
+			local guzhu_list = player:getTag("QingchengList"):toString()
+			guzhu_list = guzhu_list:split("+")
+			for _,id in ipairs(guzhu_list) do
+				local mark = "Qingcheng"..id
+				room:setPlayerMark(player, mark, 0)
+			end  
+			player:setTag("QingchengList", sgs.QVariant())   
+			local cards = player:getCards("he")
+			room:filterCards(player, cards, false)
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target 
+	end, 
+	priority = 4
 }
 --[[
 	技能名：倾国

@@ -337,7 +337,7 @@ LuaXFenxun = sgs.CreateTriggerSkill{
 			end
 		end
 		if event == sgs.EventLoseSkill then
-			if data:toString()~="LuaXFenxunVS" then
+			if data:toString() ~= "LuaXFenxunVS" then
 				return false
 			end
 		end
@@ -481,8 +481,12 @@ LuaXFuluanCard = sgs.CreateSkillCard{
 	name = "LuaXFuluanCard",
 	target_fixed = false,
 	will_throw = true,
-	filter = function(self, targets, to_select, player)
-		return #targets == 0 and to_select:objectName() ~= player:objectName() and player:inMyAttackRange(to_select)
+	filter = function(self, targets, to_select)
+		if #targets == 0 then
+			if to_select:objectName() ~= sgs.Self:objectName() then
+				return sgs.Self:inMyAttackRange(to_select)
+			end
+		end
 	end,
 	on_use = function(self, room, source, targets)
 		local room = source:getRoom()
@@ -494,20 +498,21 @@ LuaXFuluanVS = sgs.CreateViewAsSkill{
 	name = "LuaXFuluan",
 	n = 3,
 	view_filter = function(self, selected, to_select)
-        if #selected >0 then
+		if #selected >0 then
 			return to_select:getSuit() == selected[1]:getSuit()
-        else
+		else
 			return true
 		end
 	end,
 	view_as = function(self, cards)
-		if #cards ~= 3 then	return end
-		local card = LuaXFuluanCard:clone()
-		card:addSubcard(cards[1])
-		card:addSubcard(cards[2])
-		card:addSubcard(cards[3])
-		card:setSkillName(self:objectName())
-		return card
+		if #cards == 3 then
+			local card = LuaXFuluanCard:clone()
+			card:addSubcard(cards[1])
+			card:addSubcard(cards[2])
+			card:addSubcard(cards[3])
+			card:setSkillName(self:objectName())
+			return card
+		end
 	end,
 	enabled_at_play=function(self, player)
 		if player:hasUsed("#LuaXFuluanCard") or player:hasFlag("cannotDoFuluan") then
@@ -643,12 +648,12 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 	状态：0224验证通过
 ]]--
 LuaFuhun = sgs.CreateTriggerSkill{
-name = "LuaFuhun",
-events = {sgs.EventPhaseStart,sgs.EventPhaseChanging},
-on_trigger = function(self, event, player, data)
+	name = "LuaFuhun",
+	events = {sgs.EventPhaseStart, sgs.EventPhaseChanging},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local phase = player:getPhase()
-		if event==sgs.EventPhaseStart and phase == sgs.Player_Draw then
+		if event == sgs.EventPhaseStart and phase == sgs.Player_Draw then
 			if player:askForSkillInvoke(self:objectName()) then
 				local id1 = room:drawCard()
 				local id2 = room:drawCard()
@@ -666,7 +671,7 @@ on_trigger = function(self, event, player, data)
 				move2.to_place = sgs.Player_PlaceHand
 				move2.to = player
 				room:moveCardsAtomic(move2, true)
-				if (diff) then
+				if diff then
 					room:setEmotion(player, "good")
 					room:acquireSkill(player, "wusheng")
 					room:acquireSkill(player, "paoxiao")
@@ -676,9 +681,9 @@ on_trigger = function(self, event, player, data)
 				end
 				return true
 			end
-		elseif event==sgs.EventPhaseChanging then
-			local change=data:toPhaseChange()
-			if change.to==sgs.Player_NotActive and player:hasFlag(self:objectName()) then
+		elseif event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to == sgs.Player_NotActive and player:hasFlag(self:objectName()) then
 				room:detachSkillFromPlayer(player, "wusheng")
 				room:detachSkillFromPlayer(player, "paoxiao")
 			end

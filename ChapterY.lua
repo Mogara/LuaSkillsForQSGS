@@ -7,6 +7,7 @@
 	技能名：言笑
 	相关武将：☆SP·大乔
 	描述：出牌阶段，你可以将一张方块牌置于一名角色的判定区内，判定区内有“言笑”牌的角色下个判定阶段开始时，获得其判定区里的所有牌。
+	状态：尚未验证
 ]]--
 LuaYanxiaoCard = sgs.CreateSkillCard{
 	name = "LuaYanxiaoCard",
@@ -19,12 +20,13 @@ LuaYanxiaoCard = sgs.CreateSkillCard{
 		local source = effect.from
 		local target = effect.to
 		local room = source:getRoom()
-		room:setCardFlag(self:getEffectiveId(),"LuaYanxiaoCard") --给Card设置flag
-		sgs.Sanguosha:getCard(self:getEffectiveId()):setSkillName("LuaYanxiaoVS") --给Card设置技能名
-		room:moveCardTo(self,target,sgs.Player_PlaceDelayedTrick,true)
+		local id = self:getEffectiveId()
+		room:setCardFlag(id, "LuaYanxiaoCard") 
+		local card = sgs.Sanguosha:getCard(id)
+		card:setSkillName("LuaYanxiaoVS") 
+		room:moveCardTo(self, target, sgs.Player_PlaceDelayedTrick, true)
 	end
 }
-
 LuaYanxiaoVS = sgs.CreateViewAsSkill{
 	name = "LuaYanxiaoVS",
 	n = 1,
@@ -38,44 +40,32 @@ LuaYanxiaoVS = sgs.CreateViewAsSkill{
 			skill_card:addSubcard(sub_card)
 			return skill_card
 		end
-	end,
-	enabled_at_play = function(self, player)
-		return true
-	end,
-	enabled_at_response = function(self, player, pattern)
-		return false
-	end,
-	enabled_at_nullification = function(self, player)
-		return false
 	end
 }
-
 LuaYanxiaoTS = sgs.CreateTriggerSkill{
 	name = "#LuaYanxiaoTS",
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local myplayer=room:findPlayerBySkillName(self:objectName())
-		if (player:getPhase() == sgs.Player_Judge) then
+		local myplayer = room:findPlayerBySkillName(self:objectName())
+		if player:getPhase() == sgs.Player_Judge then
 			local judging_cards = player:getJudgingArea()
 			local judging_cards_ids = sgs.IntList()
 			local can_invoke = false
 			for _,card in sgs.qlist(judging_cards) do
-				judging_cards_ids:append(card:getId())
-				-- if card:getSkillName() == "LuaYanxiaoVS" then
-					-- can_invoke = true
-				-- end
-				if card:hasFlag("LuaYanxiaoCard") then --二者取其一即可
+				local id = card:getId()
+				judging_cards_ids:append(id)
+				if card:hasFlag("LuaYanxiaoCard") then 
 					can_invoke = true
 				end
 			end
 			if can_invoke then
 				local move = sgs.CardsMoveStruct()
-					  move.card_ids = judging_cards_ids
-					  move.to = player
-					  move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, name)
-					  move.to_place = sgs.Player_PlaceHand
+				move.card_ids = judging_cards_ids
+				move.to = player
+				move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, name)
+				move.to_place = sgs.Player_PlaceHand
 				room:moveCards(move, false)
 			end
 			
@@ -340,7 +330,7 @@ LuaXYicongCard = sgs.CreateSkillCard{
 }
 LuaXYicongVS = sgs.CreateViewAsSkill{
 	name = "LuaXYicong",
-	n = 998,
+	n = 999,
 	view_filter = function(self, selected, to_select)
 		return true
 	end,
@@ -365,10 +355,12 @@ LuaXYicong = sgs.CreateTriggerSkill{
 	events = {sgs.EventPhaseEnd},
 	view_as_skill = LuaYicongVS,
 	on_trigger = function(self, event, player, data)
-		if player:getPhase() ~= sgs.Player_Discard then return end
-		if player:isNude() then return end
-		local room = player:getRoom()
-		room:askForUseCard(player, "@@LuaXYicong", "@LuaXYicong")
+		if player:getPhase() == sgs.Player_Discard then 
+			if not player:isNude() then
+				local room = player:getRoom()
+				room:askForUseCard(player, "@@LuaXYicong", "@LuaXYicong")
+			end
+		end
 	end,
 }
 LuaXYicongDist = sgs.CreateDistanceSkill{
@@ -707,7 +699,7 @@ LuaYingzi = sgs.CreateTriggerSkill{
 	events = {sgs.DrawNCards},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if room:askForSkillInvoke(player, "LuaYingZi", data) then
+		if room:askForSkillInvoke(player, "LuaYingzi", data) then
 			local count = data:toInt() + 1
 			data:setValue(count)
 		end
@@ -717,7 +709,7 @@ LuaYingzi = sgs.CreateTriggerSkill{
 	技能名：狱刎（锁定技）
 	相关武将：智·田丰
 	描述：当你死亡时，凶手视为自己 
-	状态：0224验证
+	状态：0224验证通过
 	附注：除死亡笔记结果不可更改外，其他情况均通过
 ]]--
 LuaXYuwen = sgs.CreateTriggerSkill{
@@ -750,33 +742,33 @@ LuaXYuwen = sgs.CreateTriggerSkill{
 	end,
 	priority = 3
 }
-
-luaYw=sgs.CreateTriggerSkill{
-name = "luaYw",
-events=sgs.GameOverJudge, --为什么时机不跟源代码的一样？这样用死亡笔记，凶手仍然还是自己...
-frequency = sgs.Skill_Compulsory,
-priority = 4,
-can_trigger=function(self,player)
-return player and player:hasSkill(self:objectName()) end,
-on_trigger=function(self,event,player,data)
-local room = player:getRoom()
-local damage = data:toDamageStar()
-if damage then
-if (damage.from and damage.from:objectName()==player:objectName()) then return end
-else                
-damage=sgs.DamageStruct()
-damage.to = player
-data:setValue(damage)
-end
-damage.from = player
-local log = sgs.LogMessage()
-log.type = "#TriggerSkill"
-log.from = player
-log.arg  = self:objectName()
-room:sendLog(log) 
-return
-end
-}	
+LuaXYuwenX = sgs.CreateTriggerSkill{ --???
+	name = "luaXYuwen",
+	events = {sgs.GameOverJudge}, --为什么时机不跟源代码的一样？这样用死亡笔记，凶手仍然还是自己...
+	frequency = sgs.Skill_Compulsory,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local damage = data:toDamageStar()
+		if damage then
+			local source = damage.from
+			if source and source:objectName() == player:objectName() then
+				return
+			end
+		else				
+			damage = sgs.DamageStruct()
+			damage.to = player
+			data:setValue(damage)
+		end
+		damage.from = player
+	end,
+	can_trigger = function(self, target)
+		if target then
+			return target:hasSkill(self:objectName())
+		end
+		return false
+	end,
+	priority = 4,
+}
 --[[
 	技能名：援护
 	相关武将：SP·曹洪

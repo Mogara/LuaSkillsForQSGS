@@ -457,31 +457,40 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 	状态：验证通过
 	附注：原技能涉及修改源码。Lua的版本以此法可实现，但体验感略微欠佳。
 ]]--
-LuaDuanbing = sgs.CreateTriggerSkill{
-	name = "LuaDuanbing",
+LuaXDuanbing = sgs.CreateTriggerSkill{
+	name = "LuaXDuanbing",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.CardUsed},
 	on_trigger = function(self, event, player, data)
 		local use = data:toCardUse()
-		if not use.card:isKindOf("Slash") then return end
-		local room = player:getRoom()
-		local targets = sgs.SPlayerList()
-		for _,p in sgs.qlist(room:getOtherPlayers(player)) do
-			if player:distanceTo(p) == 1 and not use.to:contains(p) and not sgs.Sanguosha:isProhibited(player, p, sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)) then
-				room:setPlayerFlag(p, "duanbingslash")
-				targets:append(p)
+		if use.card:isKindOf("Slash") then
+			local room = player:getRoom()
+			local targets = sgs.SPlayerList()
+			local others = room:getOtherPlayers(player)
+			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			for _,p in sgs.qlist(others) do
+				if player:distanceTo(p) == 1 then
+					if not use.to:contains(p) then
+						if not sgs.Sanguosha:isProhibited(player, p, slash) then
+							room:setPlayerFlag(p, "duanbingslash")
+							targets:append(p)
+						end
+					end
+				end
+			end
+			if not targets:isEmpty() then
+				if player:askForSkillInvoke(self:objectName()) then
+					local target = room:askForPlayerChosen(player, targets, self:objectName())
+					for _,p in sgs.qlist(others) do
+						if p:hasFlag("duanbingslash") then
+							room:setPlayerFlag(p, "-duanbingslash")
+						end
+					end
+					use.to:append(target)
+					data:setValue(use)
+				end
 			end
 		end
-		if targets:isEmpty() then return end
-		if not player:askForSkillInvoke(self:objectName()) then return end
-		local target = room:askForPlayerChosen(player, targets, self:objectName())
-		for _,p in sgs.qlist(room:getOtherPlayers(player)) do
-			if p:hasFlag("duanbingslash") then
-				room:setPlayerFlag(p, "-duanbingslash")
-			end
-		end
-		use.to:append(target)
-		data:setValue(use)
 	end,
 }
 --[[
@@ -643,20 +652,20 @@ LuaXDuoshiCard = sgs.CreateSkillCard{
 	name = "LuaXDuoshiCard",
 	target_fixed = false,
 	will_throw = true,
-	filter = function(self, targets, to_select,player)
-		return to_select:objectName()~=player:objectName()
+	filter = function(self, targets, to_select)
+		return to_select:objectName() ~= sgs.Self:objectName()
 	end,
 	feasible = function(self, targets)
 		return true
 	end,
 	on_use = function(self, room, source, targets)
 		source:drawCards(2)
-		for i=1,#targets,1 do
+		for i=1, #targets, 1 do
 			targets[i]:drawCards(2)
 		end
-		room:askForDiscard(source, "LuaXDuoshi", 2, 2, false, true,"#LuaXDuoshi-discard")
-		for i=1,#targets,1 do
-			room:askForDiscard(targets[i], "LuaXDuoshi", 2, 2, false, true,"#LuaXDuoshi-discard")
+		room:askForDiscard(source, "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
+		for i=1, #targets, 1 do
+			room:askForDiscard(targets[i], "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
 		end
 	end,
 }

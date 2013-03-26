@@ -359,7 +359,7 @@ LuaJiangchi = sgs.CreateTriggerSkill{
 		local count = data:toInt()
 		local choice = room:askForChoice(player, self:objectName(), "jiang+chi+cancel")
 		if choice == "jiang" then
-			room:setPlayerCardLimitation(player,"use,response","Slash",true)
+			room:setPlayerCardLimitation(player, "use,response", "Slash", true)
 			count = count + 1
 			data:setValue(count)
 		elseif choice == "chi" then
@@ -369,14 +369,22 @@ LuaJiangchi = sgs.CreateTriggerSkill{
 		end
 	end
 }
-JiangchiMod=sgs.CreateTargetModSkill{
-	name="#JiangchiMod",
+LuaJiangchiMod = sgs.CreateTargetModSkill{
+	name = "#LuaJiangchiMod",
 	frequency = sgs.Skill_NotFrequent,
-	residue_func=function(self, target)
-		if target:hasSkill("LuaJiangchi") and target:hasFlag("jiangchi_invoke") then return 1 end
+	residue_func = function(self, target)
+		if target:hasSkill("LuaJiangchi") then
+			if target:hasFlag("jiangchi_invoke") then 
+				return 1 
+			end
+		end
 	end,
-	distance_limit_func=function(self, from, card)
-		if from:hasSkill("LuaJiangchi") and from:hasFlag("jiangchi_invoke") then return 1000 end
+	distance_limit_func = function(self, from, card)
+		if from:hasSkill("LuaJiangchi") then
+			if from:hasFlag("jiangchi_invoke") then 
+				return 1000 
+			end
+		end
 	end,
 }
 --[[
@@ -650,26 +658,28 @@ LuaXJincui = sgs.CreateTriggerSkill{
 	events = {sgs.Death},  
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
-		local SI = data:toDeath()
-		local allplayers = room:getAlivePlayers()
-        if player:objectName()~=SI.who:objectName() then return end
-		    if (not allplayers:isEmpty()) and room:askForSkillInvoke(player, self:objectName(), data) then
-			    local target = room:askForPlayerChosen(player, allplayers, self:objectName())
-			    local t_data=sgs.QVariant()
-                   	    t_data:setValue(target) --for AI
-			    local choice = room:askForChoice(player, self:objectName(), "draw+throw", t_data)
-				if choice == "draw" then
-					target:drawCards(3)
-				else
-					local count = math.min(3, target:getCardCount(true))
-					room:askForDiscard(target, self:objectName(), count, count, false, true)
+		local death = data:toDeath()
+		local alives = room:getAlivePlayers()
+		if player:objectName() == death.who:objectName() then
+			if not alives:isEmpty() then
+				if room:askForSkillInvoke(player, self:objectName(), data) then
+					local target = room:askForPlayerChosen(player, alives, self:objectName())
+					local ai_data = sgs.QVariant()
+					ai_data:setValue(target) 
+					local choice = room:askForChoice(player, self:objectName(), "draw+throw", ai_data)
+					if choice == "draw" then
+						target:drawCards(3)
+					else
+						local count = math.min(3, target:getCardCount(true))
+						room:askForDiscard(target, self:objectName(), count, count, false, true)
+					end
 				end
 			end
-		
+		end
 		return 
 	end, 
 	can_trigger = function(self, target)
-         return target and target:hasSkill(self:objectName()) 
+		 return target and target:hasSkill(self:objectName()) 
 	end
 }
 --[[
@@ -909,7 +919,7 @@ LuaJujianVS = sgs.CreateViewAsSkill{
 		return false
 	end, 
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@jujian"
+		return pattern == "@@LuaJujian"
 	end
 }
 LuaJujian = sgs.CreateTriggerSkill{
@@ -922,7 +932,7 @@ LuaJujian = sgs.CreateTriggerSkill{
 		local phase = player:getPhase()
 		if phase == sgs.Player_Finish then
 			if not player:isNude() then
-				room:askForUseCard(player, "@@jujian", "@jujian-card")
+				room:askForUseCard(player, "@@LuaJujian", "@jujian-card")
 			end
 		end
 		return false
@@ -1323,13 +1333,8 @@ LuaJueqing = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.Predamage},
 	on_trigger = function(self, event, player, data)
-		local log = sgs.LogMessage()
 		local damage = data:toDamage()
 		local room = player:getRoom()
-        	log.from = player
-        	log.type = "#TriggerSkill"
-       		log.arg = self:objectName()
-        	room:sendLog(log)	
 		room:loseHp(damage.to, damage.damage)
 		return true
 	end,
@@ -1338,79 +1343,81 @@ LuaJueqing = sgs.CreateTriggerSkill{
 	技能名：军威
 	相关武将：☆SP·甘宁
 	描述：回合结束阶段开始时，你可以将三张“锦”置入弃牌堆。若如此做，你须指定一名角色并令其选择一项：1.亮出一张【闪】，然后由你交给任意一名角色。2.该角色失去1点体力，然后由你选择将其装备区的一张牌移出游戏。在该角色的回合结束后，将以此法移出游戏的装备牌移回原处。
-	状态：验证通过]]--
+	状态：验证通过
+]]--
 LuaJunwei = sgs.CreateTriggerSkill{
-name = "LuaJunwei",
-events = sgs.EventPhaseStart,
-can_trigger = function(self, target)
-	if target:getPhase() == sgs.Player_Finish then
-		return true
-	else
-		return false
-	end
-end,
-on_trigger = function(self, event, player, data)
-	local room = player:getRoom()
-	local brocade = player:getPile("brocade")
-	if player:hasSkill(self:objectName()) then
-		if (brocade:length() >= 3)then
-			if (room:askForSkillInvoke(player,self:objectName(),data)) then
-				local n = 3
-				while (n > 0) do
-					room:fillAG(brocade,player)
-					local card_id = room:askForAG(player,brocade,false,self:objectName())
-					room:throwCard(card_id,player)
-					brocade:removeOne(card_id)
-					n = n - 1
-					player:invoke("clearAG")
-				end
-				if n == 0 then
-					local target = room:askForPlayerChosen(player,room:getAllPlayers(),self:objectName())
-					if target then
-						local choice = room:askForChoice(target,self:objectName(),"show_jink+lose_hp",data)
-						if choice == "show_jink" then
-							local jink = room:askForCard(target,"jink",self:objectName(),data)
-							if jink then
-								local target2 = room:askForPlayerChosen(player,room:getAllPlayers(),self:objectName())
-								target2:obtainCard(jink)
-							else
-								choice = "lose_hp"
+	name = "LuaJunwei",
+	events = sgs.EventPhaseStart,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local brocade = player:getPile("brocade")
+		if player:hasSkill(self:objectName()) then
+			if brocade:length() >= 3 then
+				if room:askForSkillInvoke(player, self:objectName(), data) then
+					local n = 3
+					while n > 0 do
+						room:fillAG(brocade, player)
+						local card_id = room:askForAG(player, brocade, false, self:objectName())
+						room:throwCard(card_id, player)
+						brocade:removeOne(card_id)
+						n = n - 1
+						player:invoke("clearAG")
+					end
+					if n == 0 then
+						local allplayers = room:getAllPlayers()
+						local target = room:askForPlayerChosen(player, allplayers, self:objectName())
+						if target then
+							local choice = room:askForChoice(target, self:objectName(), "show_jink+lose_hp", data)
+							if choice == "show_jink" then
+								local jink = room:askForCard(target, "jink", self:objectName(), data)
+								if jink then
+									local target2 = room:askForPlayerChosen(player,room:getAllPlayers(),self:objectName())
+									target2:obtainCard(jink)
+								else
+									choice = "lose_hp"
+								end
 							end
+							if choice == "lose_hp" then
+								room:loseHp(target,1)
+								if target:hasEquip() then
+									local equip_id = room:askForCardChosen(player, target, "e", self:objectName())
+									local junwei = player:getPile("junwei")
+									player:addToPile("junwei", equip_id) --junwei:at(0),junwei:first(), junwei:last(),自动崩溃
+									local value = sgs.QVariant()
+									value:setValue(equip_id)
+									room:setTag("junwei", value)
+									room:setPlayerMark(target, "junwei", 1)
+								end
+							end	
 						end
-						if choice == "lose_hp" then
-							room:loseHp(target,1)
-							if target:hasEquip() then
-								local equip_id = room:askForCardChosen(player,target,"e",self:objectName())
-								local junwei = player:getPile("junwei")
-								player:addToPile("junwei",equip_id) --junwei:at(0),junwei:first(),junwei:last(),自动崩溃
-								local value = sgs.QVariant()
-								value:setValue(equip_id)
-								room:setTag("junwei", value)
-								room:setPlayerMark(target,"junwei",1)
-							end
-						end	
 					end
 				end
 			end
 		end
-	end
-	if player:getMark("junwei") > 0 then
-		player:loseAllMarks("junwei")
-		local junwei = player:getPile("junwei")--junwei:at(0),junwei:first(),junwei:last(),自动崩溃
-		local tag = room:getTag("junwei")
-		local id = tag:toInt()
-		local card = sgs.Sanguosha:getCard(id)
-		if card:isKindOf("Weapon") then
-			player:removeEquip(player:getWeapon())
-		elseif card:isKindOf("Armor") then
-			player:removeEquip(player:getArmor())
-		elseif card:isKindOf("DefensiveHorse") then
-			player:removeEquip(player:getDefensiveHorse())
-		elseif card:isKindOf("OffensiveHorse") then
-			player:removeEquip(player:getOffensiveHorse())
+		if player:getMark("junwei") > 0 then
+			player:loseAllMarks("junwei")
+			local junwei = player:getPile("junwei") --junwei:at(0),junwei:first(),junwei:last(),自动崩溃
+			local tag = room:getTag("junwei")
+			local id = tag:toInt()
+			local card = sgs.Sanguosha:getCard(id)
+			if card:isKindOf("Weapon") then
+				player:removeEquip(player:getWeapon())
+			elseif card:isKindOf("Armor") then
+				player:removeEquip(player:getArmor())
+			elseif card:isKindOf("DefensiveHorse") then
+				player:removeEquip(player:getDefensiveHorse())
+			elseif card:isKindOf("OffensiveHorse") then
+				player:removeEquip(player:getOffensiveHorse())
+			end
+			
+			room:moveCardTo(card, player, sgs.Player_PlaceEquip,true) --CardMoveReason(CardMoveReason::S_REASON_PUT, player:objectName(), "junqei", data))
 		end
-		
-		room:moveCardTo(card, player, sgs.Player_PlaceEquip,true)--CardMoveReason(CardMoveReason::S_REASON_PUT, player:objectName(), "junqei", data))
-	end
-end
+	end,
+	can_trigger = function(self, target)
+		if target:getPhase() == sgs.Player_Finish then
+			return true
+		else
+			return false
+		end
+	end,
 }

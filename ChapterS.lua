@@ -156,7 +156,8 @@ LuaShenfen = sgs.CreateViewAsSkill{
 --[[
 	技能名：神戟
 	相关武将：SP·暴怒战神
-	描述：若你的装备区没有武器牌，当你使用【杀】时，你可以额外选择至多两个目标。 
+	描述：若你的装备区没有武器牌，当你使用【杀】时，你可以额外选择至多两个目标。
+	状态：尚未验证	
 	附注：由于TargetModSkill为锁定技，与描述有出入，所以创建一个仅提供按键图标的空壳视为技，功能由TargetModSkill实现。
 ]]--
 LuaShenji = sgs.CreateViewAsSkill{
@@ -609,16 +610,19 @@ LuaXShouye = sgs.CreateViewAsSkill{
 	描述：回合结束阶段开始时，你可以将手牌数补至等同于体力上限的张数。 
 	状态：验证通过
 ]]--
-LuaShude = sgs.CreateTriggerSkill{
-	name = "LuaShude",
+LuaXShude = sgs.CreateTriggerSkill{
+	name = "LuaXShude",
 	frequency = sgs.Skill_Frequent,
 	events = {sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local x = player:getMaxHp()-player:getHandcardNum()
-		if player:getPhase()~=sgs.Player_Finish or x<=0 then return false end
-		if room:askForSkillInvoke(player, self:objectName()) then
-			player:drawCards(x)
+		local x = player:getMaxHp() - player:getHandcardNum()
+		if player:getPhase() == sgs.Player_Finish then
+			if x > 0 then 
+				if room:askForSkillInvoke(player, self:objectName()) then
+					player:drawCards(x)
+				end
+			end
 		end
 	end
 }
@@ -652,7 +656,7 @@ LuaXShushenVS = sgs.CreateViewAsSkill{
 		return false
 	end, 
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@shushen"
+		return pattern == "@@LuaXShushen"
 	end
 }
 LuaXShushen = sgs.CreateTriggerSkill{
@@ -665,7 +669,7 @@ LuaXShushen = sgs.CreateTriggerSkill{
 		local recover_struct = data:toRecover()
 		local recover = recover_struct.recover
 		for i=1, recover, 1 do
-			if not room:askForUseCard(player, "@@shushen", "@shushen-draw") then
+			if not room:askForUseCard(player, "@@LuaXShushen", "@shushen-draw") then
 				break
 			end
 		end

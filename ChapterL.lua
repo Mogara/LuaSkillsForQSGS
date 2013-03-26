@@ -39,8 +39,8 @@ LuaXLanggu = sgs.CreateTriggerSkill{
 							player:invoke("clearAG")
 							break
 						end
-						local cc = sgs.Sanguosha:getCard(card_id)
-						if judge.card:getSuit() == cc:getSuit() then
+						local card = sgs.Sanguosha:getCard(card_id)
+						if judge.card:getSuit() == card:getSuit() then
 							room:throwCard(card_id, target)
 						end
 					end
@@ -54,12 +54,13 @@ LuaXLanggu = sgs.CreateTriggerSkill{
 		elseif event == sgs.AskForRetrial then
 			local room = player:getRoom()
 			local judge = data:toJudge()
-			if judge.reason ~= self:objectName() or judge.who:objectName() ~= player:objectName() then
-				return false
-			end
-			local card = room:askForCard(player, ".", "@LuaXLanggu", data, sgs.AskForRetrial)
-			if card ~= nil then
-				room:retrial(card, player, judge, self:objectName(), false)
+			if judge.reason == self:objectName() then
+				if judge.who:objectName() == player:objectName() then
+					local card = room:askForCard(player, ".", "@LuaXLanggu", data, sgs.AskForRetrial)
+					if card then
+						room:retrial(card, player, judge, self:objectName(), false)
+					end
+				end
 			end
 			return false
 		end
@@ -635,7 +636,7 @@ LuaLihuo = sgs.CreateTriggerSkill{
 		return false;
 	end, 
 	can_trigger = function(self, target)
-		return target ~= nil
+		return target 
 	end
 }
 LuaLihuoTarget = sgs.CreateTargetModSkill{
@@ -644,9 +645,8 @@ LuaLihuoTarget = sgs.CreateTargetModSkill{
 	extra_target_func = function(self, player)
 		if player:hasSkill(self:objectName()) then
 			return 1
-		else
-			return 0
 		end
+		return 0
 	end,
 }
 --[[
@@ -663,40 +663,41 @@ LuaXLirang = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data) 
 		local move = data:toMoveOneTime()
 		local source = move.from
-		if player:hasFlag("lirang_InTempMoving") then return false end --防止不完全给出时二次触发
-		if source and source:objectName() == player:objectName() then
-			if move.to_place == sgs.Player_DiscardPile then
-				local reason = move.reason
-				local basic = bit:_and(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) 
-				if basic == sgs.CardMoveReason_S_REASON_DISCARD then
-					local room = player:getRoom()
-					local i = 0
-					local lirang_card = sgs.IntList()
-					for _,card_id in sgs.qlist(move.card_ids) do
-						if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
-							local place = move.from_places:at(i)
-							if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
-								lirang_card:append(card_id)
+		if not player:hasFlag("lirang_InTempMoving") then --防止不完全给出时二次触发
+			if source and source:objectName() == player:objectName() then
+				if move.to_place == sgs.Player_DiscardPile then
+					local reason = move.reason
+					local basic = bit:_and(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) 
+					if basic == sgs.CardMoveReason_S_REASON_DISCARD then
+						local room = player:getRoom()
+						local i = 0
+						local lirang_card = sgs.IntList()
+						for _,card_id in sgs.qlist(move.card_ids) do
+							if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
+								local place = move.from_places:at(i)
+								if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
+									lirang_card:append(card_id)
+								end
 							end
+							i = i + 1
 						end
-						i = i + 1
-					end
-					if not lirang_card:isEmpty() then
-						if player:askForSkillInvoke(self:objectName(), data) then
-							room:setPlayerFlag(player, "lirang_InTempMoving")
-							local move2 = sgs.CardsMoveStruct()
-							move2.card_ids = lirang_card
-							move2.to_place = sgs.Player_PlaceHand
-							move2.to = player
-							room:moveCardsAtomic(move2, true)
-							while room:askForYiji(player, lirang_card, false, true) do
+						if not lirang_card:isEmpty() then
+							if player:askForSkillInvoke(self:objectName(), data) then
+								room:setPlayerFlag(player, "lirang_InTempMoving")
+								local move2 = sgs.CardsMoveStruct()
+								move2.card_ids = lirang_card
+								move2.to_place = sgs.Player_PlaceHand
+								move2.to = player
+								room:moveCardsAtomic(move2, true)
+								while room:askForYiji(player, lirang_card, false, true) do
+								end
+								local move3 = sgs.CardsMoveStruct()
+								move3.card_ids = lirang_card
+								move3.to_place = sgs.Player_DiscardPile
+								move3.reason = reason
+								room:moveCardsAtomic(move3, true)
+								room:setPlayerFlag(player, "-lirang_InTempMoving")
 							end
-							local move3 = sgs.CardsMoveStruct()
-							move3.card_ids = lirang_card
-							move3.to_place = sgs.Player_DiscardPile
-							move3.reason = reason
-							room:moveCardsAtomic(move3, true)
-							room:setPlayerFlag(player, "-lirang_InTempMoving")
 						end
 					end
 				end
@@ -955,6 +956,11 @@ LuaLuoshen = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：洛神
+	相关武将：国战·甄姬
+	描述：
+]]--
+--[[
 	技能名：落英
 	相关武将：一将成名·曹植
 	描述：当其他角色的梅花牌因弃置或判定而置入弃牌堆时，你可以获得之。
@@ -1139,53 +1145,62 @@ LuaLihun = sgs.CreateTriggerSkill{
 	描述：出牌阶段，你可以弃置一张牌并选择两名男性角色，视为其中一名男性角色对另一名男性角色使用一张【决斗】。此【决斗】不能被【无懈可击】响应。每阶段限一次。
 	状态：验证通过 
 ]]--
-Lualijian = sgs.CreateViewAsSkill{
-	name = "Lualijian",
+LuaLijianCard = sgs.CreateSkillCard{
+	name = "LuaLijianCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
+		if #targets ~= 2 then
+			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
+			if to_select:isMale() then
+				return not sgs.Self:isProhibited(to_select, duel)
+			end
+		elseif #targets == 2 then
+			local tag = sgs.QVariant(targets[1]:objectName())
+			sgs.Self:setTag("LualijianTarget", tag)
+		end
+		return false
+	end,
+	feasible = function(self, targets)
+		return #targets == 2
+	end,
+	on_use = function(self, room, source, targets)
+		local LijianTarget = sgs.Self:getTag("LualijianTarget"):toString()
+		if LijianTarget ~= "" then
+			local from = nil
+			local to = nil
+			if LijianTarget == targets[1]:objectName() then
+				from = targets[2]
+				to = targets[1]
+			else
+				from = targets[1]
+				to = targets[2]
+			end
+			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
+			duel:toTrick():setCancelable(false)
+			duel:setSkillName("LuaLijian")
+			room:cardEffect(duel, from, to)
+			room:removeTag("LualijianTarget")
+		end
+	end	
+}
+LuaLijian = sgs.CreateViewAsSkill{
+	name = "LuaLijian",
 	n = 1,
 	view_filter = function(self, selected, to_select)
 		return true
 	end,
 	view_as = function(self, cards)
-		if #cards ~= 1  then return nil end
-		local card = Lualijian_card:clone()
-		card:addSubcard(cards[1])
-		card:setSkillName(self:objectName())
-		return card
+		if #cards == 1 then
+			local card = LualijianCard:clone()
+			card:addSubcard(cards[1])
+			card:setSkillName(self:objectName())
+			return card
+		end
 	end,
 	enabled_at_play = function()
 		return not sgs.Self:hasUsed("#Lualijian_card")
 	end
-}
-
-Lualijian_card = sgs.CreateSkillCard{
-	name = "Lualijian_card",
-	target_fixed = false,
-	will_throw = true,
-	
-	feasible = function(self, targets)
-		return #targets == 2
-	end,
-	filter = function(self, targets, to_select,player)
-		if #targets ~= 2 then
-			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
-			return to_select:getGeneral():isMale() and not player:isProhibited(to_select, duel) 
-		end
-		if #targets == 2 then
-			player:setTag("LualijianTarget", sgs.QVariant(targets[1]:objectName()))
-			return false
-		end
-	end,
-	on_use = function(self, room, source, targets)
-		local toN = sgs.Self:getTag("LualijianTarget"):toString()
-		if not toN == "" then return end
-		local to = toN == targets[1]:objectName() and targets[1] or targets[2]
-		local from = to == targets[1] and targets[2] or targets[1]
-		local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
-		duel:toTrick():setCancelable(false)
-		duel:setSkillName("Lualijian")
-		room:cardEffect(duel,from,to)
-		room:removeTag("LualijianTarget")
-	end	
 }
 --[[
 	技能名：连环
@@ -1316,19 +1331,26 @@ LuaLianYing = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local move = data:toMoveOneTime()
-		if move.from and move.from:hasSkill(self:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
+		local source = move.from
+		if source and source:hasSkill(self:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
 			if event == sgs.BeforeCardsMove then 
-				for _, rh in sgs.qlist(player:handCards()) do 
-				if not move.card_ids:contains(rh) then return end
+				local handcards = player:handCards()
+				for _,id in sgs.qlist(handcards) do 
+					if not move.card_ids:contains(id) then 
+						return 
+					end
+				end
+				player:addMark(self:objectName())
+			else
+				if player:getMark(self:objectName()) > 0 then
+					player:removeMark(self:objectName())			 
+					if room:askForSkillInvoke(player, self:objectName(), data) then
+						player:drawCards(1)
+					end
+				end
 			end
-			player:addMark(self:objectName())
-		else
-			if player:getMark(self:objectName()) == 0 then return end
-			player:removeMark(self:objectName())             
-			if not room:askForSkillInvoke(player,self:objectName(),data) then return end  
-			room:broadcastSkillInvoke("lianying");player:drawCards(1) end
 		end
-	end,
+	end
 } 
 --[[
 	技能名：烈弓

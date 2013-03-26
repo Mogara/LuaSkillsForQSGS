@@ -164,8 +164,12 @@ LuaGongqi = sgs.CreateViewAsSkill{
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		local weapon = sgs.Self:getWeapon()
-		if weapon and to_select:objectName() == weapon:objectName() and to_select:objectName() == "Crossbow" then
-			return sgs.Self:canSlashWithoutCrossbow()
+		if weapon then
+			if to_select:objectName() == weapon:objectName() then
+				if to_select:objectName() == "Crossbow" then
+					return sgs.Self:canSlashWithoutCrossbow()
+				end
+			end
 		end
 		return to_select:getTypeId() == sgs.Card_Equip
 	end, 
@@ -189,13 +193,14 @@ LuaGongqi = sgs.CreateViewAsSkill{
 	end
 }
 LuaGongqiTargetMod = sgs.CreateTargetModSkill{
-	name = "#LuaGongqi-target",
+	name = "#LuaGongqiTargetMod",
 	distance_limit_func = function(self, from, card)
-        if from:hasSkill("LuaGongqi") and card:getSkillName() == "LuaGongqi" then
-            return 1000
-        else
-            return 0
+		if from:hasSkill("LuaGongqi") then
+			if card:getSkillName() == "LuaGongqi" then
+				return 1000
+			end
 		end
+		return 0
 	end
 }
 --[[
@@ -254,9 +259,9 @@ LuaXGongmou = sgs.CreateTriggerSkill{
 			end
 		elseif phase == sgs.Player_Start then
 			local players = room:getOtherPlayers(player)
-			for _,player in sgs.qlist(players) do
-				if player:getMark("@conspiracy") > 0 then
-					player:loseMark("@conspiracy")
+			for _,p in sgs.qlist(players) do
+				if p:getMark("@conspiracy") > 0 then
+					p:loseMark("@conspiracy")
 				end
 			end
 		end
@@ -367,44 +372,46 @@ LuaGuzheng = sgs.CreateTriggerSkill{
 		local current = room:getCurrent()
 		local move = data:toMoveOneTime()
 		local source = move.from
-		if source == nil then return false end
-		if((player:objectName() ~= source:objectName()) or (erzhang == nil) or (erzhang:objectName() == current:objectName()))then
-			return false
-		end
-		if current:getPhase() == sgs.Player_Discard then
-			local tag = room:getTag("GuzhengToGet")
-			local guzhengToGet= tag:toString()
-			tag = room:getTag("GuzhengOther")
-			local guzhengOther = tag:toString()
-			if guzhengToGet == nil then
-				guzhengToGet = ""
-			end
-			if guzhengOther == nil then
-				guzhengOther = ""
-			end
-			for _,card_id in sgs.qlist(move.card_ids) do
-				local flag = bit:_and(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
-				if flag == sgs.CardMoveReason_S_REASON_DISCARD then
-					if source:objectName() == current:objectName() then
-						if guzhengToGet == "" then
-							guzhengToGet = tostring(card_id)
-						else
-							guzhengToGet = guzhengToGet.."+"..tostring(card_id)
+		if source then
+			if player:objectName() == source:objectName() then
+				if erzhang and erzhang:objectName() ~= current:objectName() then
+					if current:getPhase() == sgs.Player_Discard then
+						local tag = room:getTag("GuzhengToGet")
+						local guzhengToGet= tag:toString()
+						tag = room:getTag("GuzhengOther")
+						local guzhengOther = tag:toString()
+						if guzhengToGet == nil then
+							guzhengToGet = ""
 						end
-					elseif not strcontain(guzhengToGet, tostring(card_id)) then
-						if guzhengOther == "" then
-							guzhengOther = tostring(card_id)
-						else
-							guzhengOther = guzhengOther.."+"..tostring(card_id)
+						if guzhengOther == nil then
+							guzhengOther = ""
+						end
+						for _,card_id in sgs.qlist(move.card_ids) do
+							local flag = bit:_and(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+							if flag == sgs.CardMoveReason_S_REASON_DISCARD then
+								if source:objectName() == current:objectName() then
+									if guzhengToGet == "" then
+										guzhengToGet = tostring(card_id)
+									else
+										guzhengToGet = guzhengToGet.."+"..tostring(card_id)
+									end
+								elseif not strcontain(guzhengToGet, tostring(card_id)) then
+									if guzhengOther == "" then
+										guzhengOther = tostring(card_id)
+									else
+										guzhengOther = guzhengOther.."+"..tostring(card_id)
+									end
+								end
+							end
+						end
+						if guzhengToGet then
+							room:setTag("GuzhengToGet", sgs.QVariant(guzhengToGet))
+						end
+						if guzhengOther then
+							room:setTag("GuzhengOther", sgs.QVariant(guzhengOther))
 						end
 					end
 				end
-			end
-			if guzhengToGet then
-				room:setTag("GuzhengToGet", sgs.QVariant(guzhengToGet))
-			end
-			if guzhengOther then
-				room:setTag("GuzhengOther", sgs.QVariant(guzhengOther))
 			end
 		end
 		return false
@@ -508,7 +515,8 @@ LuaGuanxing = sgs.CreateTriggerSkill{
 				if count > 5 then
 					count = 5
 				end
-				room:askForGuanxing(player, room:getNCards(count, false), false)
+				local cards = room:getNCards(count, false)
+				room:askForGuanxing(player, cards, false)
 			end
 		end
 	end
@@ -638,50 +646,47 @@ LuaGuixin = sgs.CreateTriggerSkill{
 	events = {sgs.EventPhaseProceeding},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if player:getPhase() ~= sgs.Player_Finish then return end
-		if (room:askForSkillInvoke(player, self:objectName()) ~= true) then return end
-		local tc = room:askForChoice(player, self:objectName(), "modify+obtain")	
-		if (tc == "modify") then
-			local to_modify = room:askForPlayerChosen(player, room:getOtherPlayers(player), self:objectName())
-			local data = sgs.QVariant()
-			data:setValue(to_modify)
-			room:setTag("Guixin2Modify", data)
-			local kingdom = room:askForChoice(player, self:objectName(), "wei+shu+wu+qun")
-			room:removeTag("Guixin2Modify")           
-			local old_kingdom = to_modify:getKingdom()
-			room:setPlayerProperty(to_modify, "kingdom", sgs.QVariant(kingdom))
-			local log = sgs.LogMessage()
-			log.type = "#ChangeKingdom"
-			log.from = player
-			log.to:append(to_modify)
-			log.arg = old_kingdom
-			log.arg2 = kingdom
-			room:sendLog(log)
-		elseif (tc == "obtain") then
-			local lords = sgs.Sanguosha:getLords()
-			local players = room:getOtherPlayers(player)
-			for _, rh in sgs.qlist(players) do
-				table.removeOne(lords, rh:getGeneralName())
-			end
-			local lord_skills = {}
-			for _, rhx in ipairs(lords) do 
-				local general = sgs.Sanguosha:getGeneral(rhx)
-				local skills = general:getSkillList()
-				for _, skill in sgs.qlist(skills) do 
-					if skill:isLordSkill() and not player:hasSkill(skill:objectName()) then
-						table.insert(lord_skills, skill:objectName())
+		if player:getPhase() == sgs.Player_Finish then 
+			if room:askForSkillInvoke(player, self:objectName()) then
+				local choice = room:askForChoice(player, self:objectName(), "modify+obtain")
+				local others = room:getOtherPlayers(player)
+				if choice == "modify" then
+					local to_modify = room:askForPlayerChosen(player, others, self:objectName())
+					local ai_data = sgs.QVariant()
+					ai_data:setValue(to_modify)
+					room:setTag("Guixin2Modify", ai_data)
+					local kingdom = room:askForChoice(player, self:objectName(), "wei+shu+wu+qun")
+					room:removeTag("Guixin2Modify")		   
+					local old_kingdom = to_modify:getKingdom()
+					room:setPlayerProperty(to_modify, "kingdom", sgs.QVariant(kingdom))
+				elseif choice == "obtain" then
+					local lords = sgs.Sanguosha:getLords()
+					for _, p in sgs.qlist(others) do
+						table.removeOne(lords, p:getGeneralName())
 					end
-				end	
-			end
-			if (#lord_skills>0) then
-				local skill_name = room:askForChoice(player, self:objectName(), table.concat(lord_skills, "+"))
-				local skill = sgs.Sanguosha:getSkill(skill_name)           
-				room:acquireSkill(player, skill) 
-				local jiemingEX = sgs.Sanguosha:getTriggerSkill(skill:objectName())
-				jiemingEX:trigger(sgs.GameStart, room, player, sgs.QVariant())
+					local lord_skills = {}
+					for _, lord in ipairs(lords) do 
+						local general = sgs.Sanguosha:getGeneral(lord)
+						local skills = general:getSkillList()
+						for _, skill in sgs.qlist(skills) do 
+							if skill:isLordSkill() then
+								if not player:hasSkill(skill:objectName()) then
+									table.insert(lord_skills, skill:objectName())
+								end
+							end
+						end	
+					end
+					if #lord_skills > 0 then
+						local choices = table.concat(lord_skills, "+")
+						local skill_name = room:askForChoice(player, self:objectName(), choices)
+						local skill = sgs.Sanguosha:getSkill(skill_name)		   
+						room:acquireSkill(player, skill) 
+						local jiemingEX = sgs.Sanguosha:getTriggerSkill(skill:objectName())
+						jiemingEX:trigger(sgs.GameStart, room, player, sgs.QVariant())
+					end
+				end
 			end
 		end
-		return
 	end,
 }
 --[[
@@ -763,8 +768,6 @@ GuicaiCard = sgs.CreateSkillCard{
 	name = "GuicaiCard",
 	target_fixed = true,
 	will_throw = false,
-	on_effect = function(self, effect)
-	end
 }
 LuaGuicaiVS = sgs.CreateViewAsSkill{
 	name = "LuaGuicai",

@@ -777,10 +777,10 @@ LuaWushen = sgs.CreateFilterSkill{
 LuaWushenTargetMod = sgs.CreateTargetModSkill{
 	name = "#LuaWushen-target",
 	distance_limit_func = function(self, from, card)
-        if from:hasSkill("LuaWushen") and card:getSuit() == sgs.Card_Heart then
-            return 1000
-        else
-            return 0
+		if from:hasSkill("LuaWushen") and card:getSuit() == sgs.Card_Heart then
+			return 1000
+		else
+			return 0
 		end
 	end
 }

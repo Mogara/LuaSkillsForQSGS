@@ -719,7 +719,6 @@ Lua3V3_isFriend = function(player,other)
 	local tb = { ["lord"] = "warm", ["loyalist"] = "warm", ["renegade"] = "cold", ["rebel"] = "cold" }
 	return tb[player:getRole()] == tb[other:getRole()]
 end
-
 LuaXHuanshiCard = sgs.CreateSkillCard {
 	name = "LuaXHuanshiCard",
 	target_fixed = true,
@@ -747,7 +746,6 @@ LuaXHuanshiVS = sgs.CreateViewAsSkill{
 		return pattern == "@LuaXHuanshi"
 	end
 }
-
 LuaXHuanshi = sgs.CreateTriggerSkill {
 	name = "LuaXHuanshi",
 	frequency = sgs.Skill_NotFrequent,
@@ -780,7 +778,7 @@ LuaXHuanshi = sgs.CreateTriggerSkill {
 	描述：在一名角色的判定牌生效前，你可以令其选择是否由你打出一张牌代替之。
 	状态：验证通过
 ]]--
-LuaXHuanshiCard = sgs.CreateSkillCard {
+LuaXHuanshiCard = sgs.CreateSkillCard{
 	name = "LuaXHuanshiCard",
 	target_fixed = true,
 	will_throw = false,
@@ -851,8 +849,6 @@ function setHuoshuiFlag(room, player, is_lose)
 		room:filterCards(pl, pl:getCards("he"), not is_lose)
 	end
 end
-
-
 LuaHuoshui = sgs.CreateTriggerSkill{
 	name = "LuaHuoshui",
 	events	= {sgs.EventPhaseStart,sgs.EventPhaseChanging,sgs.PostHpReduced,sgs.Death,sgs.MaxHpChanged,sgs.EventAcquireSkill,sgs.EventLoseSkill,sgs.HpRecover,sgs.PreHpLost},
@@ -1288,7 +1284,7 @@ gzkuangfu=sgs.CreateTriggerSkill{
 		if (index >-1 and player:getEquip(index)==nil) then 
 			table.insert(choicelist,"move") 
 		end
-		local option = room:askForChoice(player, self:objectName(), table.concat(choicelist,"+"))          
+		local option = room:askForChoice(player, self:objectName(), table.concat(choicelist,"+"))		  
 		if option == "move" then 
 			room:moveCardTo(card, player, sgs.Player_PlaceEquip, true)
 		else 
