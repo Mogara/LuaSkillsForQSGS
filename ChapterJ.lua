@@ -123,7 +123,7 @@ LuaJijiu = sgs.CreateViewAsSkill{
 			local suit = card:getSuit()
 			local point = card:getNumber()
 			local id = card:getId()
-			local peach = sgs.Sanguosha:cloneCard("Peach", suit, point)
+			local peach = sgs.Sanguosha:cloneCard("peach", suit, point)
 			peach:setSkillName(self:objectName())
 			peach:addSubcard(id)
 			return peach
@@ -292,7 +292,7 @@ LuaJizhi = sgs.CreateTriggerSkill{
 			card = response.m_card
 		end
 		local room = player:getRoom()
-		if card:isNDTrick() then		   
+		if card:isNDTrick() then
 			if room:askForSkillInvoke(player, self:objectName()) then
 				player:drawCards(1)
 			end
