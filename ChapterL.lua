@@ -1192,14 +1192,14 @@ LuaLijian = sgs.CreateViewAsSkill{
 	end,
 	view_as = function(self, cards)
 		if #cards == 1 then
-			local card = LualijianCard:clone()
+			local card = LuaLijianCard:clone()
 			card:addSubcard(cards[1])
 			card:setSkillName(self:objectName())
 			return card
 		end
 	end,
 	enabled_at_play = function()
-		return not sgs.Self:hasUsed("#Lualijian_card")
+		return not sgs.Self:hasUsed("#LuaLijianCard")
 	end
 }
 --[[
