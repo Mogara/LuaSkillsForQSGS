@@ -534,6 +534,37 @@ LuaXShicai = sgs.CreateTriggerSkill{
 	priority = -1
 }
 --[[
+	技能名：伤逝
+	相关武将：一将成名·张春华
+	描述：弃牌阶段外，当你的手牌数小于X时，你将手牌补至X张（X为你已损失的体力值且最多为2）。
+	状态：验证通过
+]]--
+LuaShangshi = sgs.CreateTriggerSkill{
+	name = "LuaShangshi",
+	events = {sgs.EventPhaseStart,sgs.CardsMoveOneTime,sgs.MaxHpChanged,sgs.HpChanged},
+	frequency = sgs.Skill_Frequent,
+    on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local num = player:getHandcardNum()
+		local lost = player:getLostHp()
+		if lost > 2 then lost = 2 end
+		if num >= lost  then return end
+		if player:getPhase() ~= sgs.Player_Discard then
+		if event == sgs.CardsMoveOneTime then
+		local move = data:toMoveOneTime()
+		if move.from:objectName() == player:objectName() then
+		if not room:askForSkillInvoke(player,self:objectName()) then return end
+		player:drawCards(lost-num)
+		end
+	end	
+		if event == sgs.MaxHpChanged or event == sgs.HpChanged then
+		if not room:askForSkillInvoke(player,self:objectName()) then return end
+			player:drawCards(lost-num)
+		end	
+	end
+end	
+}
+--[[
 	技能名：恃勇（锁定技）
 	相关武将：二将成名·华雄
 	描述：每当你受到一次红色的【杀】或因【酒】生效而伤害+1的【杀】造成的伤害后，你减1点体力上限。
