@@ -598,12 +598,12 @@ LuaFuli = sgs.CreateTriggerSkill{
 	技能名：辅佐
 	相关武将：智·张昭
 	描述：当有角色拼点时，你可以打出一张点数小于8的手牌，让其中一名角色的拼点牌加上这张牌点数的二分之一（向下取整）
-	状态：验证通过
+	状态：0224验证通过
 ]]--
 LuaXFuzuo = sgs.CreateTriggerSkill{
 	name = "LuaXFuzuo",  
 	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Pindian},   
+	events = {sgs.PindianVerifying},   
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
 		local zhangzhao = room:findPlayerBySkillName(self:objectName())
@@ -616,22 +616,14 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 			if choice ~= "cancel" then
 				local intervention = room:askForCard(zhangzhao, ".|.|~7|hand", "@fuzuo_card")
 				if intervention then
-					local dest = zhangzhao
-					local pindian_card
 					if choice == source:getGeneralName() then
-						dest = source
-						pindian_card = pindian.from_card
+						local num = math.min((pindian.from_card:getNumber() + intervention:getNumber() / 2),13)
+						pindian.from_number=num
 					else
-						dest = target
-						pindian_card = pindian.to_card
+						local num = math.min((pindian.to_card:getNumber() + intervention:getNumber() / 2),13)
+						pindian.to_number=num
 					end
-					local id = pindian_card:getId()
-					local num = pindian_card:getNumber() + intervention:getNumber() / 2
-					local new_card = sgs.Sanguosha:getWrappedCard(id)
-					new_card:setNumber(num)
-					new_card:setSkillName(self:objectName())
-					new_card:setModified(true)
-					room:broadcastUpdateCard(room:getPlayers(), id, new_card)
+					data:setValue(pindian)
 				end
 			end
 		end
