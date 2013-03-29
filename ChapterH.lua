@@ -941,17 +941,18 @@ LuaHuangtian = sgs.CreateTriggerSkill{
 	技能名：挥泪（锁定技）
 	相关武将：一将成名·马谡
 	描述：当你被其他角色杀死时，该角色弃置其所有的牌。
-	状态：验证通过
+	状态：0224验证通过
 ]]--
 LuaHuilei = sgs.CreateTriggerSkill{
 	name = "LuaHuilei",
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.Death},
 	on_trigger = function(self, event, player, data)
-		local damage = data:toDamageStar()
-		if damage then
-			local killer = damage.from
-			if killer then
+		local death = data:toDeath()
+		if death.who:objectName( )== player:objectName() then
+			local damage = death.damage
+			if damage then
+			    local killer = damage.from 
 				killer:throwAllHandCardsAndEquips()
 			end
 		end
