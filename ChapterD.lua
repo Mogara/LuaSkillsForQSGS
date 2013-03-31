@@ -351,8 +351,69 @@ LuaDimeng = sgs.CreateViewAsSkill{
 --[[
 	技能名：毒计
 	相关武将：3D织梦·李儒
-	描述： 出牌阶段，若你的武将牌上没有牌，你可以将一张黑桃牌置于你的武将牌上。当一名其他角色在其出牌阶段使用一张【杀】指定目标后，你可将此牌置于其手上，并令此【杀】当有【酒】效果的【杀】结算，然后该角色须执行下列一项：将武将牌翻面或失去1点体力。 
+	描述： 出牌阶段，若你的武将牌上没有牌，你可以将一张黑桃牌置于你的武将牌上。当一名其他角色在其出牌阶段使用一张【杀】指定目标后，你可将此牌置于其手上，并令此【杀】当有【酒】效果的【杀】结算，然后该角色须执行下列一项：将武将牌翻面或失去1点体力。
+	状态：验证通过
 ]]--
+LuaDujiCard = sgs.CreateSkillCard{
+	name = "LuaDujiCard",
+	target_fixed = true,
+	will_throw = false, 
+	on_use = function(self, room, source, targets)
+	source:addToPile("du", self)
+	end 
+}
+LuaDujiVS = sgs.CreateViewAsSkill{
+	name = "LuaDuji", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		return to_select:getSuit() == sgs.Card_Spade 
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local card = cards[1]
+			local vs_card = LuaDujiCard:clone()
+			vs_card:setSkillName(self:objectName())
+			vs_card:addSubcard(card)
+			return vs_card
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return player:getPile("du"):isEmpty()
+	end
+}
+LuaDuji = sgs.CreateTriggerSkill{
+	name = "LuaDuji", 
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.TargetConfirmed}, 
+	view_as_skill = LuaDujiVS, 
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local use = data:toCardUse()
+		local pile = player:getPile("du")
+		if use.from and use.from:objectName() ~= player:objectName() then
+		    if use.from:getPhase() == sgs.Player_Play then
+			    if not pile:isEmpty() then
+					if use.card and use.card:isKindOf("Slash") then
+						if not use.from:hasFlag("drank") then
+							if player:askForSkillInvoke(self:objectName()) then
+								local cardid = pile:first()
+								room:obtainCard(use.from, cardid)
+								room:setPlayerFlag(use.from, "drank")
+								local choice = room:askForChoice(use.from, self:objectName(), "turn+lp")
+								if  choice == "turn"  then
+								    use.from:turnOver()
+								else
+								    room:loseHp(use.from)
+								end
+							end	
+						end
+					end		
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：毒士（锁定技）
 	相关武将：倚天·贾文和
