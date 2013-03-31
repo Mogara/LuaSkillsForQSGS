@@ -390,7 +390,24 @@ LuaXBeifa = sgs.CreateTriggerSkill{
 	技能名：备粮
 	相关武将：长坂坡·神张飞
 	描述：摸牌阶段，你可以选择放弃摸牌，将手牌补至等同于你体力上限的张数。 
+	状态：验证通过
 ]]--
+LuaBeiliang = sgs.CreateTriggerSkill{
+	name = "LuaBeiliang",
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+	    local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Draw then
+			if player:getHandcardNum() < player:getMaxHp() then 
+				if room:askForSkillInvoke(player, self:objectName()) then
+					local x = player:getMaxHp() - player:getHandcardNum()
+				    	player:drawCards(x) 
+				    return true
+				end
+			end
+		end
+	end
+}
 --[[
 	技能名：崩坏（锁定技）
 	相关武将：林·董卓
