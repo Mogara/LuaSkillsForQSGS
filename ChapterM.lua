@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（M区）
 	技能索引：
-		马术、漫卷、猛进、秘计、密信、密诏、明策、名士、明哲、谋断、谋溃
+		马术、漫卷、猛进、秘计、密信、密诏、名士、明策、明鉴、明哲、谋断、谋溃
 ]]--
 --[[
 	技能名：马术（锁定技）
@@ -331,6 +331,40 @@ LuaXMizhao = sgs.CreateTriggerSkill{
 	priority = -1
 }
 --[[
+	技能名：名士（锁定技）
+	相关武将：国战·孔融
+	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。 
+	状态：0224验证通过
+]]--
+LuaXMingshi = sgs.CreateTriggerSkill{
+	name = "LuaXMingshi",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.DamageInflicted},  
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local damage = data:toDamage()
+		local source = damage.from
+		if source then
+			local choice
+			if not source:isKongcheng() then
+				choice = room:askForChoice(source, self:objectName(), "yes+no", data)
+			else
+				choice = "yes"
+			end
+			if choice == "no" then
+				damage.damage = damage.damage - 1
+				if damage.damage < 1 then
+					return true
+				end
+				data:setValue(damage)
+			else
+				room:showAllCards(source)
+			end
+		end
+		return false
+	end
+}
+--[[
 	技能名：明策
 	相关武将：一将成名·陈宫
 	描述：出牌阶段，你可以交给一名其他角色一张装备牌或【杀】，该角色选择一项：1. 视为对其攻击范围内你选择的另一名角色使用一张【杀】。2. 摸一张牌。每回合限一次。
@@ -406,39 +440,12 @@ LuaMingce = sgs.CreateViewAsSkill{
 	end
 }
 --[[
-	技能名：名士（锁定技）
-	相关武将：国战·孔融
-	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。 
-	状态：0224验证通过
+	技能名：明鉴
+	相关武将：贴纸·辛宪英
+	描述：任一角色回合开始时，你可以立即优先执行下列两项中的一项：
+		1.弃置一张牌，跳过该角色的判定阶段。
+		2.竖置一张手牌于其武将牌上，该角色本回合内的判定均不受任何人物技能影响，该角色回合结束后将该牌置入弃牌堆。 
 ]]--
-LuaXMingshi = sgs.CreateTriggerSkill{
-	name = "LuaXMingshi",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.DamageInflicted},  
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local damage = data:toDamage()
-		local source = damage.from
-		if source then
-			local choice
-			if not source:isKongcheng() then
-				choice = room:askForChoice(source, self:objectName(), "yes+no", data)
-			else
-				choice = "yes"
-			end
-			if choice == "no" then
-				damage.damage = damage.damage - 1
-				if damage.damage < 1 then
-					return true
-				end
-				data:setValue(damage)
-			else
-				room:showAllCards(source)
-			end
-		end
-		return false
-	end
-}
 --[[
 	技能名：明哲
 	相关武将：新3V3·诸葛瑾

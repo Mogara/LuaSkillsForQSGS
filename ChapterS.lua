@@ -1,7 +1,43 @@
 --[[
 	代码速查手册（S区）
 	技能索引：
-		烧营、涉猎、神愤、神戟、神君、神力、神速、神威、神智、师恩、誓仇、识破、恃才、恃勇、授业、淑德、双刃、双雄、水箭、水泳、死谏、死战、颂词、颂威、随势
+		伤逝、伤逝、烧营、涉猎、神愤、神戟、神君、神力、神速、神威、神智、师恩、识破、识破、恃才、恃勇、弑神、誓仇、授业、淑德、淑慎、双刃、双雄、水箭、水泳、死谏、死节、死战、颂词、颂威、随势
+]]--
+--[[
+	技能名：伤逝（锁定技）
+	相关武将：一将成名·张春华
+	描述：弃牌阶段外，当你的手牌数小于X时，你将手牌补至X张（X为你已损失的体力值且最多为2）。
+	状态：验证通过
+]]--
+LuaShangshi = sgs.CreateTriggerSkill{
+	name = "LuaShangshi",
+	events = {sgs.EventPhaseStart,sgs.CardsMoveOneTime,sgs.MaxHpChanged,sgs.HpChanged},
+	frequency = sgs.Skill_Frequent,
+    on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local num = player:getHandcardNum()
+		local lost = player:getLostHp()
+		if lost > 2 then lost = 2 end
+		if num >= lost  then return end
+		if player:getPhase() ~= sgs.Player_Discard then
+			if event == sgs.CardsMoveOneTime then
+				local move = data:toMoveOneTime()
+				if move.from:objectName() == player:objectName() then
+					if not room:askForSkillInvoke(player,self:objectName()) then return end
+					player:drawCards(lost-num)
+				end
+			end	
+			if event == sgs.MaxHpChanged or event == sgs.HpChanged then
+				if not room:askForSkillInvoke(player,self:objectName()) then return end
+				player:drawCards(lost-num)
+			end	
+		end
+	end	
+}
+--[[
+	技能名：伤逝
+	相关武将：怀旧·张春华
+	描述：弃牌阶段外，当你的手牌数小于X时，你可以将手牌补至X张（X为你已损失的体力值） 
 ]]--
 --[[
 	技能名：烧营
@@ -260,7 +296,10 @@ LuaXShenli = sgs.CreateTriggerSkill{
 --[[
 	技能名：神速
 	相关武将：风·夏侯渊
-	描述：你可以选择一至两项：1.跳过你的判定阶段和摸牌阶段。2.跳过你的出牌阶段并弃置一张装备牌。你每选择一项，视为对一名其他角色使用一张【杀】（无距离限制）。
+	描述：你可以选择一至两项：
+		1.跳过你的判定阶段和摸牌阶段。
+		2.跳过你的出牌阶段并弃置一张装备牌。
+		你每选择一项，视为对一名其他角色使用一张【杀】（无距离限制）。
 	状态：验证失败
 ]]--
 --[[
@@ -406,6 +445,78 @@ LuaXShipo = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：识破（锁定技）
+	相关武将：3D织梦·李儒
+	描述：你不能成为黑桃【杀】或黑桃锦囊的目标。 
+]]--
+--[[
+	技能名：恃才（锁定技）
+	相关武将：智·许攸
+	描述：当你拼点成功时，摸一张牌 
+	状态：验证通过
+]]--
+LuaXShicai = sgs.CreateTriggerSkill{
+	name = "LuaXShicai",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.Pindian},  
+	on_trigger = function(self, event, player, data) 
+		if player then
+			local room = player:getRoom()
+			local xuyou = room:findPlayerBySkillName(self:objectName())
+			if xuyou then
+				local pindian = data:toPindian()
+				local source = pindian.from
+				local target = pindian.to
+				if source:objectName() == xuyou:objectName() or target:objectName() == xuyou:objectName() then
+					local winner
+					if pindian.from_card:getNumber() > pindian.to_card:getNumber() then
+						winner = source 
+					else
+						winner = target
+					end
+					if winner:objectName() == xuyou:objectName() then
+						xuyou:drawCards(1)
+					end
+				end
+			end
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target
+	end, 
+	priority = -1
+}
+--[[
+	技能名：恃勇（锁定技）
+	相关武将：二将成名·华雄
+	描述：每当你受到一次红色的【杀】或因【酒】生效而伤害+1的【杀】造成的伤害后，你减1点体力上限。
+	状态：验证通过
+]]--
+LuaShiyong = sgs.CreateTriggerSkill{
+	name = "LuaShiyong",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.Damaged},  
+	on_trigger = function(self, event, player, data) 
+		local damage = data:toDamage()
+		local slash = damage.card
+		if slash then
+			if slash:isKindOf("Slash") then
+				if slash:isRed() or slash:hasFlag("drank") then
+					local room = player:getRoom()
+					room:loseMaxHp(player)
+				end
+			end
+		end
+		return false
+	end
+}
+--[[
+	技能名：弑神（聚气技）
+	相关武将：长坂坡·神张飞
+	描述：出牌阶段，你可以弃两张相同颜色的“怒”，令任一角色流失1点体力。
+]]--
+--[[
 	技能名：誓仇（主公技、限定技）
 	相关武将：☆SP·刘备
 	描述：你的回合开始时，你可指定一名蜀国角色并交给其两张牌。本盘游戏中，每当你受到伤害时，改为该角色替你受到等量的伤害，然后摸等量的牌，直至该角色第一次进入濒死状态。
@@ -493,99 +604,6 @@ LuaShichou = sgs.CreateTriggerSkill{
 	end, 
 	can_trigger = function(self, target)
 		return target
-	end
-}
---[[
-	技能名：恃才（锁定技）
-	相关武将：智·许攸
-	描述：当你拼点成功时，摸一张牌 
-	状态：验证通过
-]]--
-LuaXShicai = sgs.CreateTriggerSkill{
-	name = "LuaXShicai",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.Pindian},  
-	on_trigger = function(self, event, player, data) 
-		if player then
-			local room = player:getRoom()
-			local xuyou = room:findPlayerBySkillName(self:objectName())
-			if xuyou then
-				local pindian = data:toPindian()
-				local source = pindian.from
-				local target = pindian.to
-				if source:objectName() == xuyou:objectName() or target:objectName() == xuyou:objectName() then
-					local winner
-					if pindian.from_card:getNumber() > pindian.to_card:getNumber() then
-						winner = source 
-					else
-						winner = target
-					end
-					if winner:objectName() == xuyou:objectName() then
-						xuyou:drawCards(1)
-					end
-				end
-			end
-		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		return target
-	end, 
-	priority = -1
-}
---[[
-	技能名：伤逝
-	相关武将：一将成名·张春华
-	描述：弃牌阶段外，当你的手牌数小于X时，你将手牌补至X张（X为你已损失的体力值且最多为2）。
-	状态：验证通过
-]]--
-LuaShangshi = sgs.CreateTriggerSkill{
-	name = "LuaShangshi",
-	events = {sgs.EventPhaseStart,sgs.CardsMoveOneTime,sgs.MaxHpChanged,sgs.HpChanged},
-	frequency = sgs.Skill_Frequent,
-    	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local num = player:getHandcardNum()
-		local lost = player:getLostHp()
-		if lost > 2 then lost = 2 end
-		if num >= lost  then return end
-		if player:getPhase() ~= sgs.Player_Discard then
-		if event == sgs.CardsMoveOneTime then
-		local move = data:toMoveOneTime()
-		if move.from:objectName() == player:objectName() then
-		if not room:askForSkillInvoke(player,self:objectName()) then return end
-		player:drawCards(lost-num)
-		end
-	end	
-		if event == sgs.MaxHpChanged or event == sgs.HpChanged then
-		if not room:askForSkillInvoke(player,self:objectName()) then return end
-			player:drawCards(lost-num)
-		end	
-	end
-end	
-}
---[[
-	技能名：恃勇（锁定技）
-	相关武将：二将成名·华雄
-	描述：每当你受到一次红色的【杀】或因【酒】生效而伤害+1的【杀】造成的伤害后，你减1点体力上限。
-	状态：验证通过
-]]--
-LuaShiyong = sgs.CreateTriggerSkill{
-	name = "LuaShiyong",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.Damaged},  
-	on_trigger = function(self, event, player, data) 
-		local damage = data:toDamage()
-		local slash = damage.card
-		if slash then
-			if slash:isKindOf("Slash") then
-				if slash:isRed() or slash:hasFlag("drank") then
-					local room = player:getRoom()
-					room:loseMaxHp(player)
-				end
-			end
-		end
-		return false
 	end
 }
 --[[
@@ -918,6 +936,11 @@ LuaXShuiyong = sgs.CreateTriggerSkill{
 	相关武将：国战·田丰
 	描述：每当你失去最后的手牌后，你可以弃置一名其他角色的一张牌。 
 	状态：尚未验证
+]]--
+--[[
+	技能名：死节
+	相关武将：3D织梦·沮授
+	描述：每当你受到1点伤害后，可弃置一名角色的X张牌（X为该角色已损失的体力值，且至少为1）。 
 ]]--
 --[[
 	技能名：死战（锁定技）

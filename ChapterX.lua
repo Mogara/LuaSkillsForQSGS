@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（X区）
 	技能索引：
-		惜粮、享乐、骁果、枭姬、陷阵、新生、心战、行殇、雄异、修罗、旋风、旋风、眩惑、眩惑、雪恨、血祭、血裔、殉志
+		惜粮、吓尿、先登、陷阵、享乐、枭姬、骁果、骁果、心战、新生、行殇、雄异、修罗、旋风、旋风、眩惑、眩惑、雪恨、血祭、血裔、循规、迅猛、殉志
 ]]--
 --[[
 	技能名：惜粮
@@ -65,76 +65,15 @@ LuaXXiliang = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：享乐（锁定技）
-	相关武将：山·刘禅
-	描述：当其他角色使用【杀】指定你为目标时，需弃置一张基本牌，否则此【杀】对你无效。
-	状态：验证通过
-]]--
-LuaXiangle = sgs.CreateTriggerSkill{
-	name = "LuaXiangle", 
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.SlashEffected, sgs.TargetConfirming},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.TargetConfirming then
-			local use = data:toCardUse()
-			local slash = use.card
-			if slash and slash:isKindOf("Slash") then
-				local ai_data = sgs.QVariant()
-				ai_data:setValue(player)
-				if not room:askForCard(use.from, ".Basic", "@xiangle-discard", ai_data, sgs.CardDiscarded) then
-					player:addMark("xiangle")
-				end
-			end
-		else
-			local count = player:getMark("xiangle")
-			if count > 0 then
-				player:setMark("xiangle", count - 1)
-				return true
-			end
-		end
-		return false
-	end
-}
---[[
-	技能：骁果
-	相关武将：国战·乐进
-	描述：其他角色的回合结束阶段开始时，你可以弃置一张基本牌：若如此做，该角色可以弃置一张装备牌，否则受到你造成的1点伤害。 
-	状态：尚未验证
+	技能名：吓尿（锁定技）
+	相关武将：胆创·夏侯杰
+	描述：当其他角色造成一次伤害时，若你在其攻击范围内，你须弃置所有手牌，然后摸等同于该角色体力值张数的牌。 
 ]]--
 --[[
-	技能名：枭姬
-	相关武将：标准·孙尚香、SP·孙尚香
-	描述：当你失去装备区里的一张牌时，你可以摸两张牌。
-	状态：验证通过
+	技能名：先登
+	相关武将：3D织梦·乐进
+	描述：摸牌阶段，你可少摸一张牌，然后你无视一名其他角色的距离直到回合结束。 
 ]]--
-LuaXiaoji = sgs.CreateTriggerSkill{
-	name = "LuaXiaoji", 
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.CardsMoveOneTime}, 
-	on_trigger = function(self, event, player, data)
-		local move = data:toMoveOneTime()
-		local places = move.from_places
-		local source = move.from
-		if source and source:objectName() == player:objectName() then
-			if places:contains(sgs.Player_PlaceEquip) then
-				local n = 0
-				for _,place in sgs.qlist(places) do
-					if place == sgs.Player_PlaceEquip then
-						n = n + 1
-					end
-				end
-				local room = player:getRoom()
-				for i = 1, n, 1 do
-					if room:askForSkillInvoke(player, self:objectName()) then
-						player:drawCards(2)
-					end
-				end
-			end
-		end
-		return false
-	end
-}
 --[[
 	技能名：陷阵
 	相关武将：一将成名·高顺
@@ -247,23 +186,81 @@ LuaXianzhenClear = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：新生
-	相关武将：山·左慈
-	描述：每当你受到1点伤害后，你可以获得一张“化身牌”。
+	技能名：享乐（锁定技）
+	相关武将：山·刘禅
+	描述：当其他角色使用【杀】指定你为目标时，需弃置一张基本牌，否则此【杀】对你无效。
 	状态：验证通过
-	备注：需調用ChapterH 的acquieGenerals 函数
 ]]--
-LuaXinSheng = sgs.CreateTriggerSkill{
-	name = "LuaXinSheng",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.Damaged},
+LuaXiangle = sgs.CreateTriggerSkill{
+	name = "LuaXiangle", 
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.SlashEffected, sgs.TargetConfirming},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if room:askForSkillInvoke(player, self:objectName()) then
-			acquireGenerals(player, data:toDamage().damage)--需調用ChapterH 的acquieGenerals 函数
+		if event == sgs.TargetConfirming then
+			local use = data:toCardUse()
+			local slash = use.card
+			if slash and slash:isKindOf("Slash") then
+				local ai_data = sgs.QVariant()
+				ai_data:setValue(player)
+				if not room:askForCard(use.from, ".Basic", "@xiangle-discard", ai_data, sgs.CardDiscarded) then
+					player:addMark("xiangle")
+				end
+			end
+		else
+			local count = player:getMark("xiangle")
+			if count > 0 then
+				player:setMark("xiangle", count - 1)
+				return true
+			end
 		end
+		return false
 	end
 }
+--[[
+	技能名：枭姬
+	相关武将：标准·孙尚香、SP·孙尚香
+	描述：当你失去装备区里的一张牌时，你可以摸两张牌。
+	状态：验证通过
+]]--
+LuaXiaoji = sgs.CreateTriggerSkill{
+	name = "LuaXiaoji", 
+	frequency = sgs.Skill_Frequent, 
+	events = {sgs.CardsMoveOneTime}, 
+	on_trigger = function(self, event, player, data)
+		local move = data:toMoveOneTime()
+		local places = move.from_places
+		local source = move.from
+		if source and source:objectName() == player:objectName() then
+			if places:contains(sgs.Player_PlaceEquip) then
+				local n = 0
+				for _,place in sgs.qlist(places) do
+					if place == sgs.Player_PlaceEquip then
+						n = n + 1
+					end
+				end
+				local room = player:getRoom()
+				for i = 1, n, 1 do
+					if room:askForSkillInvoke(player, self:objectName()) then
+						player:drawCards(2)
+					end
+				end
+			end
+		end
+		return false
+	end
+}
+--[[
+	技能名：骁果
+	相关武将：国战·乐进
+	描述：其他角色的回合结束阶段开始时，你可以弃置一张基本牌：若如此做，该角色可以弃置一张装备牌，否则受到你造成的1点伤害。 
+	状态：尚未验证
+]]--
+--[[
+	技能名：骁果
+	相关武将：3D织梦·乐进
+	描述：出牌阶段，每当你使用非红桃【杀】被目标角色的【闪】抵消时，你可令该【闪】返回该角色手牌中，然后将此【杀】当一张延时类锦囊对该角色使用（黑色当【兵粮寸断】，方块当【乐不思蜀】）。 
+]]--
 --[[
 	技能名：心战
 	相关武将：一将成名·马谡
@@ -316,6 +313,24 @@ LuaXinzhan = sgs.CreateViewAsSkill{
 			return player:getHandcardNum() > player:getMaxHp()
 		end
 		return false
+	end
+}
+--[[
+	技能名：新生
+	相关武将：山·左慈
+	描述：每当你受到1点伤害后，你可以获得一张“化身牌”。
+	状态：验证通过
+	备注：需调用ChapterH 的acquieGenerals 函数
+]]--
+LuaXinSheng = sgs.CreateTriggerSkill{
+	name = "LuaXinSheng",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.Damaged},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if room:askForSkillInvoke(player, self:objectName()) then
+			acquireGenerals(player, data:toDamage().damage)--需調用ChapterH 的acquieGenerals 函数
+		end
 	end
 }
 --[[
@@ -911,6 +926,16 @@ LuaXueyi = sgs.CreateMaxCardsSkill{
 		end
 	end
 }
+--[[
+	技能名：循规
+	相关武将：3D织梦·蒋琬
+	描述：出牌阶段，你可以将一张非延时类锦囊置于你的武将牌上，称为“规”。若存在“规”，则弃掉代替之，且你回复1点体力。每阶段限用一次。 
+]]--
+--[[
+	技能名：迅猛（锁定技）
+	相关武将：僵尸·僵尸
+	描述：你的杀造成的伤害+1。你的杀造成伤害时若你体力大于1，你流失1点体力。 
+]]--
 --[[
 	技能名：殉志
 	相关武将：倚天·姜伯约

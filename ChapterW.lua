@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（W区）
 	技能索引：
-		完杀、危殆、帷幕、围堰、伪帝、温酒、无谋、无前、无双、无言、无言、武魂、武继、五灵、武圣、武神
+		完杀、危殆、围堰、帷幕、伪帝、温酒、无谋、无前、无双、无言、无言、五灵、武魂、武继、武神、武圣
 ]]--
 --[[
 	技能名：完杀（锁定技）
@@ -112,23 +112,6 @@ LuaXWeidai = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：帷幕（锁定技）
-	相关武将：林·贾诩、SP·贾诩
-	描述：你不能被选择为黑色锦囊牌的目标。
-	状态：验证通过
-]]--
-LuaWeimu = sgs.CreateProhibitSkill{
-	name = "LuaWeimu", 
-	is_prohibited = function(self, from, to, card)
-		if card:isKindOf("TrickCard") then
-			if card:isBlack() then
-				local name = card:getSkillName()
-				return name ~= "guhuo"
-			end
-		end
-	end
-}
---[[
 	技能名：围堰
 	相关武将：倚天·陆抗
 	描述：你可以将你的摸牌阶段当作出牌阶段，出牌阶段当作摸牌阶段执行 
@@ -157,6 +140,23 @@ LuaXLukangWeiyan = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
+	end
+}
+--[[
+	技能名：帷幕（锁定技）
+	相关武将：林·贾诩、SP·贾诩
+	描述：你不能被选择为黑色锦囊牌的目标。
+	状态：验证通过
+]]--
+LuaWeimu = sgs.CreateProhibitSkill{
+	name = "LuaWeimu", 
+	is_prohibited = function(self, from, to, card)
+		if card:isKindOf("TrickCard") then
+			if card:isBlack() then
+				local name = card:getSkillName()
+				return name ~= "guhuo"
+			end
+		end
 	end
 }
 --[[
@@ -429,6 +429,131 @@ LuaNosWuyan = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：五灵
+	相关武将：倚天·晋宣帝
+	描述：回合开始阶段，你可选择一种五灵效果发动，该效果对场上所有角色生效
+		该效果直到你的下回合开始为止，你选择的五灵效果不可与上回合重复
+		[风]场上所有角色受到的火焰伤害+1
+		[雷]场上所有角色受到的雷电伤害+1
+		[水]场上所有角色使用桃时额外回复1点体力
+		[火]场上所有角色受到的伤害均视为火焰伤害
+		[土]场上所有角色每次受到的属性伤害至多为1 
+	状态：验证通过
+]]--
+LuaXWulingExEffect = sgs.CreateTriggerSkill{
+	name = "#LuaXWulingExEffect",  
+	frequency = sgs.Skill_Frequent, 
+	events = {sgs.CardEffected, sgs.DamageInflicted},  
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		local tag = room:getTag("wuling")
+		if tag then
+			local wuling = tag:toString()
+			if event == sgs.CardEffected then
+				if wuling == "water" then
+					local effect = data:toCardEffect()
+					local peach = effect.card
+					if peach and peach:isKindOf("Peach") then
+						local recover = sgs.RecoverStruct()
+						recover.card = peach
+						recover.who = effect.from
+						room:recover(player, recover)
+					end
+				end
+			elseif event == sgs.DamageInflicted then
+				if wuling == "earth" then
+					local damage = data:toDamage()
+					if damage.nature ~= sgs.DamageStruct_Normal then				
+						if damage.damage > 1 then
+							damage.damage = 1
+							data:setValue(damage)
+						end
+					end
+				end
+			end
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target
+	end, 
+	priority = -1
+}
+LuaXWulingEffect = sgs.CreateTriggerSkill{
+	name = "#LuaXWulingEffect",  
+	frequency = sgs.Skill_Frequent, 
+	events = {sgs.DamageInflicted},  
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		local tag = room:getTag("wuling")
+		if tag then
+			local wuling = tag:toString()
+			local damage = data:toDamage()
+			local nature = damage.nature
+			local count = damage.damage
+			local flag = not damage.chain and not damage.transfer
+			if wuling == "wind" then
+				if nature == sgs.DamageStruct_Fire then
+					if flag then
+						damage.damage = count + 1
+						data:setValue(damage)
+					end
+				end
+			elseif wuling == "thunder" then
+				if nature == sgs.DamageStruct_Thunder then
+					if flag then
+						damage.damage = count + 1
+						data:setValue(damage)
+					end
+				end
+			elseif wuling == "fire" then
+				if nature ~= sgs.DamageStruct_Fire then
+					damage.nature = sgs.DamageStruct_Fire
+					data:setValue(damage)
+				end
+			end
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target
+	end, 
+	priority = 2
+}
+LuaXWuling = sgs.CreateTriggerSkill{
+	name = "LuaXWuling",  
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseStart},  
+	on_trigger = function(self, event, player, data) 
+		local effects = {"wind", "thunder", "water", "fire", "earth"}
+		if player:getPhase() == sgs.Player_Start then
+			local room = player:getRoom()
+			local current = nil
+			local tag = room:getTag("wuling")
+			if tag then
+				current = tag:toString()
+			end
+			local choices = ""
+			for _,effect in pairs(effects) do
+				if effect ~= current then
+					choices = string.format("%s+%s", choices, effect)
+				end
+			end
+			choices = string.sub(choices, 2)
+			local choice = room:askForChoice(player, self:objectName(), choices)
+			local mark = nil
+			if current then
+				mark = string.format("@%s", current)
+				player:loseMark(mark)
+			end
+			mark = string.format("@%s", choice)
+			player:gainMark(mark)
+			room:setTag("wuling", sgs.QVariant(choice))
+		end
+		return false
+	end
+}
+--[[
 	技能名：武魂（锁定技）
 	相关武将：神·关羽
 	描述：每当你受到1点伤害后，伤害来源获得一枚“梦魇”标记；你死亡时，令拥有最多该标记的一名其他角色进行一次判定，若判定结果不为【桃】或【桃园结义】，该角色死亡。
@@ -581,128 +706,41 @@ LuaWuji = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：五灵
-	相关武将：倚天·晋宣帝
-	描述：回合开始阶段，你可选择一种五灵效果发动，该效果对场上所有角色生效
-		该效果直到你的下回合开始为止，你选择的五灵效果不可与上回合重复
-		[风]场上所有角色受到的火焰伤害+1
-		[雷]场上所有角色受到的雷电伤害+1
-		[水]场上所有角色使用桃时额外回复1点体力
-		[火]场上所有角色受到的伤害均视为火焰伤害
-		[土]场上所有角色每次受到的属性伤害至多为1 
-	状态：验证通过
+	技能名：武神（锁定技）
+	相关武将：神·关羽
+	描述：你的红桃手牌均视为【杀】；你使用红桃【杀】时无距离限制。
+	状态：0224验证通过
 ]]--
-LuaXWulingExEffect = sgs.CreateTriggerSkill{
-	name = "#LuaXWulingExEffect",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.CardEffected, sgs.DamageInflicted},  
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
-		local tag = room:getTag("wuling")
-		if tag then
-			local wuling = tag:toString()
-			if event == sgs.CardEffected then
-				if wuling == "water" then
-					local effect = data:toCardEffect()
-					local peach = effect.card
-					if peach and peach:isKindOf("Peach") then
-						local recover = sgs.RecoverStruct()
-						recover.card = peach
-						recover.who = effect.from
-						room:recover(player, recover)
-					end
-				end
-			elseif event == sgs.DamageInflicted then
-				if wuling == "earth" then
-					local damage = data:toDamage()
-					if damage.nature ~= sgs.DamageStruct_Normal then				
-						if damage.damage > 1 then
-							damage.damage = 1
-							data:setValue(damage)
-						end
-					end
-				end
-			end
+LuaWushen = sgs.CreateFilterSkill{
+	name = "LuaWushen",
+	view_filter = function(self, to_select)
+		local room = sgs.Sanguosha:currentRoom()
+		local id = to_select:getEffectiveId()
+		local place = room:getCardPlace(id)
+		if to_select:getSuit() == sgs.Card_Heart then
+			return place == sgs.Player_PlaceHand
 		end
 		return false
 	end, 
-	can_trigger = function(self, target)
-		return target
-	end, 
-	priority = -1
+	view_as = function(self, card)
+		local suit = card:getSuit()
+		local point = card:getNumber()
+		local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
+		slash:setSkillName(self:objectName())
+		local id = card:getId()
+		local vs_card = sgs.Sanguosha:getWrappedCard(id)
+		vs_card:takeOver(slash)
+		return vs_card
+	end
 }
-LuaXWulingEffect = sgs.CreateTriggerSkill{
-	name = "#LuaXWulingEffect",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.DamageInflicted},  
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
-		local tag = room:getTag("wuling")
-		if tag then
-			local wuling = tag:toString()
-			local damage = data:toDamage()
-			local nature = damage.nature
-			local count = damage.damage
-			local flag = not damage.chain and not damage.transfer
-			if wuling == "wind" then
-				if nature == sgs.DamageStruct_Fire then
-					if flag then
-						damage.damage = count + 1
-						data:setValue(damage)
-					end
-				end
-			elseif wuling == "thunder" then
-				if nature == sgs.DamageStruct_Thunder then
-					if flag then
-						damage.damage = count + 1
-						data:setValue(damage)
-					end
-				end
-			elseif wuling == "fire" then
-				if nature ~= sgs.DamageStruct_Fire then
-					damage.nature = sgs.DamageStruct_Fire
-					data:setValue(damage)
-				end
-			end
+LuaWushenTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaWushen-target",
+	distance_limit_func = function(self, from, card)
+		if from:hasSkill("LuaWushen") and card:getSuit() == sgs.Card_Heart then
+			return 1000
+		else
+			return 0
 		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		return target
-	end, 
-	priority = 2
-}
-LuaXWuling = sgs.CreateTriggerSkill{
-	name = "LuaXWuling",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
-		local effects = {"wind", "thunder", "water", "fire", "earth"}
-		if player:getPhase() == sgs.Player_Start then
-			local room = player:getRoom()
-			local current = nil
-			local tag = room:getTag("wuling")
-			if tag then
-				current = tag:toString()
-			end
-			local choices = ""
-			for _,effect in pairs(effects) do
-				if effect ~= current then
-					choices = string.format("%s+%s", choices, effect)
-				end
-			end
-			choices = string.sub(choices, 2)
-			local choice = room:askForChoice(player, self:objectName(), choices)
-			local mark = nil
-			if current then
-				mark = string.format("@%s", current)
-				player:loseMark(mark)
-			end
-			mark = string.format("@%s", choice)
-			player:gainMark(mark)
-			room:setTag("wuling", sgs.QVariant(choice))
-		end
-		return false
 	end
 }
 --[[
@@ -745,42 +783,4 @@ LuaWusheng = sgs.CreateViewAsSkill{
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "slash"
 	end,
-}
---[[
-	技能名：武神（锁定技）
-	相关武将：神·关羽
-	描述：你的红桃手牌均视为【杀】；你使用红桃【杀】时无距离限制。
-	状态：0224验证通过
-]]--
-LuaWushen = sgs.CreateFilterSkill{
-	name = "LuaWushen",
-	view_filter = function(self, to_select)
-		local room = sgs.Sanguosha:currentRoom()
-		local id = to_select:getEffectiveId()
-		local place = room:getCardPlace(id)
-		if to_select:getSuit() == sgs.Card_Heart then
-			return place == sgs.Player_PlaceHand
-		end
-		return false
-	end, 
-	view_as = function(self, card)
-		local suit = card:getSuit()
-		local point = card:getNumber()
-		local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
-		slash:setSkillName(self:objectName())
-		local id = card:getId()
-		local vs_card = sgs.Sanguosha:getWrappedCard(id)
-		vs_card:takeOver(slash)
-		return vs_card
-	end
-}
-LuaWushenTargetMod = sgs.CreateTargetModSkill{
-	name = "#LuaWushen-target",
-	distance_limit_func = function(self, from, card)
-		if from:hasSkill("LuaWushen") and card:getSuit() == sgs.Card_Heart then
-			return 1000
-		else
-			return 0
-		end
-	end
 }

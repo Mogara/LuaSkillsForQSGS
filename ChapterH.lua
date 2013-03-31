@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（H区）
 	技能索引：
-		汉统、好施、红颜、弘援、后援、虎啸、胡笳、护驾、化身、缓释、缓释、皇恩、黄天、挥泪、魂姿、火计、祸首、祸水
+		汉统、好施、弘援、弘援、红颜、后援、胡笳、虎啸、护驾、化身、怀异、缓释、缓释、皇恩、黄天、挥泪、魂姿、火计、祸首、祸水
 ]]--
 --[[
 	技能名：汉统
@@ -330,31 +330,47 @@ LuaHaoshi = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：红颜（锁定技）
-	相关武将：风·小乔
-	描述：你的黑桃牌均视为红桃牌。
-	状态：验证通过
-]]--
-LuaHongyan = sgs.CreateFilterSkill{
-	name = "LuaHongyan",
-	view_filter = function(self, to_select)
-		return to_select:getSuit() == sgs.Card_Spade
-	end,
-	view_as = function(self, card)
-		local id = card:getEffectiveId()
-		local new_card = sgs.Sanguosha:getWrappedCard(id)
-		new_card:setSkillName(self:objectName())
-		new_card:setSuit(sgs.Card_Heart)
-		new_card:setModified(true)
-		return new_card
-	end
-}
---[[
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾
 	描述：摸牌阶段，你可以少摸一张牌，令其他己方角色各摸一张牌。
-	状态：验证失败
+	状态：验证通过
 ]]--
+Lua3V3_isFriend = function(player,other)
+	local tb = { ["lord"] = "warm", ["loyalist"] = "warm", ["renegade"] = "cold", ["rebel"] = "cold" }
+	return tb[player:getRole()] == tb[other:getRole()]
+end
+LuaXHongyuan = sgs.CreateTriggerSkill{
+	name = "LuaXHongyuan",
+	frequency = sgs.Skill_NotFrequent,
+	events = { sgs.DrawNCards },  
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		if room:askForSkillInvoke(player, self:objectName()) then
+			player:setFlags(self:objectName())
+			local count = data:toInt() - 1
+			data:setValue(count)
+		end
+	end
+}
+LuaXHongyuanAct = sgs.CreateTriggerSkill {
+	name = "#LuaXHongyuanAct",  
+	frequency = sgs.Skill_Frequent, 
+	events = { sgs.AfterDrawNCards },  
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Draw then
+			if player:hasFlag("LuaXHongyuan") then
+				player:setFlags("-LuaXHongyuan")
+				for _, other in sgs.qlist(room:getOtherPlayers(player)) do
+					if Lua3V3_isFriend(player, other) then
+						other:drawCards(1)
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾（身份局）
@@ -420,6 +436,26 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：红颜（锁定技）
+	相关武将：风·小乔
+	描述：你的黑桃牌均视为红桃牌。
+	状态：验证通过
+]]--
+LuaHongyan = sgs.CreateFilterSkill{
+	name = "LuaHongyan",
+	view_filter = function(self, to_select)
+		return to_select:getSuit() == sgs.Card_Spade
+	end,
+	view_as = function(self, card)
+		local id = card:getEffectiveId()
+		local new_card = sgs.Sanguosha:getWrappedCard(id)
+		new_card:setSkillName(self:objectName())
+		new_card:setSuit(sgs.Card_Heart)
+		new_card:setModified(true)
+		return new_card
+	end
+}
+--[[
 	技能名：后援
 	相关武将：智·蒋琬
 	描述：出牌阶段，你可以弃置两张手牌，指定一名其他角色摸两张牌，每阶段限一次 
@@ -461,41 +497,6 @@ LuaXHouyuan = sgs.CreateViewAsSkill{
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaXHouyuanCard")
 	end
-}
---[[
-	技能名：虎啸
-	相关武将：SP·关银屏
-	描述：你于出牌阶段每使用一张【杀】被【闪】抵消，此阶段你可以额外使用一张【杀】。 
-	状态：验证通过
-]]--
-LuaHuxiao = sgs.CreateTriggerSkill{
-	name = "LuaHuxiao",
-	events = {sgs.SlashMissed,sgs.EventPhaseChanging},
-	on_trigger = function(self, event, player, data)
-		if event == sgs.SlashMissed then
-			if player:getPhase() == sgs.Player_Play then
-				player:gainMark("Huxiao", 1)
-			end
-		elseif event == sgs.EventPhaseChanging then	
-			local change = data:toPhaseChange()
-			if change.from == sgs.Player_Play then
-				local x = player:getMark("Huxiao")
-				if x > 0 then
-					player:loseMark("Huxiao", x)
-				end
-			end
-		end
-	end,
-}
-LuaHuxiaoHid = sgs.CreateTargetModSkill{
-	name = "#LuaHuxiaoHid",
-	pattern = "Slash",
-	residue_func = function(self, player)
-		local num = player:getMark("Huxiao")
-		if player:hasSkill(self:objectName()) then
-			return num
-		end
-	end,
 }
 --[[
 	技能名：胡笳
@@ -543,6 +544,41 @@ LuaXCaizhaojiHujia = sgs.CreateTriggerSkill{
 		end
 		return false
 	end
+}
+--[[
+	技能名：虎啸
+	相关武将：SP·关银屏
+	描述：你于出牌阶段每使用一张【杀】被【闪】抵消，此阶段你可以额外使用一张【杀】。 
+	状态：验证通过
+]]--
+LuaHuxiao = sgs.CreateTriggerSkill{
+	name = "LuaHuxiao",
+	events = {sgs.SlashMissed,sgs.EventPhaseChanging},
+	on_trigger = function(self, event, player, data)
+		if event == sgs.SlashMissed then
+			if player:getPhase() == sgs.Player_Play then
+				player:gainMark("Huxiao", 1)
+			end
+		elseif event == sgs.EventPhaseChanging then	
+			local change = data:toPhaseChange()
+			if change.from == sgs.Player_Play then
+				local x = player:getMark("Huxiao")
+				if x > 0 then
+					player:loseMark("Huxiao", x)
+				end
+			end
+		end
+	end,
+}
+LuaHuxiaoHid = sgs.CreateTargetModSkill{
+	name = "#LuaHuxiaoHid",
+	pattern = "Slash",
+	residue_func = function(self, player)
+		local num = player:getMark("Huxiao")
+		if player:hasSkill(self:objectName()) then
+			return num
+		end
+	end,
 }
 --[[
 	技能名：护驾（主公技）
@@ -677,13 +713,74 @@ LuaHuashen = sgs.CreateTriggerSkill{
 		end
 	end
 }
-
+--[[
+	技能名：怀异
+	相关武将：3D织梦·司马昭
+	描述： 每当你体力值发生一次变化后，你可以摸一张牌。 
+]]--
 --[[
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
 	描述：在一名己方角色的判定牌生效前，你可以打出一张牌代替之。
-	状态:验证失败
+	状态:验证通过
 ]]--
+Lua3V3_isFriend = function(player,other)
+	local tb = { ["lord"] = "warm", ["loyalist"] = "warm", ["renegade"] = "cold", ["rebel"] = "cold" }
+	return tb[player:getRole()] == tb[other:getRole()]
+end
+LuaXHuanshiCard = sgs.CreateSkillCard {
+	name = "LuaXHuanshiCard",
+	target_fixed = true,
+	will_throw = false,
+	handling_method = sgs.Card_MethodResponse
+}
+LuaXHuanshiVS = sgs.CreateViewAsSkill{
+	name = "LuaXHuanshi",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		return not sgs.Self:isCardLimited(to_select, sgs.Card_MethodResponse)
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local card = LuaXHuanshiCard:clone()
+			card:setSuit(cards[1]:getSuit())
+			card:addSubcard(cards[1])
+			return card
+		end
+	end,
+	enabled_at_play = function(self, player)
+		return false
+	end,
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@LuaXHuanshi"
+	end
+}
+LuaXHuanshi = sgs.CreateTriggerSkill {
+	name = "LuaXHuanshi",
+	frequency = sgs.Skill_NotFrequent,
+	events = { sgs.AskForRetrial },
+	view_as_skill = LuaXHuanshiVS,
+	on_trigger = function(self, event, player, data)
+		if player:isNude() then return false end
+		local judge = data:toJudge()
+		local can_invoke = false
+		local room = player:getRoom()
+		if Lua3V3_isFriend(player,judge.who) then
+			can_invoke = true
+		end
+		if not can_invoke then
+			return false
+		end
+		local prompt_list = { "@huanshi-card", judge.who:objectName(), self:objectName(), judge.reason, judge.card:getEffectIdString() }
+		local prompt = table.concat(prompt_list, ":")
+		local pattern = "@LuaXHuanshi"
+		local card = room:askForCard(player, pattern, prompt, data, sgs.Card_MethodResponse, judge.who, true)
+		if card then
+			room:retrial(card, player, judge, self:objectName())
+		end
+		return false
+	end
+}
 --[[
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾（身份局）

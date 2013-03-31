@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（D区）
 	技能索引：
-		大喝、大雾、单骑、啖酪、当先、洞察、缔盟、毒士、毒医、短兵、断肠、断粮、断指、度势
+		大喝、大雾、单骑、啖酪、当先、蹈矩、缔盟、洞察、毒计、毒士、毒医、度势、短兵、断肠、断粮、断指
 ]]--
 --[[
 	技能名：大喝
@@ -279,11 +279,10 @@ LuaDangxian = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：洞察
-	相关武将：倚天·贾文和
-	描述：回合开始阶段开始时，你可以指定一名其他角色：该角色的所有手牌对你处于可见状态，直到你的本回合结束。其他角色都不知道你对谁发动了洞察技能，包括被洞察的角色本身 
-	状态：验证失败
-]]--
+	技能名：蹈矩
+	相关武将：3D织梦·蒋琬
+	描述：出牌阶段，你可以将两张相同颜色手牌当“规”所示锦囊使用。每阶段限用一次。 
+]]--	
 --[[
 	技能名：缔盟
 	相关武将：林·鲁肃
@@ -343,6 +342,17 @@ LuaDimeng = sgs.CreateViewAsSkill{
 		return not player:hasUsed("#LuaDimengCard")
 	end
 }
+--[[
+	技能名：洞察
+	相关武将：倚天·贾文和
+	描述：回合开始阶段开始时，你可以指定一名其他角色：该角色的所有手牌对你处于可见状态，直到你的本回合结束。其他角色都不知道你对谁发动了洞察技能，包括被洞察的角色本身 
+	状态：验证失败
+]]--
+--[[
+	技能名：毒计
+	相关武将：3D织梦·李儒
+	描述： 出牌阶段，若你的武将牌上没有牌，你可以将一张黑桃牌置于你的武将牌上。当一名其他角色在其出牌阶段使用一张【杀】指定目标后，你可将此牌置于其手上，并令此【杀】当有【酒】效果的【杀】结算，然后该角色须执行下列一项：将武将牌翻面或失去1点体力。 
+]]--
 --[[
 	技能名：毒士（锁定技）
 	相关武将：倚天·贾文和
@@ -448,6 +458,54 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 	end, 
 	can_trigger = function(self, target)
 		return target
+	end
+}
+--[[
+	技能名：度势
+	相关武将：国战·陆逊
+	描述：出牌阶段，你可以弃置一张红色手牌并选择任意数量的其他角色：若如此做，你与这些角色各摸两张牌并弃置两张牌。 
+	状态：0224验证通过
+	附注：按照dadao.net修改，依次摸牌，然后再依次弃牌，而不是某人摸2弃2，再结算下一个
+]]--
+LuaXDuoshiCard = sgs.CreateSkillCard{
+	name = "LuaXDuoshiCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
+		return to_select:objectName() ~= sgs.Self:objectName()
+	end,
+	feasible = function(self, targets)
+		return true
+	end,
+	on_use = function(self, room, source, targets)
+		source:drawCards(2)
+		for i=1, #targets, 1 do
+			targets[i]:drawCards(2)
+		end
+		room:askForDiscard(source, "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
+		for i=1, #targets, 1 do
+			room:askForDiscard(targets[i], "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
+		end
+	end,
+}
+LuaXDuoshi = sgs.CreateViewAsSkill{
+	name = "LuaXDuoshi",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		if to_select:isRed() then
+			if not to_select:isEquipped() then
+				return not sgs.Self:isJilei(to_select)
+			end
+		end
+		return false
+	end,
+	view_as = function(self, cards)
+		if #cards == 1 then
+			local await = LuaXDuoshiCard:clone()
+			await:addSubcard(cards[1])
+			await:setSkillName(self:objectName())
+			return await
+		end
 	end
 }
 --[[
@@ -640,52 +698,4 @@ LuaXDuanzhiAvoidTriggeringCardsMove = sgs.CreateTriggerSkill{
 		return target
 	end, 
 	priority = 10
-}
---[[
-	技能名：度势
-	相关武将：国战·陆逊
-	描述：出牌阶段，你可以弃置一张红色手牌并选择任意数量的其他角色：若如此做，你与这些角色各摸两张牌并弃置两张牌。 
-	状态：0224验证通过
-	附注：按照dadao.net修改，依次摸牌，然后再依次弃牌，而不是某人摸2弃2，再结算下一个
-]]--
-LuaXDuoshiCard = sgs.CreateSkillCard{
-	name = "LuaXDuoshiCard",
-	target_fixed = false,
-	will_throw = true,
-	filter = function(self, targets, to_select)
-		return to_select:objectName() ~= sgs.Self:objectName()
-	end,
-	feasible = function(self, targets)
-		return true
-	end,
-	on_use = function(self, room, source, targets)
-		source:drawCards(2)
-		for i=1, #targets, 1 do
-			targets[i]:drawCards(2)
-		end
-		room:askForDiscard(source, "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
-		for i=1, #targets, 1 do
-			room:askForDiscard(targets[i], "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
-		end
-	end,
-}
-LuaXDuoshi = sgs.CreateViewAsSkill{
-	name = "LuaXDuoshi",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		if to_select:isRed() then
-			if not to_select:isEquipped() then
-				return not sgs.Self:isJilei(to_select)
-			end
-		end
-		return false
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local await = LuaXDuoshiCard:clone()
-			await:addSubcard(cards[1])
-			await:setSkillName(self:objectName())
-			return await
-		end
-	end
 }

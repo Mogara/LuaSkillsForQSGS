@@ -1,61 +1,13 @@
 --[[
 	代码速查手册（Z区）
 	技能索引：
-		凿险、早夭、再起、昭心、昭烈、贞烈、镇威、争锋、争功、直谏、制霸、制霸、智迟、制衡、志继、智愚、筑楼、追忆、自立、自守、宗室、纵火、醉乡
+		灾变、再起、凿险、早夭、仗八、昭烈、昭心、昭心、贞烈、镇威、争锋、争功、争功、整军、直谏、志继、制霸、制霸、制衡、智迟、智愚、筑楼、追忆、自立、自守、宗室、纵火、醉乡
 ]]--
 --[[
-	技能名：凿险（觉醒技）
-	相关武将：山·邓艾
-	描述：回合开始阶段开始时，若“田”的数量达到3或更多，你须减1点体力上限，并获得技能“急袭”。
-	状态：验证通过
+	技能名：灾变（锁定技）
+	相关武将：僵尸·僵尸
+	描述：你的出牌阶段开始时，若人类玩家数-僵尸玩家数+1大于0，你多摸该数目的牌。 
 ]]--
-LuaZaoxian = sgs.CreateTriggerSkill{
-	name = "LuaZaoxian", 
-	frequency = sgs.Skill_Wake, 
-	events = {sgs.EventPhaseStart}, 
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		room:setPlayerMark(player, "zaoxian", 1)
-		player:gainMark("@waked")
-		room:loseMaxHp(player)
-		room:acquireSkill(player, "jixi")
-		return false
-	end, 
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if target:getPhase() == sgs.Player_Start then
-					if target:getMark("zaoxian") == 0 then
-						local fields = target:getPile("field")
-						return fields:length() >= 3
-					end
-				end
-			end
-		end
-		return false
-	end
-}
---[[
-	技能名：早夭（锁定技）
-	相关武将：倚天·曹冲
-	描述：回合结束阶段开始时，若你的手牌大于13张，则你必须弃置所有手牌并流失1点体力 
-	状态：验证通过
-]]--
-LuaXZaoyao = sgs.CreateTriggerSkill{
-	name = "LuaXZaoyao",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
-		if player:getPhase() == sgs.Player_Finish then
-			if player:getHandcardNum() > 13 then
-				local room = player:getRoom()
-				player:throwAllHandCards()
-				room:loseHp(player)
-			end
-		end
-		return false
-	end
-}
 --[[
 	技能名：再起
 	相关武将：林·孟获
@@ -119,39 +71,63 @@ LuaZaiqi = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：昭心
-	相关武将：贴纸·司马昭
-	描述：摸牌阶段结束时，你可以展示所有手牌，若如此做，视为你使用一张【杀】，每阶段限一次。 
+	技能名：凿险（觉醒技）
+	相关武将：山·邓艾
+	描述：回合开始阶段开始时，若“田”的数量达到3或更多，你须减1点体力上限，并获得技能“急袭”。
 	状态：验证通过
 ]]--
-LuaZhaoXin = sgs.CreateTriggerSkill{
-	name = "LuaZhaoXin",
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseEnd},
+LuaZaoxian = sgs.CreateTriggerSkill{
+	name = "LuaZaoxian", 
+	frequency = sgs.Skill_Wake, 
+	events = {sgs.EventPhaseStart}, 
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Draw then
-			local splist = sgs.SPlayerList()
-			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-			slash:setSkillName(self:objectName())
-			for _,p in sgs.qlist(room:getOtherPlayers(player)) do
-				if player:canSlash(p, slash) then
-					splist:append(p)
+		room:setPlayerMark(player, "zaoxian", 1)
+		player:gainMark("@waked")
+		room:loseMaxHp(player)
+		room:acquireSkill(player, "jixi")
+		return false
+	end, 
+	can_trigger = function(self, target)
+		if target then
+			if target:isAlive() and target:hasSkill(self:objectName()) then
+				if target:getPhase() == sgs.Player_Start then
+					if target:getMark("zaoxian") == 0 then
+						local fields = target:getPile("field")
+						return fields:length() >= 3
+					end
 				end
 			end
-			if splist:isEmpty() then return false end
-			if room:askForSkillInvoke(player, self:objectName(), sgs.QVariant()) then
-				local target = room:askForPlayerChosen(player, splist, self:objectName())
-				room:showAllCards(player)
-				local use = sgs.CardUseStruct()
-				use.from = player
-				use.to:append(target)
-				use.card = slash
-				room:useCard(use, false)
-			end
 		end
+		return false
 	end
 }
+--[[
+	技能名：早夭（锁定技）
+	相关武将：倚天·曹冲
+	描述：回合结束阶段开始时，若你的手牌大于13张，则你必须弃置所有手牌并流失1点体力 
+	状态：验证通过
+]]--
+LuaXZaoyao = sgs.CreateTriggerSkill{
+	name = "LuaXZaoyao",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.EventPhaseStart},  
+	on_trigger = function(self, event, player, data) 
+		if player:getPhase() == sgs.Player_Finish then
+			if player:getHandcardNum() > 13 then
+				local room = player:getRoom()
+				player:throwAllHandCards()
+				room:loseHp(player)
+			end
+		end
+		return false
+	end
+}
+--[[
+	技能名：仗八（锁定技）
+	相关武将：长坂坡·神张飞
+	描述：当你没有装备武器时，你的攻击范围始终为3。 
+]]--
 --[[
 	技能名：昭烈
 	相关武将：☆SP·刘备
@@ -278,6 +254,45 @@ LuaZhaolieAct = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：昭心
+	相关武将：贴纸·司马昭
+	描述：摸牌阶段结束时，你可以展示所有手牌，若如此做，视为你使用一张【杀】，每阶段限一次。 
+	状态：验证通过
+]]--
+LuaZhaoXin = sgs.CreateTriggerSkill{
+	name = "LuaZhaoXin",
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseEnd},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Draw then
+			local splist = sgs.SPlayerList()
+			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			slash:setSkillName(self:objectName())
+			for _,p in sgs.qlist(room:getOtherPlayers(player)) do
+				if player:canSlash(p, slash) then
+					splist:append(p)
+				end
+			end
+			if splist:isEmpty() then return false end
+			if room:askForSkillInvoke(player, self:objectName(), sgs.QVariant()) then
+				local target = room:askForPlayerChosen(player, splist, self:objectName())
+				room:showAllCards(player)
+				local use = sgs.CardUseStruct()
+				use.from = player
+				use.to:append(target)
+				use.card = slash
+				room:useCard(use, false)
+			end
+		end
+	end
+}
+--[[
+	技能名：昭心
+	相关武将：3D织梦·司马昭
+	描述：出牌阶段，若你的手牌数不小于你的体力值，你可以展示你全部手牌。若其均为不同花色，你令一名角色失去1点体力。若其均为同一种花色，你获得一名其他角色一张牌。每阶段限一次。 
+]]--
+--[[
 	技能名：贞烈
 	相关武将：二将成名·王异
 	描述：在你的判定牌生效前，你可以从牌堆顶亮出一张牌代替之。
@@ -381,6 +396,16 @@ LuaXZhenggong = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：争功
+	相关武将：胆创·钟会
+	描述：你每受到一次伤害，可以获得伤害来源装备区中的一张牌并立即放入你的装备区。 
+]]--
+--[[
+	技能名：整军（锁定技）
+	相关武将：长坂坡·神张飞
+	描述：回合开始阶段，你弃X张牌（不足则全弃），回合结束阶段，你须将你的武将牌翻面并摸X+1张牌。X为你的攻击范围。 
+]]--
+--[[
 	技能名：直谏
 	相关武将：山·张昭张纮
 	描述：出牌阶段，你可以将手牌中的一张装备牌置于一名其他角色的装备区里（不能替换原装备），然后摸一张牌。
@@ -432,6 +457,50 @@ LuaZhijian = sgs.CreateViewAsSkill{
 			zhijian_card:addSubcard(cards[1])
 			return zhijian_card
 		end
+	end
+}
+--[[
+	技能名：志继（觉醒技）
+	相关武将：山·姜维
+	描述：回合开始阶段开始时，若你没有手牌，你须选择一项：回复1点体力，或摸两张牌。然后你减1点体力上限，并获得技能“观星”。
+	状态：验证通过
+]]--
+LuaZhiji = sgs.CreateTriggerSkill{
+	name = "LuaZhiji", 
+	frequency = sgs.Skill_Wake, 
+	events = {sgs.EventPhaseStart}, 
+	on_trigger = function(self, event, player, data) --必须
+		local room = player:getRoom()
+		local draw
+		if player:getLostHp() > 0 then
+			choice = room:askForChoice(player, self:objectName(), "draw+recover")
+		else
+			choice = "draw"
+		end
+		if choice == "recover" then
+			local recover = sgs.RecoverStruct()
+			recover.who = player
+			room:recover(player, recover)
+		else
+			room:drawCards(player, 2)
+		end
+		room:setPlayerMark(player, "zhiji", 1)
+		player:gainMark("@waked")
+		room:acquireSkill(player, "guanxing")
+		room:loseMaxHp(player)
+		return false
+	end, 
+	can_trigger = function(self, target)
+		if target then
+			if target:isAlive() and target:hasSkill(self:objectName()) then
+				if target:getMark("zhiji") == 0 then
+					if target:getPhase() == sgs.Player_Start then
+						return target:isKongcheng()
+					end
+				end
+			end
+		end
+		return false
 	end
 }
 --[[
@@ -593,6 +662,44 @@ LuaXZhiBa = sgs.CreateViewAsSkill{
 	end
 }
 --[[
+	技能名：制衡
+	相关武将：标准·孙权
+	描述：出牌阶段，你可以弃置任意数量的牌，然后摸等量的牌。每阶段限一次。
+	状态：验证通过
+]]--
+LuaZhihengCard = sgs.CreateSkillCard{
+	name = "LuaZhihengCard", 
+	target_fixed = true, 
+	will_throw = false,
+	on_use = function(self, room, source, targets)
+		room:throwCard(self, source)
+		if source:isAlive() then
+			local count = self:subcardsLength()
+			room:drawCards(source, count)
+		end
+	end
+}
+LuaZhiheng = sgs.CreateViewAsSkill{
+	name = "LuaZhiheng", 
+	n = 999, 
+	view_filter = function(self, selected, to_select)
+		return true
+	end, 
+	view_as = function(self, cards) 
+		if #cards > 0 then
+			local zhiheng_card = LuaZhihengCard:clone()
+			for _,card in pairs(cards) do
+				zhiheng_card:addSubcard(card)
+			end
+			zhiheng_card:setSkillName(self:objectName())
+			return zhiheng_card
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("#LuaZhihengCard")
+	end
+}
+--[[
 	技能名：智迟（锁定技）
 	相关武将：一将成名·陈宫
 	描述：你的回合外，每当你受到一次伤害后，【杀】或非延时类锦囊牌对你无效，直到回合结束。
@@ -634,88 +741,6 @@ LuaZhichi = sgs.CreateTriggerSkill{
 						if card:isKindOf("Slash") or card:getTypeId() == sgs.Card_Trick then
 							return true
 						end
-					end
-				end
-			end
-		end
-		return false
-	end
-}
---[[
-	技能名：制衡
-	相关武将：标准·孙权
-	描述：出牌阶段，你可以弃置任意数量的牌，然后摸等量的牌。每阶段限一次。
-	状态：验证通过
-]]--
-LuaZhihengCard = sgs.CreateSkillCard{
-	name = "LuaZhihengCard", 
-	target_fixed = true, 
-	will_throw = false,
-	on_use = function(self, room, source, targets)
-		room:throwCard(self, source)
-		if source:isAlive() then
-			local count = self:subcardsLength()
-			room:drawCards(source, count)
-		end
-	end
-}
-LuaZhiheng = sgs.CreateViewAsSkill{
-	name = "LuaZhiheng", 
-	n = 999, 
-	view_filter = function(self, selected, to_select)
-		return true
-	end, 
-	view_as = function(self, cards) 
-		if #cards > 0 then
-			local zhiheng_card = LuaZhihengCard:clone()
-			for _,card in pairs(cards) do
-				zhiheng_card:addSubcard(card)
-			end
-			zhiheng_card:setSkillName(self:objectName())
-			return zhiheng_card
-		end
-	end, 
-	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaZhihengCard")
-	end
-}
---[[
-	技能名：志继（觉醒技）
-	相关武将：山·姜维
-	描述：回合开始阶段开始时，若你没有手牌，你须选择一项：回复1点体力，或摸两张牌。然后你减1点体力上限，并获得技能“观星”。
-	状态：验证通过
-]]--
-LuaZhiji = sgs.CreateTriggerSkill{
-	name = "LuaZhiji", 
-	frequency = sgs.Skill_Wake, 
-	events = {sgs.EventPhaseStart}, 
-	on_trigger = function(self, event, player, data) --必须
-		local room = player:getRoom()
-		local draw
-		if player:getLostHp() > 0 then
-			choice = room:askForChoice(player, self:objectName(), "draw+recover")
-		else
-			choice = "draw"
-		end
-		if choice == "recover" then
-			local recover = sgs.RecoverStruct()
-			recover.who = player
-			room:recover(player, recover)
-		else
-			room:drawCards(player, 2)
-		end
-		room:setPlayerMark(player, "zhiji", 1)
-		player:gainMark("@waked")
-		room:acquireSkill(player, "guanxing")
-		room:loseMaxHp(player)
-		return false
-	end, 
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if target:getMark("zhiji") == 0 then
-					if target:getPhase() == sgs.Player_Start then
-						return target:isKongcheng()
 					end
 				end
 			end
@@ -874,6 +899,11 @@ LuaZili = sgs.CreateTriggerSkill{
 		return false
 	end
 }
+--[[
+	技能名：自立（觉醒技）
+	相关武将：胆创·钟会
+	描述：回合开始阶段开始时，若你的“权”为四张或更多时，你必须减1点体力上限，并永久获得技能“排异”。
+]]--
 --[[
 	技能名：自守
 	相关武将：二将成名·刘表

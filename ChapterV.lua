@@ -4,13 +4,13 @@
 	☆源代码转化失败，改写后通过：
 		不屈、称象、虎啸、祸水、龙胆、龙魂、龙魂
 	☆验证失败：
-		洞察、弘援、缓释、激将、极略、连理、秘计、神速、探虎、伪帝、修罗
+		洞察、激将、极略、连理、秘计、神速、探虎、伪帝、修罗、言笑
 	☆尚未完成：
 		蛊惑、归心、倾城
 	☆尚未验证：
 		明哲、军威、死谏、骁果、雄异、援护
 	☆验证通过：
-		弓骑、弘援、缓释、疠火
+		弓骑、弘援、弘援、缓释、缓释、疠火
 ]]--
 --[[
 	技能名：不屈
@@ -2559,6 +2559,78 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
+	end
+}
+--[[
+	技能名：言笑
+	相关武将：☆SP·大乔
+	描述：出牌阶段，你可以将一张方块牌置于一名角色的判定区内，判定区内有“言笑”牌的角色下个判定阶段开始时，获得其判定区里的所有牌。
+	状态：验证失败
+]]--
+LuaYanxiaoCard = sgs.CreateSkillCard{
+	name = "LuaYanxiaoCard",
+	target_fixed = false,
+	will_throw = false,
+	filter = function(self, targets, to_select, player)
+		return #targets == 0
+	end,
+	on_effect = function(self, effect)
+		local source = effect.from
+		local target = effect.to
+		local room = source:getRoom()
+		local id = self:getEffectiveId()
+		room:setCardFlag(id, "LuaYanxiaoCard") 
+		local card = sgs.Sanguosha:getCard(id)
+		card:setSkillName("LuaYanxiaoVS") 
+		room:moveCardTo(self, target, sgs.Player_PlaceDelayedTrick, true)
+	end
+}
+LuaYanxiaoVS = sgs.CreateViewAsSkill{
+	name = "LuaYanxiaoVS",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		return to_select:getSuit() == sgs.Card_Diamond
+	end,	
+	view_as = function(self, cards)
+		if #cards == 1 then
+			local sub_card = cards[1]
+			local skill_card = LuaYanxiaoCard:clone()
+			skill_card:addSubcard(sub_card)
+			return skill_card
+		end
+	end
+}
+LuaYanxiaoTS = sgs.CreateTriggerSkill{
+	name = "#LuaYanxiaoTS",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local myplayer = room:findPlayerBySkillName(self:objectName())
+		if player:getPhase() == sgs.Player_Judge then
+			local judging_cards = player:getJudgingArea()
+			local judging_cards_ids = sgs.IntList()
+			local can_invoke = false
+			for _,card in sgs.qlist(judging_cards) do
+				local id = card:getId()
+				judging_cards_ids:append(id)
+				if card:hasFlag("LuaYanxiaoCard") then 
+					can_invoke = true
+				end
+			end
+			if can_invoke then
+				local move = sgs.CardsMoveStruct()
+				move.card_ids = judging_cards_ids
+				move.to = player
+				move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, name)
+				move.to_place = sgs.Player_PlaceHand
+				room:moveCards(move, false)
+			end
+			
+		end
+	end,
+	can_trigger = function(self, target)
+		return true
 	end
 }
 --[[

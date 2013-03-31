@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（Q区）
 	技能索引：
-		七星、奇才、奇策、奇袭、谦逊、潜袭、强袭、巧变、琴音、倾城、倾国、青囊、驱虎、权计
+		七星、奇才、奇策、奇袭、谦逊、潜袭、强袭、巧变、琴音、青釭、青囊、倾城、倾国、驱虎、权计、权计、劝谏
 ]]--
 --[[
 	技能名：七星
@@ -499,7 +499,69 @@ LuaQinyin = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能：倾城
+	技能名：青釭
+	相关武将：长坂坡·神赵云
+	描述：你每造成1点伤害，你可以让目标选择弃掉一张手牌或者让你从其装备区获得一张牌。 
+]]--
+--[[
+	技能名：青囊
+	相关武将：标准·华佗
+	描述：出牌阶段，你可以弃置一张手牌，令一名已受伤的角色回复1点体力。每阶段限一次。
+	状态：验证通过
+]]--
+LuaQingnangCard = sgs.CreateSkillCard{
+	name = "LuaQingnangCard",
+	target_fixed = false, 
+	will_throw = true, 
+	filter = function(self, targets, to_select) 
+		if #targets == 0 then
+			return to_select:isWounded()
+		end
+		return false
+	end,
+	feasible = function(self, targets)
+		if #targets == 1 then
+			return targets[1]:isWounded()
+		end
+		return false
+	end,
+	on_use = function(self, room, source, targets) 
+		local target = targets[1]
+		local effect = sgs.CardEffectStruct()
+		effect.card = self
+		effect.from = source
+		effect.to = target
+		room:cardEffect(effect)
+	end,
+	on_effect = function(self, effect) 
+		local dest = effect.to
+		local room = dest:getRoom()
+		local recover = sgs.RecoverStruct()
+		recover.card = self
+		recover.who = effect.from
+		room:recover(dest, recover)
+	end
+}
+LuaQingnang = sgs.CreateViewAsSkill{
+	name = "LuaQingnang", 
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		return not to_select:isEquipped()
+	end, 
+	view_as = function(self, cards)
+		if #cards ==1 then
+			local card = cards[1]
+			local qn_card = LuaQingnangCard:clone()
+			qn_card:addSubcard(card)
+			return qn_card
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("#LuaQingnangCard")
+	end
+}
+--[[
+	技能名：倾城
 	相关武将：国战·邹氏
 	描述：出牌阶段，你可以弃置一张装备牌，令一名其他角色的一项武将技能无效，直到其下回合开始。
 	状态：尚未完成
@@ -628,63 +690,6 @@ LuaQingguo = sgs.CreateViewAsSkill{
 	end
 }
 --[[
-	技能名：青囊
-	相关武将：标准·华佗
-	描述：出牌阶段，你可以弃置一张手牌，令一名已受伤的角色回复1点体力。每阶段限一次。
-	状态：验证通过
-]]--
-LuaQingnangCard = sgs.CreateSkillCard{
-	name = "LuaQingnangCard",
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
-		if #targets == 0 then
-			return to_select:isWounded()
-		end
-		return false
-	end,
-	feasible = function(self, targets)
-		if #targets == 1 then
-			return targets[1]:isWounded()
-		end
-		return false
-	end,
-	on_use = function(self, room, source, targets) 
-		local target = targets[1]
-		local effect = sgs.CardEffectStruct()
-		effect.card = self
-		effect.from = source
-		effect.to = target
-		room:cardEffect(effect)
-	end,
-	on_effect = function(self, effect) 
-		local dest = effect.to
-		local room = dest:getRoom()
-		local recover = sgs.RecoverStruct()
-		recover.card = self
-		recover.who = effect.from
-		room:recover(dest, recover)
-	end
-}
-LuaQingnang = sgs.CreateViewAsSkill{
-	name = "LuaQingnang", 
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return not to_select:isEquipped()
-	end, 
-	view_as = function(self, cards)
-		if #cards ==1 then
-			local card = cards[1]
-			local qn_card = LuaQingnangCard:clone()
-			qn_card:addSubcard(card)
-			return qn_card
-		end
-	end, 
-	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaQingnangCard")
-	end
-}
---[[
 	技能名：驱虎
 	相关武将：火·荀彧
 	描述：出牌阶段，你可以与一名体力比你多的角色拼点。若你赢，则该角色对其攻击范围内你选择的另一名角色造成1点伤害。若你没赢，则其对你造成1点伤害。每阶段限一次。
@@ -808,3 +813,13 @@ LuaQuanjiRemove = sgs.CreateTriggerSkill{
 		return (target ~= nil)
 	end
 }
+--[[
+	技能名：权计
+	相关武将：胆创·钟会
+	描述：其他角色的回合开始时，你可以与该角色进行一次拼点。若你赢，该角色跳过回合开始阶段及判定阶段。 
+]]--
+--[[
+	技能名：劝谏
+	相关武将：3D织梦·沮授
+	描述：出牌阶段，你可以交给一名其他角色一张【闪】，展示其一张手牌：若为【闪】，则你与该角色各摸一张牌。每阶段限一次。 
+]]--

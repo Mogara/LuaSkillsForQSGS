@@ -1,38 +1,7 @@
 --[[
 	代码速查手册（J区）
 	代码索引：
-		激昂、激将、鸡肋、疾恶、急救、极略、急速、急袭、集智、坚守、奸雄、将驰、节命、竭缘、结姻、解烦、解惑、尽瘁、禁酒、酒池、酒诗、救援、举荐、举荐、倨傲、据守、据守、巨象、绝汲、绝境、绝境、绝情、军威
-]]--
---[[
-	技能名：激昂
-	相关武将：山·孙策
-	描述：每当你使用（指定目标后）或被使用（成为目标后）一张【决斗】或红色的【杀】时，你可以摸一张牌。 
-	状态：验证通过
-]]--
-LuaJiang = sgs.CreateTriggerSkill{
-	name = "LuaJiang",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.TargetConfirmed},
-	on_trigger = function(self, event, player, data)
-		local use = data:toCardUse()
-		local source = use.from
-		local targets = use.to
-		if source:objectName() == player:objectName() or targets:contains(player) then
-			local card = use.card
-			if card:isKindOf("Duel") or (card:isKindOf("Slash") and card:isRed()) then
-				local room = player:getRoom()
-				if room:askForSkillInvoke(player, self:objectName(), data) then
-					player:drawCards(1)
-				end
-			end
-		end
-	end
-}
---[[
-	技能名：激将（主公技）
-	相关武将：标准·刘备、山·刘禅
-	描述：当你需要使用或打出一张【杀】时，你可以令其他蜀势力角色打出一张【杀】（视为由你使用或打出）。
-	状态：验证失败
+		鸡肋、激昂、激将、极略、急救、急速、急袭、集智、嫉恶、奸雄、坚守、将驰、节命、结姻、竭缘、解烦、解烦、解惑、尽瘁、禁酒、精锐、酒池、酒诗、救援、举荐、举荐、巨象、倨傲、据守、据守、聚武、绝汲、绝境、绝境、绝情、军威
 ]]--
 --[[
 	技能名：鸡肋
@@ -80,28 +49,42 @@ LuaJileiClear = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：疾恶（锁定技）
-	相关武将：☆SP·张飞
-	描述：你使用的红色【杀】造成的伤害+1。
+	技能名：激昂
+	相关武将：山·孙策
+	描述：每当你使用（指定目标后）或被使用（成为目标后）一张【决斗】或红色的【杀】时，你可以摸一张牌。 
 	状态：验证通过
 ]]--
-LuaJie = sgs.CreateTriggerSkill{
-	name = "LuaJie",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.ConfirmDamage},
+LuaJiang = sgs.CreateTriggerSkill{
+	name = "LuaJiang",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.TargetConfirmed},
 	on_trigger = function(self, event, player, data)
-		local damage = data:toDamage()
-		local card = damage.card
-		if card then
-			if card:isKindOf("Slash") and card:isRed() then
-				local hurt = damage.damage
-				damage.damage = hurt + 1
-				data:setValue(damage)
+		local use = data:toCardUse()
+		local source = use.from
+		local targets = use.to
+		if source:objectName() == player:objectName() or targets:contains(player) then
+			local card = use.card
+			if card:isKindOf("Duel") or (card:isKindOf("Slash") and card:isRed()) then
+				local room = player:getRoom()
+				if room:askForSkillInvoke(player, self:objectName(), data) then
+					player:drawCards(1)
+				end
 			end
 		end
-		return false
 	end
 }
+--[[
+	技能名：激将（主公技）
+	相关武将：标准·刘备、山·刘禅
+	描述：当你需要使用或打出一张【杀】时，你可以令其他蜀势力角色打出一张【杀】（视为由你使用或打出）。
+	状态：验证失败
+]]--
+--[[
+	技能名：极略
+	相关武将：神·司马懿
+	描述：弃一枚“忍”标记发动下列一项技能——“鬼才”、“放逐”、“完杀”、“制衡”、“集智”。
+	状态：验证失败
+]]--
 --[[
 	技能名：急救
 	相关武将：标准·华佗
@@ -141,12 +124,6 @@ LuaJijiu = sgs.CreateViewAsSkill{
 		return false
 	end
 }
---[[
-	技能名：极略
-	相关武将：神·司马懿
-	描述：弃一枚“忍”标记发动下列一项技能——“鬼才”、“放逐”、“完杀”、“制衡”、“集智”。
-	状态：验证失败
-]]--
 --[[
 	技能名：急速
 	相关武将：奥运·叶诗文
@@ -301,22 +278,26 @@ LuaJizhi = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：坚守
-	相关武将：测试·蹲坑曹仁
-	描述：回合结束阶段开始时，你可以摸五张牌，然后将你的武将牌翻面 
+	技能名：嫉恶（锁定技）
+	相关武将：☆SP·张飞
+	描述：你使用的红色【杀】造成的伤害+1。
 	状态：验证通过
 ]]--
-LuaXJianshou = sgs.CreateTriggerSkill{
-	name = "LuaXJianshou",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
+LuaJie = sgs.CreateTriggerSkill{
+	name = "LuaJie",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.ConfirmDamage},
 	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_Finish then
-			if player:askForSkillInvoke(self:objectName(), data) then
-				player:drawCards(5, true, self:objectName())
-				player:turnOver()
+		local damage = data:toDamage()
+		local card = damage.card
+		if card then
+			if card:isKindOf("Slash") and card:isRed() then
+				local hurt = damage.damage
+				damage.damage = hurt + 1
+				data:setValue(damage)
 			end
 		end
+		return false
 	end
 }
 --[[
@@ -341,6 +322,25 @@ LuaJianxiong = sgs.CreateTriggerSkill{
 				if room:askForSkillInvoke(player, self:objectName(), card_data) then
 					player:obtainCard(card);
 				end
+			end
+		end
+	end
+}
+--[[
+	技能名：坚守
+	相关武将：测试·蹲坑曹仁
+	描述：回合结束阶段开始时，你可以摸五张牌，然后将你的武将牌翻面 
+	状态：验证通过
+]]--
+LuaXJianshou = sgs.CreateTriggerSkill{
+	name = "LuaXJianshou",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+		if player:getPhase() == sgs.Player_Finish then
+			if player:askForSkillInvoke(self:objectName(), data) then
+				player:drawCards(5, true, self:objectName())
+				player:turnOver()
 			end
 		end
 	end
@@ -420,6 +420,54 @@ LuaJieming = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：结姻
+	相关武将：标准·孙尚香、SP·孙尚香
+	描述：出牌阶段，你可以弃置两张手牌并选择一名已受伤的男性角色，你与其各回复1点体力。每阶段限一次。
+	状态：验证通过
+]]--
+LuaJieyinCard = sgs.CreateSkillCard{
+	name = "LuaJieyinCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
+		if #targets == 0 then
+			if to_select:isWounded() then
+				return to_select:isMale()
+			end
+		end
+		return false
+	end,
+	on_use = function(self, room, player, targets)
+		local dest = targets[1]
+		local recover = sgs.RecoverStruct()
+		recover.card = self
+		recover.who = player
+		room:recover(player, recover, true)
+		room:recover(dest, recover, true)
+	end
+}
+LuaJieyin = sgs.CreateViewAsSkill{
+	name = "LuaJieyin",
+	n = 2,
+	view_filter = function(self, selected, to_select)
+		if #selected <2 then
+			return not to_select:isEquipped()
+		end
+		return false
+	end,
+	view_as = function(self, cards)
+		if #cards == 2 then
+			local card = LuaJieyinCard:clone()
+			card:addSubcard(cards[1])
+			card:addSubcard(cards[2])
+			return card
+		end
+	end,
+	enabled_at_play = function(self, target)
+		return not target:hasUsed("#LuaJieyinCard")
+	end
+}
+--[[
 	技能名：竭缘
 	相关武将：铜雀台·灵雎、SP·灵雎
 	描述：当你对一名其他角色造成伤害时，若其体力值大于或等于你的体力值，你可弃置一张黑色手牌令此伤害+1；当你受到一名其他角色造成的伤害时，若其体力值大于或等于你的体力值，你可弃置一张红色手牌令此伤害-1 
@@ -468,53 +516,10 @@ LuaXJieyuan = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：结姻
-	相关武将：标准·孙尚香、SP·孙尚香
-	描述：出牌阶段，你可以弃置两张手牌并选择一名已受伤的男性角色，你与其各回复1点体力。每阶段限一次。
-	状态：验证通过
+	技能名：解烦（限定技）
+	相关武将：二将成名·韩当
+	描述：出牌阶段，你可以指定一名角色，攻击范围内含有该角色的所有角色须依次选择一项：弃置一张武器牌；或令该角色摸一张牌。 
 ]]--
-LuaJieyinCard = sgs.CreateSkillCard{
-	name = "LuaJieyinCard",
-	target_fixed = false,
-	will_throw = true,
-	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			if to_select:isWounded() then
-				return to_select:isMale()
-			end
-		end
-		return false
-	end,
-	on_use = function(self, room, player, targets)
-		local dest = targets[1]
-		local recover = sgs.RecoverStruct()
-		recover.card = self
-		recover.who = player
-		room:recover(player, recover, true)
-		room:recover(dest, recover, true)
-	end
-}
-LuaJieyin = sgs.CreateViewAsSkill{
-	name = "LuaJieyin",
-	n = 2,
-	view_filter = function(self, selected, to_select)
-		if #selected <2 then
-			return not to_select:isEquipped()
-		end
-		return false
-	end,
-	view_as = function(self, cards)
-		if #cards == 2 then
-			local card = LuaJieyinCard:clone()
-			card:addSubcard(cards[1])
-			card:addSubcard(cards[2])
-			return card
-		end
-	end,
-	enabled_at_play = function(self, target)
-		return not target:hasUsed("#LuaJieyinCard")
-	end
-}
 --[[
 	技能名：解烦
 	相关武将：怀旧·韩当
@@ -709,6 +714,11 @@ LuaJinjiu = sgs.CreateFilterSkill{
 		return vs_card
 	end
 }
+--[[
+	技能名：精锐
+	相关武将：3D织梦·陈到
+	描述： 若你的手牌数不小于你的体力值，你可以将一张手牌当做【杀】或【闪】使用或打出。 
+]]--
 --[[
 	技能名：酒池
 	相关武将：林·董卓
@@ -1002,6 +1012,63 @@ LuaNosJujian = sgs.CreateViewAsSkill{
 	end
 }
 --[[
+	技能名：巨象（锁定技）
+	相关武将：林·祝融
+	描述：【南蛮入侵】对你无效；当其他角色使用的【南蛮入侵】在结算后置入弃牌堆时，你获得之。
+	状态：验证通过
+]]--
+LuaJuxiang = sgs.CreateTriggerSkill{
+	name = "LuaJuxiang",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.CardsMoving,sgs.CardUsed},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.CardUsed then
+			local use = data:toCardUse()
+			if use.card:isVirtualCard() then
+				if use.card:isKindOf("SavageAssault") then
+					if use.card:subcardsLength() == 1 then
+						if sgs.Sanguosha:getCard(use.card:getSubcards():first()):isKindOf("SavageAssault") then
+							 room:setCardFlag(use.card:getSubcards():first(), "real_SA")
+						end
+					end
+				end
+			elseif use.card:isKindOf("SavageAssault") then
+				room:setCardFlag(use.card:getId(), "real_SA")
+			end
+		elseif event == sgs.CardsMoving then
+			local move = data:toMoveOneTime()
+			if move.card_ids:length() == 1 and move.from_places:contains(sgs.Player_PlaceTable) and move.to_place == sgs.Player_DiscardPile then
+				if move.reason.m_reason == sgs.CardMoveReason_S_REASON_USE then
+					local card = sgs.Sanguosha:getCard(move.card_ids:first())
+					if card:hasFlag("real_SA") then
+						local targets = room:getAllPlayers()
+						for _,p in sgs.qlist(targets) do
+							if p:hasSkill(self:objectName()) and p:objectName() ~= move.from:objectName() then
+								p:obtainCard(card)
+							end
+						end
+					end
+				end
+			end
+		end
+	end,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
+LuaJuxiangSavageAssaultAvoid = sgs.CreateTriggerSkill{
+	name = "#LuaJuxiangSavageAssaultAvoid",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.CardEffected},
+	on_trigger = function(self, event, player, data)
+		local effect = data:toCardEffect()
+		if effect.card:isKindOf("SavageAssault") then
+			return true
+		end
+	end
+}
+--[[
 	技能名：倨傲
 	相关武将：智·许攸
 	描述：出牌阶段，你可以选择两张手牌背面向上移出游戏，指定一名角色，被指定的角色到下个回合开始阶段时，跳过摸牌阶段，得到你所移出游戏的两张牌。每阶段限一次 
@@ -1123,62 +1190,10 @@ LuaXNeoJushou = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：巨象（锁定技）
-	相关武将：林·祝融
-	描述：【南蛮入侵】对你无效；当其他角色使用的【南蛮入侵】在结算后置入弃牌堆时，你获得之。
-	状态：验证通过
+	技能名：聚武
+	相关武将：长坂坡·神张飞
+	描述：出牌阶段，你可以将至多X张手牌任意分配给神赵云，X为你的当前体力值。 
 ]]--
-LuaJuxiang = sgs.CreateTriggerSkill{
-	name = "LuaJuxiang",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.CardsMoving,sgs.CardUsed},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.CardUsed then
-			local use = data:toCardUse()
-			if use.card:isVirtualCard() then
-				if use.card:isKindOf("SavageAssault") then
-					if use.card:subcardsLength() == 1 then
-						if sgs.Sanguosha:getCard(use.card:getSubcards():first()):isKindOf("SavageAssault") then
-							 room:setCardFlag(use.card:getSubcards():first(), "real_SA")
-						end
-					end
-				end
-			elseif use.card:isKindOf("SavageAssault") then
-				room:setCardFlag(use.card:getId(), "real_SA")
-			end
-		elseif event == sgs.CardsMoving then
-			local move = data:toMoveOneTime()
-			if move.card_ids:length() == 1 and move.from_places:contains(sgs.Player_PlaceTable) and move.to_place == sgs.Player_DiscardPile then
-				if move.reason.m_reason == sgs.CardMoveReason_S_REASON_USE then
-					local card = sgs.Sanguosha:getCard(move.card_ids:first())
-					if card:hasFlag("real_SA") then
-						local targets = room:getAllPlayers()
-						for _,p in sgs.qlist(targets) do
-							if p:hasSkill(self:objectName()) and p:objectName() ~= move.from:objectName() then
-								p:obtainCard(card)
-							end
-						end
-					end
-				end
-			end
-		end
-	end,
-	can_trigger = function(self, target)
-		return target ~= nil
-	end
-}
-LuaJuxiangSavageAssaultAvoid = sgs.CreateTriggerSkill{
-	name = "#LuaJuxiangSavageAssaultAvoid",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.CardEffected},
-	on_trigger = function(self, event, player, data)
-		local effect = data:toCardEffect()
-		if effect.card:isKindOf("SavageAssault") then
-			return true
-		end
-	end
-}
 --[[
 	技能名：绝汲
 	相关武将：倚天·张儁乂

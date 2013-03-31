@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（G区）
 	技能索引：
-		甘露、刚烈、刚烈、弓骑、攻心、共谋、蛊惑、固守、固政、观星、国色、归汉、归心、归心、鬼道、鬼才
+		甘露、感染、刚戾、刚烈、刚烈、弓骑、弓骑、攻心、共谋、蛊惑、固守、固政、观星、归汉、归心、归心、鬼才、鬼道、国色
 ]]--
 --[[
 	技能名：甘露
@@ -66,6 +66,16 @@ LuaGanlu = sgs.CreateViewAsSkill{
 		return not player:hasUsed("#LuaGanluCard")
 	end
 }
+--[[
+	技能名：感染（锁定技）
+	相关武将：僵尸·僵尸
+	描述：你的装备牌都视为铁锁连环。 
+]]--
+--[[
+	技能名：刚戾
+	相关武将：3D织梦·程昱
+	描述：每当你受到其他角色造成的1点伤害后，你可以：选择除伤害来源外的另一名角色，视为伤害来源对该角色使用一张【杀】（此【杀】无距离限制且不计入出牌阶段使用次数限制）。 
+]]--
 --[[
 	技能名：刚烈
 	相关武将：标准·夏侯惇
@@ -153,6 +163,11 @@ LuaXNeoGanglie = sgs.CreateTriggerSkill{
 		end
 	end
 }
+--[[
+	技能名：弓骑
+	相关武将：二将成名·韩当
+	描述：出牌阶段，你可以弃置一张牌，令你的攻击范围无限直到回合结束；若你以此法弃置的牌为装备牌，你可以弃置一名其他角色的一张牌，每阶段限一次。 
+]]--
 --[[
 	技能名：弓骑
 	相关武将：怀旧·韩当
@@ -522,33 +537,6 @@ LuaGuanxing = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：国色
-	相关武将：标准·大乔
-	描述：你可以将一张方块牌当【乐不思蜀】使用。
-	状态：验证通过
-]]--
-LuaGuose = sgs.CreateViewAsSkill{
-	name = "LuaGuose",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return to_select:getSuit() == sgs.Card_Diamond
-	end,
-	view_as = function(self, cards)
-		if #cards == 0 then
-			return nil
-		elseif #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local id = card:getId()
-			local indulgence = sgs.Sanguosha:cloneCard("indulgence", suit, point)
-			indulgence:addSubcard(id)
-			indulgence:setSkillName(self:objectName())
-			return indulgence
-		end
-	end
-}
---[[
 	技能名：归汉
 	相关武将：倚天·蔡昭姬
 	描述：出牌阶段，你可以主动弃置两张相同花色的红色手牌，和你指定的一名其他存活角色互换位置。每阶段限一次 
@@ -690,6 +678,65 @@ LuaGuixin = sgs.CreateTriggerSkill{
 	end,
 }
 --[[
+	技能名：鬼才
+	相关武将：标准·司马懿
+	描述：在一名角色的判定牌生效前，你可以打出一张手牌代替之。
+	状态：验证通过
+]]--
+GuicaiCard = sgs.CreateSkillCard{
+	name = "GuicaiCard",
+	target_fixed = true,
+	will_throw = false,
+}
+LuaGuicaiVS = sgs.CreateViewAsSkill{
+	name = "LuaGuicai",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		if #selected == 0 then
+			return not to_select:isEquipped()
+		end
+		return false
+	end,
+	view_as = function(self, cards)
+		if #cards == 0 then
+			return nil
+		end
+		local card = GuicaiCard:clone()
+		card:addSubcard(cards[1])
+		card:setSkillName(self:objectName())
+		return card
+	end,
+	enabled_at_play = function(self, player)
+		return false
+	end,
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@LuaGuicai"
+	end
+}
+LuaGuicai = sgs.CreateTriggerSkill{
+	name = "LuaGuicai",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.AskForRetrial},
+	view_as_skill = LuaGuicaiVS,
+	on_trigger = function(self, event, player, data)
+		if player:askForSkillInvoke(self:objectName(), data) then
+			local judge = data:toJudge()
+			local room = player:getRoom()
+			local card = room:askForCard(player, "@LuaGuicai", nil, data, sgs.AskForRetrial)
+			room:retrial(card, player, judge, self:objectName())
+			return false
+		end
+	end,
+	can_trigger = function(self, target)
+		if target then
+			if target:isAlive() and target:hasSkill(self:objectName()) then
+				return not target:isKongcheng()
+			end
+		end
+		return false
+	end
+}
+--[[
 	技能名：鬼道
 	相关武将：风·张角
 	描述：在一名角色的判定牌生效前，你可以打出一张黑色牌替换之。
@@ -759,61 +806,29 @@ LuaGuidao = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：鬼才
-	相关武将：标准·司马懿
-	描述：在一名角色的判定牌生效前，你可以打出一张手牌代替之。
+	技能名：国色
+	相关武将：标准·大乔
+	描述：你可以将一张方块牌当【乐不思蜀】使用。
 	状态：验证通过
 ]]--
-GuicaiCard = sgs.CreateSkillCard{
-	name = "GuicaiCard",
-	target_fixed = true,
-	will_throw = false,
-}
-LuaGuicaiVS = sgs.CreateViewAsSkill{
-	name = "LuaGuicai",
+LuaGuose = sgs.CreateViewAsSkill{
+	name = "LuaGuose",
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		if #selected == 0 then
-			return not to_select:isEquipped()
-		end
-		return false
+		return to_select:getSuit() == sgs.Card_Diamond
 	end,
 	view_as = function(self, cards)
 		if #cards == 0 then
 			return nil
+		elseif #cards == 1 then
+			local card = cards[1]
+			local suit = card:getSuit()
+			local point = card:getNumber()
+			local id = card:getId()
+			local indulgence = sgs.Sanguosha:cloneCard("indulgence", suit, point)
+			indulgence:addSubcard(id)
+			indulgence:setSkillName(self:objectName())
+			return indulgence
 		end
-		local card = GuicaiCard:clone()
-		card:addSubcard(cards[1])
-		card:setSkillName(self:objectName())
-		return card
-	end,
-	enabled_at_play = function(self, player)
-		return false
-	end,
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@LuaGuicai"
-	end
-}
-LuaGuicai = sgs.CreateTriggerSkill{
-	name = "LuaGuicai",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.AskForRetrial},
-	view_as_skill = LuaGuicaiVS,
-	on_trigger = function(self, event, player, data)
-		if player:askForSkillInvoke(self:objectName(), data) then
-			local judge = data:toJudge()
-			local room = player:getRoom()
-			local card = room:askForCard(player, "@LuaGuicai", nil, data, sgs.AskForRetrial)
-			room:retrial(card, player, judge, self:objectName())
-			return false
-		end
-	end,
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				return not target:isKongcheng()
-			end
-		end
-		return false
 	end
 }

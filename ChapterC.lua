@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（C区）
 	技能索引：
-		藏匿、超级观星、称象、冲阵、筹粮、持重、醇醪、聪慧
+		藏匿、谗陷、缠蛇、超级观星、称象、持重、冲阵、筹粮、醇醪、聪慧
 ]]--
 --[[
 	技能名：藏匿
@@ -96,6 +96,16 @@ LuaXCangni = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：谗陷
+	相关武将：3D织梦·孙鲁班
+	描述： 出牌阶段，你可以将一张方片牌交给一名其他角色，该角色进行二选一：1、对其攻击范围内的另一名由你指定的角色使用一张【杀】。2.令你选择获得其一张牌或对其造成一点伤害。每阶段限一次。 
+]]--
+--[[
+	技能名：缠蛇（聚气技）
+	相关武将：长坂坡·神张飞
+	描述：出牌阶段，你可以将你的任意方片花色的“怒”当【乐不思蜀】使用。
+]]--
+--[[
 	技能名：超级观星
 	相关武将：测试·五星诸葛
 	描述：回合开始阶段，你可以观看牌堆顶的5张牌，将其中任意数量的牌以任意顺序置于牌堆顶，其余则以任意顺序置于牌堆底 
@@ -116,55 +126,7 @@ LuaXSuperGuanxing = sgs.CreateTriggerSkill{
 		return false
 	end
 }
---[[
-	技能名：冲阵
-	相关武将：☆SP·赵云
-	描述：每当你发动“龙胆”使用或打出一张手牌时，你可以立即获得对方的一张手牌。
-	状态：验证通过
-]]--
-LuaChongzhen = sgs.CreateTriggerSkill{
-	name = "LuaChongzhen",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.CardResponsed, sgs.TargetConfirmed},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.CardResponsed then
-			local resp = data:toResponsed()
-			local dest = resp.m_who
-			local card = resp.m_card
-			if card:getSkillName() == "longdan" then
-				if dest and not dest:isKongcheng() then
-					local ai_data = sgs.QVariant()
-					ai_data:setValue(dest)
-					if player:askForSkillInvoke(self:objectName(), ai_data) then
-						card_id = room:askForCardChosen(player, dest, "h", self:objectName())
-						local destcard = sgs.Sanguosha:getCard(card_id)
-						room:obtainCard(player, destcard)
-					end
-				end
-			end
-		elseif event == sgs.TargetConfirmed then
-			local use = data:toCardUse()
-			if use.from:objectName() == player:objectName() then
-				if use.card:getSkillName() == "longdan" then
-					local targets = use.to
-					for _,dest in sgs.qlist(targets) do
-						if not dest:isKongcheng() then
-							local ai_data = sgs.QVariant()
-							ai_data:setValue(dest)
-							if player:askForSkillInvoke(self:objectName(), ai_data) then
-								local card_id = room:askForCardChosen(player, dest, "h", self:objectName())
-								local destcard = sgs.Sanguosha:getCard(card_id)
-								room:obtainCard(player, destcard)
-							end
-						end
-					end
-				end
-			end
-		end
-		return false
-	end
-}
+
 --[[
 	技能名：称象
 	相关武将：倚天·曹冲
@@ -257,6 +219,126 @@ LuaXChengxiang = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：持重（锁定技）
+	相关武将：铜雀台·伏完
+	描述：你的手牌上限等于你的体力上限；其他角色死亡时，你加1点体力上限。 
+	状态：验证通过
+]]--
+LuaXChizhongKeep = sgs.CreateMaxCardsSkill{
+	name = "LuaXChizhong", 
+	extra_func = function(self, target) 
+		if target:hasSkill(self:objectName()) then
+			return target:getLostHp()
+		end
+	end
+}
+LuaXChizhong = sgs.CreateTriggerSkill{
+	name = "#LuaXChizhong",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.Death},  
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		local splayer = room:findPlayerBySkillName(self:objectName())
+		if splayer then
+			if event == sgs.Death then
+				if player:objectName() ~= splayer:objectName() then
+					local maxhp = splayer:getMaxHp() + 1
+					room:setPlayerProperty(splayer, "maxhp", sgs.QVariant(maxhp))
+				end
+			end
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target
+	end
+}
+--[[
+	技能名：冲阵
+	相关武将：☆SP·赵云
+	描述：每当你发动“龙胆”使用或打出一张手牌时，你可以立即获得对方的一张手牌。
+	状态：验证通过
+]]--
+LuaChongzhen = sgs.CreateTriggerSkill{
+	name = "LuaChongzhen",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.CardResponsed, sgs.TargetConfirmed},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.CardResponsed then
+			local resp = data:toResponsed()
+			local dest = resp.m_who
+			local card = resp.m_card
+			if card:getSkillName() == "longdan" then
+				if dest and not dest:isKongcheng() then
+					local ai_data = sgs.QVariant()
+					ai_data:setValue(dest)
+					if player:askForSkillInvoke(self:objectName(), ai_data) then
+						card_id = room:askForCardChosen(player, dest, "h", self:objectName())
+						local destcard = sgs.Sanguosha:getCard(card_id)
+						room:obtainCard(player, destcard)
+					end
+				end
+			end
+		elseif event == sgs.TargetConfirmed then
+			local use = data:toCardUse()
+			if use.from:objectName() == player:objectName() then
+				if use.card:getSkillName() == "longdan" then
+					local targets = use.to
+					for _,dest in sgs.qlist(targets) do
+						if not dest:isKongcheng() then
+							local ai_data = sgs.QVariant()
+							ai_data:setValue(dest)
+							if player:askForSkillInvoke(self:objectName(), ai_data) then
+								local card_id = room:askForCardChosen(player, dest, "h", self:objectName())
+								local destcard = sgs.Sanguosha:getCard(card_id)
+								room:obtainCard(player, destcard)
+							end
+						end
+					end
+				end
+			end
+		end
+		return false
+	end
+}
+--[[
+	技能名：筹粮
+	相关武将：智·蒋琬
+	描述：回合结束阶段开始时，若你手牌少于三张，你可以从牌堆顶亮出X张牌（X为4减当前手牌数），拿走其中的基本牌，把其余的牌置入弃牌堆 
+	状态：验证通过
+]]--
+LuaXChouliang = sgs.CreateTriggerSkill{
+	name = "LuaXChouliang",  
+	frequency = sgs.Skill_Frequent, 
+	events = {sgs.EventPhaseStart},   
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		local handcardnum = player:getHandcardNum()
+		if player:getPhase() == sgs.Player_Finish then
+			if handcardnum < 3 then
+				if room:askForSkillInvoke(player, self:objectName()) then
+					for i=1, 4-handcardnum, 1 do
+						local card_id = room:drawCard()
+						local card = sgs.Sanguosha:getCard(card_id)
+						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SHOW, player:objectName(), "", self:objectName(), "")
+						room:moveCardTo(card, player, sgs.Player_PlaceTable, reason, true)
+						room:getThread():delay()
+						if not card:isKindOf("BasicCard") then
+							room:throwCard(card_id, nil)
+							room:setEmotion(player, "bad")
+						else
+							room:obtainCard(player, card_id)
+							room:setEmotion(player, "good")
+						end
+					end
+				end
+			end
+		end
+		return false
+	end
+}
+--[[
 	技能名：醇醪
 	相关武将：二将成名·程普
 	描述：回合结束阶段开始时，若你的武将牌上没有牌，你可以将任意数量的【杀】置于你的武将牌上，称为“醇”；当一名角色处于濒死状态时，你可以将一张“醇”置入弃牌堆，视为该角色使用一张【酒】。
@@ -340,77 +422,6 @@ LuaChunlao = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end
-}
---[[
-	技能名：筹粮
-	相关武将：智·蒋琬
-	描述：回合结束阶段开始时，若你手牌少于三张，你可以从牌堆顶亮出X张牌（X为4减当前手牌数），拿走其中的基本牌，把其余的牌置入弃牌堆 
-	状态：验证通过
-]]--
-LuaXChouliang = sgs.CreateTriggerSkill{
-	name = "LuaXChouliang",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.EventPhaseStart},   
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
-		local handcardnum = player:getHandcardNum()
-		if player:getPhase() == sgs.Player_Finish then
-			if handcardnum < 3 then
-				if room:askForSkillInvoke(player, self:objectName()) then
-					for i=1, 4-handcardnum, 1 do
-						local card_id = room:drawCard()
-						local card = sgs.Sanguosha:getCard(card_id)
-						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SHOW, player:objectName(), "", self:objectName(), "")
-						room:moveCardTo(card, player, sgs.Player_PlaceTable, reason, true)
-						room:getThread():delay()
-						if not card:isKindOf("BasicCard") then
-							room:throwCard(card_id, nil)
-							room:setEmotion(player, "bad")
-						else
-							room:obtainCard(player, card_id)
-							room:setEmotion(player, "good")
-						end
-					end
-				end
-			end
-		end
-		return false
-	end
-}
---[[
-	技能名：持重（锁定技）
-	相关武将：铜雀台·伏完
-	描述：你的手牌上限等于你的体力上限；其他角色死亡时，你加1点体力上限。 
-	状态：验证通过
-]]--
-LuaXChizhongKeep = sgs.CreateMaxCardsSkill{
-	name = "LuaXChizhong", 
-	extra_func = function(self, target) 
-		if target:hasSkill(self:objectName()) then
-			return target:getLostHp()
-		end
-	end
-}
-LuaXChizhong = sgs.CreateTriggerSkill{
-	name = "#LuaXChizhong",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.Death},  
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
-		local splayer = room:findPlayerBySkillName(self:objectName())
-		if splayer then
-			if event == sgs.Death then
-				if player:objectName() ~= splayer:objectName() then
-					local maxhp = splayer:getMaxHp() + 1
-					room:setPlayerProperty(splayer, "maxhp", sgs.QVariant(maxhp))
-				end
-			end
-		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		return target
 	end
 }
 --[[

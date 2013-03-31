@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（F区）
 	技能索引：
-		反间、反间、反馈、放权、放逐、飞影、焚心、奋迅、愤勇、奉印、扶乱、伏枥、辅佐、父魂
+		反间、反间、反馈、放权、放逐、飞影、焚心、奋迅、愤勇、奉印、伏枥、扶乱、辅佐、父魂
 ]]--
 --[[
 	技能名：反间
@@ -472,6 +472,62 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：伏枥（限定技）
+	相关武将：二将成名·廖化
+	描述：当你处于濒死状态时，你可以将体力回复至X点（X为现存势力数），然后将你的武将牌翻面。
+	状态：验证通过
+]]--
+KingdomCount = function(targets)
+	local kingdoms = {}
+	for _,target in sgs.qlist(targets) do
+		local flag = true
+		local kingdom = target:getKingdom()
+		for _,k in pairs(kingdoms) do
+			if k == kingdom then
+				flag = false
+				break
+			end
+		end
+		if flag then
+			table.insert(kingdoms, kingdom)
+		end
+	end
+	return kingdoms
+end
+LuaFuli = sgs.CreateTriggerSkill{
+	name = "LuaFuli",  
+	frequency = sgs.Skill_Limited, 
+	events = {sgs.AskForPeaches},  
+	on_trigger = function(self, event, player, data) 
+		local dying_data = data:toDying()
+		local dest = dying_data.who
+		if dest:objectName() == player:objectName() then
+			if player:askForSkillInvoke(self:objectName(), data) then
+				player:loseMark("@laoji")
+				local room = player:getRoom()
+				local players = room:getAlivePlayers()
+				local kingdoms = KingdomCount(players)
+				local hp = player:getHp()
+				local recover = sgs.RecoverStruct()
+				recover.recover = #kingdoms - hp
+				room:recover(player, recover)
+				player:turnOver()
+			end
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		if target then
+			if target:isAlive() then
+				if target:hasSkill(self:objectName()) then
+					return target:getMark("@laoji") > 0
+				end
+			end
+		end
+		return false
+	end
+}
+--[[
 	技能名：扶乱
 	相关武将：贴纸·王元姬
 	描述：出牌阶段，若你未于此阶段使用过【杀】，你可以弃置三张相同花色的牌并选择攻击范围内的一名其他角色，该角色将武将牌翻面，且此阶段你不可使用【杀】，每阶段限一次。
@@ -537,62 +593,6 @@ LuaXFuluan = sgs.CreateTriggerSkill{
 			end
 		end
 	end,
-}
---[[
-	技能名：伏枥（限定技）
-	相关武将：二将成名·廖化
-	描述：当你处于濒死状态时，你可以将体力回复至X点（X为现存势力数），然后将你的武将牌翻面。
-	状态：验证通过
-]]--
-KingdomCount = function(targets)
-	local kingdoms = {}
-	for _,target in sgs.qlist(targets) do
-		local flag = true
-		local kingdom = target:getKingdom()
-		for _,k in pairs(kingdoms) do
-			if k == kingdom then
-				flag = false
-				break
-			end
-		end
-		if flag then
-			table.insert(kingdoms, kingdom)
-		end
-	end
-	return kingdoms
-end
-LuaFuli = sgs.CreateTriggerSkill{
-	name = "LuaFuli",  
-	frequency = sgs.Skill_Limited, 
-	events = {sgs.AskForPeaches},  
-	on_trigger = function(self, event, player, data) 
-		local dying_data = data:toDying()
-		local dest = dying_data.who
-		if dest:objectName() == player:objectName() then
-			if player:askForSkillInvoke(self:objectName(), data) then
-				player:loseMark("@laoji")
-				local room = player:getRoom()
-				local players = room:getAlivePlayers()
-				local kingdoms = KingdomCount(players)
-				local hp = player:getHp()
-				local recover = sgs.RecoverStruct()
-				recover.recover = #kingdoms - hp
-				room:recover(player, recover)
-				player:turnOver()
-			end
-		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() then
-				if target:hasSkill(self:objectName()) then
-					return target:getMark("@laoji") > 0
-				end
-			end
-		end
-		return false
-	end
 }
 --[[
 	技能名：辅佐
