@@ -38,7 +38,49 @@ LuaShangshi = sgs.CreateTriggerSkill{
 	技能名：伤逝
 	相关武将：怀旧·张春华
 	描述：弃牌阶段外，当你的手牌数小于X时，你可以将手牌补至X张（X为你已损失的体力值） 
+	状态：验证通过
 ]]--
+LuaXShangshi = sgs.CreateTriggerSkill {
+	name = "LuaXShangshi",
+	events = {sgs.CardsMoveOneTime,sgs.EventPhaseChanging,sgs.HpChanged,sgs.MaxHpChanged,sgs.EventAcquireSkill},
+	frequency = sgs.Skill_Frequent,
+	on_trigger = function(self,event,player,data)
+		local room = player:getRoom()
+		if event == sgs.CardsMoveOneTime then
+			local move = data:toMoveOneTime()
+			local CAN = nil
+			if move.from:objectName() == player:objectName() then 
+				CAN = move.from_places:contains(sgs.Player_PlaceHand)
+			elseif move.to:objectName() == player:objectName() then 
+				CAN = move.to_place == sgs.Player_PlaceHand 
+			end
+			if (player:getPhase() == sgs.Player_Discard) or (not CAN) then 
+				return 
+			end
+		end
+		if event == sgs.EventPhaseChanging then 
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_Finish then 
+				return 
+			end
+		end
+		if event == sgs.EventAcquireSkill then 
+			local string = data:toString()
+			if string ~= self:objectName() then 
+				return 
+			end
+		end
+		local Num = player:getHandcardNum()
+		local Mhp = player:getMaxHp()
+		local Lhp = player:getLostHp()
+		local x = math.min(Lhp, Mhp) - Num
+		if x > 0 and player:getHp() > 0 then 
+			if player:askForSkillInvoke(self:objectName()) then 
+				player:drawCards(x)
+			end
+		end 
+	end
+}
 --[[
 	技能名：烧营
 	相关武将：倚天·陆伯言
