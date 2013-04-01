@@ -445,7 +445,92 @@ LuaMingce = sgs.CreateViewAsSkill{
 	描述：任一角色回合开始时，你可以立即优先执行下列两项中的一项：
 		1.弃置一张牌，跳过该角色的判定阶段。
 		2.竖置一张手牌于其武将牌上，该角色本回合内的判定均不受任何人物技能影响，该角色回合结束后将该牌置入弃牌堆。 
+	状态：验证通过
 ]]--
+LuaMingjianCard = sgs.CreateSkillCard{
+	name = "LuaMingjianCard",
+	target_fixed = true,
+	will_throw = false, 
+	on_use = function(self, room, source, targets)
+		local target = room:getCurrent()			
+		target:addToPile("jian", self)
+	end 
+}
+LuaMingjianVS = sgs.CreateViewAsSkill{
+	name = "LuaMingjian", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		return not to_select:isEquipped()
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local card = cards[1]
+			local vs_card = LuaMingjianCard:clone()
+			vs_card:setSkillName(self:objectName())
+			vs_card:addSubcard(card)
+			return vs_card
+		end
+	end, 
+	enabled_at_play=function()
+		return false 
+	end,
+	enabled_at_response=function(self,player,pattern) 
+		return pattern == "@@LuaMingjian" 
+	end
+}
+LuaMingjian = sgs.CreateTriggerSkill{
+	name = "LuaMingjian", 
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseStart}, 
+	view_as_skill = LuaMingjianVS, 
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local phase = player:getPhase()
+		local xin = room:findPlayerBySkillName(self:objectName())
+		if phase == sgs.Player_NotActive then
+			player:removePileByName("jian")
+			return
+		end
+		if xin then
+			if phase == sgs.Player_RoundStart then
+				if not xin:isNude() then
+					local string = not player:getJudgingArea():isEmpty() and "ming+jian+cancel" or "jian+cancel"
+					local choice = room:askForChoice(xin, self:objectName(), string)
+					if  choice == "cancel"  then
+						return false
+					elseif choice == "ming"  then
+						local data = sgs.QVariant()
+						data:setValue(player) 
+						local card = room:askForCard(xin, ".|.|.|.|.", "@mingjiana", data, "LuaMingjian")
+						if card then
+							player:skip(sgs.Player_Judge)
+						end
+					elseif choice == "jian"  then
+						room:askForUseCard(xin, "@@LuaMingjian", "@mingjianb", -1, sgs.Card_MethodNone) 
+					end
+				end
+			end
+		end
+		return false
+	end,
+	can_trigger = function(self, target)
+		return target
+	end
+}
+
+luaMingjianStop=sgs.CreateTriggerSkill{
+	name = "#luaMingjianStop",
+	priority = 5,
+	events = sgs.AskForRetrial ,        
+	on_trigger = function(self, event, player, data)
+		local judge = data:toJudge()
+		local jianpile = judge.who:getPile("jian")
+		return not jianpile:isEmpty()
+	end,      
+	can_trigger = function()
+		return true
+	end
+}
 --[[
 	技能名：明哲
 	相关武将：新3V3·诸葛瑾
