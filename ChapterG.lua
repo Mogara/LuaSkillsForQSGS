@@ -75,7 +75,52 @@ LuaGanlu = sgs.CreateViewAsSkill{
 	技能名：刚戾
 	相关武将：3D织梦·程昱
 	描述：每当你受到其他角色造成的1点伤害后，你可以：选择除伤害来源外的另一名角色，视为伤害来源对该角色使用一张【杀】（此【杀】无距离限制且不计入出牌阶段使用次数限制）。 
+	状态：验证通过
 ]]--
+LuaGangli = sgs.CreateTriggerSkill{
+	name = "LuaGangli",
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.Damaged, sgs.PreHpReduced},
+	on_trigger = function(self, event, player, data) 
+		local damage = data:toDamage()
+		local source = damage.from
+		local victim = damage.to
+		local count = damage.damage
+		local room = player:getRoom()
+		if event == sgs.PreHpReduced then
+			if victim then
+				if victim:hasSkill(self:objectName()) then
+					if source and source:objectName() ~= victim:objectName() then
+						local value = sgs.QVariant(count==1)
+						victim:setTag("Gangli", value)
+					end
+				end
+			end
+		elseif event == sgs.Damaged then
+			if player:hasSkill(self:objectName()) then
+				local tag = player:getTag("Gangli")
+				local invoke = tag:toBool()
+				player:setTag("Gangli", sgs.QVariant(false))
+				if invoke then
+					if room:askForSkillInvoke(player, self:objectName(), data) then
+						local target = room:askForPlayerChosen(player, room:getOtherPlayers(source), self:objectName())
+						local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+						slash:setSkillName(self:objectName())
+						local use = sgs.CardUseStruct()
+						use.card = slash
+						use.from = source
+						use.to:append(target)
+						room:useCard(use, false)
+					end
+				end
+			end
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target
+	end
+}
 --[[
 	技能名：刚烈
 	相关武将：标准·夏侯惇
