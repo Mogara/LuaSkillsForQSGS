@@ -42,7 +42,7 @@ LuaShangshi = sgs.CreateTriggerSkill{
 ]]--
 LuaXShangshi = sgs.CreateTriggerSkill {
 	name = "LuaXShangshi",
-	events = {sgs.CardsMoveOneTime,sgs.EventPhaseChanging,sgs.HpChanged,sgs.MaxHpChanged,sgs.EventAcquireSkill},
+	events={sgs.CardsMoveOneTime,sgs.EventPhaseChanging,sgs.HpChanged,sgs.MaxHpChanged,sgs.EventAcquireSkill},
 	frequency = sgs.Skill_Frequent,
 	on_trigger = function(self,event,player,data)
 		local room = player:getRoom()
@@ -52,9 +52,9 @@ LuaXShangshi = sgs.CreateTriggerSkill {
 			if move.from:objectName() == player:objectName() then 
 				CAN = move.from_places:contains(sgs.Player_PlaceHand)
 			elseif move.to:objectName() == player:objectName() then 
-				CAN = move.to_place == sgs.Player_PlaceHand 
+				CAN = move.to_place==sgs.Player_PlaceHand 
 			end
-			if (player:getPhase() == sgs.Player_Discard) or (not CAN) then 
+			if not CAN then 
 				return 
 			end
 		end
@@ -75,9 +75,11 @@ LuaXShangshi = sgs.CreateTriggerSkill {
 		local Lhp = player:getLostHp()
 		local x = math.min(Lhp, Mhp) - Num
 		if x > 0 and player:getHp() > 0 then 
-			if player:askForSkillInvoke(self:objectName()) then 
-				player:drawCards(x)
-			end
+			if player:getPhase() ~= sgs.Player_Discard then 
+				if player:askForSkillInvoke(self:objectName()) then 
+					player:drawCards(x)
+				end
+			end	
 		end 
 	end
 }
