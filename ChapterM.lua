@@ -545,38 +545,38 @@ LuaMingzhe = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
         if(player:getPhase() ~= sgs.Player_NotActive) then
             return false
-		end
-		local move = data:toMoveOneTime()
-		local room = player:getRoom()
+	end
+	local move = data:toMoveOneTime()
+	local room = player:getRoom()
         if (move.from:objectName() ~= player:objectName()) then
             return false
-		end
+	end
         if (event == sgs.BeforeCardsMove) then
-            if (bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_USE
-                or bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD 
-                or bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_RESPONSE) then
-                local card
-                local i = 0
-				for _,card_id in sgs.qlist(move.card_ids) do
-					card = sgs.Sanguosha:getCard(card_id)
-					if (card:isRed() and (room:getCardPlace(card_id) == sgs.Player_PlaceHand or room:getCardPlace(card_id) == sgs.Player_PlaceEquip)) then-- and (move.from_places[i] == sgs.Player_PlaceHand or move.from_places[i] == sgs.Player_PlaceEquip))then
-						player:addMark(self:objectName())
-						player:askForSkillInvoke(self:objectName(), data)
-					end
-					i=i+1
-				end
-            end
-        else 
-			local count = player:getMark(self:objectName())
-			local i = 0
-			while(i < count) do
-				if (player:askForSkillInvoke(self:objectName(), data)) then
-                    room:broadcastSkillInvoke(self:objectName())
-					player:removeMark(self:objectName());
-					room:drawCards(player,1)
-                end
-				i= i+1
+		if (bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_USE
+		or bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD 
+		or bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_RESPONSE) then
+		local card
+		local i = 0
+		for _,card_id in sgs.qlist(move.card_ids) do
+			card = sgs.Sanguosha:getCard(card_id)
+			if (card:isRed() and (room:getCardPlace(card_id) == sgs.Player_PlaceHand or room:getCardPlace(card_id) == sgs.Player_PlaceEquip)) then-- and (move.from_places[i] == sgs.Player_PlaceHand or move.from_places[i] == sgs.Player_PlaceEquip))then
+				player:addMark(self:objectName())
+				player:askForSkillInvoke(self:objectName(), data)
 			end
+			i=i+1
+		end
+		end
+        else 
+		local count = player:getMark(self:objectName())
+		local i = 0
+		while(i < count) do
+			if (player:askForSkillInvoke(self:objectName(), data)) then
+		    		room:broadcastSkillInvoke(self:objectName())
+				player:removeMark(self:objectName());
+				room:drawCards(player,1)
+			end
+			i= i+1
+		end
         end
         return false
     end
