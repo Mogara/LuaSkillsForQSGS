@@ -718,6 +718,15 @@ LuaHuashen = sgs.CreateTriggerSkill{
 	相关武将：3D织梦·司马昭
 	描述： 每当你体力值发生一次变化后，你可以摸一张牌。 
 ]]--
+LuaXHuaiyi = sgs.CreateTriggerSkill {
+	name = "LuaXHuaiyi",
+	events={sgs.HpChanged},
+	frequency = sgs.Skill_Frequent,
+	on_trigger = function(self,event,player,data)
+		local room = player:getRoom()
+		player:drawCards(1)
+	end
+}
 --[[
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
