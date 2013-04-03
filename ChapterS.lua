@@ -344,8 +344,96 @@ LuaXShenli = sgs.CreateTriggerSkill{
 		1.跳过你的判定阶段和摸牌阶段。
 		2.跳过你的出牌阶段并弃置一张装备牌。
 		你每选择一项，视为对一名其他角色使用一张【杀】（无距离限制）。
-	状态：验证失败
+	状态：验证通过
+	备注:使用杀时发生几次闪退,原因不明
 ]]--
+LuaShensuCard = sgs.CreateSkillCard{
+	name = "LuaShensuCard",
+	target_fixed = false,
+	filter = function(self, targets, to_select, player)
+		if #targets == 0 then
+			return player:canSlash(to_select,false)
+		end
+		return true
+	end,
+	on_use = function(self, room, source, targets)
+		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		slash:setSkillName("luashensu")
+		local use = sgs.CardUseStruct()
+		use.card = slash
+		use.to:append(targets[1])
+		use.from = source
+		room:useCard(use, true)
+	end,
+}
+
+LuaShensuVS = sgs.CreateViewAsSkill{
+	name = "LuaShensu",
+	n = 1,
+	LuaShensuPattern = "",
+	view_filter = function(self, selected, to_select)
+	        if (LuaShensuPattern == "luashensu1") then
+	            return false
+	        else
+	            return #selected==0 and to_select:isKindOf("EquipCard")
+		end
+	end,
+	view_as = function(self, cards)					
+		if (LuaShensuPattern == "luashensu1") then
+				if (#cards == 0) then
+					return LuaShensuCard:clone()
+				end
+	        else
+			if(#cards ~= 1) then
+				return false
+			else
+				local card = LuaShensuCard:clone()
+				card:addSubcard(cards[1])
+				return card
+			end
+		end
+	end,
+	enabled_at_play = function(self, player)
+		return false
+	end,
+	enabled_at_response = function(self, player, pattern)
+		if (pattern == "@@LuaShensu") then
+			if(player:hasFlag("luashensu1")) then
+				LuaShensuPattern = "luashensu1"
+			else
+				LuaShensuPattern = "luashensu2"
+			end
+			return true
+		end
+		return false
+	end,
+}
+LuaShensu = sgs.CreateTriggerSkill{
+	name = "LuaShensu",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseChanging},
+	view_as_skill = LuaShensuVS,
+	on_trigger = function(self, event, player, data)
+		local change = data:toPhaseChange()
+		local room = player:getRoom()
+	        if (change.to == sgs.Player_Judge and not player:isSkipped(sgs.Player_Judge)
+	            and not player:isSkipped(sgs.Player_Draw))  then
+			room:setPlayerFlag(player,"luashensu1")
+			if (room:askForUseCard(player, "@@"..self:objectName(), "@luashensu1", 1))  then
+			player:skip(sgs.Player_Judge)
+			player:skip(sgs.Player_Draw)
+			end
+			room:setPlayerFlag(player,"-luashensu1")
+	        elseif (change.to == sgs.Player_Play and not player:isSkipped(sgs.Player_Play))  then
+			room:setPlayerFlag(player,"luashensu2")
+			if (room:askForUseCard(player, "@@"..self:objectName(), "@luashensu2", 2, sgs.Card_MethodDiscard)) then
+			player:skip(sgs.Player_Play)
+			end
+			room:setPlayerFlag(player,"-luashensu2")
+	        end
+	        return false
+	end,
+}
 --[[
 	技能名：神威（锁定技）
 	相关武将：SP·暴怒战神
