@@ -150,7 +150,40 @@ LuaXBawang = sgs.CreateTriggerSkill{
 	技能名：拜将（觉醒技）
 	相关武将：胆创·钟会
 	描述：回合开始阶段开始时，若你的装备区的装备牌为三张或更多时，你必须增加1点体力上限，失去技能【权计】和【争功】并获得技能“野心”。
+	状态：验证通过
 ]]--
+LuaBaijiang = sgs.CreateTriggerSkill{
+	name = "LuaBaijiang",
+	frequency = sgs.Skill_Wake,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		room:setPlayerMark(player, "baijiang", 1)
+		player:gainMark("@waked")
+		local mhp = sgs.QVariant()
+		local count = player:getMaxHp()
+		mhp:setValue(count+1)
+		room:setPlayerProperty(player, "maxhp", mhp)
+		room:detachSkillFromPlayer(player, "quanji")
+		room:detachSkillFromPlayer(player, "zhenggong")
+		room:acquireSkill(player, "yexin")
+		return false
+	end,
+	can_trigger = function(self, target)
+		if target then
+			if target:isAlive() and target:hasSkill(self:objectName()) then
+				if target:getPhase() == sgs.Player_Start then
+					if target:getMark("baijiang") == 0 then
+						local equips = target:getEquips()
+						local length = equips:length()
+						return length >= 3
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：拜印（觉醒技）
 	相关武将：神·司马懿
