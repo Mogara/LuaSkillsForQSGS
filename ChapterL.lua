@@ -7,6 +7,7 @@
 	技能名：狼顾
 	相关武将：贴纸·司马昭
 	描述：每当你受到1点伤害后，你可以进行一次判定，然后你可以打出一张手牌代替此判定牌：若如此做，你观看伤害来源的所有手牌，并弃置其中任意数量的与判定牌花色相同的牌。 
+	引用：LuaXLanggu
 	状态：验证通过
 ]]--
 LuaXLanggu = sgs.CreateTriggerSkill{
@@ -71,6 +72,7 @@ LuaXLanggu = sgs.CreateTriggerSkill{
 	技能名：乐学
 	相关武将：倚天·姜伯约
 	描述：出牌阶段，可令一名有手牌的其他角色展示一张手牌，若为基本牌或非延时锦囊，则你可将与该牌同花色的牌当作该牌使用或打出直到回合结束；若为其他牌，则立刻被你获得。每阶段限一次 
+	引用：LuaXLexue
 	状态：验证通过
 ]]--
 LuaXLexueCard = sgs.CreateSkillCard{
@@ -185,6 +187,7 @@ LuaXLexue = sgs.CreateViewAsSkill{
 	技能名：雷击
 	相关武将：风·张角
 	描述：当你使用或打出一张【闪】（若为使用则在选择目标后），你可以令一名角色进行一次判定，若判定结果为黑桃，你对该角色造成2点雷电伤害。
+	引用：LuaLeiji
 	状态：验证通过
 ]]--
 LuaLeijiCard = sgs.CreateSkillCard{
@@ -251,6 +254,7 @@ LuaLeiji = sgs.CreateTriggerSkill{
 	技能名：离魂
 	相关武将：☆SP·貂蝉
 	描述：出牌阶段，你可以弃置一张牌并将你的武将牌翻面，若如此做，指定一名男性角色，获得其所有手牌。出牌阶段结束时，你须为该角色每一点体力分配给其一张牌。每回合限一次。
+	引用：LuaLihun
 	状态：验证通过
 ]]--
 LuaLihunDummyCard = sgs.CreateSkillCard{
@@ -357,6 +361,7 @@ LuaLihun = sgs.CreateTriggerSkill{
 	技能名：离间
 	相关武将：标准·貂蝉、SP·貂蝉
 	描述：出牌阶段，你可以弃置一张牌并选择两名男性角色，视为其中一名男性角色对另一名男性角色使用一张【决斗】。此【决斗】不能被【无懈可击】响应。每阶段限一次。
+	引用：LuaLijian
 	状态：验证通过 
 ]]--
 LuaLijianCard = sgs.CreateSkillCard{
@@ -425,7 +430,8 @@ LuaLijian = sgs.CreateViewAsSkill{
 --[[
 	技能名：礼让
 	相关武将：国战·孔融
-	描述：当你的牌因弃置而置入弃牌堆时，你可以将其中任意数量的牌以任意分配方式交给任意数量的其他角色。 
+	描述：当你的牌因弃置而置入弃牌堆时，你可以将其中任意数量的牌以任意分配方式交给任意数量的其他角色。
+	引用：LuaXLirang
 	状态：0224验证通过
 ]]--
 require ("bit")
@@ -483,6 +489,7 @@ LuaXLirang = sgs.CreateTriggerSkill{
 	技能名：疠火
 	相关武将：二将成名·程普
 	描述：你可以将一张普通【杀】当火【杀】使用，若以此法使用的【杀】造成了伤害，在此【杀】结算后你失去1点体力；你使用火【杀】时，可以额外选择一个目标。
+	引用：LuaLihuo、LuaLihuoTarget
 	状态：验证通过
 ]]--
 LuaLihuoVS = sgs.CreateViewAsSkill{
@@ -556,6 +563,7 @@ LuaLihuoTarget = sgs.CreateTargetModSkill{
 	技能名：连环
 	相关武将：火·庞统
 	描述：你可以将一张梅花手牌当【铁索连环】使用或重铸。
+	引用：LuaLianhuan
 	状态：验证通过
 ]]--
 LuaLianhuan = sgs.CreateViewAsSkill{
@@ -591,6 +599,7 @@ LuaLianhuan = sgs.CreateViewAsSkill{
 	技能名：连破
 	相关武将：神·司马懿
 	描述：若你在一回合内杀死了至少一名角色，此回合结束后，你可以进行一个额外的回合。
+	引用：LuaLianpoCount、LuaLianpo、LuaLianpoDo
 	状态：验证通过
 ]]--
 LuaLianpoCount = sgs.CreateTriggerSkill{
@@ -673,29 +682,32 @@ LuaLianpoDo = sgs.CreateTriggerSkill{
 	技能名：连营
 	相关武将：标准·陆逊、倚天·陆抗
 	描述：当你失去最后的手牌时，你可以摸一张牌。
+	引用：LuaLianYing
 	状态：验证通过
 ]]--
 LuaLianYing = sgs.CreateTriggerSkill{
 	name = "LuaLianYing",
-	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
+	events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local move = data:toMoveOneTime()
 		local source = move.from
-		if source and source:hasSkill(self:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
-			if event == sgs.BeforeCardsMove then 
-				local handcards = player:handCards()
-				for _,id in sgs.qlist(handcards) do 
-					if not move.card_ids:contains(id) then 
-						return 
+		if source and source:hasSkill(self:objectName()) then
+			if move.from_places:contains(sgs.Player_PlaceHand) then
+				if event == sgs.BeforeCardsMove then 
+					local handcards = player:handCards()
+					for _,id in sgs.qlist(handcards) do 
+						if not move.card_ids:contains(id) then 
+							return 
+						end
 					end
-				end
-				player:addMark(self:objectName())
-			else
-				if player:getMark(self:objectName()) > 0 then
-					player:removeMark(self:objectName())			 
-					if room:askForSkillInvoke(player, self:objectName(), data) then
-						player:drawCards(1)
+					player:addMark(self:objectName())
+				else
+					if player:getMark(self:objectName()) > 0 then
+						player:removeMark(self:objectName())			 
+						if room:askForSkillInvoke(player, self:objectName(), data) then
+							player:drawCards(1)
+						end
 					end
 				end
 			end
@@ -711,6 +723,7 @@ LuaLianYing = sgs.CreateTriggerSkill{
 	技能名：烈弓
 	相关武将：风·黄忠
 	描述：当你在出牌阶段内使用【杀】指定一名角色为目标后，以下两种情况，你可以令其不可以使用【闪】对此【杀】进行响应：1.目标角色的手牌数大于或等于你的体力值。2.目标角色的手牌数小于或等于你的攻击范围。
+	引用：LuaLiegong
 	状态：验证通过
 ]]--
 LuaLiegong = sgs.CreateTriggerSkill{
@@ -760,6 +773,7 @@ LuaLiegong = sgs.CreateTriggerSkill{
 	技能名：烈刃
 	相关武将：火·祝融
 	描述：每当你使用【杀】对目标角色造成一次伤害后，你可以与其拼点，若你赢，你获得该角色的一张牌。
+	引用：LuaLieren
 	状态：验证通过
 ]]--
 LuaLieren = sgs.CreateTriggerSkill{
@@ -801,6 +815,7 @@ LuaLieren = sgs.CreateTriggerSkill{
 	技能名：流离
 	相关武将：标准·大乔
 	描述：当你成为【杀】的目标时，你可以弃置一张牌，将此【杀】转移给你攻击范围内的一名其他角色（此【杀】的使用者除外）。
+	引用：LuaLiuli
 	状态：验证通过
 ]]--
 sgs.LiuliPattern = {0}
@@ -923,6 +938,7 @@ LuaLiuli = sgs.CreateTriggerSkill{
 	技能名：龙胆
 	相关武将：标准·赵云、☆SP·赵云、翼·赵云
 	描述：你可以将一张【杀】当【闪】，一张【闪】当【杀】使用或打出。
+	引用：LuaLongdan
 	状态：验证通过
 ]]--
 sgs.LongdanPattern = {"pattern"}
@@ -977,6 +993,7 @@ LuaLongdan = sgs.CreateViewAsSkill{
 	技能名：龙魂
 	相关武将：神·赵云
 	描述：你可以将同花色的X张牌按下列规则使用或打出：红桃当【桃】，方块当具火焰伤害的【杀】，梅花当【闪】，黑桃当【无懈可击】（X为你当前的体力值且至少为1）。
+	引用：LuaLonghun
 	状态：验证通过
 ]]--
 sgs.LonghunPattern = {"spade", "heart", "club", "diamond"}
@@ -1092,6 +1109,7 @@ LuaLonghun = sgs.CreateViewAsSkill{
 	技能名：龙魂
 	相关武将：测试·高达一号
 	描述：你可以将一张牌按以下规则使用或打出：♥当【桃】；♦当火【杀】；♠当【无懈可击】；♣当【闪】。回合开始阶段开始时，若其他角色的装备区内有【青釭剑】，你可以获得之。 
+	引用：LuaXNosLonghun、LuaXDuojian
 	状态：验证通过
 ]]--
 sgs.NosLonghunPattern = {"spade", "heart", "club", "diamond"}
@@ -1219,6 +1237,7 @@ LuaXDuojian = sgs.CreateTriggerSkill{
 	技能名：笼络
 	相关武将：智·张昭
 	描述：回合结束阶段开始时，你可以选择一名其他角色摸取与你弃牌阶段弃牌数量相同的牌 
+	引用：LuaXLongluo
 	状态：验证通过
 ]]--
 LuaXLongluo = sgs.CreateTriggerSkill{
@@ -1257,6 +1276,7 @@ LuaXLongluo = sgs.CreateTriggerSkill{
 	技能名：乱击
 	相关武将：火·袁绍
 	描述：你可以将两张花色相同的手牌当【万箭齐发】使用。
+	引用：LuaLuanji
 	状态：验证通过
 ]]--
 LuaLuanji = sgs.CreateViewAsSkill{
@@ -1291,6 +1311,7 @@ LuaLuanji = sgs.CreateViewAsSkill{
 	技能名：乱武（限定技）
 	相关武将：林·贾诩、SP·贾诩
 	描述：出牌阶段，你可以令所有其他角色各选择一项：对距离最近的另一名角色使用一张【杀】，或失去1点体力。
+	引用：LuaLuanwu、LuaLuanwuMark
 	状态：验证通过
 ]]--
 LuaLuanwuCard = sgs.CreateSkillCard{
@@ -1362,6 +1383,7 @@ LuaLuanwuMark = sgs.CreateTriggerSkill{
 	技能名：裸衣
 	相关武将：标准·许褚
 	描述：摸牌阶段，你可以少摸一张牌，若如此做，你使用的【杀】或【决斗】（你为伤害来源时）造成的伤害+1，直到回合结束。
+	引用：LuaLuoyiBuff、LuaLuoyi
 	状态：验证通过
 ]]--
 LuaLuoyiBuff = sgs.CreateTriggerSkill{
@@ -1408,6 +1430,7 @@ LuaLuoyi = sgs.CreateTriggerSkill{
 	技能名：裸衣
 	相关武将：翼·许褚
 	描述：出牌阶段，你可以弃置一张装备牌，若如此做，你使用的【杀】或【决斗】（你为伤害来源时）造成的伤害+1，直到回合结束。每阶段限一次。 
+	引用：LuaXNeoLuoyi、LuaXNeoLuoyiBuff
 	状态：验证通过
 ]]--
 LuaXNeoLuoyiCard = sgs.CreateSkillCard{
@@ -1466,6 +1489,7 @@ LuaXNeoLuoyiBuff = sgs.CreateTriggerSkill{
 	技能名：洛神
 	相关武将：标准·甄姬、SP·甄姬
 	描述：回合开始阶段开始时，你可以进行一次判定，若判定结果为黑色，你获得此牌，你可以重复此流程，直到出现红色的判定结果为止。
+	引用：LuaLuoshen
 	状态：验证通过
 ]]--
 LuaLuoshen = sgs.CreateTriggerSkill{
@@ -1506,6 +1530,7 @@ LuaLuoshen = sgs.CreateTriggerSkill{
 	技能名：落英
 	相关武将：一将成名·曹植
 	描述：当其他角色的梅花牌因弃置或判定而置入弃牌堆时，你可以获得之。
+	引用：LuaLuoying
 	状态：0224验证通过
 ]]--
 require("bit")

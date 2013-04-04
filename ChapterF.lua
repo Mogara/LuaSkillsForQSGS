@@ -7,6 +7,7 @@
 	技能名：反间
 	相关武将：标准·周瑜
 	描述：出牌阶段，你可以令一名其他角色说出一种花色，然后获得你的一张手牌并展示之，若此牌不为其所述之花色，你对该角色造成1点伤害。每阶段限一次。
+	引用：LuaFanjian
 	状态：验证通过
 ]]--
 LuaFanjianCard = sgs.CreateSkillCard{
@@ -55,6 +56,7 @@ LuaFanjian = sgs.CreateViewAsSkill{
 	技能名：反间
 	相关武将：翼·周瑜
 	描述：出牌阶段，你可以选择一张手牌，令一名其他角色说出一种花色后展示并获得之，若猜错则其受到你对其造成的1点伤害。每阶段限一次。 
+	引用：LuaXNeoFanjian
 	状态：验证通过
 ]]--
 LuaXNeoFanjianCard = sgs.CreateSkillCard{
@@ -105,6 +107,7 @@ LuaXNeoFanjian = sgs.CreateViewAsSkill{
 	技能名：反馈
 	相关武将：标准·司马懿
 	描述：每当你受到一次伤害后，你可以获得伤害来源的一张牌。
+	引用：LuaFankui
 	状态：验证通过
 ]]--
 LuaFankui = sgs.CreateTriggerSkill{
@@ -130,7 +133,8 @@ LuaFankui = sgs.CreateTriggerSkill{
 --[[
 	技能名：放权
 	相关武将：山·刘禅
-	描述：你可以跳过你的出牌阶段，若如此做，你在回合结束时可以弃置一张手牌令一名其他角色进行一个额外的回合。 
+	描述：你可以跳过你的出牌阶段，若如此做，你在回合结束时可以弃置一张手牌令一名其他角色进行一个额外的回合。
+	引用：LuaFangquan、LuaFangquanGive
 	状态：尚未验证
 ]]--
 LuaFangquan = sgs.CreateTriggerSkill{
@@ -164,7 +168,7 @@ LuaFangquan = sgs.CreateTriggerSkill{
 	end
 }
 LuaFangquanGive = sgs.CreateTriggerSkill{
-	name = "#LuaFangquan-Give",
+	name = "#LuaFangquanGive",
 	frequency = sgs.Skill_Frequent,
 	events = {sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
@@ -190,6 +194,7 @@ LuaFangquanGive = sgs.CreateTriggerSkill{
 	技能名：放逐
 	相关武将：林·曹丕、铜雀台·曹丕
 	描述：每当你受到一次伤害后，你可以令一名其他角色摸X张牌（X为你已损失的体力值），然后该角色将其武将牌翻面。
+	引用：LuaFangzhu
 	状态：验证通过
 ]]--
 LuaFangzhu = sgs.CreateTriggerSkill{
@@ -213,6 +218,7 @@ LuaFangzhu = sgs.CreateTriggerSkill{
 	技能名：飞影（锁定技）
 	相关武将：神·曹操、倚天·魏武帝
 	描述：其他角色计算的与你的距离+1。
+	引用：LuaFeiying
 	状态：验证通过
 ]]--
 LuaFeiying = sgs.CreateDistanceSkill{
@@ -227,6 +233,7 @@ LuaFeiying = sgs.CreateDistanceSkill{
 	技能名：焚心（限定技）
 	相关武将：铜雀台·灵雎、SP·灵雎
 	描述：当你杀死一名非主公角色时，在其翻开身份牌之前，你可以与该角色交换身份牌。（你的身份为主公时不能发动此技能。）
+	引用：LuaXFenxin、LuaXFenxinStart
 	状态：验证通过
 ]]--
 LuaXFenxin = sgs.CreateTriggerSkill{
@@ -281,6 +288,7 @@ LuaXFenxinStart = sgs.CreateTriggerSkill{
 	技能名：奋迅
 	相关武将：国战·丁奉
 	描述：出牌阶段，你可以弃置一张牌并选择一名其他角色：若如此做，你拥有以下技能直到回合结束：你无视与该角色的距离。每阶段限一次。  
+	引用：LuaXFenxun
 	状态：0224验证通过
 ]]--
 LuaXFenxunCard = sgs.CreateSkillCard{
@@ -371,6 +379,7 @@ LuaXFenxun = sgs.CreateTriggerSkill{
 	技能名：愤勇
 	相关武将：☆SP·夏侯惇
 	描述：每当你受到一次伤害后，你可以竖置你的体力牌；当你的体力牌为竖置状态时，防止你受到的所有伤害。
+	引用：LuaFenyong、LuaFenyongClear
 	状态：验证通过
 ]]--
 LuaFenyong = sgs.CreateTriggerSkill{
@@ -414,6 +423,7 @@ LuaFenyongClear = sgs.CreateTriggerSkill{
 	技能名：奉印
 	相关武将：铜雀台·伏完
 	描述：其他角色的回合开始时，若其当前的体力值不比你少，你可以交给其一张【杀】，令其跳过其出牌阶段和弃牌阶段。
+	引用：LuaXFengyin
 	状态：验证通过
 ]]--
 LuaXFengyinCard = sgs.CreateSkillCard{
@@ -427,7 +437,7 @@ LuaXFengyinCard = sgs.CreateSkillCard{
 	end
 }
 LuaXFengyinVS = sgs.CreateViewAsSkill{
-	name = "LuaXFengyinVS", 
+	name = "LuaXFengyin", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		return to_select:isKindOf("Slash")
@@ -481,6 +491,7 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 	技能名：伏枥（限定技）
 	相关武将：二将成名·廖化
 	描述：当你处于濒死状态时，你可以将体力回复至X点（X为现存势力数），然后将你的武将牌翻面。
+	引用：LuaFuli
 	状态：验证通过
 ]]--
 KingdomCount = function(targets)
@@ -537,6 +548,7 @@ LuaFuli = sgs.CreateTriggerSkill{
 	技能名：扶乱
 	相关武将：贴纸·王元姬
 	描述：出牌阶段，若你未于此阶段使用过【杀】，你可以弃置三张相同花色的牌并选择攻击范围内的一名其他角色，该角色将武将牌翻面，且此阶段你不可使用【杀】，每阶段限一次。
+	引用：LuaXFuluan
 	状态：验证通过
 ]]--
 LuaXFuluanCard = sgs.CreateSkillCard{
@@ -576,7 +588,7 @@ LuaXFuluanVS = sgs.CreateViewAsSkill{
 			return card
 		end
 	end,
-	enabled_at_play=function(self, player)
+	enabled_at_play = function(self, player)
 		if player:hasUsed("#LuaXFuluanCard") or player:hasFlag("cannotDoFuluan") then
 			return false
 		end
@@ -604,6 +616,7 @@ LuaXFuluan = sgs.CreateTriggerSkill{
 	技能名：辅佐
 	相关武将：智·张昭
 	描述：当有角色拼点时，你可以打出一张点数小于8的手牌，让其中一名角色的拼点牌加上这张牌点数的二分之一（向下取整）
+	引用：LuaXFuzuo
 	状态：0224验证通过
 ]]--
 LuaXFuzuo = sgs.CreateTriggerSkill{
@@ -644,6 +657,7 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 	技能名：父魂
 	相关武将：二将成名·关兴张苞
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为从牌堆顶亮出两张牌并获得之，若亮出的牌颜色不同，你获得技能“武圣”、“咆哮”，直到回合结束。
+	引用：LuaFuhun
 	状态：0224验证通过
 ]]--
 LuaFuhun = sgs.CreateTriggerSkill{

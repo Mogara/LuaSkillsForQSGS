@@ -7,6 +7,7 @@
 	技能名：藏匿
 	相关武将：铜雀台·伏皇后
 	描述：弃牌阶段开始时，你可以回复1点体力或摸两张牌，然后将你的武将牌翻面；其他角色的回合内，当你获得（每回合限一次）/失去一次牌时，若你的武将牌背面朝上，你可以令该角色摸/弃置一张牌。 
+	引用：LuaXCangni
 	状态：验证通过
 ]]--
 LuaXCangni = sgs.CreateTriggerSkill{
@@ -109,6 +110,7 @@ LuaXCangni = sgs.CreateTriggerSkill{
 	技能名：超级观星
 	相关武将：测试·五星诸葛
 	描述：回合开始阶段，你可以观看牌堆顶的5张牌，将其中任意数量的牌以任意顺序置于牌堆顶，其余则以任意顺序置于牌堆底 
+	引用：LuaXSuperGuanxing
 	状态：验证通过
 ]]--
 LuaXSuperGuanxing = sgs.CreateTriggerSkill{
@@ -131,6 +133,7 @@ LuaXSuperGuanxing = sgs.CreateTriggerSkill{
 	技能名：称象
 	相关武将：倚天·曹冲
 	描述：每当你受到1次伤害，你可打出X张牌（X小于等于3），它们的点数之和与造成伤害的牌的点数相等，你可令X名角色各恢复1点体力（若其满体力则摸2张牌）
+	引用：LuaXChengxiang
 	状态：验证通过
 ]]--
 LuaXChengxiangCard = sgs.CreateSkillCard{
@@ -162,7 +165,7 @@ LuaXChengxiangCard = sgs.CreateSkillCard{
 	end
 }
 LuaXChengxiangVS = sgs.CreateViewAsSkill{
-	name = "LuaXChengxiangVS", 
+	name = "LuaXChengxiang", 
 	n = 3, 
 	view_filter = function(self, selected, to_select)
 		if #selected < 3 then
@@ -222,6 +225,7 @@ LuaXChengxiang = sgs.CreateTriggerSkill{
 	技能名：持重（锁定技）
 	相关武将：铜雀台·伏完
 	描述：你的手牌上限等于你的体力上限；其他角色死亡时，你加1点体力上限。 
+	引用：LuaXChizhongKeep、LuaXChizhong
 	状态：验证通过
 ]]--
 LuaXChizhongKeep = sgs.CreateMaxCardsSkill{
@@ -257,6 +261,7 @@ LuaXChizhong = sgs.CreateTriggerSkill{
 	技能名：冲阵
 	相关武将：☆SP·赵云
 	描述：每当你发动“龙胆”使用或打出一张手牌时，你可以立即获得对方的一张手牌。
+	引用：LuaChongzhen
 	状态：验证通过
 ]]--
 LuaChongzhen = sgs.CreateTriggerSkill{
@@ -306,6 +311,7 @@ LuaChongzhen = sgs.CreateTriggerSkill{
 	技能名：筹粮
 	相关武将：智·蒋琬
 	描述：回合结束阶段开始时，若你手牌少于三张，你可以从牌堆顶亮出X张牌（X为4减当前手牌数），拿走其中的基本牌，把其余的牌置入弃牌堆 
+	引用：LuaXChouliang
 	状态：验证通过
 ]]--
 LuaXChouliang = sgs.CreateTriggerSkill{
@@ -342,6 +348,7 @@ LuaXChouliang = sgs.CreateTriggerSkill{
 	技能名：醇醪
 	相关武将：二将成名·程普
 	描述：回合结束阶段开始时，若你的武将牌上没有牌，你可以将任意数量的【杀】置于你的武将牌上，称为“醇”；当一名角色处于濒死状态时，你可以将一张“醇”置入弃牌堆，视为该角色使用一张【酒】。
+	引用：LuaChunlao
 	状态：验证通过
 ]]--
 LuaChunlaoCard = sgs.CreateSkillCard{
@@ -356,7 +363,7 @@ LuaChunlaoCard = sgs.CreateSkillCard{
 	end
 }
 LuaChunlaoVS = sgs.CreateViewAsSkill{
-	name = "LuaChunlaoVS", 
+	name = "LuaChunlao", 
 	n = 999, 
 	view_filter = function(self, selected, to_select)
 		return to_select:isKindOf("Slash")
@@ -428,6 +435,7 @@ LuaChunlao = sgs.CreateTriggerSkill{
 	技能名：聪慧（锁定技）
 	相关武将：倚天·曹冲
 	描述：你将永远跳过你的弃牌阶段 
+	引用：LuaXConghui
 	状态：验证通过
 ]]--
 LuaXConghui = sgs.CreateTriggerSkill{

@@ -7,6 +7,7 @@
 	技能名：八阵（锁定技）
 	相关武将：火·诸葛亮
 	描述：若你的装备区没有防具牌，视为你装备着【八卦阵】。
+	引用：LuaBazhen
 	状态：验证通过
 ]]--
 LuaBazhen = sgs.CreateTriggerSkill{
@@ -53,6 +54,7 @@ LuaBazhen = sgs.CreateTriggerSkill{
 	技能名：霸刀
 	相关武将：智·华雄
 	描述：当你成为黑色的【杀】目标时，你可以对你攻击范围内的一名其他角色使用一张【杀】 
+	引用：LuaXBadao
 	状态：验证通过
 ]]--
 LuaXBadao = sgs.CreateTriggerSkill{
@@ -75,6 +77,7 @@ LuaXBadao = sgs.CreateTriggerSkill{
 	技能名：霸王
 	相关武将：智·孙策
 	描述：当你使用的【杀】被【闪】响应时，你可以和对方拼点：若你赢，可以选择最多两个目标角色，视为对其分别使用了一张【杀】
+	引用：LuaXBawang
 	状态：验证通过
 ]]--
 LuaXBawangCard = sgs.CreateSkillCard{
@@ -150,10 +153,11 @@ LuaXBawang = sgs.CreateTriggerSkill{
 	技能名：拜将（觉醒技）
 	相关武将：胆创·钟会
 	描述：回合开始阶段开始时，若你的装备区的装备牌为三张或更多时，你必须增加1点体力上限，失去技能【权计】和【争功】并获得技能“野心”。
+	引用：LuaXBaijiang
 	状态：验证通过
 ]]--
-LuaBaijiang = sgs.CreateTriggerSkill{
-	name = "LuaBaijiang",
+LuaXBaijiang = sgs.CreateTriggerSkill{
+	name = "LuaXBaijiang",
 	frequency = sgs.Skill_Wake,
 	events = {sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
@@ -188,6 +192,7 @@ LuaBaijiang = sgs.CreateTriggerSkill{
 	技能名：拜印（觉醒技）
 	相关武将：神·司马懿
 	描述：回合开始阶段开始时，若你拥有4枚或更多的“忍”标记，你须减1点体力上限，并获得技能“极略”。
+	引用：LuaBaiyin
 	状态：验证通过
 ]]--
 LuaBaiyin = sgs.CreateTriggerSkill{
@@ -219,6 +224,7 @@ LuaBaiyin = sgs.CreateTriggerSkill{
 	技能名：豹变（锁定技）
 	相关武将：SP·夏侯霸
 	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
+	引用：LuaBaobian
 	状态：0224验证通过
 ]]--÷
 BaobianChange = function(room, player, hp, skill_name)
@@ -269,6 +275,7 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	技能名：暴虐（主公技）
 	相关武将：林·董卓
 	描述：每当其他群雄角色造成一次伤害后，该角色可以进行一次判定，若判定结果为黑桃，你回复1点体力。
+	引用：LuaBaonue
 	状态：验证通过
 ]]--
 LuaBaonue = sgs.CreateTriggerSkill{
@@ -320,6 +327,7 @@ LuaBaonue = sgs.CreateTriggerSkill{
 	技能名：悲歌
 	相关武将：山·蔡文姬、SP·蔡文姬
 	描述：每当一名角色受到【杀】造成的一次伤害后，你可以弃置一张牌，令其进行一次判定，判定结果为：红桃 该角色回复1点体力；方块 该角色摸两张牌；梅花 伤害来源弃置两张牌；黑桃 伤害来源将其武将牌翻面。
+	引用：LuaBeige
 	状态：验证通过
 ]]--
 LuaBeige = sgs.CreateTriggerSkill{
@@ -381,6 +389,7 @@ LuaBeige = sgs.CreateTriggerSkill{
 	技能名：北伐（锁定技）
 	相关武将：智·姜维
 	描述：当你失去最后一张手牌时，视为对攻击范围内的一名角色使用了一张【杀】
+	引用：LuaXBeifa
 	状态：验证通过
 ]]--
 LuaXBeifa = sgs.CreateTriggerSkill{
@@ -423,19 +432,20 @@ LuaXBeifa = sgs.CreateTriggerSkill{
 	技能名：备粮
 	相关武将：长坂坡·神张飞
 	描述：摸牌阶段，你可以选择放弃摸牌，将手牌补至等同于你体力上限的张数。 
+	引用：LuaXBeiliang
 	状态：验证通过
 ]]--
-LuaBeiliang = sgs.CreateTriggerSkill{
-	name = "LuaBeiliang",
+LuaXBeiliang = sgs.CreateTriggerSkill{
+	name = "LuaXBeiliang",
 	events = {sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
-	    local room = player:getRoom()
+		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Draw then
 			if player:getHandcardNum() < player:getMaxHp() then 
 				if room:askForSkillInvoke(player, self:objectName()) then
 					local x = player:getMaxHp() - player:getHandcardNum()
-				    player:drawCards(x) 
-				    return true
+					player:drawCards(x) 
+					return true
 				end
 			end
 		end
@@ -444,7 +454,8 @@ LuaBeiliang = sgs.CreateTriggerSkill{
 --[[
 	技能名：崩坏（锁定技）
 	相关武将：林·董卓
-	描述：回合结束阶段开始时，若你不是当前的体力值最少的角色之一，你须失去1点体力或减1点体力上限。 
+	描述：回合结束阶段开始时，若你不是当前的体力值最少的角色之一，你须失去1点体力或减1点体力上限。
+	引用：LuaBenghuai
 	状态：验证通过
 ]]--
 LuaBenghuai = sgs.CreateTriggerSkill{
@@ -479,6 +490,7 @@ LuaBenghuai = sgs.CreateTriggerSkill{
 	技能名：笔伐
 	相关武将：SP·陈琳
 	描述：回合结束阶段开始时，你可以将一张手牌背面朝下移出游戏并选择一名其他角色。该角色的回合开始时，其观看此牌并选择一项：1、交给你一张与此牌同类别的手牌，然后获得此牌。2、将此牌置入弃牌堆，然后失去1点体力。
+	引用：LuaBifa
 	状态：验证通过
 ]]--
 LuaBifaCard = sgs.CreateSkillCard{
@@ -507,7 +519,7 @@ LuaBifaCard = sgs.CreateSkillCard{
 	end
 }
 LuaBifaVS = sgs.CreateViewAsSkill{
-	name = "LuaBifaVS", 
+	name = "LuaBifa", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
@@ -582,7 +594,7 @@ LuaBifa = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-		return false;
+		return false
 	end, 
 	can_trigger = function(self, target)
 		return target
@@ -592,6 +604,7 @@ LuaBifa = sgs.CreateTriggerSkill{
 	技能名：闭月
 	相关武将：标准·貂蝉、SP貂蝉、☆SP貂蝉
 	描述：回合结束阶段开始时，你可以摸一张牌。
+	引用：LuaBiyue
 	状态：验证通过
 ]]--
 LuaBiyue = sgs.CreateTriggerSkill{
@@ -611,6 +624,7 @@ LuaBiyue = sgs.CreateTriggerSkill{
 	技能名：补益
 	相关武将：一将成名·吴国太
 	描述：当一名角色进入濒死状态时，你可以展示该角色的一张手牌，若此牌不为基本牌，该角色弃置之，然后回复1点体力。
+	引用：LuaBuyi
 	状态：0224验证通过
 ]]--
 LuaBuyi = sgs.CreateTriggerSkill{
@@ -649,6 +663,7 @@ LuaBuyi = sgs.CreateTriggerSkill{
 	技能名：不屈
 	相关武将：风·周泰
 	描述：每当你扣减1点体力后，若你当前的体力值为0：你可以从牌堆顶亮出一张牌置于你的武将牌上，若此牌的点数与你武将牌上已有的任何一张牌都不同，你不会死亡；若出现相同点数的牌，你进入濒死状态。
+	引用：LuaBuqu、LuaBuquRemove
 	状态：验证通过
 ]]--
 function Remove(SP) 

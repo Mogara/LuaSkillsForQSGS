@@ -7,6 +7,7 @@
 	技能名：鸡肋
 	相关武将：SP·杨修
 	描述：每当你受到伤害时，你可以说出一种牌的类别，令伤害来源不能使用、打出或弃置其此类别的手牌，直到回合结束。
+	引用：LuaJilei、LuaJileiClear
 	状态：验证通过
 ]]--
 LuaJilei = sgs.CreateTriggerSkill{
@@ -51,7 +52,8 @@ LuaJileiClear = sgs.CreateTriggerSkill{
 --[[
 	技能名：激昂
 	相关武将：山·孙策
-	描述：每当你使用（指定目标后）或被使用（成为目标后）一张【决斗】或红色的【杀】时，你可以摸一张牌。 
+	描述：每当你使用（指定目标后）或被使用（成为目标后）一张【决斗】或红色的【杀】时，你可以摸一张牌。
+	引用：LuaJiang
 	状态：验证通过
 ]]--
 LuaJiang = sgs.CreateTriggerSkill{
@@ -89,6 +91,7 @@ LuaJiang = sgs.CreateTriggerSkill{
 	技能名：急救
 	相关武将：标准·华佗
 	描述：你的回合外，你可以将一张红色牌当【桃】使用。
+	引用：LuaJijiu
 	状态：验证通过
 ]]--
 LuaJijiu = sgs.CreateViewAsSkill{
@@ -128,6 +131,7 @@ LuaJijiu = sgs.CreateViewAsSkill{
 	技能名：急速
 	相关武将：奥运·叶诗文
 	描述：你可以跳过你此回合的判定阶段和摸牌阶段。若如此做，视为对一名其他角色使用一张【杀】。 
+	引用：LuaXJisu
 	状态：验证通过
 ]]--
 LuaXJisuCard = sgs.CreateSkillCard{
@@ -191,6 +195,7 @@ LuaXJisu = sgs.CreateTriggerSkill{
 	技能名：急袭
 	相关武将：山·邓艾
 	描述：你可以将一张“田”当【顺手牵羊】使用。
+	引用：LuaJixi
 	状态：验证通过
 ]]--
 LuaJixiCard = sgs.CreateSkillCard{
@@ -253,6 +258,7 @@ LuaJixi = sgs.CreateViewAsSkill{
 	技能名：集智
 	相关武将：标准·黄月英
 	描述：当你使用非延时类锦囊牌选择目标后，你可以摸一张牌。
+	引用：LuaJizhi
 	状态：验证通过
 ]]--
 LuaJizhi = sgs.CreateTriggerSkill{
@@ -281,6 +287,7 @@ LuaJizhi = sgs.CreateTriggerSkill{
 	技能名：嫉恶（锁定技）
 	相关武将：☆SP·张飞
 	描述：你使用的红色【杀】造成的伤害+1。
+	引用：LuaJie
 	状态：验证通过
 ]]--
 LuaJie = sgs.CreateTriggerSkill{
@@ -304,6 +311,7 @@ LuaJie = sgs.CreateTriggerSkill{
 	技能名：奸雄
 	相关武将：标准·曹操、铜雀台·曹操
 	描述：每当你受到一次伤害后，你可以获得对你造成伤害的牌。
+	引用：LuaJianxiong
 	状态：验证通过
 ]]--
 LuaJianxiong = sgs.CreateTriggerSkill{
@@ -330,6 +338,7 @@ LuaJianxiong = sgs.CreateTriggerSkill{
 	技能名：坚守
 	相关武将：测试·蹲坑曹仁
 	描述：回合结束阶段开始时，你可以摸五张牌，然后将你的武将牌翻面 
+	引用：LuaXJianshou
 	状态：验证通过
 ]]--
 LuaXJianshou = sgs.CreateTriggerSkill{
@@ -349,6 +358,7 @@ LuaXJianshou = sgs.CreateTriggerSkill{
 	技能名：将驰
 	相关武将：二将成名·曹彰
 	描述：摸牌阶段，你可以选择一项：1、额外摸一张牌，若如此做，你不能使用或打出【杀】，直到回合结束。2、少摸一张牌，若如此做，出牌阶段你使用【杀】时无距离限制且你可以额外使用一张【杀】，直到回合结束。
+	引用：LuaJiangchi、LuaJiangchiMod
 	状态：0224验证通过
 ]]--
 LuaJiangchi = sgs.CreateTriggerSkill{
@@ -391,6 +401,7 @@ LuaJiangchiMod = sgs.CreateTargetModSkill{
 	技能名：节命
 	相关武将：火·荀彧
 	描述：每当你受到1点伤害后，你可以令一名角色将手牌补至X张（X为该角色的体力上限且至多为5）。
+	引用：LuaJieming
 	状态：验证通过
 ]]--
 LuaJieming = sgs.CreateTriggerSkill{
@@ -423,6 +434,7 @@ LuaJieming = sgs.CreateTriggerSkill{
 	技能名：结姻
 	相关武将：标准·孙尚香、SP·孙尚香
 	描述：出牌阶段，你可以弃置两张手牌并选择一名已受伤的男性角色，你与其各回复1点体力。每阶段限一次。
+	引用：LuaJieyin
 	状态：验证通过
 ]]--
 LuaJieyinCard = sgs.CreateSkillCard{
@@ -471,6 +483,7 @@ LuaJieyin = sgs.CreateViewAsSkill{
 	技能名：竭缘
 	相关武将：铜雀台·灵雎、SP·灵雎
 	描述：当你对一名其他角色造成伤害时，若其体力值大于或等于你的体力值，你可弃置一张黑色手牌令此伤害+1；当你受到一名其他角色造成的伤害时，若其体力值大于或等于你的体力值，你可弃置一张红色手牌令此伤害-1 
+	引用：LuaXJieyuan
 	状态：验证通过
 ]]--
 LuaXJieyuan = sgs.CreateTriggerSkill{
@@ -519,10 +532,11 @@ LuaXJieyuan = sgs.CreateTriggerSkill{
 	技能名：解烦（限定技）
 	相关武将：二将成名·韩当
 	描述：出牌阶段，你可以指定一名角色，攻击范围内含有该角色的所有角色须依次选择一项：弃置一张武器牌；或令该角色摸一张牌。 
+	引用：LuaXJiefan
 	状态：0224验证通过
 ]]--
-LuaXJiefancard = sgs.CreateSkillCard{
-	name = "LuaXJiefancard",
+LuaXJiefanCard = sgs.CreateSkillCard{
+	name = "LuaXJiefanCard",
 	mute = true,
 	filter = function(self, targets, to_select, player)
 		return #targets == 0 
@@ -559,7 +573,7 @@ LuaXJiefanVS = sgs.CreateViewAsSkill{
 	name = "LuaXJiefan",
 	n = 0,
 	view_as = function(self, cards)
-		return LuaXJiefancard:clone()
+		return LuaXJiefanCard:clone()
 	end,
 	enabled_at_play = function(self, player)
 		return player:getMark("@rescue") > 0 
@@ -579,10 +593,11 @@ LuaXJiefan = sgs.CreateTriggerSkill{
 	技能名：解烦
 	相关武将：怀旧·韩当
 	描述：你的回合外，当一名角色处于濒死状态时，你可以对当前正进行回合的角色使用一张【杀】（无距离限制），此【杀】造成伤害时，你防止此伤害，视为对该濒死角色使用一张【桃】。
+	引用：LuaNosJiefan
 	状态：验证通过
 ]]--
-LuaJiefan = sgs.CreateTriggerSkill{
-	name = "LuaJiefan", 
+LuaNosJiefan = sgs.CreateTriggerSkill{
+	name = "LuaNosJiefan", 
 	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.AskForPeaches, sgs.DamageCaused, sgs.CardFinished, sgs.CardUsed}, 
 	on_trigger = function(self, event, player, data)
@@ -681,6 +696,7 @@ LuaJiefan = sgs.CreateTriggerSkill{
 	技能名：解惑（觉醒技）
 	相关武将：智·司马徽
 	描述：当你发动“授业”目标累计超过6个时，须减去一点体力上限，将技能“授业”改为每阶段限一次，并获得技能“师恩”
+	引用：LuaXJiehuo
 	状态：验证通过
 ]]--
 LuaXJiehuo = sgs.CreateTriggerSkill{
@@ -711,6 +727,7 @@ LuaXJiehuo = sgs.CreateTriggerSkill{
 	技能名：尽瘁
 	相关武将：智·张昭
 	描述：当你死亡时，可令一名角色摸取或者弃置三张牌 
+	引用：LuaXJincui
 	状态：0224验证通过
 ]]--
 LuaXJincui = sgs.CreateTriggerSkill{
@@ -746,6 +763,7 @@ LuaXJincui = sgs.CreateTriggerSkill{
 	技能名：禁酒（锁定技）
 	相关武将：一将成名·高顺
 	描述：你的【酒】均视为【杀】。
+	引用：LuaJinjiu
 	状态：验证通过
 ]]--
 LuaJinjiu = sgs.CreateFilterSkill{
@@ -778,6 +796,7 @@ LuaJinjiu = sgs.CreateFilterSkill{
 	技能名：酒池
 	相关武将：林·董卓
 	描述：你可以将一张黑桃手牌当【酒】使用。
+	引用：LuaJiuchi
 	状态：验证通过
 ]]--
 LuaJiuchi = sgs.CreateViewAsSkill{
@@ -812,6 +831,7 @@ LuaJiuchi = sgs.CreateViewAsSkill{
 	技能名：酒诗
 	相关武将：一将成名·曹植
 	描述：若你的武将牌正面朝上，你可以将你的武将牌翻面，视为使用一张【酒】；若你的武将牌背面朝上时你受到伤害，你可以在伤害结算后将你的武将牌翻转至正面朝上。
+	引用：LuaJiushi、LuaJiushiFlip
 	状态：验证通过
 ]]--
 LuaJiushi = sgs.CreateViewAsSkill{
@@ -868,6 +888,7 @@ LuaJiushiFlip = sgs.CreateTriggerSkill{
 	技能名：救援（主公技、锁定技）
 	相关武将：标准·孙权、测试·制霸孙权
 	描述：其他吴势力角色使用的【桃】指定你为目标后，回复的体力+1。
+	引用：LuaJiuyuan
 	状态：验证通过
 ]]--
 LuaJiuyuan = sgs.CreateTriggerSkill{
@@ -922,6 +943,7 @@ LuaJiuyuan = sgs.CreateTriggerSkill{
 	技能名：举荐
 	相关武将：一将成名·徐庶
 	描述：回合结束阶段开始时，你可以弃置一张非基本牌，令一名其他角色选择一项：摸两张牌，或回复1点体力，或将其武将牌翻至正面朝上并重置之。
+	引用：LuaJujian
 	状态：验证通过
 ]]--
 LuaJujianCard = sgs.CreateSkillCard{
@@ -967,7 +989,7 @@ LuaJujianCard = sgs.CreateSkillCard{
 	end
 }
 LuaJujianVS = sgs.CreateViewAsSkill{
-	name = "LuaJujianVS", 
+	name = "LuaJujian", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		return not to_select:isKindOf("BasicCard")
@@ -1007,6 +1029,7 @@ LuaJujian = sgs.CreateTriggerSkill{
 	技能名：举荐
 	相关武将：怀旧·徐庶
 	描述：出牌阶段，你可以弃置至多三张牌，然后令一名其他角色摸等量的牌。若你以此法弃置三张同一类别的牌，你回复1点体力。每阶段限一次。
+	引用：LuaNosJujian
 	状态：验证通过
 ]]--
 LuaNosJujianCard = sgs.CreateSkillCard{
@@ -1070,6 +1093,7 @@ LuaNosJujian = sgs.CreateViewAsSkill{
 	技能名：巨象（锁定技）
 	相关武将：林·祝融
 	描述：【南蛮入侵】对你无效；当其他角色使用的【南蛮入侵】在结算后置入弃牌堆时，你获得之。
+	引用：LuaJuxiang、LuaJuxiangSavageAssaultAvoid
 	状态：验证通过
 ]]--
 LuaJuxiang = sgs.CreateTriggerSkill{
@@ -1133,6 +1157,7 @@ LuaJuxiangSavageAssaultAvoid = sgs.CreateTriggerSkill{
 	技能名：倨傲
 	相关武将：智·许攸
 	描述：出牌阶段，你可以选择两张手牌背面向上移出游戏，指定一名角色，被指定的角色到下个回合开始阶段时，跳过摸牌阶段，得到你所移出游戏的两张牌。每阶段限一次 
+	引用：LuaXJuao
 	状态：验证通过
 ]]--
 LuaXJuaoCard = sgs.CreateSkillCard{
@@ -1152,7 +1177,7 @@ LuaXJuaoCard = sgs.CreateSkillCard{
 	end
 }
 LuaXJuaoVS = sgs.CreateViewAsSkill{
-	name = "LuaXJuaoVS", 
+	name = "LuaXJuao", 
 	n = 2, 
 	view_filter = function(self, selected, to_select)
 		if #selected <= 2 then
@@ -1211,6 +1236,7 @@ LuaXJuao = sgs.CreateTriggerSkill{
 	技能名：据守
 	相关武将：风·曹仁
 	描述：回合结束阶段开始时，你可以摸三张牌，然后将你的武将牌翻面。
+	引用：LuaJushou
 	状态：验证通过
 ]]--
 LuaJushou = sgs.CreateTriggerSkill{
@@ -1232,6 +1258,7 @@ LuaJushou = sgs.CreateTriggerSkill{
 	技能名：据守
 	相关武将：翼·曹仁
 	描述：回合结束阶段开始时，你可以摸2+X张牌（X为你已损失的体力值），然后将你的武将牌翻面。
+	引用：LuaXNeoJushou
 	状态：验证通过
 ]]--
 LuaXNeoJushou = sgs.CreateTriggerSkill{
@@ -1259,6 +1286,7 @@ LuaXNeoJushou = sgs.CreateTriggerSkill{
 	技能名：绝汲
 	相关武将：倚天·张儁乂
 	描述：出牌阶段，你可以和一名角色拼点：若你赢，你获得对方的拼点牌，并可立即再次与其拼点，如此反复，直到你没赢或不愿意继续拼点为止。每阶段限一次。 
+	引用：LuaXJueji、LuaXJuejiGet
 	状态：验证通过
 ]]--
 LuaXJuejiCard = sgs.CreateSkillCard{
@@ -1326,6 +1354,7 @@ LuaXJuejiGet = sgs.CreateTriggerSkill{
 	技能名：绝境（锁定技）
 	相关武将：神·赵云
 	描述：摸牌阶段，你摸牌的数量改为你已损失的体力值+2；你的手牌上限+2。
+	引用：LuaJuejing、LuaJuejingKeep
 	状态：验证通过
 ]]--
 LuaJuejing = sgs.CreateTriggerSkill{
@@ -1351,6 +1380,7 @@ LuaJuejingKeep = sgs.CreateMaxCardsSkill{
 	技能名：绝境（锁定技）
 	相关武将：测试·高达一号
 	描述：摸牌阶段，你不摸牌。每当你的手牌数变化后，若你的手牌数不为4，你须将手牌补至或弃置至四张。
+	引用：LuaXNosJuejing
 	状态：验证通过
 ]]--
 LuaXNosJuejing = sgs.CreateTriggerSkill{
@@ -1402,6 +1432,7 @@ LuaXNosJuejing = sgs.CreateTriggerSkill{
 	技能名：绝情（锁定技）
 	相关武将：一将成名·张春华、怀旧·张春华
 	描述：你即将造成的伤害均视为失去体力。
+	引用：LuaJueqing
 	状态：验证通过
 ]]--
 LuaJueqing = sgs.CreateTriggerSkill{
@@ -1419,6 +1450,7 @@ LuaJueqing = sgs.CreateTriggerSkill{
 	技能名：军威
 	相关武将：☆SP·甘宁
 	描述：回合结束阶段开始时，你可以将三张“锦”置入弃牌堆。若如此做，你须指定一名角色并令其选择一项：1.亮出一张【闪】，然后由你交给任意一名角色。2.该角色失去1点体力，然后由你选择将其装备区的一张牌移出游戏。在该角色的回合结束后，将以此法移出游戏的装备牌移回原处。
+	引用：LuaJunwei
 	状态：验证通过
 ]]--
 LuaJunwei = sgs.CreateTriggerSkill{

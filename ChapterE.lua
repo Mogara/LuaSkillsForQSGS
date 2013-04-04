@@ -7,6 +7,7 @@
 	技能名：恩怨
 	相关武将：一将成名·法正
 	描述：你每次获得一名其他角色两张或更多的牌时，可以令其摸一张牌；每当你受到1点伤害后，你可以令伤害来源选择一项：交给你一张手牌，或失去1点体力。
+	引用：LuaEnyuan
 	状态：验证通过
 ]]--
 LuaEnyuan = sgs.CreateTriggerSkill{
@@ -63,6 +64,7 @@ LuaEnyuan = sgs.CreateTriggerSkill{
 	技能名：恩怨（锁定技）
 	相关武将：怀旧·法正
 	描述：其他角色每令你回复1点体力，该角色摸一张牌；其他角色每对你造成一次伤害后，需交给你一张红桃手牌，否则该角色失去1点体力。
+	引用：LuaNosEnyuan
 	状态：验证通过
 ]]--
 LuaNosEnyuan = sgs.CreateTriggerSkill{

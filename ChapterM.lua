@@ -7,6 +7,7 @@
 	技能名：马术（锁定技）
 	相关武将：标准·马超、火·庞德、SP·庞德、SP·关羽、SP·最强神话、SP·暴怒战神、SP·马超、二将成名·马岱、国战·马腾
 	描述：你计算的与其他角色的距离-1。
+	引用：LuaMashu
 	状态：验证通过
 ]]--
 LuaMashu = sgs.CreateDistanceSkill{
@@ -21,6 +22,7 @@ LuaMashu = sgs.CreateDistanceSkill{
 	技能名：漫卷
 	相关武将：☆SP·庞统
 	描述：每当你将获得任何一张手牌，将之置于弃牌堆。若此情况处于你的回合中，你可依次将与该牌点数相同的一张牌从弃牌堆置于你的手上。
+	引用：LuaManjuan
 	状态：验证通过
 ]]--
 DoManjuan = function(player, id, skillname)
@@ -106,6 +108,7 @@ LuaManjuan = sgs.CreateTriggerSkill{
 	技能名：猛进
 	相关武将：火·庞德、SP·庞德
 	描述：当你使用的【杀】被目标角色的【闪】抵消时，你可以弃置其一张牌。 
+	引用：LuaMengjin
 	状态：验证通过
 ]]--
 LuaMengjin = sgs.CreateTriggerSkill{
@@ -133,6 +136,7 @@ LuaMengjin = sgs.CreateTriggerSkill{
 	技能名：秘计
 	相关武将：二将成名·王异
 	描述：回合开始/结束阶段开始时，若你已受伤，你可以进行一次判定，若判定结果为黑色，你观看牌堆顶的X张牌（X为你已损失的体力值），然后将这些牌交给一名角色。
+	引用：LuaMiji
 	状态：1111验证通过
 ]]--
 LuaMiji = sgs.CreateTriggerSkill{
@@ -174,6 +178,7 @@ LuaMiji = sgs.CreateTriggerSkill{
 	技能名：密信
 	相关武将：铜雀台·伏皇后
 	描述：出牌阶段，你可以将一张手牌交给一名其他角色，该角色须对你选择的另一名角色使用一张【杀】（无距离限制），否则你选择的角色观看其手牌并获得其中任意一张。每阶段限一次。 
+	引用：LuaXMixin
 	状态：验证通过
 ]]--
 LuaXMixinCard = sgs.CreateSkillCard{
@@ -236,6 +241,7 @@ LuaXMixin = sgs.CreateViewAsSkill{
 	技能名：密诏
 	相关武将：铜雀台·汉献帝
 	描述：出牌阶段，你可以将所有手牌（至少一张）交给一名其他角色。若如此做，你令该角色与你指定的另一名有手牌的角色拼点。视为拼点赢的角色对没赢的角色使用一张【杀】。每阶段限一次 
+	引用：LuaXMizhao
 	状态：验证通过
 ]]--
 LuaXMizhaoCard = sgs.CreateSkillCard{
@@ -269,7 +275,7 @@ LuaXMizhaoCard = sgs.CreateSkillCard{
 	end
 }
 LuaXMizhaoVS = sgs.CreateViewAsSkill{
-	name = "LuaXMizhaoVS", 
+	name = "LuaXMizhao", 
 	n = 999, 
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
@@ -334,6 +340,7 @@ LuaXMizhao = sgs.CreateTriggerSkill{
 	技能名：名士（锁定技）
 	相关武将：国战·孔融
 	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。 
+	引用：LuaXMingshi
 	状态：0224验证通过
 ]]--
 LuaXMingshi = sgs.CreateTriggerSkill{
@@ -368,6 +375,7 @@ LuaXMingshi = sgs.CreateTriggerSkill{
 	技能名：明策
 	相关武将：一将成名·陈宫
 	描述：出牌阶段，你可以交给一名其他角色一张装备牌或【杀】，该角色选择一项：1. 视为对其攻击范围内你选择的另一名角色使用一张【杀】。2. 摸一张牌。每回合限一次。
+	引用：LuaMingce
 	状态：验证通过
 ]]--
 LuaMingceCard = sgs.CreateSkillCard{
@@ -444,11 +452,12 @@ LuaMingce = sgs.CreateViewAsSkill{
 	相关武将：贴纸·辛宪英
 	描述：任一角色回合开始时，你可以立即优先执行下列两项中的一项：
 		1.弃置一张牌，跳过该角色的判定阶段。
-		2.竖置一张手牌于其武将牌上，该角色本回合内的判定均不受任何人物技能影响，该角色回合结束后将该牌置入弃牌堆。 
+		2.竖置一张手牌于其武将牌上，该角色本回合内的判定均不受任何人物技能影响，该角色回合结束后将该牌置入弃牌堆。
+	引用：LuaMingjian、luaXMingjianStop
 	状态：验证通过
 ]]--
-LuaMingjianCard = sgs.CreateSkillCard{
-	name = "LuaMingjianCard",
+LuaXMingjianCard = sgs.CreateSkillCard{
+	name = "LuaXMingjianCard",
 	target_fixed = true,
 	will_throw = false, 
 	on_use = function(self, room, source, targets)
@@ -456,8 +465,8 @@ LuaMingjianCard = sgs.CreateSkillCard{
 		target:addToPile("jian", self)
 	end 
 }
-LuaMingjianVS = sgs.CreateViewAsSkill{
-	name = "LuaMingjian", 
+LuaXMingjianVS = sgs.CreateViewAsSkill{
+	name = "LuaXMingjian", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
@@ -465,7 +474,7 @@ LuaMingjianVS = sgs.CreateViewAsSkill{
 	view_as = function(self, cards) 
 		if #cards == 1 then
 			local card = cards[1]
-			local vs_card = LuaMingjianCard:clone()
+			local vs_card = LuaXMingjianCard:clone()
 			vs_card:setSkillName(self:objectName())
 			vs_card:addSubcard(card)
 			return vs_card
@@ -474,15 +483,15 @@ LuaMingjianVS = sgs.CreateViewAsSkill{
 	enabled_at_play=function()
 		return false 
 	end,
-	enabled_at_response=function(self,player,pattern) 
-		return pattern == "@@LuaMingjian" 
+	enabled_at_response = function(self,player,pattern) 
+		return pattern == "@@LuaXMingjian" 
 	end
 }
-LuaMingjian = sgs.CreateTriggerSkill{
-	name = "LuaMingjian", 
+LuaXMingjian = sgs.CreateTriggerSkill{
+	name = "LuaXMingjian", 
 	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.EventPhaseStart}, 
-	view_as_skill = LuaMingjianVS, 
+	view_as_skill = LuaXMingjianVS, 
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local phase = player:getPhase()
@@ -496,17 +505,17 @@ LuaMingjian = sgs.CreateTriggerSkill{
 				if not xin:isNude() then
 					local string = not player:getJudgingArea():isEmpty() and "ming+jian+cancel" or "jian+cancel"
 					local choice = room:askForChoice(xin, self:objectName(), string)
-					if  choice == "cancel"  then
+					if  choice == "cancel" then
 						return false
-					elseif choice == "ming"  then
+					elseif choice == "ming" then
 						local data = sgs.QVariant()
 						data:setValue(player) 
-						local card = room:askForCard(xin, ".|.|.|.|.", "@mingjiana", data, "LuaMingjian")
+						local card = room:askForCard(xin, ".|.|.|.|.", "@mingjiana", data, "LuaXMingjian")
 						if card then
 							player:skip(sgs.Player_Judge)
 						end
 					elseif choice == "jian"  then
-						room:askForUseCard(xin, "@@LuaMingjian", "@mingjianb", -1, sgs.Card_MethodNone) 
+						room:askForUseCard(xin, "@@LuaXMingjian", "@mingjianb", -1, sgs.Card_MethodNone) 
 					end
 				end
 			end
@@ -517,9 +526,8 @@ LuaMingjian = sgs.CreateTriggerSkill{
 		return target
 	end
 }
-
-luaMingjianStop=sgs.CreateTriggerSkill{
-	name = "#luaMingjianStop",
+luaXMingjianStop = sgs.CreateTriggerSkill{
+	name = "#luaXMingjianStop",
 	priority = 5,
 	events = sgs.AskForRetrial ,		
 	on_trigger = function(self, event, player, data)
@@ -535,11 +543,12 @@ luaMingjianStop=sgs.CreateTriggerSkill{
 	技能名：明哲
 	相关武将：新3V3·诸葛瑾
 	描述：你的回合外，当你因使用、打出或弃置而失去一张红色牌时，你可以摸一张牌。 
+	引用：LuaXMingzhe
 	状态：通过
 ]]--
 require("bit")--按位操作所需库文件
-LuaMingzhe = sgs.CreateTriggerSkill{
-	name = "LuaMingzhe", 
+LuaXMingzhe = sgs.CreateTriggerSkill{
+	name = "LuaXMingzhe", 
 	requency = sgs.Skill_Frequent,
 	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
 	on_trigger = function(self, event, player, data)
@@ -581,6 +590,7 @@ LuaMingzhe = sgs.CreateTriggerSkill{
 	技能名：谋断（转化技）
 	相关武将：☆SP·吕蒙
 	描述：通常状态下，你拥有标记“武”并拥有技能“激昂”和“谦逊”。当你的手牌数为2张或以下时，你须将你的标记翻面为“文”，将该两项技能转化为“英姿”和“克己”。任一角色的回合开始前，你可弃一张牌将标记翻回。
+	引用：LuaMouduanStart、LuaMouduan、LuaMouduanClear
 	状态：验证通过
 ]]--
 LuaMouduanStart = sgs.CreateTriggerSkill{
@@ -672,6 +682,7 @@ LuaMouduanClear = sgs.CreateTriggerSkill{
 	技能名：谋溃
 	相关武将：铜雀台·穆顺
 	描述：当你使用【杀】指定一名角色为目标后，你可以选择一项：摸一张牌，或弃置其一张牌。若如此做，此【杀】被【闪】抵消时，该角色弃置你的一张牌。 
+	引用：LuaXMoukui
 	状态：验证通过
 ]]--
 LuaXMoukui = sgs.CreateTriggerSkill{

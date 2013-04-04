@@ -7,6 +7,7 @@
 	技能名：看破
 	相关武将：火·诸葛亮
 	描述：你可以将一张黑色手牌当【无懈可击】使用。
+	引用：LuaKanpo
 	状态：验证通过
 ]]--
 LuaKanpo = sgs.CreateViewAsSkill{
@@ -52,6 +53,7 @@ LuaKanpo = sgs.CreateViewAsSkill{
 	技能名：克构（觉醒技）
 	相关武将：倚天·陆抗
 	描述：回合开始阶段开始时，若你是除主公外唯一的吴势力角色，你须减少1点体力上限并获得技能“连营” 
+	引用：LuaXKegou
 	状态：验证通过
 ]]--
 LuaXKegou = sgs.CreateTriggerSkill{
@@ -96,6 +98,7 @@ LuaXKegou = sgs.CreateTriggerSkill{
 	技能名：克己
 	相关武将：标准·吕蒙
 	描述：若你于出牌阶段未使用或打出过【杀】，你可以跳过此回合的弃牌阶段。
+	引用：LuaKeji
 	状态：验证通过
 ]]--
 LuaKeji = sgs.CreateTriggerSkill{
@@ -124,13 +127,14 @@ LuaKeji = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-		return false;
+		return false
 	end
 }
 --[[
 	技能名：空城（锁定技）
 	相关武将：标准·诸葛亮、测试·五星诸葛
 	描述：若你没有手牌，你不能被选择为【杀】或【决斗】的目标。
+	引用：LuaKongcheng
 	状态：验证通过
 ]]--
 LuaKongcheng = sgs.CreateProhibitSkill{
@@ -147,6 +151,7 @@ LuaKongcheng = sgs.CreateProhibitSkill{
 	技能名：苦肉
 	相关武将：标准·黄盖
 	描述：出牌阶段，你可以失去1点体力，然后摸两张牌。
+	引用：LuaKurou
 	状态：验证通过
 ]]--
 KurouCard = sgs.CreateSkillCard{
@@ -171,6 +176,7 @@ LuaKurou = sgs.CreateViewAsSkill{
 	技能名：狂暴（锁定技）
 	相关武将：神·吕布
 	描述：游戏开始时，你获得2枚“暴怒”标记；每当你造成或受到1点伤害后，你获得1枚“暴怒”标记。
+	引用：LuaKuangbao
 	状态：验证通过
 ]]--
 LuaKuangbao = sgs.CreateTriggerSkill{
@@ -192,6 +198,7 @@ LuaKuangbao = sgs.CreateTriggerSkill{
 	技能名：狂风
 	相关武将：神·诸葛亮
 	描述：回合结束阶段开始时，你可以将一张“星”置入弃牌堆并选择一名角色，若如此做，每当该角色受到的火焰伤害结算开始时，此伤害+1，直到你的下回合开始。
+	引用：LuaKuangfeng
 	状态：验证通过
 ]]--
 LuaKuangfengCard = sgs.CreateSkillCard{
@@ -214,7 +221,7 @@ LuaKuangfengCard = sgs.CreateSkillCard{
 	end
 }
 LuaKuangfengVS = sgs.CreateViewAsSkill{
-	name = "LuaKuangfengVS", 
+	name = "LuaKuangfeng", 
 	n = 0,
 	view_as = function(self, cards)
 		return LuaKuangfengCard:clone()
@@ -250,6 +257,7 @@ LuaKuangfeng = sgs.CreateTriggerSkill{
 	技能名：狂斧
 	相关武将：国战·潘凤
 	描述：每当你使用的【杀】对一名角色造成一次伤害后，你可以将其装备区里的一张牌弃置或置入你的装备区。 
+	引用：LuaXKuangfu
 	状态：0224验证通过
 ]]--
 LuaXKuangfu = sgs.CreateTriggerSkill{
@@ -291,6 +299,7 @@ LuaXKuangfu = sgs.CreateTriggerSkill{
 	技能名：狂骨（锁定技）
 	相关武将：风·魏延
 	描述：每当你对距离1以内的一名角色造成1点伤害后，你回复1点体力。
+	引用：LuaKuanggu
 	状态：验证通过
 ]]--
 LuaKuanggu = sgs.CreateTriggerSkill{
@@ -336,6 +345,7 @@ LuaKuanggu = sgs.CreateTriggerSkill{
 	技能名：溃围
 	相关武将：☆SP·曹仁
 	描述：回合结束阶段开始时，你可以摸2+X张牌，然后将你的武将牌翻面。在你的下个摸牌阶段开始时，你须弃置X张牌。X等于当时场上装备区内的武器牌的数量。
+	引用：LuaKuiwei
 	状态：验证通过
 ]]--
 LuaKuiwei = sgs.CreateTriggerSkill{

@@ -7,6 +7,7 @@
 	技能名：大喝
 	相关武将：☆SP·张飞
 	描述：出牌阶段，你可以与一名其他角色拼点；若你赢，该角色的非红心【闪】无效直到回合结束，你可将该角色拼点的牌交给场上一名体力不多于你的角色。若你没赢，你须展示手牌并选择一张弃置。每阶段限一次。
+	引用：LuaDahe、LuaDahePindian
 	状态：验证通过
 ]]--
 LuaDaheCard = sgs.CreateSkillCard{
@@ -127,6 +128,7 @@ LuaDahePindian = sgs.CreateTriggerSkill{
 	技能名：大雾
 	相关武将：神·诸葛亮
 	描述：回合结束阶段开始时，你可以将X张“星”置入弃牌堆并选择X名角色，若如此做，每当这些角色受到的非雷电伤害结算开始时，防止此伤害，直到你的下回合开始。
+	引用：LuaDawu
 	状态：验证通过
 ]]--
 LuaDawuCard = sgs.CreateSkillCard{
@@ -155,7 +157,7 @@ LuaDawuCard = sgs.CreateSkillCard{
 	end
 }
 LuaDawuVS = sgs.CreateViewAsSkill{
-	name = "LuaDawuVS", 
+	name = "LuaDawu", 
 	n = 0,
 	view_as = function(self, cards)
 		return LuaDawuCard:clone()
@@ -187,6 +189,7 @@ LuaDawu = sgs.CreateTriggerSkill{
 	技能名：单骑（觉醒技）
 	相关武将：SP·关羽
 	描述：回合开始阶段，若你的手牌数大于你当前的体力值，且本局主公为曹操时，你须减1点体力上限并永久获得技能“马术”。
+	引用：LuaDanji
 	状态：验证通过
 ]]--
 LuaDanji = sgs.CreateTriggerSkill{
@@ -218,6 +221,7 @@ LuaDanji = sgs.CreateTriggerSkill{
 	技能名：啖酪
 	相关武将：SP·杨修
 	描述：当一张锦囊牌指定包括你在内的多名目标后，你可以摸一张牌，若如此做，此锦囊牌对你无效。
+	引用：LuaDanlao
 	状态：验证通过
 ]]--
 LuaDanlao = sgs.CreateTriggerSkill{
@@ -261,6 +265,7 @@ LuaDanlao = sgs.CreateTriggerSkill{
 	技能名：当先（锁定技）
 	相关武将：二将成名·廖化
 	描述：回合开始时，你执行一个额外的出牌阶段。
+	引用：LuaDangxian
 	状态：验证通过
 ]]--
 LuaDangxian = sgs.CreateTriggerSkill{
@@ -287,6 +292,7 @@ LuaDangxian = sgs.CreateTriggerSkill{
 	技能名：缔盟
 	相关武将：林·鲁肃
 	描述：出牌阶段，你可以选择两名其他角色并弃置等同于他们手牌数差的牌，然后交换他们的手牌。每阶段限一次。
+	引用：LuaDimeng
 	状态：验证通过
 ]]--
 LuaDimengCard = sgs.CreateSkillCard{
@@ -352,18 +358,19 @@ LuaDimeng = sgs.CreateViewAsSkill{
 	技能名：毒计
 	相关武将：3D织梦·李儒
 	描述： 出牌阶段，若你的武将牌上没有牌，你可以将一张黑桃牌置于你的武将牌上。当一名其他角色在其出牌阶段使用一张【杀】指定目标后，你可将此牌置于其手上，并令此【杀】当有【酒】效果的【杀】结算，然后该角色须执行下列一项：将武将牌翻面或失去1点体力。
+	引用：LuaDuji
 	状态：验证通过
 ]]--
-LuaDujiCard = sgs.CreateSkillCard{
-	name = "LuaDujiCard",
+LuaXDujiCard = sgs.CreateSkillCard{
+	name = "LuaXDujiCard",
 	target_fixed = true,
 	will_throw = false, 
 	on_use = function(self, room, source, targets)
 		source:addToPile("du", self)
 	end 
 }
-LuaDujiVS = sgs.CreateViewAsSkill{
-	name = "LuaDuji", 
+LuaXDujiVS = sgs.CreateViewAsSkill{
+	name = "LuaXDuji", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		return to_select:getSuit() == sgs.Card_Spade 
@@ -381,8 +388,8 @@ LuaDujiVS = sgs.CreateViewAsSkill{
 		return player:getPile("du"):isEmpty()
 	end
 }
-LuaDuji = sgs.CreateTriggerSkill{
-	name = "LuaDuji", 
+LuaXDuji = sgs.CreateTriggerSkill{
+	name = "LuaXDuji", 
 	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.TargetConfirmed}, 
 	view_as_skill = LuaDujiVS, 
@@ -391,8 +398,8 @@ LuaDuji = sgs.CreateTriggerSkill{
 		local use = data:toCardUse()
 		local pile = player:getPile("du")
 		if use.from and use.from:objectName() ~= player:objectName() then
-		    if use.from:getPhase() == sgs.Player_Play then
-			    if not pile:isEmpty() then
+			if use.from:getPhase() == sgs.Player_Play then
+				if not pile:isEmpty() then
 					if use.card and use.card:isKindOf("Slash") then
 						if not use.from:hasFlag("drank") then
 							if player:askForSkillInvoke(self:objectName()) then
@@ -401,9 +408,9 @@ LuaDuji = sgs.CreateTriggerSkill{
 								room:setPlayerFlag(use.from, "drank")
 								local choice = room:askForChoice(use.from, self:objectName(), "turn+lp")
 								if  choice == "turn"  then
-								    use.from:turnOver()
+									use.from:turnOver()
 								else
-								    room:loseHp(use.from)
+									room:loseHp(use.from)
 								end
 							end	
 						end
@@ -418,6 +425,7 @@ LuaDuji = sgs.CreateTriggerSkill{
 	技能名：毒士（锁定技）
 	相关武将：倚天·贾文和
 	描述：杀死你的角色获得崩坏技能直到游戏结束 
+	引用：LuaXDushi
 	状态：验证通过
 ]]--
 LuaXDushi = sgs.CreateTriggerSkill{
@@ -451,6 +459,7 @@ LuaXDushi = sgs.CreateTriggerSkill{
 	技能名：毒医
 	相关武将：铜雀台·吉本
 	描述：出牌阶段，你可以亮出牌堆顶的一张牌并交给一名角色，若此牌为黑色，该角色不能使用或打出其手牌，直到回合结束。每阶段限一次。 
+	引用：LuaXDuyi
 	状态：验证通过
 ]]--
 LuaXDuyiCard = sgs.CreateSkillCard{
@@ -525,6 +534,7 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 	技能名：度势
 	相关武将：国战·陆逊
 	描述：出牌阶段，你可以弃置一张红色手牌并选择任意数量的其他角色：若如此做，你与这些角色各摸两张牌并弃置两张牌。 
+	引用：LuaXDuoshi
 	状态：0224验证通过
 	附注：按照dadao.net修改，依次摸牌，然后再依次弃牌，而不是某人摸2弃2，再结算下一个
 ]]--
@@ -573,6 +583,7 @@ LuaXDuoshi = sgs.CreateViewAsSkill{
 	技能名：短兵
 	相关武将：国战·丁奉
 	描述：你使用【杀】可以额外选择一名距离1的目标。 
+	引用：LuaXDuanbing
 	状态：验证通过
 	附注：原技能涉及修改源码。Lua的版本以此法可实现，但体验感略微欠佳。
 ]]--
@@ -616,6 +627,7 @@ LuaXDuanbing = sgs.CreateTriggerSkill{
 	技能名：断肠（锁定技）
 	相关武将：山·蔡文姬、SP·蔡文姬
 	描述：你死亡时，杀死你的角色失去其所有武将技能。
+	引用：LuaDuanchang
 	状态：验证通过
 ]]--
 LuaDuanchang = sgs.CreateTriggerSkill{
@@ -648,6 +660,7 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 	技能名：断粮
 	相关武将：林·徐晃
 	描述：你可以将一张黑色牌当【兵粮寸断】使用，此牌必须为基本牌或装备牌；你可以对距离2以内的一名其他角色使用【兵粮寸断】。 
+	引用：LuaDuanliang
 	状态：验证通过
 ]]--
 LuaDuanliang = sgs.CreateViewAsSkill{
@@ -679,6 +692,7 @@ LuaDuanliang = sgs.CreateViewAsSkill{
 	技能名：断指
 	相关武将：铜雀台·吉本
 	描述：当你成为其他角色使用的牌的目标后，你可以弃置其至多两张牌（也可以不弃置），然后失去1点体力。 
+	引用：LuaXDuanzhi、LuaXDuanzhiAvoidTriggeringCardsMove
 	状态：验证通过
 ]]--
 LuaXDuanzhiDummyCard = sgs.CreateSkillCard{

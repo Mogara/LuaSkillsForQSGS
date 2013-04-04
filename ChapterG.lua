@@ -7,6 +7,7 @@
 	技能名：甘露
 	相关武将：一将成名·吴国太
 	描述：出牌阶段，你可以交换两名角色装备区里的牌，以此法交换的装备数差不能超过X（X为你已损失体力值）。每阶段限一次。
+	引用：LuaGanlu
 	状态：验证通过
 ]]--
 LuaGanluCard = sgs.CreateSkillCard{
@@ -75,10 +76,11 @@ LuaGanlu = sgs.CreateViewAsSkill{
 	技能名：刚戾
 	相关武将：3D织梦·程昱
 	描述：每当你受到其他角色造成的1点伤害后，你可以：选择除伤害来源外的另一名角色，视为伤害来源对该角色使用一张【杀】（此【杀】无距离限制且不计入出牌阶段使用次数限制）。 
+	引用：LuaXGangli
 	状态：验证通过
 ]]--
-LuaGangli = sgs.CreateTriggerSkill{
-	name = "LuaGangli",
+LuaXGangli = sgs.CreateTriggerSkill{
+	name = "LuaXGangli",
 	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.Damaged, sgs.PreHpReduced},
 	on_trigger = function(self, event, player, data) 
@@ -126,6 +128,7 @@ LuaGangli = sgs.CreateTriggerSkill{
 	技能名：刚烈
 	相关武将：标准·夏侯惇
 	描述：每当你受到一次伤害后，你可以进行一次判定，若判定结果不为红桃，则伤害来源选择一项：弃置两张手牌，或受到你对其造成的1点伤害。
+	引用：LuaGanglie
 	状态：验证通过
 ]]--
 LuaGanglie = sgs.CreateTriggerSkill{
@@ -160,6 +163,7 @@ LuaGanglie = sgs.CreateTriggerSkill{
 	技能名：刚烈
 	相关武将：翼·夏侯惇
 	描述：每当你受到一次伤害后，你可以进行一次判定，若判定结果不为红桃，你选择一项：令伤害来源弃置两张手牌，或受到你对其造成的1点伤害。 
+	引用：LuaXNeoGanglie
 	状态：验证通过
 ]]--
 LuaXNeoGanglie = sgs.CreateTriggerSkill{
@@ -218,10 +222,11 @@ LuaXNeoGanglie = sgs.CreateTriggerSkill{
 	技能名：弓骑
 	相关武将：怀旧·韩当
 	描述：你可以将一张装备牌当【杀】使用或打出；你以此法使用【杀】时无距离限制。
+	引用：LuaNosGongqi、LuaNosGongqiTargetMod
 	状态：0224验证通过
 ]]--
-LuaGongqi = sgs.CreateViewAsSkill{
-	name = "LuaGongqi", 
+LuaNosGongqi = sgs.CreateViewAsSkill{
+	name = "LuaNosGongqi", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		local weapon = sgs.Self:getWeapon()
@@ -253,11 +258,11 @@ LuaGongqi = sgs.CreateViewAsSkill{
 		return pattern == "slash"
 	end
 }
-LuaGongqiTargetMod = sgs.CreateTargetModSkill{
-	name = "#LuaGongqiTargetMod",
+LuaNosGongqiTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaNosGongqiTargetMod",
 	distance_limit_func = function(self, from, card)
-		if from:hasSkill("LuaGongqi") then
-			if card:getSkillName() == "LuaGongqi" then
+		if from:hasSkill("LuaNosGongqi") then
+			if card:getSkillName() == "LuaNosGongqi" then
 				return 1000
 			end
 		end
@@ -268,6 +273,7 @@ LuaGongqiTargetMod = sgs.CreateTargetModSkill{
 	技能名：攻心
 	相关武将：神·吕蒙
 	描述：出牌阶段，你可以观看任意一名角色的手牌，并可以展示其中一张红桃牌，然后将其弃置或置于牌堆顶。每阶段限一次。 
+	引用：LuaGongxin
 	状态：验证通过
 ]]--
 LuaGongxinCard = sgs.CreateSkillCard{
@@ -303,6 +309,7 @@ LuaGongxin = sgs.CreateViewAsSkill{
 	技能名：共谋
 	相关武将：倚天·钟士季
 	描述：回合结束阶段开始时，可指定一名其他角色：其在摸牌阶段摸牌后，须给你X张手牌（X为你手牌数与对方手牌数的较小值），然后你须选择X张手牌交给对方 
+	引用：LuaXGongmou、LuaXGongmouExchange
 	状态：验证通过
 ]]--
 LuaXGongmou = sgs.CreateTriggerSkill{
@@ -375,6 +382,7 @@ LuaXGongmouExchange = sgs.CreateTriggerSkill{
 	技能名：固守
 	相关武将：智·田丰
 	描述：回合外，当你使用或打出一张基本牌时，可以摸一张牌 
+	引用：LuaXGushou
 	状态：验证通过
 ]]--
 LuaXGushou = sgs.CreateTriggerSkill{
@@ -407,6 +415,7 @@ LuaXGushou = sgs.CreateTriggerSkill{
 	技能名：固政
 	相关武将：山·张昭张纮
 	描述：其他角色的弃牌阶段结束时，你可以将该角色于此阶段中弃置的一张牌从弃牌堆返回其手牌，若如此做，你可以获得弃牌堆里其余于此阶段中弃置的牌。
+	引用：LuaGuzheng、LuaGuzhengGet
 	状态：0224验证通过
 	附注：以字符串形式保存卡牌id
 ]]--
@@ -562,6 +571,7 @@ LuaGuzhengGet = sgs.CreateTriggerSkill{
 	技能名：观星
 	相关武将：标准·诸葛亮、山·姜维
 	描述：回合开始阶段开始时，你可以观看牌堆顶的X张牌（X为存活角色数且至多为5），将其中任意数量的牌以任意顺序置于牌堆顶，其余以任意顺序置于牌堆底。
+	引用：LuaGuanxing
 	状态：验证通过
 ]]--
 LuaGuanxing = sgs.CreateTriggerSkill{
@@ -586,6 +596,7 @@ LuaGuanxing = sgs.CreateTriggerSkill{
 	技能名：归汉
 	相关武将：倚天·蔡昭姬
 	描述：出牌阶段，你可以主动弃置两张相同花色的红色手牌，和你指定的一名其他存活角色互换位置。每阶段限一次 
+	引用：LuaXGuihan
 	状态：验证通过
 ]]--
 LuaXGuihanCard = sgs.CreateSkillCard{
@@ -630,6 +641,7 @@ LuaXGuihan = sgs.CreateViewAsSkill{
 	技能名：归心
 	相关武将：神·曹操
 	描述：每当你受到1点伤害后，你可以分别从每名其他角色的区域获得一张牌，然后将你的武将牌翻面。
+	引用：LuaGuixin
 	状态：验证通过
 ]]--
 LuaGuixin = sgs.CreateTriggerSkill{
@@ -673,10 +685,11 @@ LuaGuixin = sgs.CreateTriggerSkill{
 	描述：回合结束阶段，你可以做以下二选一：
 		1. 永久改变一名其他角色的势力
 		2. 永久获得一项未上场或已死亡角色的主公技。(获得后即使你不是主公仍然有效) 
+	引用：LuaXWeiwudiGuixin
 	状态：验证通过
 ]]--
-LuaGuixin = sgs.CreateTriggerSkill{
-	name = "LuaGuixin",
+LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
+	name = "LuaXWeiwudiGuixin",
 	events = {sgs.EventPhaseProceeding},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
@@ -727,6 +740,7 @@ LuaGuixin = sgs.CreateTriggerSkill{
 	技能名：鬼才
 	相关武将：标准·司马懿
 	描述：在一名角色的判定牌生效前，你可以打出一张手牌代替之。
+	引用：LuaGuicai
 	状态：验证通过
 ]]--
 GuicaiCard = sgs.CreateSkillCard{
@@ -786,6 +800,7 @@ LuaGuicai = sgs.CreateTriggerSkill{
 	技能名：鬼道
 	相关武将：风·张角
 	描述：在一名角色的判定牌生效前，你可以打出一张黑色牌替换之。
+	引用：LuaGuidao
 	状态：验证通过
 ]]--
 GuidaoCard = sgs.CreateSkillCard{
@@ -855,6 +870,7 @@ LuaGuidao = sgs.CreateTriggerSkill{
 	技能名：国色
 	相关武将：标准·大乔
 	描述：你可以将一张方块牌当【乐不思蜀】使用。
+	引用：LuaGuose
 	状态：验证通过
 ]]--
 LuaGuose = sgs.CreateViewAsSkill{

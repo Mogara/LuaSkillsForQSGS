@@ -7,6 +7,7 @@
 	技能名：汉统
 	相关武将：贴纸·刘协
 	描述：弃牌阶段，你可以将你弃置的手牌置于武将牌上，称为“诏”。你可以将一张“诏”置入弃牌堆，然后你拥有并发动以下技能之一：“护驾”、“激将”、“救援”、“血裔”，直到当前回合结束。 
+	引用：LuaXHantong、LuaXHantongKeep
 	状态：验证通过
 ]]--
 LuaXHantongRemove = function(room, player)
@@ -212,8 +213,8 @@ LuaXHantong = sgs.CreateTriggerSkill{
 		end
 	end,
 }
-LuaXHantongMax = sgs.CreateMaxCardsSkill{
-	name = "#LuaXHantongMax",
+LuaXHantongKeep = sgs.CreateMaxCardsSkill{
+	name = "#LuaXHantongKeep",
 	extra_func = function(self, target)
 		if target:hasSkill(self:objectName()) then
 			return 2 * target:getMark("hantong")
@@ -225,6 +226,7 @@ LuaXHantongMax = sgs.CreateMaxCardsSkill{
 	技能名：好施
 	相关武将：林·鲁肃
 	描述：摸牌阶段，你可以额外摸两张牌，若此时你的手牌多于五张，则将一半（向下取整）的手牌交给全场手牌数最少的一名其他角色。
+	引用：LuaHaoshiGive、LuaHaoshi
 	状态：验证通过
 ]]--
 LuaHaoshiCard = sgs.CreateSkillCard{
@@ -333,6 +335,7 @@ LuaHaoshi = sgs.CreateTriggerSkill{
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾
 	描述：摸牌阶段，你可以少摸一张牌，令其他己方角色各摸一张牌。
+	引用：LuaXHongyuan、LuaXHongyuanAct
 	状态：验证通过
 ]]--
 Lua3V3_isFriend = function(player,other)
@@ -375,6 +378,7 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill {
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾（身份局）
 	描述：摸牌阶段，你可以少摸一张牌，令一至两名其他角色各摸一张牌。
+	引用：LuaXHongyuan、LuaXHongyuanAct
 	状态：验证通过
 ]]--
 LuaXHongyuanCard = sgs.CreateSkillCard{
@@ -439,6 +443,7 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill{
 	技能名：红颜（锁定技）
 	相关武将：风·小乔
 	描述：你的黑桃牌均视为红桃牌。
+	引用：LuaHongyan
 	状态：验证通过
 ]]--
 LuaHongyan = sgs.CreateFilterSkill{
@@ -459,6 +464,7 @@ LuaHongyan = sgs.CreateFilterSkill{
 	技能名：后援
 	相关武将：智·蒋琬
 	描述：出牌阶段，你可以弃置两张手牌，指定一名其他角色摸两张牌，每阶段限一次 
+	引用：LuaXHouyuan
 	状态：验证通过
 ]]--
 LuaXHouyuanCard = sgs.CreateSkillCard{
@@ -502,6 +508,7 @@ LuaXHouyuan = sgs.CreateViewAsSkill{
 	技能名：胡笳
 	相关武将：倚天·蔡昭姬
 	描述：回合结束阶段开始时，你可以进行判定：若为红色，立即获得此牌，如此往复，直到出现黑色为止，连续发动3次后武将翻面 
+	引用：LuaXCaizhaojiHujia
 	状态：验证通过
 ]]--
 LuaXCaizhaojiHujia = sgs.CreateTriggerSkill{
@@ -549,41 +556,54 @@ LuaXCaizhaojiHujia = sgs.CreateTriggerSkill{
 	技能名：虎啸
 	相关武将：SP·关银屏
 	描述：你于出牌阶段每使用一张【杀】被【闪】抵消，此阶段你可以额外使用一张【杀】。 
-	状态：验证通过
+	引用：LuaHuxiaoCount、LuaHuxiao、LuaHuxiaoRemove
+	状态：尚未验证
 ]]--
-LuaHuxiao = sgs.CreateTriggerSkill{
-	name = "LuaHuxiao",
+LuaHuxiaoCount = sgs.CreateTriggerSkill{
+	name = "#LuaHuxiaoCount",
 	events = {sgs.SlashMissed,sgs.EventPhaseChanging},
 	on_trigger = function(self, event, player, data)
 		if event == sgs.SlashMissed then
 			if player:getPhase() == sgs.Player_Play then
-				player:gainMark("Huxiao", 1)
+				player:gainMark("huxiao", 1)
 			end
 		elseif event == sgs.EventPhaseChanging then	
 			local change = data:toPhaseChange()
 			if change.from == sgs.Player_Play then
-				local x = player:getMark("Huxiao")
+				local x = player:getMark("huxiao")
 				if x > 0 then
-					player:loseMark("Huxiao", x)
+					player:loseMark("huxiao", x)
 				end
 			end
 		end
 	end,
 }
-LuaHuxiaoHid = sgs.CreateTargetModSkill{
-	name = "#LuaHuxiaoHid",
+LuaHuxiao = sgs.CreateTargetModSkill{
+	name = "LuaHuxiao",
 	pattern = "Slash",
 	residue_func = function(self, player)
-		local num = player:getMark("Huxiao")
+		local num = player:getMark("huxiao")
 		if player:hasSkill(self:objectName()) then
 			return num
 		end
 	end,
 }
+LuaHuxiaoRemove = sgs.CreateTriggerSkill{
+	name = "#LuaHuxiaoRemove"
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.EventLoseSkill},
+	on_trigger = function(self, event, player, data)
+		if data:toString() == "huxiao" then
+            room:setPlayerMark(player, "huxiao", 0)
+		end
+        return false
+	end
+}
 --[[
 	技能名：护驾（主公技）
 	相关武将：标准·曹操、铜雀台·曹操
 	描述：当你需要使用或打出一张【闪】时，你可以令其他魏势力角色打出一张【闪】（视为由你使用或打出）。 
+	引用：LuaHujia
 	状态：0224验证通过
 ]]--
 LuaHujia = sgs.CreateTriggerSkill{
@@ -623,6 +643,7 @@ LuaHujia = sgs.CreateTriggerSkill{
 	技能名：化身
 	相关武将：山·左慈
 	描述：所有人都展示武将牌后，你随机获得两张未加入游戏的武将牌，称为“化身牌”，选一张置于你面前并声明该武将的一项技能，你获得该技能且同时将性别和势力属性变成与该武将相同直到“化身牌”被替换。在你的每个回合开始时和结束后，你可以替换“化身牌”，然后（无论是否替换）你为当前的“化身牌”声明一项技能（你不可以声明限定技、觉醒技或主公技）。
+	引用：LuaHuashen
 	状态：验证通过
 ]]--
 function acquireGenerals(zuoci, n)
@@ -655,7 +676,6 @@ function acquireGenerals(zuoci, n)
 	end
 	zuoci:setTag("LuaHuashens", sgs.QVariant(table.concat(Huashens, "+")))
 end
-
 function askForChooseSkill(zuoci)
 	local room = zuoci:getRoom()
 	local old_skill = zuoci:getTag("LuaHuashensSkill"):toString()
@@ -717,6 +737,8 @@ LuaHuashen = sgs.CreateTriggerSkill{
 	技能名：怀异
 	相关武将：3D织梦·司马昭
 	描述： 每当你体力值发生一次变化后，你可以摸一张牌。 
+	引用：LuaXHuaiyi
+	状态：尚未验证
 ]]--
 LuaXHuaiyi = sgs.CreateTriggerSkill {
 	name = "LuaXHuaiyi",
@@ -731,6 +753,7 @@ LuaXHuaiyi = sgs.CreateTriggerSkill {
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾
 	描述：在一名己方角色的判定牌生效前，你可以打出一张牌代替之。
+	引用：LuaXHuanshi
 	状态:验证通过
 ]]--
 Lua3V3_isFriend = function(player,other)
@@ -794,6 +817,7 @@ LuaXHuanshi = sgs.CreateTriggerSkill {
 	技能名：缓释
 	相关武将：新3V3·诸葛瑾（身份局）
 	描述：在一名角色的判定牌生效前，你可以令其选择是否由你打出一张牌代替之。
+	引用：LuaXHuanshi
 	状态：验证通过
 ]]--
 LuaXHuanshiCard = sgs.CreateSkillCard{
@@ -867,6 +891,7 @@ LuaXHuanshi = sgs.CreateTriggerSkill{
 	技能名：皇恩
 	相关武将：贴纸·刘协
 	描述：每当一张锦囊牌指定了不少于两名目标时，你可以令成为该牌目标的至多X名角色各摸一张牌，则该锦囊牌对这些角色无效。（X为你当前体力值） 
+	引用：LuaXHuangen
 	状态：验证通过
 ]]--
 LuaXHuangenCard = sgs.CreateSkillCard{
@@ -949,6 +974,7 @@ LuaXHuangen = sgs.CreateTriggerSkill{
 	技能名：黄天（主公技）
 	相关武将：风·张角
 	描述：其他群雄角色可以在他们各自的出牌阶段交给你一张【闪】或【闪电】。每阶段限一次。
+	引用：LuaHuangtian；LuaHuangtianVS（技能暗将）
 	状态：验证通过
 ]]--
 LuaHuangtianCard = sgs.CreateSkillCard{
@@ -1047,6 +1073,7 @@ LuaHuangtian = sgs.CreateTriggerSkill{
 	技能名：挥泪（锁定技）
 	相关武将：一将成名·马谡
 	描述：当你被其他角色杀死时，该角色弃置其所有的牌。
+	引用：LuaHuilei
 	状态：0224验证通过
 ]]--
 LuaHuilei = sgs.CreateTriggerSkill{
@@ -1058,7 +1085,7 @@ LuaHuilei = sgs.CreateTriggerSkill{
 		if death.who:objectName()== player:objectName() then
 			local damage = death.damage
 			if damage then
-			    local killer = damage.from 
+				local killer = damage.from 
 				killer:throwAllHandCardsAndEquips()
 			end
 		end
@@ -1074,6 +1101,7 @@ LuaHuilei = sgs.CreateTriggerSkill{
 	技能名：魂姿（觉醒技）
 	相关武将：山·孙策
 	描述：回合开始阶段开始时，若你的体力为1，你须减1点体力上限，并获得技能“英姿”和“英魂”。
+	引用：LuaHunzi
 	状态：验证通过
 ]]--
 LuaHunzi = sgs.CreateTriggerSkill{
@@ -1105,6 +1133,7 @@ LuaHunzi = sgs.CreateTriggerSkill{
 	技能名：火计
 	相关武将：火·诸葛亮
 	描述：你可以将一张红色手牌当【火攻】使用。
+	引用：LuaHuoji
 	状态：验证通过
 ]]--
 LuaHuoji = sgs.CreateViewAsSkill{
@@ -1133,6 +1162,7 @@ LuaHuoji = sgs.CreateViewAsSkill{
 	技能名：祸首（锁定技）
 	相关武将：林·孟获
 	描述：【南蛮入侵】对你无效；当其他角色使用【南蛮入侵】指定目标后，你是该【南蛮入侵】造成伤害的来源。
+	引用：LuaHuoshou、LuaSavageAssaultAvoid
 	状态：验证通过
 ]]--
 LuaHuoshou = sgs.CreateTriggerSkill{
@@ -1198,7 +1228,8 @@ LuaSavageAssaultAvoid = sgs.CreateTriggerSkill{
 --[[
 	技能名：祸水（锁定技）
 	相关武将：国战·邹氏
-	描述：你的回合内，体力值不少于体力上限一半的其他角色所有武将技能无效。 
+	描述：你的回合内，体力值不少于体力上限一半的其他角色所有武将技能无效。
+	引用：LuaHuoshui
 	状态：验证通过
 ]]--
 function setHuoshuiFlag(room, player, is_lose) 
@@ -1208,8 +1239,8 @@ function setHuoshuiFlag(room, player, is_lose)
 		room:filterCards(pl, pl:getCards("he"), not is_lose)
 	end
 end
-LuaHuoshui = sgs.CreateTriggerSkill{
-	name = "LuaHuoshui",
+LuaXHuoshui = sgs.CreateTriggerSkill{
+	name = "LuaXHuoshui",
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.EventPhaseStart, sgs.EventPhaseChanging, sgs.PostHpReduced, sgs.Death, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill, sgs.HpRecover, sgs.PreHpLost},	
 	on_trigger = function(self, event, player, data)
