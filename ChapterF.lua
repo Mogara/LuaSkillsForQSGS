@@ -25,7 +25,7 @@ LuaFanjianCard = sgs.CreateSkillCard{
 		local card = sgs.Sanguosha:getCard(id)
 		local suit = room:askForSuit(dest, self:objectName())
 		room:getThread():delay()
-		dest:obtainCard(card);
+		dest:obtainCard(card)
 		room:showCard(dest, id)
 		if card:getSuit() ~= suit then
 			local damage = sgs.DamageStruct()
@@ -131,7 +131,7 @@ LuaFankui = sgs.CreateTriggerSkill{
 	技能名：放权
 	相关武将：山·刘禅
 	描述：你可以跳过你的出牌阶段，若如此做，你在回合结束时可以弃置一张手牌令一名其他角色进行一个额外的回合。 
-	状态：验证通过
+	状态：尚未验证
 ]]--
 LuaFangquan = sgs.CreateTriggerSkill{
 	name = "LuaFangquan",
@@ -178,6 +178,12 @@ LuaFangquanGive = sgs.CreateTriggerSkill{
 			end
 		end
 	end,
+	can_trigger = function(self, target)
+		if target then
+			return target:getPhase() == sgs.Player_NotActive
+		end
+		return false
+	end
 	priority = -4
 }
 --[[
