@@ -153,7 +153,7 @@ LuaXJisuCard = sgs.CreateSkillCard{
 	end
 }
 LuaXJisuVS = sgs.CreateViewAsSkill{
-	name = "LuaXJisuVS", 
+	name = "LuaXJisu", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaXJisuCard:clone()
@@ -1038,14 +1038,20 @@ LuaJuxiang = sgs.CreateTriggerSkill{
 			end
 		elseif event == sgs.CardsMoving then
 			local move = data:toMoveOneTime()
-			if move.card_ids:length() == 1 and move.from_places:contains(sgs.Player_PlaceTable) and move.to_place == sgs.Player_DiscardPile then
-				if move.reason.m_reason == sgs.CardMoveReason_S_REASON_USE then
-					local card = sgs.Sanguosha:getCard(move.card_ids:first())
-					if card:hasFlag("real_SA") then
-						local targets = room:getAllPlayers()
-						for _,p in sgs.qlist(targets) do
-							if p:hasSkill(self:objectName()) and p:objectName() ~= move.from:objectName() then
-								p:obtainCard(card)
+			if move.card_ids:length() == 1 then
+				if move.from_places:contains(sgs.Player_PlaceTable) then
+					if move.to_place == sgs.Player_DiscardPile then
+						if move.reason.m_reason == sgs.CardMoveReason_S_REASON_USE then
+							local card = sgs.Sanguosha:getCard(move.card_ids:first())
+							if card:hasFlag("real_SA") then
+								local targets = room:getAllPlayers()
+								for _,p in sgs.qlist(targets) do
+									if p:hasSkill(self:objectName()) then
+										if p:objectName() ~= move.from:objectName() then
+											p:obtainCard(card)
+										end
+									end
+								end
 							end
 						end
 					end

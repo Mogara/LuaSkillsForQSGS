@@ -621,13 +621,14 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 			local choice = room:askForChoice(zhangzhao, self:objectName(), choices)
 			if choice ~= "cancel" then
 				local intervention = room:askForCard(zhangzhao, ".|.|~7|hand", "@fuzuo_card")
+				local extra = intervention:getNumber()
 				if intervention then
 					if choice == source:getGeneralName() then
-						local num = math.min((pindian.from_card:getNumber() + intervention:getNumber() / 2),13)
-						pindian.from_number=num
+						local num = math.min((pindian.from_card:getNumber() + extra/2), 13)
+						pindian.from_number = num
 					else
-						local num = math.min((pindian.to_card:getNumber() + intervention:getNumber() / 2),13)
-						pindian.to_number=num
+						local num = math.min((pindian.to_card:getNumber() + extra/2), 13)
+						pindian.to_number = num
 					end
 					data:setValue(pindian)
 				end

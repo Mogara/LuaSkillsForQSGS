@@ -30,11 +30,12 @@ LuaXLanggu = sgs.CreateTriggerSkill{
 					judge.pattern = sgs.QRegExp("(.*):(.*):(.*)")
 					judge.who = player
 					room:judge(judge)
-					room:fillAG(target:handCards(), player)
+					local ids = target:handCards()
+					room:fillAG(ids, player)
 					local mark = judge.card:getSuitString()
 					room:setPlayerFlag(player, mark)
-					while (not target:isKongcheng()) do
-						local card_id = room:askForAG(player, target:handCards(), true, "LuaXLanggu")
+					while not target:isKongcheng() do
+						local card_id = room:askForAG(player, ids, true, "LuaXLanggu")
 						if card_id == -1 then
 							player:invoke("clearAG")
 							break
@@ -219,7 +220,7 @@ LuaLeijiCard = sgs.CreateSkillCard{
 	end
 }
 LuaLeijiVS = sgs.CreateViewAsSkill{
-	name = "LuaLeijiVS", 
+	name = "LuaLeiji", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaLeijiCard:clone()
@@ -228,7 +229,7 @@ LuaLeijiVS = sgs.CreateViewAsSkill{
 		return false
 	end, 
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@leiji"
+		return pattern == "@@LuaLeiji"
 	end
 }
 LuaLeiji = sgs.CreateTriggerSkill{
@@ -240,7 +241,7 @@ LuaLeiji = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local card = data:toResponsed().m_card
 		if card:isKindOf("Jink") then
-			room:askForUseCard(player, "@@leiji", "@leiji")
+			room:askForUseCard(player, "@@LuaLeiji", "@LuaLeiji")
 		end
 		return false
 	end, 

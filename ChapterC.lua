@@ -375,7 +375,7 @@ LuaChunlaoVS = sgs.CreateViewAsSkill{
 		return false
 	end, 
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@chunlao"
+		return pattern == "@@LuaChunlao"
 	end
 }
 LuaChunlao = sgs.CreateTriggerSkill{
@@ -389,7 +389,7 @@ LuaChunlao = sgs.CreateTriggerSkill{
 			if player:getPhase() == sgs.Player_Finish then
 				if not player:isKongcheng() then
 					if player:getPile("wine"):length() == 0 then
-						room:askForUseCard(player, "@@chunlao", "@chunlao")
+						room:askForUseCard(player, "@@LuaChunlao", "@LuaChunlao")
 					end
 				end
 			end

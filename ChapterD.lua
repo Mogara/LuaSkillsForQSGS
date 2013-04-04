@@ -359,7 +359,7 @@ LuaDujiCard = sgs.CreateSkillCard{
 	target_fixed = true,
 	will_throw = false, 
 	on_use = function(self, room, source, targets)
-	source:addToPile("du", self)
+		source:addToPile("du", self)
 	end 
 }
 LuaDujiVS = sgs.CreateViewAsSkill{
@@ -499,7 +499,7 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 		if splayer then
 			if splayer:getPhase() == sgs.Player_Discard then
 				if splayer:hasFlag("duyi_target") then
-					splayer:jilei(".");
+					splayer:jilei(".")
 					splayer:invoke("jilei", ".")
 					room:setPlayerFlag(splayer, "-duyi_target")
 				end

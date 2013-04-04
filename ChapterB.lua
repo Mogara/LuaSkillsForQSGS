@@ -164,9 +164,9 @@ LuaBaijiang = sgs.CreateTriggerSkill{
 		local count = player:getMaxHp()
 		mhp:setValue(count+1)
 		room:setPlayerProperty(player, "maxhp", mhp)
-		room:detachSkillFromPlayer(player, "quanji")
-		room:detachSkillFromPlayer(player, "zhenggong")
-		room:acquireSkill(player, "yexin")
+		room:detachSkillFromPlayer(player, "v5quanji")
+		room:detachSkillFromPlayer(player, "v5zhenggong")
+		room:acquireSkill(player, "v5yexin")
 		return false
 	end,
 	can_trigger = function(self, target)
@@ -232,7 +232,7 @@ BaobianChange = function(room, player, hp, skill_name)
 	else
 		room:detachSkillFromPlayer(player, skill_name)
 		for i=1, #baobian_skills, 1 do
-			if baobian_skills[i]==skill_name  then
+			if baobian_skills[i] == skill_name then
 				table.remove(baobian_skills, i)
 			end
 		end
@@ -434,7 +434,7 @@ LuaBeiliang = sgs.CreateTriggerSkill{
 			if player:getHandcardNum() < player:getMaxHp() then 
 				if room:askForSkillInvoke(player, self:objectName()) then
 					local x = player:getMaxHp() - player:getHandcardNum()
-				    	player:drawCards(x) 
+				    player:drawCards(x) 
 				    return true
 				end
 			end
@@ -544,7 +544,7 @@ LuaBifa = sgs.CreateTriggerSkill{
 		if player:getPhase() == sgs.Player_RoundStart then
 			local bifa_list = player:getPile("bifa")
 			if bifa_list:length() > 0 then
-				while (not bifa_list:isEmpty()) do
+				while not bifa_list:isEmpty() do
 					local card_id = bifa_list:first()
 					local keystr = string.format("BifaSource%d", card_id)
 					local tag = room:getTag(keystr)

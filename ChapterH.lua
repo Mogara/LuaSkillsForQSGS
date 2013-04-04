@@ -1055,7 +1055,7 @@ LuaHuilei = sgs.CreateTriggerSkill{
 	events = {sgs.Death},
 	on_trigger = function(self, event, player, data)
 		local death = data:toDeath()
-		if death.who:objectName( )== player:objectName() then
+		if death.who:objectName()== player:objectName() then
 			local damage = death.damage
 			if damage then
 			    local killer = damage.from 

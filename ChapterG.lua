@@ -103,7 +103,8 @@ LuaGangli = sgs.CreateTriggerSkill{
 				player:setTag("Gangli", sgs.QVariant(false))
 				if invoke then
 					if room:askForSkillInvoke(player, self:objectName(), data) then
-						local target = room:askForPlayerChosen(player, room:getOtherPlayers(source), self:objectName())
+						local others = room:getOtherPlayers(source)
+						local target = room:askForPlayerChosen(player, others, self:objectName())
 						local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 						slash:setSkillName(self:objectName())
 						local use = sgs.CardUseStruct()
@@ -147,9 +148,9 @@ LuaGanglie = sgs.CreateTriggerSkill{
 			if judge:isGood() then
 				if not room:askForDiscard(source, self:objectName(), 2, 2, true) then
 					local damage = sgs.DamageStruct()
-					damage.from = player;
-					damage.to = source;
-					room:damage(damage);
+					damage.from = player
+					damage.to = source
+					room:damage(damage)
 				end
 			end
 		end

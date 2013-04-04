@@ -153,16 +153,16 @@ LuaMiji = sgs.CreateTriggerSkill{
 					room:judge(judge)
 					if judge:isGood() then
 						local x = player:getLostHp()
-						local miji_cards=sgs.CardList()
-						miji_cards=room:getNCards(x,false)
+						local miji_cards = sgs.CardList()
+						miji_cards = room:getNCards(x,false)
 						local miji_card = sgs.Sanguosha:cloneCard("Slash",sgs.Card_Spade,13)
 						for _,card in sgs.qlist(miji_cards) do
 							miji_card:addSubcard(card)
 						end
-						room:obtainCard(player,miji_card,false)
+						room:obtainCard(player, miji_card, false)
 						local playerlist = room:getAllPlayers()
 						local target = room:askForPlayerChosen(player, playerlist, self:objectName())
-						room:obtainCard(target,miji_card,false)
+						room:obtainCard(target, miji_card, false)
 					end
 				end
 			end
@@ -521,12 +521,12 @@ LuaMingjian = sgs.CreateTriggerSkill{
 luaMingjianStop=sgs.CreateTriggerSkill{
 	name = "#luaMingjianStop",
 	priority = 5,
-	events = sgs.AskForRetrial ,        
+	events = sgs.AskForRetrial ,		
 	on_trigger = function(self, event, player, data)
 		local judge = data:toJudge()
 		local jianpile = judge.who:getPile("jian")
 		return not jianpile:isEmpty()
-	end,      
+	end,	  
 	can_trigger = function()
 		return true
 	end
@@ -543,40 +543,39 @@ LuaMingzhe = sgs.CreateTriggerSkill{
 	requency = sgs.Skill_Frequent,
 	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
 	on_trigger = function(self, event, player, data)
-        if(player:getPhase() ~= sgs.Player_NotActive) then
-            return false
-	end
-	local move = data:toMoveOneTime()
-	local room = player:getRoom()
-        if (move.from:objectName() ~= player:objectName()) then
-            return false
-	end
-        if (event == sgs.BeforeCardsMove) then
-		if (bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_USE
-		or bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD 
-		or bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_RESPONSE) then
-			local card
-			for _,card_id in sgs.qlist(move.card_ids) do
-				card = sgs.Sanguosha:getCard(card_id)
-				if (card:isRed() and (room:getCardPlace(card_id) == sgs.Player_PlaceHand or room:getCardPlace(card_id) == sgs.Player_PlaceEquip)) then-- and (move.from_places[i] == sgs.Player_PlaceHand or move.from_places[i] == sgs.Player_PlaceEquip))then
-					player:addMark(self:objectName())
+		if player:getPhase() == sgs.Player_NotActive then
+			local move = data:toMoveOneTime()
+			local room = player:getRoom()
+			if move.from:objectName() == player:objectName() then
+				if event == sgs.BeforeCardsMove then
+					local reason = bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+					if (reason == sgs.CardMoveReason_S_REASON_USE) or (reason == sgs.CardMoveReason_S_REASON_DISCARD) or (reason == sgs.CardMoveReason_S_REASON_RESPONSE) then
+						local card
+						for _,card_id in sgs.qlist(move.card_ids) do
+							card = sgs.Sanguosha:getCard(card_id)
+							if card:isRed() then
+								local place = room:getCardPlace(card_id)
+								if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
+									player:addMark(self:objectName())
+								end
+							end
+						end
+					end
+				else 
+					local count = player:getMark(self:objectName())
+					local i = 0
+					while i < count do
+						if player:askForSkillInvoke(self:objectName(), data) then
+							player:removeMark(self:objectName())
+							room:drawCards(player, 1)
+						end
+						i= i + 1
+					end
 				end
 			end
 		end
-        else 
-		local count = player:getMark(self:objectName())
-		local i = 0
-		while(i < count) do
-			if (player:askForSkillInvoke(self:objectName(), data)) then
-		    		room:broadcastSkillInvoke(self:objectName())
-				player:removeMark(self:objectName())
-				room:drawCards(player,1)
-			end
-			i= i+1
-		end
-        end
-        return false
-    end
+		return false
+	end
 }
 --[[
 	技能名：谋断（转化技）
