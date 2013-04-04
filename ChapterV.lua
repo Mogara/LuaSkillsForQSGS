@@ -2283,7 +2283,7 @@ LuaTanhuClear = sgs.CreateTriggerSkill{
 	技能名：伪帝（锁定技）
 	相关武将：SP·袁术
 	描述：你拥有当前主公的主公技。
-	状态：验证失败（不能拥有主公技）
+	状态：尚未验证(原有问题:不能拥有主公技)
 ]]--
 LuaWeidiCard = sgs.CreateSkillCard{
 	name = "LuaWeidiCard", 
@@ -2291,25 +2291,25 @@ LuaWeidiCard = sgs.CreateSkillCard{
 	will_throw = true, 
 	on_use = function(self, room, source, targets) 
 		local lord = room:getLord()
-		local choices = sgs.StringList()
+		local choices = {}
 		if source:hasLordSkill("jijiang") then
 			if lord:hasLordSkill("jijiang") then
 				if sgs.Slash_IsAvailable(source) then
-					choices:append("jijiang")
+					table.insert(choices, "jijiang")
 				end
 			end
 		end
 		if source:hasLordSkill("weidai") then
 			if lord:hasLordSkill("weidai") then
 				if sgs.Analeptic_IsAvailable(source) then
-					choices:append("weidai")
+					table.insert(choices, "weidai")
 				end
 			end
 		end
-		if choices:length() > 0 then
+		if #choices > 0 then
 			local choice = ""
-			if choices:length() == 1 then
-				choice = choices:first()
+			if #choices == 1 then
+				choice = choices[1]
 			else
 				choice = room:askForChoice(source, "LuaWeidi", "jijiang+weidai")
 			end
@@ -2360,7 +2360,15 @@ LuaWeidiVS = sgs.CreateViewAsSkill{
 			end
 		end
 		return false
-	end
+	end,
+	enabled_at_response = function(self, player, pattern)
+		if player:hasLordSkill("jijiang") and pattern=="slash" then
+			return true
+		end
+		if player:hasLordSkill("weidai") and string.find(pattenr, "analeptic") then
+			return true
+		end
+	end,
 }
 LuaWeidi = sgs.CreateTriggerSkill{
 	name = "LuaWeidi", 
@@ -2368,7 +2376,12 @@ LuaWeidi = sgs.CreateTriggerSkill{
 	events = {sgs.GameStart}, 
 	view_as_skill = LuaWeidiVS, 
 	on_trigger = function(self, event, player, data) 
-		-- do nothing --
+		local lord = player:getRoom():getLord()
+		for _,sk in sgs.qlist(lord:getVisibleSkillList()) do
+			if sk:isLordSkill() then
+				room:acquireSkill(player, sk:objectName(), false)
+			end
+		end
 		return false
 	end
 }
