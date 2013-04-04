@@ -680,10 +680,8 @@ LuaDuanliang = sgs.CreateViewAsSkill{
 	相关武将：铜雀台·吉本
 	描述：当你成为其他角色使用的牌的目标后，你可以弃置其至多两张牌（也可以不弃置），然后失去1点体力。 
 	状态：验证通过
+	备注:原版遇到香香会有bug,新版选择手牌可能会有多次选择的情况()两次随机选卡为相同id,以后再修正
 ]]--
-LuaXDuanzhiDummyCard = sgs.CreateSkillCard{
-	name = "LuaXDuanzhiDummyCard"
-}
 LuaXDuanzhi = sgs.CreateTriggerSkill{
 	name = "LuaXDuanzhi",  
 	frequency = sgs.Skill_NotFrequent, 
@@ -700,12 +698,15 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 					if targets and targets:contains(splayer) then
 						if player:objectName() == splayer:objectName() then
 							if player:askForSkillInvoke(self:objectName()) then
-								room:setPlayerFlag(player, "DuanzhiTarget_InTempMoving")
-								local dummy = LuaXDuanzhiDummyCard:clone()
 								local card_ids = sgs.IntList()
-								local original_places = {}
-								for i=0, 1, 1 do
-									if player:isNude() then
+								local m
+								if(source:getCards("he"):length() < 2)then
+									m = 1
+								else
+									m = 2
+								end
+								while(card_ids:length() < m) do
+									if source:isNude() then
 										break
 									end
 									local choice = room:askForChoice(player, self:objectName(), "discard+cancel")
@@ -713,21 +714,18 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 										break
 									end
 									local id = room:askForCardChosen(player, source, "he", self:objectName())
-									card_ids:append(id)
-									local place = room:getCardPlace(card_ids:at(i))
-									table.insert(original_places, place)
-									dummy:addSubcard(card_ids:at(i))
-									source:addToPile("#duanzhi", card_ids:at(i), false)
-								end
-								local scl = dummy:subcardsLength()
-								if scl > 0 then
-									for i=0, scl-1, 1 do
-										local card = sgs.Sanguosha:getCard(card_ids:at(i))
-										room:moveCardTo(card, source, original_places[i+1], false)
-										room:throwCard(dummy, source, player)
+									while(card_ids:contains(id)) do 
+										id = room:askForCardChosen(player, source, "he", self:objectName())
 									end
+									card_ids:append(id)
 								end
-								room:setPlayerFlag(player, "-DuanzhiTarget_InTempMoving")
+								if(card_ids:length() > 0) then
+									local move1 = sgs.CardsMoveStruct()
+									move1.card_ids = card_ids
+									move1.from = source
+									move1.to_place = sgs.Player_DiscardPile
+									room:moveCardsAtomic(move1, false)
+								end
 								room:loseHp(player)
 							end
 						end
@@ -740,23 +738,4 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		return target
 	end
-}
-LuaXDuanzhiAvoidTriggeringCardsMove = sgs.CreateTriggerSkill{
-	name = "#LuaXDuanzhi",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.CardsMoveOneTime},  
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
-		local players = room:getAllPlayers()
-		for _,p in sgs.qlist(players) do
-			if p:hasFlag("DuanzhiTarget_InTempMoving") then
-				return true
-			end
-		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		return target
-	end, 
-	priority = 10
 }
