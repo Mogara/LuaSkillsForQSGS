@@ -519,7 +519,62 @@ LuaXJieyuan = sgs.CreateTriggerSkill{
 	技能名：解烦（限定技）
 	相关武将：二将成名·韩当
 	描述：出牌阶段，你可以指定一名角色，攻击范围内含有该角色的所有角色须依次选择一项：弃置一张武器牌；或令该角色摸一张牌。 
+	状态：0224验证通过
 ]]--
+LuaXJiefancard = sgs.CreateSkillCard{
+	name = "LuaXJiefancard",
+	mute = true,
+	filter = function(self, targets, to_select, player)
+		return #targets == 0 
+	end,
+	on_use = function(self, room, source, targets)
+		source:loseMark("@rescue")
+		local target = targets[1]
+		local data = sgs.QVariant()
+		data:setValue(target)
+		room:setTag("Jiefantarget",data)
+		room:getThread():delay(500)
+		for _, p in sgs.qlist(room:getAllPlayers()) do
+			if p:inMyAttackRange(target) then
+				if p:isAlive() then
+					room:cardEffect(self, source, p)
+				end
+			end
+		end
+		room:removeTag("Jiefantarget")
+	end,
+	on_effect = function(self, effect)
+		local room = effect.to:getRoom()
+		local tar = room:getTag("Jiefantarget"):toPlayer()
+		local data = sgs.QVariant()
+		data:setValue(tar)
+		if tar then
+			if not room:askForCard(effect.to, ".Weapon", "@jiefan-discard", data) then
+				tar:drawCards(1)
+			end
+		end
+	end
+}
+LuaXJiefanVS = sgs.CreateViewAsSkill{
+	name = "LuaXJiefan",
+	n = 0,
+	view_as = function(self, cards)
+		return LuaXJiefancard:clone()
+	end,
+	enabled_at_play = function(self, player)
+		return player:getMark("@rescue") > 0 
+	end
+}
+LuaXJiefan = sgs.CreateTriggerSkill{
+	name = "LuaXJiefan",
+	frequency = sgs.Skill_Limited,
+	events = sgs.GameStart,
+	view_as_skill = LuaXJiefanVS,
+	on_trigger = function(self,event,player,data)
+		player:gainMark("@rescue") 
+		return
+	end
+}
 --[[
 	技能名：解烦
 	相关武将：怀旧·韩当
