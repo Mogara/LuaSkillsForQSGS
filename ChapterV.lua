@@ -2283,7 +2283,7 @@ LuaTanhuClear = sgs.CreateTriggerSkill{
 	技能名：伪帝（锁定技）
 	相关武将：SP·袁术
 	描述：你拥有当前主公的主公技。
-	状态：尚未验证(原有问题:不能拥有主公技)
+	状态：验证失败(激将、危殆失败)
 ]]--
 LuaWeidiCard = sgs.CreateSkillCard{
 	name = "LuaWeidiCard", 
@@ -2343,7 +2343,7 @@ LuaWeidiCard = sgs.CreateSkillCard{
 	end
 }
 LuaWeidiVS = sgs.CreateViewAsSkill{
-	name = "LuaWeidiVS", 
+	name = "LuaWeidi", 
 	n = 0,
 	view_as = function(self, cards) 
 		return LuaWeidiCard:clone()
@@ -2372,14 +2372,15 @@ LuaWeidiVS = sgs.CreateViewAsSkill{
 }
 LuaWeidi = sgs.CreateTriggerSkill{
 	name = "LuaWeidi", 
-	frequency = sgs.Skill_Compulsory, 
+	frequency = sgs.Skill_NotFrequent,		--因为要用视为技 
 	events = {sgs.GameStart}, 
 	view_as_skill = LuaWeidiVS, 
+	priority = 2,
 	on_trigger = function(self, event, player, data) 
 		local lord = player:getRoom():getLord()
 		for _,sk in sgs.qlist(lord:getVisibleSkillList()) do
 			if sk:isLordSkill() then
-				room:acquireSkill(player, sk:objectName(), false)
+				player:getRoom():acquireSkill(player, sk:objectName(), false)
 			end
 		end
 		return false
