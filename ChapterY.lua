@@ -667,7 +667,29 @@ LuaYongsi = sgs.CreateTriggerSkill{
 	技能名：忧戚（觉醒技）
 	相关武将：3D织梦·诸葛瑾
 	描述：回合开始阶段结束时，若你的体力为1，你须减1点体力上限，并永久获得技能“缔盟”和“空城”。 
+	引用：LuaXYouqi
+	状态：验证通过
 ]]--
+LuaXYouqi=sgs.CreateTriggerSkill{
+	name="LuaXYouqi",
+	frequency=sgs.Skill_Wake,
+	events={sgs.EventPhaseEnd},
+	can_trigger = function(self, target)
+		if target:hasSkill(self:objectName()) then
+			if target:getMark(self:objectName()) == 0 then
+				return target:getPhase() == sgs.Player_Start and target:getHp() == 1 
+			end
+		end
+	end,
+	on_trigger=function(self, event, player, data)
+		local room = player:getRoom()
+		room:loseMaxHp(player)
+		room:acquireSkill(player, "dimeng")
+        	room:acquireSkill(player, "kongcheng")
+		room:setPlayerMark(player, self:objectName(), 1)
+		return false
+	end
+}
 --[[
 	技能名：狱刎（锁定技）
 	相关武将：智·田丰
