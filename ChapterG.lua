@@ -71,7 +71,30 @@ LuaGanlu = sgs.CreateViewAsSkill{
 	技能名：感染（锁定技）
 	相关武将：僵尸·僵尸
 	描述：你的装备牌都视为铁锁连环。 
+	引用：LuaXGanran
+	状态：验证通过
 ]]--
+LuaXGanran = sgs.CreateFilterSkill{
+	name = "LuaXGanran",
+	view_filter = function(self, to_select)
+		local room = sgs.Sanguosha:currentRoom()
+		local place = room:getCardPlace(to_select:getEffectiveId())
+		if place == sgs.Player_PlaceHand then
+			return to_select:isKindOf("EquipCard")
+		end
+		return false
+	end,
+	view_as = function(self, card)
+		local id = card:getId()
+		local suit = card:getSuit()
+		local point = card:getNumber()
+		local chain = sgs.Sanguosha:cloneCard("iron_chain", suit, point)
+		chain:setSkillName(self:objectName())
+		local vs_card = sgs.Sanguosha:getWrappedCard(id)
+		vs_card:takeOver(chain)
+		return vs_card
+	end,
+}
 --[[
 	技能名：刚戾
 	相关武将：3D织梦·程昱
