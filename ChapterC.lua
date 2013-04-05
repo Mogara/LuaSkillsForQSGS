@@ -99,8 +99,92 @@ LuaXCangni = sgs.CreateTriggerSkill{
 --[[
 	技能名：谗陷
 	相关武将：3D织梦·孙鲁班
-	描述： 出牌阶段，你可以将一张方片牌交给一名其他角色，该角色进行二选一：1、对其攻击范围内的另一名由你指定的角色使用一张【杀】。2.令你选择获得其一张牌或对其造成一点伤害。每阶段限一次。 
+	描述： 出牌阶段，你可以将一张方片牌交给一名其他角色，该角色进行二选一：1、对其攻击范围内的另一名由你指定的角色使用一张【杀】。2.令你选择获得其一张牌或对其造成一点伤害。每阶段限一次。
+	引用：LuaXChanxian
+	状态：验证通过
 ]]--
+LuaXChanxianCard = sgs.CreateSkillCard{
+	name = "LuaXChanxianCard",
+	target_fixed = false,
+	will_throw = false,
+	filter = function(self, targets, to_select, player)
+		return #targets == 0 and to_select:objectName() ~= player:objectName()
+	end,
+	on_effect = function(self, effect)
+		local source = effect.from
+		local dest = effect.to
+		local room = source:getRoom()
+		room:obtainCard(dest, self, true)
+		if source:isAlive() and dest:isAlive() then
+			local can_use = false
+			local list = room:getOtherPlayers(dest)
+			for _,p in sgs.qlist(list) do
+				if dest:canSlash(p) then
+					can_use = true
+					break
+				end
+			end
+			local victim = nil
+			if can_use then
+				local targets = sgs.SPlayerList()
+				for _,v in sgs.qlist(list) do
+					if dest:canSlash(v) then
+						targets:append(v)
+					end
+				end
+				victim = room:askForPlayerChosen(source, targets, self:objectName())
+				local prompt = string.format("@ChanxianSlash", source:objectName(), victim:objectName())
+				if not room:askForUseSlashTo(dest, victim, prompt) then
+					if not dest:isNude() then
+						local choice = room:askForChoice(source, self:objectName(), "getcard+damage")
+						if choice == "getcard" then
+							local card_id = room:askForCardChosen(source, dest, "he", self:objectName())
+							room:obtainCard(source, card_id)
+						else
+							local damage = sgs.DamageStruct()
+							damage.from = source
+							damage.to = dest
+							damage.damage = 1
+							damage.card = nil
+							room:damage(damage)
+						end
+					else
+						local damage = sgs.DamageStruct()
+						damage.from = source
+						damage.to = dest
+						damage.damage = 1
+						damage.card = nil
+						room:damage(damage)
+					end
+				end
+			else
+				local damage = sgs.DamageStruct()
+				damage.from = source
+				damage.to = dest
+				damage.damage = 1
+				damage.card = nil
+				room:damage(damage)
+			end
+		end
+	end,
+}
+LuaXChanxian = sgs.CreateViewAsSkill{
+	name = "LuaXChanxian",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		return to_select:getSuit() == sgs.Card_Diamond
+	end, 
+	view_as = function(self, cards)
+		if #cards == 1 then
+			local chanxian_card = LuaXChanxianCard:clone()
+			chanxian_card:addSubcard(cards[1])
+			return chanxian_card
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("#LuaXChanxianCard")
+	end, 
+}
 --[[
 	技能名：缠蛇（聚气技）
 	相关武将：长坂坡·神张飞
