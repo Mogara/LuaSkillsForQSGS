@@ -714,5 +714,87 @@ LuaXYuwenX = sgs.CreateTriggerSkill{
 		武器牌：弃置与该角色距离为1的一名角色区域中的一张牌；
 		防具牌：该角色摸一张牌；
 		坐骑牌：该角色回复一点体力。
-	状态：验证失败
+	状态：0224验证通过
 ]]--
+LuaYuanhuCard = sgs.CreateSkillCard{
+	name = "LuaYuanhuCard", 
+	target_fixed = false, 
+	will_throw = false, 
+	filter = function(self, targets, to_select) 
+		if #targets == 0 then
+			local id = self:getEffectiveId()
+			local card = sgs.Sanguosha:getCard(id)
+			local equip = card:getRealCard():toEquipCard()
+			local index = equip:location()
+		    return to_select:getEquip(index) == nil
+		end
+		return false
+	end,
+	on_effect = function(self, effect) 
+		local source = effect.from
+		local target = effect.to
+		local room = source:getRoom()
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, source:objectName(), "LuaYuanhu", "")
+		room:moveCardTo(self, source, target, sgs.Player_PlaceEquip, reason)
+		local card = sgs.Sanguosha:getCard(self:getEffectiveId())
+		if card:isKindOf("Weapon") then
+			local targets = sgs.SPlayerList()
+			local allplayers = room:getAllPlayers()
+			for _,p in sgs.qlist(allplayers) do
+				if target:distanceTo(p) == 1 then
+					if not p:isAllNude() then
+						targets:append(p)
+					end
+				end
+			end
+			if not targets:isEmpty() then
+				local to_dismantle = room:askForPlayerChosen(source, targets, "LuaYuanhu")
+				local card_id = room:askForCardChosen(source, to_dismantle, "hej", "LuaYuanhu")
+				local to_throw = sgs.Sanguosha:getCard(card_id)
+				room:throwCard(to_throw, to_dismantle, source)
+			end
+		elseif card:isKindOf("Armor") then
+			target:drawCards(1)
+		elseif card:isKindOf("Horse") then
+			local recover = sgs.RecoverStruct()
+			recover.who = source
+			room:recover(target, recover)
+		end
+	end
+}
+LuaYuanhuVS = sgs.CreateViewAsSkill{
+	name = "LuaYuanhu", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		return to_select:isKindOf("EquipCard")
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 1 then
+			local first = LuaYuanhuCard:clone()
+			first:addSubcard(cards[1]:getId())
+			first:setSkillName(self:objectName())
+			return first
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return true
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@@LuaYuanhu"
+	end
+}
+LuaYuanhu = sgs.CreateTriggerSkill{
+	name = "LuaYuanhu", 
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.EventPhaseStart}, 
+	view_as_skill = LuaYuanhuVS, 
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Finish then
+			if not player:isNude() then
+				room:askForUseCard(player, "@@LuaYuanhu", "@yuanhu-equip")
+			end
+		end
+		return false
+	end
+}
