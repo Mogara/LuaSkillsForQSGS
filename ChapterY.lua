@@ -529,8 +529,41 @@ LuaYinlingClear = sgs.CreateTriggerSkill{
 --[[
 	技能名：隐智
 	相关武将：贴纸·辛宪英
-	描述：你每受到一点伤害，可展示牌堆顶的两张牌，其中每有一张黑桃牌，你可以立即指定任意角色从该伤害源处获得一张手牌，之后弃置那些黑桃牌，将其余以此法展示的牌收入手牌。 
+	描述：你每受到一点伤害，可展示牌堆顶的两张牌，其中每有一张黑桃牌，你可以立即指定任意角色从该伤害源处获得一张手牌，之后弃置那些黑桃牌，将其余以此法展示的牌收入手牌。
+	引用：LuaXYinzhi
+	状态：验证通过
 ]]--
+LuaXYinzhi = sgs.CreateTriggerSkill{
+	name="LuaXYinzhi",
+	events = {sgs.Damaged},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local damage = data:toDamage()
+		local from = damage.from
+		if not from or not player:askForSkillInvoke(self:objectName(), data) then 
+			return 
+		end
+		for i=1, damage.damage do
+			local card_ids = room:getNCards(2, false)
+			room:fillAG(card_ids) 
+			for _,id in sgs.qlist(card_ids) do
+				local card = sgs.Sanguosha:getCard(id)
+				if card:getSuit() == sgs.Card_Spade then 
+					if not from:isKongcheng() then
+						local targets = room:getOtherPlayers(from)
+						local target = room:askForPlayerChosen(player, targets, self:objectName())
+						local Id = room:askForCardChosen(target, from, "h", self:objectName())
+						room:obtainCard(target, Id, false)
+					end
+					room:throwCard(id, nil)	
+				else 
+					room:obtainCard(player, id) 
+				end
+			end
+			room:broadcastInvoke("clearAG")
+		end
+	end,
+}
 --[[
 	技能名：英魂
 	相关武将：林·孙坚、山·孙策
