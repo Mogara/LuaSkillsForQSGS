@@ -6,8 +6,49 @@
 --[[
 	技能名：雅量
 	相关武将：3D织梦·蒋琬
-	描述：当你成为其他角色所使用的非延时类锦囊的目标时，你可以摸一张牌，若如此做，该锦囊对你无效，且视为锦囊使用者对你使用了一张【杀】(该【杀】不计入回合使用限制)。 
+	描述：当你成为其他角色所使用的非延时类锦囊的目标时，你可以摸一张牌，若如此做，该锦囊对你无效，且视为锦囊使用者对你使用了一张【杀】(该【杀】不计入回合使用限制)。
+	引用：LuaXYaliang
+	状态：验证通过
 ]]--
+LuaXYaliang = sgs.CreateTriggerSkill{
+	name = "LuaXYaliang",
+	events = {sgs.TargetConfirming, sgs.CardEffected},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.CardEffected then
+			if player:isDead() or not player:hasSkill(self:objectName()) then 
+				return 
+			end
+			local effect = data:toCardEffect()
+			local tag = player:getTag("Yaliang")
+			local tostring = tag:toString() 
+			local target = room:getTag("YaliangA"):toPlayer()
+			if target and tostring == effect.card:toString() then 
+				player:setTag("Yaliang", sgs.QVariant())
+				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+         	   		slash:setSkillName(self:objectName())
+        	    		local use = sgs.CardUseStruct()
+        	    		use.card = slash
+        	    		use.from = target
+        	    		use.to:append(player)
+        	    		room:useCard(use, false)
+				room:setTag("YaliangA", sgs.QVariant())
+				return true
+			end
+		end
+		local use = data:toCardUse()
+		if not use.card:isNDTrick() or use.from:objectName() == player:objectName() then
+			return
+		end
+		if use.from and player:askForSkillInvoke(self:objectName(), data) then
+			room:drawCards(player, 1)
+			player:setTag("Yaliang", sgs.QVariant(use.card:toString()))
+			local data = sgs.QVariant()
+			data:setValue(use.from)
+			room:setTag("YaliangA", data)
+		end
+	end,
+}
 --[[
 	技能名：严整
 	相关武将：☆SP·曹仁
