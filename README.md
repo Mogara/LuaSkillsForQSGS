@@ -10,6 +10,4 @@ Acknowledgement
 
 Special thanks to the following for aid of looking for BUGs.^_^
 
-十一月的小胖(Baidu ID):Found BUG that Juxiang was not supported in the Version0224(Has been fixed now)
-
-Paracel(GitHub ID):A man like a god often gives us classic advice
+十一月的小胖(Baidu ID)、魅惑菇投手（Baidu ID)、赤魂go(Baidu ID)、whj329203709(Baidu ID)、波希米亚不后悔 (Baidu ID)、haoshuang(GitHub ID)、array88(GitHub ID)
