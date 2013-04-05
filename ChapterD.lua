@@ -433,15 +433,18 @@ LuaXDushi = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Compulsory, 
 	events = {sgs.Death},  
 	on_trigger = function(self, event, player, data) 
-		local damage = data:toDamageStar()
-		if damage then
-			local killer = damage.from
-			if killer then
-				local room = player:getRoom()
-				if killer:objectName() ~= player:objectName() then
-					if not player:hasSkill("benghuai") then
-						killer:gainMark("@collapse")
-						room:acquireSkill(killer, "benghuai")
+		local death = data:toDeath()
+		if death.who:objectName() == player:objectName() then
+			local damage = data:toDamageStar()
+			if damage then
+				local killer = damage.from
+				if killer then
+					local room = player:getRoom()
+					if killer:objectName() ~= player:objectName() then
+						if not player:hasSkill("benghuai") then
+							killer:gainMark("@collapse")
+							room:acquireSkill(killer, "benghuai")
+						end
 					end
 				end
 			end
@@ -635,15 +638,18 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.Death},
 	on_trigger = function(self, event, player, data)
-		local damage = data:toDamageStar()
-		if damage then
-			local murderer = damage.from
-			if murderer then
-				local room = player:getRoom()
-				local skill_list = murderer:getVisibleSkillList()
-				for _,skill in sgs.qlist(skill_list) do
-					if skill:getLocation() == sgs.Skill_Right then
-						room:detachSkillFromPlayer(murderer, skill:objectName())
+		local death = data:toDeath()
+		if death.who:objectName() == player:objectName() then
+			local damage = data:toDamageStar()
+			if damage then
+				local murderer = damage.from
+				if murderer then
+					local room = player:getRoom()
+					local skill_list = murderer:getVisibleSkillList()
+					for _,skill in sgs.qlist(skill_list) do
+						if skill:getLocation() == sgs.Skill_Right then
+							room:detachSkillFromPlayer(murderer, skill:objectName())
+						end
 					end
 				end
 			end
