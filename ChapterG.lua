@@ -240,7 +240,51 @@ LuaXNeoGanglie = sgs.CreateTriggerSkill{
 	技能名：弓骑
 	相关武将：二将成名·韩当
 	描述：出牌阶段，你可以弃置一张牌，令你的攻击范围无限直到回合结束；若你以此法弃置的牌为装备牌，你可以弃置一名其他角色的一张牌，每阶段限一次。 
+	引用：LuaGongqi
+	状态：验证通过
 ]]--
+LuaGongqiCard = sgs.CreateSkillCard{
+	name = "LuaGongqiCard",
+	target_fixed = true,
+	will_throw = true,
+	on_use = function(self, room, source, targets)
+		room:setPlayerFlag(source, "InfinityAttackRange")
+		local cd = sgs.Sanguosha:getCard(self:getSubcards():first())
+		if cd:isKindOf("EquipCard") then
+			local targets = sgs.SPlayerList()
+			for _,p in sgs.qlist(room:getOtherPlayers(source)) do
+				if not p:isNude() then
+					targets:append(p)
+				end
+			end
+			if not targets:isEmpty() and source:askForSkillInvoke(self:objectName()) then
+				local to_discard = room:askForPlayerChosen(source, targets, self:objectName())
+				room:throwCard(room:askForCardChosen(source, to_discard, "he", self:objectName()), to_discard, source)
+			end
+		end
+	end,
+}
+LuaGongqi = sgs.CreateViewAsSkill{
+	name = "LuaGongqi",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		if #selected == 0 then
+			return true
+		end
+		return false
+	end,
+	view_as = function(self, cards)
+		if #cards == 1 then
+			local card = LuaGongqiCard:clone()
+			card:addSubcard(cards[1])
+			card:setSkillName(self:objectName())
+			return card
+		end
+	end,
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("#LuaGongqiCard")
+	end,
+}
 --[[
 	技能名：弓骑
 	相关武将：怀旧·韩当
