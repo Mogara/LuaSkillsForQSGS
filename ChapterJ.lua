@@ -960,28 +960,23 @@ LuaJujianCard = sgs.CreateSkillCard{
 		local source = effect.from
 		local dest = effect.to
 		local room = source:getRoom()
-		local choicelist = {}
+		local choiceString = "draw"
 		if dest:isWounded() then
-			table.insert(choicelist, "recover")
+			choiceString = choiceString.."+recover"
 		end
 		if (not dest:faceUp()) or dest:isChained() then
-			table.insert(choicelist, "reset")
+			choiceString = choiceString.."+reset"
 		end
 		local choice
-		if #choicelist >= 2 then
-			local choiceString = "recover+reset"
-			choice = room:askForChoice(dest, "LuaJujian", choiceString)
-		else
-			choice = "draw"
-		end
+		choice = room:askForChoice(dest, "LuaJujian", choiceString)
 		if choice == "draw" then
-			room:drawCards(player, 2, self:objectName())
+			room:drawCards(dest, 2, self:objectName())
 		elseif choice == "recover" then
 			local recover = sgs.RecoverStruct()
 			recover.who = dest
 			room:recover(dest, recover)
 		elseif choice == "reset" then
-			room:setPlayerProperty(dest, "chained", false);
+			room:setPlayerProperty(dest, "chained", sgs.QVariant(false))
 			if not dest:faceUp() then
 				dest:turnOver()
 			end
