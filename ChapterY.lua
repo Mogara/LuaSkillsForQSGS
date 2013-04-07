@@ -22,17 +22,8 @@ LuaXYaliang = sgs.CreateTriggerSkill{
 			local effect = data:toCardEffect()
 			local tag = player:getTag("Yaliang")
 			local tostring = tag:toString() 
-			local target = room:getTag("YaliangA"):toPlayer()
-			if target and tostring == effect.card:toString() then 
+			if tostring == effect.card:toString() then 
 				player:setTag("Yaliang", sgs.QVariant())
-				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-         	   		slash:setSkillName(self:objectName())
-        	    		local use = sgs.CardUseStruct()
-        	    		use.card = slash
-        	    		use.from = target
-        	    		use.to:append(player)
-        	    		room:useCard(use, false)
-				room:setTag("YaliangA", sgs.QVariant())
 				return true
 			end
 		end
@@ -43,9 +34,13 @@ LuaXYaliang = sgs.CreateTriggerSkill{
 		if use.from and player:askForSkillInvoke(self:objectName(), data) then
 			room:drawCards(player, 1)
 			player:setTag("Yaliang", sgs.QVariant(use.card:toString()))
-			local data = sgs.QVariant()
-			data:setValue(use.from)
-			room:setTag("YaliangA", data)
+			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+         	slash:setSkillName(self:objectName())
+        	local newuse = sgs.CardUseStruct()
+        	newuse.card = slash
+        	newuse.from = use.from
+        	newuse.to:append(player)
+        	room:useCard(newuse, false)
 		end
 	end,
 }
