@@ -398,8 +398,12 @@ LuaLijianCard = sgs.CreateSkillCard{
 			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
 			duel:toTrick():setCancelable(false)
 			duel:setSkillName("LuaLijian")
-			room:cardEffect(duel, from, to)
-			room:removeTag("LualijianTarget")
+			local use = sgs.CardUseStruct()
+            		use.card = duel
+            		use.from = from
+           	 	use.to:append(to)
+            		room:useCard(use)
+			source:removeTag("LualijianTarget")
 		end
 	end	
 }
