@@ -7,6 +7,7 @@
 	技能名：排异
 	相关武将：一将成名·钟会
 	描述：出牌阶段，你可以将一张“权”置入弃牌堆，令一名角色摸两张牌，然后若该角色的手牌数大于你的手牌数，你对其造成1点伤害。每阶段限一次。
+	引用：LuaPaiyi
 	状态：验证通过
 ]]--
 LuaPaiyiCard = sgs.CreateSkillCard{
@@ -66,6 +67,7 @@ LuaPaiyi = sgs.CreateViewAsSkill{
 	技能名：咆哮（锁定技）
 	相关武将：标准·张飞、翼·张飞
 	描述：你在出牌阶段内使用【杀】时无次数限制。
+	引用：LuaPaoxiao
 	状态：验证通过
 ]]--
 LuaPaoxiao = sgs.CreateTargetModSkill{
@@ -86,6 +88,7 @@ LuaPaoxiao = sgs.CreateTargetModSkill{
 	技能名：破军
 	相关武将：一将成名·徐盛
 	描述：每当你使用【杀】对目标角色造成一次伤害后，你可以令其摸X张牌（X为该角色当前的体力值且至多为5），然后该角色将其武将牌翻面。
+	引用：LuaPojun
 	状态：验证通过
 ]]--
 LuaPojun = sgs.CreateTriggerSkill{

@@ -7,6 +7,7 @@
 	技能名：仁德
 	相关武将：标准·刘备
 	描述：出牌阶段，你可以将任意数量的手牌交给其他角色，若此阶段你给出的牌张数达到两张或更多时，你回复1点体力。
+	引用：LuaRende
 	状态：验证通过
 ]]--
 LuaRendeCard = sgs.CreateSkillCard{
@@ -42,7 +43,7 @@ LuaRendeCard = sgs.CreateSkillCard{
 	end
 }
 LuaRendeVS = sgs.CreateViewAsSkill{
-	name = "LuaRendeVS", 
+	name = "LuaRende", 
 	n = 999, 
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
@@ -85,6 +86,7 @@ LuaRende = sgs.CreateTriggerSkill{
 	技能名：仁德
 	相关武将：虎牢关·刘备
 	描述：出牌阶段，你可以将最多两张手牌交给其他角色，若此阶段你给出的牌张数达到两张时，你回复1点体力。
+	引用：LuaRende
 	状态：验证通过
 ]]--
 LuaRendeCard = sgs.CreateSkillCard{
@@ -120,7 +122,7 @@ LuaRendeCard = sgs.CreateSkillCard{
 	end
 }
 LuaRendeVS = sgs.CreateViewAsSkill{
-	name = "LuaRendeVS", 
+	name = "LuaRende", 
 	n = 2, 
 	view_filter = function(self, selected, to_select)
 		if not to_select:isEquipped() then
@@ -166,6 +168,7 @@ LuaRende = sgs.CreateTriggerSkill{
 	技能名：忍戒（锁定技）
 	相关武将：神·司马懿
 	描述：每当你受到一次伤害后或于弃牌阶段弃置手牌后，你获得等同于受到伤害或弃置手牌数量的“忍”标记。
+	引用：LuaRenjie
 	状态：验证通过
 ]]--
 LuaRenjie = sgs.CreateTriggerSkill{
@@ -204,6 +207,7 @@ LuaRenjie = sgs.CreateTriggerSkill{
 	技能名：肉林（锁定技）
 	相关武将：林·董卓
 	当你使用【杀】指定一名女性角色为目标后，该角色需连续使用两张【闪】才能抵消；当你成为女性角色使用【杀】的目标后，你需连续使用两张【闪】才能抵消。
+	引用：LuaRoulin
 	状态：验证通过
 ]]--
 LuaRoulinDummyCard = sgs.CreateSkillCard{
@@ -263,6 +267,7 @@ LuaRoulin = sgs.CreateTriggerSkill{
 	技能名：若愚（主公技、觉醒技）
 	相关武将：山·刘禅
 	描述：回合开始阶段开始时，若你的体力是全场最少的（或之一），你须加1点体力上限，回复1点体力，并获得技能“激将”。
+	引用：LuaRuoyu
 	状态：验证通过（但袁术通过伪帝若愚觉醒后不能获得激将）
 ]]--
 LuaRuoyu = sgs.CreateTriggerSkill{

@@ -7,6 +7,7 @@
 	技能名：涅槃（限定技）
 	相关武将：火·庞统
 	描述：当你处于濒死状态时，你可以：弃置你区域里所有的牌，然后将你的武将牌翻至正面朝上并重置之，再摸三张牌且体力回复至3点。
+	引用：LuaNiepan、LuaNiepanStart
 	状态：验证通过
 ]]--
 LuaNiepan = sgs.CreateTriggerSkill{

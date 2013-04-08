@@ -48,6 +48,7 @@ LuaXYaliang = sgs.CreateTriggerSkill{
 	技能名：严整
 	相关武将：☆SP·曹仁
 	描述：若你的手牌数大于你的体力值，你可以将你装备区内的牌当【无懈可击】使用。
+	引用：LuaYanzheng
 	状态：验证通过
 ]]--
 LuaYanzheng = sgs.CreateViewAsSkill{
@@ -115,6 +116,7 @@ LuaYanzheng = sgs.CreateViewAsSkill{
 	技能名：遗计
 	相关武将：标准·郭嘉
 	描述：每当你受到1点伤害后，你可以观看牌堆顶的两张牌，将其中一张交给一名角色，然后将另一张交给一名角色。
+	引用：LuaYiji
 	状态：验证通过
 ]]--
 LuaYiji = sgs.CreateTriggerSkill{
@@ -150,6 +152,7 @@ LuaYiji = sgs.CreateTriggerSkill{
 	技能名：倚天（联动技）
 	相关武将：倚天·倚天剑
 	描述：当你对曹操造成伤害时，可令该伤害-1 
+	引用：LuaXYitian
 	状态：验证通过
 ]]--
 LuaXYitian = sgs.CreateTriggerSkill{
@@ -171,6 +174,7 @@ LuaXYitian = sgs.CreateTriggerSkill{
 	技能名：义从（锁定技）
 	相关武将：SP·公孙瓒、翼·公孙瓒、翼·赵云
 	描述：若你当前的体力值大于2，你计算的与其他角色的距离-1；若你当前的体力值小于或等于2，其他角色计算的与你的距离+1。
+	引用：LuaYicong
 	状态：验证通过
 ]]--
 LuaYicong = sgs.CreateDistanceSkill{
@@ -192,7 +196,8 @@ LuaYicong = sgs.CreateDistanceSkill{
 --[[
 	技能名：义从
 	相关武将：贴纸·公孙瓒
-	描述：弃牌阶段结束时，你可以将任意数量的牌置于武将牌上，称为“扈”。每有一张“扈”，其他角色计算与你的距离+1。 
+	描述：弃牌阶段结束时，你可以将任意数量的牌置于武将牌上，称为“扈”。每有一张“扈”，其他角色计算与你的距离+1。
+	引用：LuaXYicong、LuaXYicongDist
 	状态：验证通过
 ]]--
 LuaXYicongCard = sgs.CreateSkillCard{
@@ -250,6 +255,7 @@ LuaXYicongDist = sgs.CreateDistanceSkill{
 	技能名：义舍
 	相关武将：倚天·张公祺
 	描述：出牌阶段，你可将任意数量手牌正面朝上移出游戏称为“米”（至多存在五张）或收回；其他角色在其出牌阶段可选择一张“米”询问你，若你同意，该角色获得这张牌，每阶段限两次 
+	引用：LuaXYishe；LuaXYisheAsk（技能暗将）
 	状态：验证通过
 ]]--
 LuaXYisheCard = sgs.CreateSkillCard{
@@ -271,7 +277,7 @@ LuaXYisheCard = sgs.CreateSkillCard{
 	end
 }
 LuaXYisheVS = sgs.CreateViewAsSkill{
-	name = "LuaXYisheVS", 
+	name = "LuaXYishe", 
 	n = 5, 
 	view_filter = function(self, selected, to_select)
 		local n = sgs.Self:getPile("rice"):length()
@@ -370,6 +376,7 @@ LuaXYishe = sgs.CreateTriggerSkill{
 	技能名：义释
 	相关武将：翼·关羽
 	描述：每当你使用红桃【杀】对目标角色造成伤害时，你可以防止此伤害，改为获得其区域里的一张牌。
+	引用：LuaXYishi
 	状态：验证通过
 ]]--
 LuaXYishi = sgs.CreateTriggerSkill{
@@ -405,6 +412,7 @@ LuaXYishi = sgs.CreateTriggerSkill{
 	技能名：异才
 	相关武将：智·姜维
 	描述：每当你使用一张非延时类锦囊时(在它结算之前)，可立即对攻击范围内的角色使用一张【杀】 
+	引用：LuaXYicai
 	状态：验证通过
 ]]--
 LuaXYicai = sgs.CreateTriggerSkill{
@@ -433,6 +441,7 @@ LuaXYicai = sgs.CreateTriggerSkill{
 	技能名：毅重（锁定技）
 	相关武将：一将成名·于禁
 	描述：若你的装备区没有防具牌，黑色的【杀】对你无效。
+	引用：LuaYizhong
 	状态：验证通过
 ]]--
 LuaYizhong = sgs.CreateTriggerSkill{
@@ -460,6 +469,7 @@ LuaYizhong = sgs.CreateTriggerSkill{
 	技能名：银铃
 	相关武将：☆SP·甘宁
 	描述：出牌阶段，你可以弃置一张黑色牌并指定一名其他角色。若如此做，你获得其一张牌并置于你的武将牌上，称为“锦”。（数量最多为四）
+	引用：LuaYinling、LuaYinlingClear
 	状态：验证通过
 ]]--
 LuaYinlingCard = sgs.CreateSkillCard{
@@ -562,7 +572,8 @@ LuaXYinzhi = sgs.CreateTriggerSkill{
 --[[
 	技能名：英魂
 	相关武将：林·孙坚、山·孙策
-	描述：回合开始阶段开始时，若你已受伤，你可以选择一项：令一名其他角色摸X张牌，然后弃置一张牌；或令一名其他角色摸一张牌，然后弃置X张牌（X为你已损失的体力值）。 
+	描述：回合开始阶段开始时，若你已受伤，你可以选择一项：令一名其他角色摸X张牌，然后弃置一张牌；或令一名其他角色摸一张牌，然后弃置X张牌（X为你已损失的体力值）。
+	引用：LuaYinghun
 	状态：验证通过
 ]]--
 LuaYinghunCard = sgs.CreateSkillCard{
@@ -600,7 +611,7 @@ LuaYinghunCard = sgs.CreateSkillCard{
 	end
 }
 LuaYinghunVS = sgs.CreateViewAsSkill{
-	name = "LuaYinghunVS", 
+	name = "LuaYinghun", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaYinghunCard:clone()
@@ -637,6 +648,7 @@ LuaYinghun = sgs.CreateTriggerSkill{
 	技能名：英姿
 	相关武将：标准·周瑜、山·孙策、翼·周瑜
 	描述：摸牌阶段，你可以额外摸一张牌。
+	引用：LuaYingzi
 	状态：验证通过
 ]]--
 LuaYingzi = sgs.CreateTriggerSkill{
@@ -655,6 +667,7 @@ LuaYingzi = sgs.CreateTriggerSkill{
 	技能名：庸肆（锁定技）
 	相关武将：SP·袁术
 	描述：摸牌阶段，你额外摸等同于现存势力数的牌；弃牌阶段开始时，你须弃置等同于现存势力数的牌。
+	引用：LuaYongsi
 	状态：验证通过
 ]]--
 YongsiGetKingdoms = function(targets)
@@ -739,22 +752,24 @@ LuaYongsi = sgs.CreateTriggerSkill{
 	引用：LuaXYouqi
 	状态：验证通过
 ]]--
-LuaXYouqi=sgs.CreateTriggerSkill{
-	name="LuaXYouqi",
-	frequency=sgs.Skill_Wake,
-	events={sgs.EventPhaseEnd},
+LuaXYouqi = sgs.CreateTriggerSkill{
+	name = "LuaXYouqi",
+	frequency = sgs.Skill_Wake,
+	events = {sgs.EventPhaseEnd},
 	can_trigger = function(self, target)
 		if target:hasSkill(self:objectName()) then
 			if target:getMark(self:objectName()) == 0 then
-				return target:getPhase() == sgs.Player_Start and target:getHp() == 1 
+				if target:getPhase() == sgs.Player_Start then
+					return target:getHp() == 1 
+				end
 			end
 		end
 	end,
-	on_trigger=function(self, event, player, data)
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		room:loseMaxHp(player)
 		room:acquireSkill(player, "dimeng")
-        	room:acquireSkill(player, "kongcheng")
+        room:acquireSkill(player, "kongcheng")
 		room:setPlayerMark(player, self:objectName(), 1)
 		return false
 	end
@@ -763,10 +778,11 @@ LuaXYouqi=sgs.CreateTriggerSkill{
 	技能名：狱刎（锁定技）
 	相关武将：智·田丰
 	描述：当你死亡时，凶手视为自己 
+	引用：LuaXYuwen
 	状态：0224验证通过
 	附注：除死亡笔记结果不可更改外，其他情况均通过
 ]]--
-LuaXYuwenX = sgs.CreateTriggerSkill{
+LuaXYuwen = sgs.CreateTriggerSkill{
 	name = "luaXYuwen",
 	events = {sgs.GameOverJudge},
 	frequency = sgs.Skill_Compulsory,
@@ -805,6 +821,7 @@ LuaXYuwenX = sgs.CreateTriggerSkill{
 		武器牌：弃置与该角色距离为1的一名角色区域中的一张牌；
 		防具牌：该角色摸一张牌；
 		坐骑牌：该角色回复一点体力。
+	引用：LuaYuanhu
 	状态：0224验证通过
 ]]--
 LuaYuanhuCard = sgs.CreateSkillCard{

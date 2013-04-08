@@ -7,6 +7,7 @@
 	技能名：完杀（锁定技）
 	相关武将：林·贾诩、SP·贾诩
 	描述：在你的回合，除你以外，只有处于濒死状态的角色才能使用【桃】。
+	引用：LuaWansha
 	状态：验证通过
 ]]--
 LuaWansha = sgs.CreateTriggerSkill{
@@ -35,6 +36,7 @@ LuaWansha = sgs.CreateTriggerSkill{
 	技能名：危殆（主公技）
 	相关武将：智·孙策
 	描述：当你需要使用一张【酒】时，所有吴势力角色按行动顺序依次选择是否打出一张黑桃2~9的手牌，视为你使用了一张【酒】，直到有一名角色或没有任何角色决定如此做时为止 
+	引用：LuaXWeidai
 	状态：验证通过
 ]]--
 LuaXWeidaiCard = sgs.CreateSkillCard{
@@ -115,6 +117,7 @@ LuaXWeidai = sgs.CreateTriggerSkill{
 	技能名：围堰
 	相关武将：倚天·陆抗
 	描述：你可以将你的摸牌阶段当作出牌阶段，出牌阶段当作摸牌阶段执行 
+	引用：LuaXLukangWeiyan
 	状态：验证通过
 ]]--
 LuaXLukangWeiyan = sgs.CreateTriggerSkill{
@@ -146,6 +149,7 @@ LuaXLukangWeiyan = sgs.CreateTriggerSkill{
 	技能名：帷幕（锁定技）
 	相关武将：林·贾诩、SP·贾诩
 	描述：你不能被选择为黑色锦囊牌的目标。
+	引用：LuaWeimu
 	状态：验证通过
 ]]--
 LuaWeimu = sgs.CreateProhibitSkill{
@@ -169,6 +173,7 @@ LuaWeimu = sgs.CreateProhibitSkill{
 	技能名：温酒（锁定技）
 	相关武将：智·华雄
 	描述：你使用黑色的【杀】造成的伤害+1，你无法闪避红色的【杀】 
+	引用：LuaXWenjiu
 	状态：验证通过
 ]]--
 LuaXWenjiu = sgs.CreateTriggerSkill{
@@ -214,6 +219,7 @@ LuaXWenjiu = sgs.CreateTriggerSkill{
 	技能名：无谋（锁定技）
 	相关武将：神·吕布
 	描述：当你使用一张非延时类锦囊牌选择目标后，你须弃1枚“暴怒”标记或失去1点体力。
+	引用：LuaWumou
 	状态：验证通过
 ]]--
 LuaWumou = sgs.CreateTriggerSkill{
@@ -249,6 +255,7 @@ LuaWumou = sgs.CreateTriggerSkill{
 	技能名：无前
 	相关武将：神·吕布
 	描述：出牌阶段，你可以弃2枚“暴怒”标记并选择一名其他角色，该角色的防具无效且你获得技能“无双”，直到回合结束。
+	引用：LuaWuqian、LuaWuqianClear
 	状态：验证通过
 ]]--
 LuaWuqianCard = sgs.CreateSkillCard{
@@ -314,6 +321,7 @@ LuaWuqianClear = sgs.CreateTriggerSkill{
 	技能名：无双（锁定技）
 	相关武将：标准·吕布、SP·最强神话、SP·暴怒战神
 	描述：当你使用【杀】指定一名角色为目标后，该角色需连续使用两张【闪】才能抵消；与你进行【决斗】的角色每次需连续打出两张【杀】。
+	引用：LuaWushuang
 	状态：验证通过
 ]]--
 LuaWushuang = sgs.CreateTriggerSkill{
@@ -361,6 +369,7 @@ LuaWushuang = sgs.CreateTriggerSkill{
 	技能名：无言（锁定技）
 	相关武将：一将成名·徐庶
 	描述：你防止你造成或受到的任何锦囊牌的伤害。
+	引用：LuaWuyan
 	状态：验证通过
 ]]--
 LuaWuyan = sgs.CreateTriggerSkill{
@@ -399,6 +408,7 @@ LuaWuyan = sgs.CreateTriggerSkill{
 	技能名：无言（锁定技）
 	相关武将：怀旧·徐庶
 	描述：你使用的非延时类锦囊牌对其他角色无效；其他角色使用的非延时类锦囊牌对你无效。
+	引用：LuaNosWuyan
 	状态：验证通过
 ]]--
 LuaNosWuyan = sgs.CreateTriggerSkill{
@@ -438,6 +448,7 @@ LuaNosWuyan = sgs.CreateTriggerSkill{
 		[水]场上所有角色使用桃时额外回复1点体力
 		[火]场上所有角色受到的伤害均视为火焰伤害
 		[土]场上所有角色每次受到的属性伤害至多为1 
+	引用：LuaXWulingExEffect、LuaXWulingEffect、LuaXWuling
 	状态：验证通过
 ]]--
 LuaXWulingExEffect = sgs.CreateTriggerSkill{
@@ -557,6 +568,7 @@ LuaXWuling = sgs.CreateTriggerSkill{
 	技能名：武魂（锁定技）
 	相关武将：神·关羽
 	描述：每当你受到1点伤害后，伤害来源获得一枚“梦魇”标记；你死亡时，令拥有最多该标记的一名其他角色进行一次判定，若判定结果不为【桃】或【桃园结义】，该角色死亡。
+	引用：LuaWuhun、LuaWuhunRevenge
 	状态：验证通过
 ]]--
 LuaWuhun = sgs.CreateTriggerSkill{
@@ -643,6 +655,7 @@ LuaWuhunRevenge = sgs.CreateTriggerSkill{
 	技能名：武继（觉醒技）
 	相关武将：SP·关银屏
 	描述：回合结束阶段开始时，若本回合你已造成3点或更多伤害，你须加1点体力上限并回复1点体力，然后失去技能“虎啸”。 
+	引用：LuaWujiCount、LuaWuji
 	状态：验证通过
 ]]--
 LuaWujiCount = sgs.CreateTriggerSkill{
@@ -709,6 +722,7 @@ LuaWuji = sgs.CreateTriggerSkill{
 	技能名：武神（锁定技）
 	相关武将：神·关羽
 	描述：你的红桃手牌均视为【杀】；你使用红桃【杀】时无距离限制。
+	引用：LuaWushen、LuaWushenTargetMod
 	状态：0224验证通过
 ]]--
 LuaWushen = sgs.CreateFilterSkill{
@@ -747,6 +761,7 @@ LuaWushenTargetMod = sgs.CreateTargetModSkill{
 	技能名：武圣
 	相关武将：标准·关羽、翼·关羽
 	描述：你可以将一张红色牌当【杀】使用或打出。
+	引用：LuaWusheng
 	状态：验证通过
 ]]--
 LuaWusheng = sgs.CreateViewAsSkill{

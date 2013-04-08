@@ -12,6 +12,7 @@
 	技能名：再起
 	相关武将：林·孟获
 	描述：摸牌阶段开始时，若你已受伤，你可以放弃摸牌，改为从牌堆顶亮出X张牌（X为你已损失的体力值），你回复等同于其中红桃牌数量的体力，然后将这些红桃牌置入弃牌堆，并获得其余的牌。
+	引用：LuaZaiqi
 	状态：验证通过
 ]]--
 LuaZaiqi = sgs.CreateTriggerSkill{
@@ -74,6 +75,7 @@ LuaZaiqi = sgs.CreateTriggerSkill{
 	技能名：凿险（觉醒技）
 	相关武将：山·邓艾
 	描述：回合开始阶段开始时，若“田”的数量达到3或更多，你须减1点体力上限，并获得技能“急袭”。
+	引用：LuaZaoxian
 	状态：验证通过
 ]]--
 LuaZaoxian = sgs.CreateTriggerSkill{
@@ -106,6 +108,7 @@ LuaZaoxian = sgs.CreateTriggerSkill{
 	技能名：早夭（锁定技）
 	相关武将：倚天·曹冲
 	描述：回合结束阶段开始时，若你的手牌大于13张，则你必须弃置所有手牌并流失1点体力 
+	引用：LuaXZaoyao
 	状态：验证通过
 ]]--
 LuaXZaoyao = sgs.CreateTriggerSkill{
@@ -132,6 +135,7 @@ LuaXZaoyao = sgs.CreateTriggerSkill{
 	技能名：昭烈
 	相关武将：☆SP·刘备
 	描述：摸牌阶段摸牌时，你可以少摸一张牌，指定你攻击范围内的一名其他角色亮出牌堆顶上3张牌，将其中全部的非基本牌和【桃】置于弃牌堆，该角色进行二选一：你对其造成X点伤害，然后他获得这些基本牌；或他依次弃置X张牌，然后你获得这些基本牌。（X为其中非基本牌的数量）。
+	引用：LuaZhaolie、LuaZhaolieAct
 	状态：验证通过
 ]]--
 LuaZhaolie = sgs.CreateTriggerSkill{
@@ -257,6 +261,7 @@ LuaZhaolieAct = sgs.CreateTriggerSkill{
 	技能名：昭心
 	相关武将：贴纸·司马昭
 	描述：摸牌阶段结束时，你可以展示所有手牌，若如此做，视为你使用一张【杀】，每阶段限一次。 
+	引用：LuaZhaoXin
 	状态：验证通过
 ]]--
 LuaZhaoXin = sgs.CreateTriggerSkill{
@@ -296,6 +301,7 @@ LuaZhaoXin = sgs.CreateTriggerSkill{
 	技能名：贞烈
 	相关武将：二将成名·王异
 	描述：在你的判定牌生效前，你可以从牌堆顶亮出一张牌代替之。
+	引用：LuaZhenlie
 	状态：验证通过
 ]]--
 LuaZhenlie = sgs.CreateTriggerSkill{
@@ -320,6 +326,7 @@ LuaZhenlie = sgs.CreateTriggerSkill{
 	技能名：镇威
 	相关武将：倚天·倚天剑
 	描述：你的【杀】被手牌中的【闪】抵消时，可立即获得该【闪】。 
+	引用：LuaXZhenwei
 	状态：验证通过
 ]]--
 LuaXZhenwei = sgs.CreateTriggerSkill{
@@ -349,6 +356,7 @@ LuaXZhenwei = sgs.CreateTriggerSkill{
 	技能名：争功
 	相关武将：倚天·邓士载
 	描述：其他角色的回合开始前，若你的武将牌正面向上，你可以将你的武将牌翻面并立即进入你的回合，你的回合结束后，进入该角色的回合 
+	引用：LuaXZhenggong
 	状态：验证通过
 ]]--
 LuaXZhenggong = sgs.CreateTriggerSkill{
@@ -409,6 +417,7 @@ LuaXZhenggong = sgs.CreateTriggerSkill{
 	技能名：直谏
 	相关武将：山·张昭张纮
 	描述：出牌阶段，你可以将手牌中的一张装备牌置于一名其他角色的装备区里（不能替换原装备），然后摸一张牌。
+	引用：LuaZhijian
 	状态：验证通过
 ]]--
 LuaZhijianCard = sgs.CreateSkillCard{
@@ -463,6 +472,7 @@ LuaZhijian = sgs.CreateViewAsSkill{
 	技能名：志继（觉醒技）
 	相关武将：山·姜维
 	描述：回合开始阶段开始时，若你没有手牌，你须选择一项：回复1点体力，或摸两张牌。然后你减1点体力上限，并获得技能“观星”。
+	引用：LuaZhiji
 	状态：验证通过
 ]]--
 LuaZhiji = sgs.CreateTriggerSkill{
@@ -507,6 +517,7 @@ LuaZhiji = sgs.CreateTriggerSkill{
 	技能名：制霸（主公技）
 	相关武将：山·孙策
 	描述：其他吴势力角色可以在他们各自的出牌阶段与你拼点（“魂姿”发动后，你可以拒绝此拼点），若该角色没赢，你可以获得双方拼点的牌。每阶段限一次。
+	引用：LuaSunceZhiba；LuaZhibaPindian（技能暗将）
 	状态：验证通过
 ]]--
 LuaZhibaCard = sgs.CreateSkillCard{
@@ -625,6 +636,7 @@ LuaSunceZhiba = sgs.CreateTriggerSkill{
 	技能名：制霸
 	相关武将：测试·制霸孙权
 	描述：出牌阶段，你可以弃置任意数量的牌，然后摸取等量的牌。每阶段可用X+1次，X为你已损失的体力值 
+	引用：LuaXZhiBa
 	状态：验证通过
 ]]--
 LuaZhihengCard = sgs.CreateSkillCard{
@@ -665,6 +677,7 @@ LuaXZhiBa = sgs.CreateViewAsSkill{
 	技能名：制衡
 	相关武将：标准·孙权
 	描述：出牌阶段，你可以弃置任意数量的牌，然后摸等量的牌。每阶段限一次。
+	引用：LuaZhiheng
 	状态：验证通过
 ]]--
 LuaZhihengCard = sgs.CreateSkillCard{
@@ -703,6 +716,7 @@ LuaZhiheng = sgs.CreateViewAsSkill{
 	技能名：智迟（锁定技）
 	相关武将：一将成名·陈宫
 	描述：你的回合外，每当你受到一次伤害后，【杀】或非延时类锦囊牌对你无效，直到回合结束。
+	引用：LuaZhichiClear、LuaZhichi
 	状态：验证通过
 ]]--
 LuaZhichiClear = sgs.CreateTriggerSkill{
@@ -752,6 +766,7 @@ LuaZhichi = sgs.CreateTriggerSkill{
 	技能名：智愚
 	相关武将：二将成名·荀攸
 	描述：每当你受到一次伤害后，你可以摸一张牌，然后展示所有手牌，若颜色均相同，伤害来源弃置一张手牌。
+	引用：LuaZhiyu
 	状态：验证通过
 ]]--
 LuaZhiyu = sgs.CreateTriggerSkill{
@@ -792,6 +807,7 @@ LuaZhiyu = sgs.CreateTriggerSkill{
 	技能名：筑楼
 	相关武将：翼·公孙瓒
 	描述：回合结束阶段开始时，你可以摸两张牌，然后失去1点体力或弃置一张武器牌。 
+	引用：LuaXZhulou
 	状态：验证通过
 ]]--
 LuaXZhulou = sgs.CreateTriggerSkill{
@@ -815,6 +831,7 @@ LuaXZhulou = sgs.CreateTriggerSkill{
 	技能名：追忆
 	相关武将：二将成名·步练师
 	描述：你死亡时，可以令一名其他角色（杀死你的角色除外）摸三张牌并回复1点体力。
+	引用：LuaZhuiyi
 	状态：验证通过
 ]]--
 LuaZhuiyi = sgs.CreateTriggerSkill{
@@ -858,6 +875,7 @@ LuaZhuiyi = sgs.CreateTriggerSkill{
 	技能名：自立（觉醒技）
 	相关武将：一将成名·钟会
 	描述：回合开始阶段开始时，若“权”的数量达到3或更多，你须减1点体力上限，然后回复1点体力或摸两张牌，并获得技能“排异”。
+	引用：LuaZili
 	状态：验证通过
 ]]--
 LuaZili = sgs.CreateTriggerSkill{
@@ -908,6 +926,7 @@ LuaZili = sgs.CreateTriggerSkill{
 	技能名：自守
 	相关武将：二将成名·刘表
 	描述：摸牌阶段，若你已受伤，你可以额外摸X张牌（X为你已损失的体力值），然后跳过你的出牌阶段。
+	引用：LuaZishou
 	状态：验证通过
 ]]--
 LuaZishou = sgs.CreateTriggerSkill{
@@ -931,6 +950,7 @@ LuaZishou = sgs.CreateTriggerSkill{
 	技能名：宗室（锁定技）
 	相关武将：二将成名·刘表
 	描述：你的手牌上限+X（X为现存势力数）。
+	引用：LuaZongsh
 	状态：验证通过
 ]]--
 ZongshiGetKingdoms = function(targets, source)
@@ -965,6 +985,7 @@ LuaZongshi = sgs.CreateMaxCardsSkill{
 	技能名：纵火（锁定技）
 	相关武将：倚天·陆伯言
 	描述：你的杀始终带有火焰属性 
+	引用：LuaXZonghuo
 	状态：验证通过
 ]]--
 LuaXZonghuo = sgs.CreateTriggerSkill{

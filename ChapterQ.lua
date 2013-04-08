@@ -7,6 +7,7 @@
 	技能名：七星
 	相关武将：神·诸葛亮
 	描述：分发起始手牌时，共发你十一张牌，你选四张作为手牌，其余的面朝下置于一旁，称为“星”；摸牌阶段结束时，你可以用任意数量的手牌等量替换这些“星”。
+	引用：LuaQixing、LuaQixingStart、LuaQixingAsk、LuaQixingClear
 	状态：验证通过
 ]]--
 Exchange = function(shenzhuge)
@@ -150,6 +151,7 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 	技能名：奇才（锁定技）
 	相关武将：标准·黄月英
 	描述：你使用锦囊牌时无距离限制。
+	引用：LuaQicai
 	状态：验证通过
 ]]--
 LuaQicai = sgs.CreateTargetModSkill{
@@ -170,6 +172,7 @@ LuaQicai = sgs.CreateTargetModSkill{
 	技能名：奇袭
 	相关武将：标准·甘宁
 	描述：你可以将一张黑色牌当【过河拆桥】使用。
+	引用：LuaQixi
 	状态：验证通过
 ]]--
 LuaQixi = sgs.CreateViewAsSkill{
@@ -195,6 +198,7 @@ LuaQixi = sgs.CreateViewAsSkill{
 	技能名：谦逊（锁定技）
 	相关武将：标准·陆逊、国战·陆逊
 	描述：你不能被选择为【顺手牵羊】和【乐不思蜀】的目标。
+	引用：LuaQianxun
 	状态：验证通过
 ]]--
 LuaQianxun = sgs.CreateProhibitSkill{
@@ -207,6 +211,7 @@ LuaQianxun = sgs.CreateProhibitSkill{
 	技能名：潜袭
 	相关武将：二将成名·马岱
 	描述：每当你使用【杀】对距离为1的目标角色造成伤害时，你可以进行一次判定，若判定结果不为红桃，你防止此伤害，改为令其减1点体力上限。
+	引用：LuaQianxi
 	状态：验证通过
 ]]--
 LuaQianxi = sgs.CreateTriggerSkill{
@@ -234,6 +239,7 @@ LuaQianxi = sgs.CreateTriggerSkill{
 	技能名：强袭
 	相关武将：火·典韦
 	描述：出牌阶段，你可以失去1点体力或弃置一张武器牌，对你攻击范围内的一名角色造成1点伤害。每阶段限一次。
+	引用：LuaQiangxi
 	状态：验证通过
 ]]--
 LuaQiangxiCard = sgs.CreateSkillCard{
@@ -295,6 +301,7 @@ LuaQiangxi = sgs.CreateViewAsSkill{
 	技能名：巧变
 	相关武将：山·张郃
 	描述：你可以弃置一张手牌，跳过你的一个阶段（回合开始和回合结束阶段除外），若以此法跳过摸牌阶段，你获得其他至多两名角色各一张手牌；若以此法跳过出牌阶段，你可以将一名角色装备区或判定区里的一张牌移动到另一名角色区域里的相应位置。
+	引用：LuaQiaobian
 	状态：验证通过
 ]]--
 LuaQiaobianCard = sgs.CreateSkillCard{
@@ -389,7 +396,7 @@ LuaQiaobianCard = sgs.CreateSkillCard{
 	end
 }
 LuaQiaobianVS = sgs.CreateViewAsSkill{
-	name = "LuaQiaobianVS", 
+	name = "LuaQiaobian", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaQiaobianCard:clone()
@@ -448,6 +455,7 @@ LuaQiaobian = sgs.CreateTriggerSkill{
 	技能名：琴音
 	相关武将：神·周瑜
 	描述：当你于弃牌阶段内弃置了两张或更多的手牌后，你可以令所有角色各回复1点体力或各失去1点体力。每阶段限一次。
+	引用：LuaQinyin
 	状态：验证通过
 ]]--
 perform = function(player, skill_name)
@@ -507,6 +515,7 @@ LuaQinyin = sgs.CreateTriggerSkill{
 	技能名：青囊
 	相关武将：标准·华佗
 	描述：出牌阶段，你可以弃置一张手牌，令一名已受伤的角色回复1点体力。每阶段限一次。
+	引用：LuaQingnang
 	状态：验证通过
 ]]--
 LuaQingnangCard = sgs.CreateSkillCard{
@@ -659,6 +668,7 @@ LuaXQingcheng = sgs.CreateTriggerSkill{
 	技能名：倾国
 	相关武将：标准·甄姬、SP·甄姬
 	描述：你可以将一张黑色手牌当【闪】使用或打出。
+	引用：LuaQingguo
 	状态：验证通过
 ]]--
 LuaQingguo = sgs.CreateViewAsSkill{
@@ -693,6 +703,7 @@ LuaQingguo = sgs.CreateViewAsSkill{
 	技能名：驱虎
 	相关武将：火·荀彧
 	描述：出牌阶段，你可以与一名体力比你多的角色拼点。若你赢，则该角色对其攻击范围内你选择的另一名角色造成1点伤害。若你没赢，则其对你造成1点伤害。每阶段限一次。
+	引用：LuaQuhu
 	状态：验证通过
 ]]--
 LuaQuhuCard = sgs.CreateSkillCard{
@@ -760,6 +771,7 @@ LuaQuhu = sgs.CreateViewAsSkill{
 	技能名：权计
 	相关武将：一将成名·钟会
 	描述：每当你受到1点伤害后，你可以摸一张牌，然后将一张手牌置于你的武将牌上，称为“权”；每有一张“权”，你的手牌上限便+1。
+	引用：LuaQuanji、LuaQuanjiKeep、LuaQuanjiRemove
 	状态：验证通过
 ]]--
 LuaQuanji = sgs.CreateTriggerSkill{

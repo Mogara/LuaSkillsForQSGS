@@ -7,18 +7,19 @@
 	技能名：伤逝（锁定技）
 	相关武将：一将成名·张春华
 	描述：弃牌阶段外，当你的手牌数小于X时，你将手牌补至X张（X为你已损失的体力值且最多为2）。
+	引用：LuaShangshi
 	状态：验证通过
 ]]--
 LuaShangshi = sgs.CreateTriggerSkill{
 	name = "LuaShangshi",
-	events = {sgs.EventPhaseStart,sgs.CardsMoveOneTime,sgs.MaxHpChanged,sgs.HpChanged},
+	events = {sgs.EventPhaseStart, sgs.CardsMoveOneTime, sgs.MaxHpChanged, sgs.HpChanged},
 	frequency = sgs.Skill_Frequent,
-    on_trigger = function(self, event, player, data)
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local num = player:getHandcardNum()
 		local lost = player:getLostHp()
 		if lost > 2 then lost = 2 end
-		if num >= lost  then return end
+		if num >= lost then return end
 		if player:getPhase() ~= sgs.Player_Discard then
 			if event == sgs.CardsMoveOneTime then
 				local move = data:toMoveOneTime()
@@ -38,11 +39,12 @@ LuaShangshi = sgs.CreateTriggerSkill{
 	技能名：伤逝
 	相关武将：怀旧·张春华
 	描述：弃牌阶段外，当你的手牌数小于X时，你可以将手牌补至X张（X为你已损失的体力值） 
+	引用：LuaNosShangshi
 	状态：验证通过
 ]]--
-LuaXShangshi = sgs.CreateTriggerSkill {
-	name = "LuaXShangshi",
-	events={sgs.CardsMoveOneTime,sgs.EventPhaseChanging,sgs.HpChanged,sgs.MaxHpChanged,sgs.EventAcquireSkill},
+LuaNosShangshi = sgs.CreateTriggerSkill {
+	name = "LuaNosShangshi",
+	events={sgs.CardsMoveOneTime, sgs.EventPhaseChanging, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill},
 	frequency = sgs.Skill_Frequent,
 	on_trigger = function(self,event,player,data)
 		local room = player:getRoom()
@@ -87,6 +89,7 @@ LuaXShangshi = sgs.CreateTriggerSkill {
 	技能名：烧营
 	相关武将：倚天·陆伯言
 	描述：当你对一名不处于连环状态的角色造成一次火焰伤害时，你可选择一名其距离为1的另外一名角色并进行一次判定：若判定结果为红色，则你对选择的角色造成一点火焰伤害 
+	引用：LuaXShaoying
 	状态：验证通过
 ]]--
 LuaXShaoying = sgs.CreateTriggerSkill{
@@ -144,6 +147,7 @@ LuaXShaoying = sgs.CreateTriggerSkill{
 	技能名：涉猎
 	相关武将：神·吕蒙
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为从牌堆顶亮出五张牌，你获得不同花色的牌各一张，将其余的牌置入弃牌堆。 
+	引用：LuaShelie
 	状态：验证通过
 ]]--
 LuaShelie = sgs.CreateTriggerSkill{
@@ -190,6 +194,7 @@ LuaShelie = sgs.CreateTriggerSkill{
 	技能名：神愤
 	相关武将：神·吕布
 	描述：出牌阶段，你可以弃6枚“暴怒”标记，对所有其他角色各造成1点伤害，所有其他角色先弃置各自装备区里的牌，再弃置四张手牌，然后将你的武将牌翻面。每阶段限一次。
+	引用：LuaShenfen
 	状态：验证通过
 ]]--
 LuaShenfenCard = sgs.CreateSkillCard{
@@ -268,6 +273,7 @@ LuaShenjiHid = sgs.CreateTargetModSkill{
 	技能名：神君（锁定技）
 	相关武将：倚天·陆伯言
 	描述：游戏开始时，你必须选择自己的性别。回合开始阶段开始时，你必须倒转性别，异性角色对你造成的非雷电属性伤害无效 
+	引用：LuaXShenjun
 	状态：验证通过
 ]]--
 LuaXShenjun = sgs.CreateTriggerSkill{
@@ -312,6 +318,7 @@ LuaXShenjun = sgs.CreateTriggerSkill{
 	技能名：神力（锁定技）
 	相关武将：倚天·古之恶来
 	描述：出牌阶段，你使用【杀】造成的第一次伤害+X，X为当前死战标记数且最大为3 
+	引用：LuaXShenli
 	状态：验证通过
 ]]--
 LuaXShenli = sgs.CreateTriggerSkill{
@@ -344,21 +351,21 @@ LuaXShenli = sgs.CreateTriggerSkill{
 		1.跳过你的判定阶段和摸牌阶段。
 		2.跳过你的出牌阶段并弃置一张装备牌。
 		你每选择一项，视为对一名其他角色使用一张【杀】（无距离限制）。
-	状态：验证通过
-	备注:使用杀时发生几次闪退,原因不明
+	状态：验证失败
+	备注：使用杀时发生几次闪退,原因不明
 ]]--
 LuaShensuCard = sgs.CreateSkillCard{
 	name = "LuaShensuCard",
 	target_fixed = false,
 	filter = function(self, targets, to_select, player)
 		if #targets == 0 then
-			return player:canSlash(to_select,false)
+			return player:canSlash(to_select, false)
 		end
 		return true
 	end,
 	on_use = function(self, room, source, targets)
 		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-		slash:setSkillName("luashensu")
+		slash:setSkillName("luaShensu")
 		local use = sgs.CardUseStruct()
 		use.card = slash
 		use.to:append(targets[1])
@@ -366,27 +373,25 @@ LuaShensuCard = sgs.CreateSkillCard{
 		room:useCard(use, true)
 	end,
 }
-
 LuaShensuVS = sgs.CreateViewAsSkill{
 	name = "LuaShensu",
 	n = 1,
 	LuaShensuPattern = "",
 	view_filter = function(self, selected, to_select)
-	        if (LuaShensuPattern == "luashensu1") then
-	            return false
-	        else
-	            return #selected==0 and to_select:isKindOf("EquipCard")
+		if LuaShensuPattern == "luashensu1" then
+			return false
+		elseif #selected == 0 then
+			return to_select:isKindOf("EquipCard")
 		end
+		return false
 	end,
 	view_as = function(self, cards)					
-		if (LuaShensuPattern == "luashensu1") then
-				if (#cards == 0) then
-					return LuaShensuCard:clone()
-				end
-	        else
-			if(#cards ~= 1) then
-				return false
-			else
+		if LuaShensuPattern == "luashensu1" then
+			if #cards == 0 then
+				return LuaShensuCard:clone()
+			end
+		else
+			if #cards == 1 then
 				local card = LuaShensuCard:clone()
 				card:addSubcard(cards[1])
 				return card
@@ -397,8 +402,8 @@ LuaShensuVS = sgs.CreateViewAsSkill{
 		return false
 	end,
 	enabled_at_response = function(self, player, pattern)
-		if (pattern == "@@LuaShensu") then
-			if(player:hasFlag("luashensu1")) then
+		if pattern == "@@LuaShensu" then
+			if player:hasFlag("luashensu1") then
 				LuaShensuPattern = "luashensu1"
 			else
 				LuaShensuPattern = "luashensu2"
@@ -416,28 +421,34 @@ LuaShensu = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local change = data:toPhaseChange()
 		local room = player:getRoom()
-	        if (change.to == sgs.Player_Judge and not player:isSkipped(sgs.Player_Judge)
-	            and not player:isSkipped(sgs.Player_Draw))  then
-			room:setPlayerFlag(player,"luashensu1")
-			if (room:askForUseCard(player, "@@"..self:objectName(), "@luashensu1", 1))  then
-			player:skip(sgs.Player_Judge)
-			player:skip(sgs.Player_Draw)
+		if change.to == sgs.Player_Judge then
+			if not player:isSkipped(sgs.Player_Judge) then
+				if not player:isSkipped(sgs.Player_Draw) then
+					room:setPlayerFlag(player, "luashensu1")
+					if room:askForUseCard(player, "@@LuaShensu", "@luashensu1", 1)  then
+						player:skip(sgs.Player_Judge)
+						player:skip(sgs.Player_Draw)
+					end
+					room:setPlayerFlag(player, "-luashensu1")
+				end
 			end
-			room:setPlayerFlag(player,"-luashensu1")
-	        elseif (change.to == sgs.Player_Play and not player:isSkipped(sgs.Player_Play))  then
-			room:setPlayerFlag(player,"luashensu2")
-			if (room:askForUseCard(player, "@@"..self:objectName(), "@luashensu2", 2, sgs.Card_MethodDiscard)) then
-			player:skip(sgs.Player_Play)
+		elseif change.to == sgs.Player_Play then
+			if not player:isSkipped(sgs.Player_Play) then
+				room:setPlayerFlag(player, "luashensu2")
+				if room:askForUseCard(player, "@@LuaShensu", "@luashensu2", 2, sgs.Card_MethodDiscard) then
+					player:skip(sgs.Player_Play)
+				end
+				room:setPlayerFlag(player, "-luashensu2")
 			end
-			room:setPlayerFlag(player,"-luashensu2")
-	        end
-	        return false
+		end
+		return false
 	end,
 }
 --[[
 	技能名：神威（锁定技）
 	相关武将：SP·暴怒战神
 	描述：摸牌阶段，你额外摸两张牌；你的手牌上限+2。
+	引用：LuaShenwei、LuaShenweiKeep
 	状态：验证通过
 ]]--
 LuaShenwei = sgs.CreateTriggerSkill{
@@ -461,6 +472,7 @@ LuaShenweiKeep = sgs.CreateMaxCardsSkill{
 	技能名：神智
 	相关武将：国战·甘夫人
 	描述：回合开始阶段开始时，你可以弃置所有手牌：若你以此法弃置的牌不少于X张，你回复1点体力。（X为你当前的体力值） 
+	引用：LuaXShenzhi
 	状态：0224验证通过
 ]]--
 LuaXShenzhi = sgs.CreateTriggerSkill{
@@ -495,6 +507,7 @@ LuaXShenzhi = sgs.CreateTriggerSkill{
 	技能名：师恩
 	相关武将：智·司马徽
 	描述：其他角色使用非延时锦囊时，可以让你摸一张牌
+	引用：LuaXShien
 	状态：验证通过
 ]]--
 LuaXShien = sgs.CreateTriggerSkill{
@@ -540,6 +553,7 @@ LuaXShien = sgs.CreateTriggerSkill{
 	技能名：识破
 	相关武将：智·田丰
 	描述：任意角色判定阶段判定前，你可以弃置两张牌，获得该角色判定区里的所有牌 
+	引用：LuaXShipo
 	状态：验证通过
 ]]--
 LuaXShipo = sgs.CreateTriggerSkill{
@@ -585,6 +599,7 @@ LuaXShipo = sgs.CreateTriggerSkill{
 	技能名：恃才（锁定技）
 	相关武将：智·许攸
 	描述：当你拼点成功时，摸一张牌 
+	引用：LuaXShicai
 	状态：验证通过
 ]]--
 LuaXShicai = sgs.CreateTriggerSkill{
@@ -623,6 +638,7 @@ LuaXShicai = sgs.CreateTriggerSkill{
 	技能名：恃勇（锁定技）
 	相关武将：二将成名·华雄
 	描述：每当你受到一次红色的【杀】或因【酒】生效而伤害+1的【杀】造成的伤害后，你减1点体力上限。
+	引用：LuaShiyong
 	状态：验证通过
 ]]--
 LuaShiyong = sgs.CreateTriggerSkill{
@@ -652,6 +668,7 @@ LuaShiyong = sgs.CreateTriggerSkill{
 	技能名：誓仇（主公技、限定技）
 	相关武将：☆SP·刘备
 	描述：你的回合开始时，你可指定一名蜀国角色并交给其两张牌。本盘游戏中，每当你受到伤害时，改为该角色替你受到等量的伤害，然后摸等量的牌，直至该角色第一次进入濒死状态。
+	引用：LuaShichou
 	状态：验证通过
 ]]--
 LuaShichou = sgs.CreateTriggerSkill{
@@ -742,6 +759,7 @@ LuaShichou = sgs.CreateTriggerSkill{
 	技能名：授业
 	相关武将：智·司马徽
 	描述：出牌阶段，你可以弃置一张红色手牌，指定最多两名其他角色各摸一张牌 
+	引用：LuaXShouye
 	状态：验证通过
 ]]--
 LuaXShouyeCard = sgs.CreateSkillCard{
@@ -789,6 +807,7 @@ LuaXShouye = sgs.CreateViewAsSkill{
 	技能名：淑德
 	相关武将：贴纸·王元姬
 	描述：回合结束阶段开始时，你可以将手牌数补至等同于体力上限的张数。 
+	引用：LuaXShude
 	状态：验证通过
 ]]--
 LuaXShude = sgs.CreateTriggerSkill{
@@ -810,7 +829,8 @@ LuaXShude = sgs.CreateTriggerSkill{
 --[[
 	技能名：淑慎
 	相关武将：国战·甘夫人
-	描述：每当你回复1点体力后，你可以令一名其他角色摸一张牌。 
+	描述：每当你回复1点体力后，你可以令一名其他角色摸一张牌。
+	引用：LuaXShushen
 	状态：0224验证通过
 ]]--
 LuaXShushenCard = sgs.CreateSkillCard{
@@ -861,6 +881,7 @@ LuaXShushen = sgs.CreateTriggerSkill{
 	技能名：双刃
 	相关武将：国战·纪灵
 	描述：出牌阶段开始时，你可以与一名其他角色拼点：若你赢，视为你一名其他角色使用一张无距离限制的普通【杀】（此【杀】不计入出牌阶段使用次数的限制）；若你没赢，你结束出牌阶段。 
+	引用：LuaXShuangren
 	状态：0224验证通过
 ]]--
 LuaXShuangrenCard = sgs.CreateSkillCard{
@@ -952,10 +973,11 @@ LuaXShuangren = sgs.CreateTriggerSkill{
 	技能名：双雄
 	相关武将：火·颜良文丑
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为进行一次判定，你获得生效后的判定牌，然后你可以将一张与此判定牌颜色不同的手牌当【决斗】使用，直到回合结束。 
+	引用：LuaShuangxiong
 	状态：验证通过
 ]]--
 LuaShuangxiongVS = sgs.CreateViewAsSkill{
-	name = "LuaShuangxiongVS", 
+	name = "LuaShuangxiong", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		if not to_select:isEquipped() then
@@ -1031,6 +1053,7 @@ LuaShuangxiong = sgs.CreateTriggerSkill{
 	技能名：水箭
 	相关武将：奥运·孙扬
 	描述：摸牌阶段摸牌时，你可以额外摸X+1张牌，X为你装备区的牌数量的一半（向下取整）。 
+	引用：LuaXShuijian
 	状态：验证通过
 ]]--
 LuaXShuijian = sgs.CreateTriggerSkill{
@@ -1052,6 +1075,7 @@ LuaXShuijian = sgs.CreateTriggerSkill{
 	技能名：水泳（锁定技）
 	相关武将：奥运·叶诗文
 	描述：防止你受到的火焰伤害。 
+	引用：LuaXShuiyong
 	状态：验证通过
 ]]--
 LuaXShuiyong = sgs.CreateTriggerSkill{
@@ -1078,6 +1102,7 @@ LuaXShuiyong = sgs.CreateTriggerSkill{
 	技能名：死战（锁定技）
 	相关武将：倚天·古之恶来
 	描述：当你受到伤害时，防止该伤害并获得与伤害点数等量的死战标记；你的回合结束阶段开始时，你须弃掉所有的X个死战标记并流失X点体力 
+	引用：LuaXSizhan
 	状态：验证通过
 ]]--
 LuaXSizhan = sgs.CreateTriggerSkill{
@@ -1107,6 +1132,7 @@ LuaXSizhan = sgs.CreateTriggerSkill{
 	技能名：颂词
 	相关武将：SP·陈琳
 	描述：出牌阶段，你可以选择一项：1、令一名手牌数小于其当前的体力值的角色摸两张牌。2、令一名手牌数大于其当前的体力值的角色弃置两张牌。每名角色每局游戏限一次。
+	引用：LuaSongci、LuaSongciClear
 	状态：验证通过
 ]]--
 LuaSongciCard = sgs.CreateSkillCard{
@@ -1184,6 +1210,7 @@ LuaSongciClear = sgs.CreateTriggerSkill{
 	技能名：颂威（主公技）
 	相关武将：林·曹丕、铜雀台·曹丕
 	描述：其他魏势力角色的判定牌为黑色且生效后，该角色可以令你摸一张牌。
+	引用：LuaSongwei
 	状态：验证通过
 ]]--
 LuaSongwei = sgs.CreateTriggerSkill{
@@ -1224,6 +1251,7 @@ LuaSongwei = sgs.CreateTriggerSkill{
 	技能：随势
 	相关武将：国战·田丰
 	描述：每当其他角色进入濒死状态时，伤害来源可以令你摸一张牌；每当其他角色死亡时，伤害来源可以令你失去1点体力。
+	引用：LuaXSuishi
 	状态：0224验证通过
 ]]--
 LuaXSuishi = sgs.CreateTriggerSkill{

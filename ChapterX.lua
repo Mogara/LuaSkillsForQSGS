@@ -7,6 +7,7 @@
 	技能名：惜粮
 	相关武将：倚天·张公祺
 	描述：你可将其他角色弃牌阶段弃置的红牌收为“米”或加入手牌 
+	引用：LuaXXiliang
 	状态：验证通过
 ]]--
 LuaXXiliang = sgs.CreateTriggerSkill{
@@ -78,6 +79,7 @@ LuaXXiliang = sgs.CreateTriggerSkill{
 	技能名：陷阵
 	相关武将：一将成名·高顺
 	描述：出牌阶段，你可以与一名其他角色拼点。若你赢，你获得以下技能直到回合结束：你无视与该角色的距离及其防具；你对该角色使用【杀】时无次数限制。若你没赢，你不能使用【杀】，直到回合结束。每阶段限一次。
+	引用：LuaXianzhen、LuaXianzhenClear
 	状态：验证通过
 ]]--
 LuaXianzhenCard = sgs.CreateSkillCard{
@@ -189,6 +191,7 @@ LuaXianzhenClear = sgs.CreateTriggerSkill{
 	技能名：享乐（锁定技）
 	相关武将：山·刘禅
 	描述：当其他角色使用【杀】指定你为目标时，需弃置一张基本牌，否则此【杀】对你无效。
+	引用：LuaXiangle
 	状态：验证通过
 ]]--
 LuaXiangle = sgs.CreateTriggerSkill{
@@ -221,6 +224,7 @@ LuaXiangle = sgs.CreateTriggerSkill{
 	技能名：枭姬
 	相关武将：标准·孙尚香、SP·孙尚香
 	描述：当你失去装备区里的一张牌时，你可以摸两张牌。
+	引用：LuaXiaoji
 	状态：验证通过
 ]]--
 LuaXiaoji = sgs.CreateTriggerSkill{
@@ -265,6 +269,7 @@ LuaXiaoji = sgs.CreateTriggerSkill{
 	技能名：心战
 	相关武将：一将成名·马谡
 	描述：出牌阶段，若你的手牌数大于你的体力上限，你可以：观看牌堆顶的三张牌，然后亮出其中任意数量的红桃牌并获得之，其余以任意顺序置于牌堆顶。每阶段限一次。
+	引用：LuaXinzhan
 	状态：验证通过
 ]]--
 LuaXinzhanCard = sgs.CreateSkillCard{
@@ -319,8 +324,9 @@ LuaXinzhan = sgs.CreateViewAsSkill{
 	技能名：新生
 	相关武将：山·左慈
 	描述：每当你受到1点伤害后，你可以获得一张“化身牌”。
+	引用：LuaXinSheng
 	状态：验证通过
-	备注：需调用ChapterH 的acquieGenerals 函数
+	备注：需调用ChapterH 的acquireGenerals 函数
 ]]--
 LuaXinSheng = sgs.CreateTriggerSkill{
 	name = "LuaXinSheng",
@@ -329,7 +335,7 @@ LuaXinSheng = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if room:askForSkillInvoke(player, self:objectName()) then
-			acquireGenerals(player, data:toDamage().damage)--需調用ChapterH 的acquieGenerals 函数
+			acquireGenerals(player, data:toDamage().damage) --需調用ChapterH 的acquieGenerals 函数
 		end
 	end
 }
@@ -337,6 +343,7 @@ LuaXinSheng = sgs.CreateTriggerSkill{
 	技能名：行殇
 	相关武将：林·曹丕、铜雀台·曹丕
 	描述：其他角色死亡时，你可以获得其所有牌。
+	引用：LuaXingshang
 	状态：验证通过
 ]]--
 LuaXingshangDummyCard = sgs.CreateSkillCard{
@@ -385,6 +392,7 @@ LuaXingshang = sgs.CreateTriggerSkill{
 	技能名：修罗
 	相关武将：SP·暴怒战神
 	描述：回合开始阶段开始时，你可以弃置一张手牌，若如此做，你弃置你判定区里的一张与你弃置手牌同花色的延时类锦囊牌。
+	引用：LuaXiuluo
 	状态：1111验证通过，和cpp版效果一致
 ]]--
 LuaXiuluo = sgs.CreateTriggerSkill{
@@ -400,12 +408,12 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 			local card_id = room:askForCardChosen(player, player, "j", self:objectName())
 			local card = sgs.Sanguosha:getCard(card_id)
 			local suit_str = card:getSuitString()
-			local pattern=string.format(".|%s|.|.|.",suit_str)
+			local pattern = string.format(".|%s|.|.|.",suit_str)
 			if room:askForCard(player, pattern, "@LuaXiuluoprompt", data, sgs.CardDiscarded) then
-				room:throwCard(card,nil,player)
+				room:throwCard(card, nil, player)
 				once_success = true
 			end
-		until(not(player:getCards("j"):length() ~= 0 and once_success))
+		until (not (player:getCards("j"):length() ~= 0 and once_success) )
 		return false
 	end,
 	can_trigger = function(self, target)
@@ -426,6 +434,7 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 	技能名：旋风
 	相关武将：一将成名·凌统
 	描述：当你失去装备区里的牌时，或于弃牌阶段内弃置了两张或更多的手牌后，你可以依次弃置一至两名其他角色的共计两张牌。
+	引用：LuaXuanfeng
 	状态：验证通过
 ]]--
 LuaXuanfengCard = sgs.CreateSkillCard{
@@ -464,7 +473,7 @@ LuaXuanfengCard = sgs.CreateSkillCard{
 	end
 }
 LuaXuanfengVS = sgs.CreateViewAsSkill{
-	name = "LuaXuanfengVS", 
+	name = "LuaXuanfeng", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaXuanfengCard:clone()
@@ -531,6 +540,7 @@ LuaXuanfeng = sgs.CreateTriggerSkill{
 	技能名：旋风
 	相关武将：怀旧·凌统
 	描述：当你失去一次装备区里的牌时，你可以选择一项：1. 视为对一名其他角色使用一张【杀】；你以此法使用【杀】时无距离限制且不计入出牌阶段内的使用次数限制。2. 对距离为1的一名角色造成1点伤害。
+	引用：LuaNosXuanfeng
 	状态：验证通过
 ]]--
 LuaNosXuanfeng = sgs.CreateTriggerSkill{
@@ -596,6 +606,7 @@ LuaNosXuanfeng = sgs.CreateTriggerSkill{
 	技能名：眩惑
 	相关武将：一将成名·法正
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为令一名其他角色摸两张牌，然后令其对其攻击范围内你选择的另一名角色使用一张【杀】，若该角色未如此做或其攻击范围内没有其他角色，你获得其两张牌。
+	引用：LuaXuanhuo
 	状态：验证通过
 ]]--
 LuaXuanhuoDummyCard = sgs.CreateSkillCard{
@@ -665,7 +676,7 @@ LuaXuanhuoCard = sgs.CreateSkillCard{
 	end
 }
 LuaXuanhuoVS = sgs.CreateViewAsSkill{
-	name = "LuaXuanhuoVS", 
+	name = "LuaXuanhuo", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaXuanhuoCard:clone()
@@ -682,7 +693,7 @@ LuaXuanhuo = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.EventPhaseStart}, 
 	view_as_skill = LuaXuanhuoVS, 
-	on_trigger = function(self, event, player, data) --必须
+	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Draw then
 			if room:askForUseCard(player, "@@LuaXuanhuo", "@xuanhuo-card") then
@@ -696,6 +707,7 @@ LuaXuanhuo = sgs.CreateTriggerSkill{
 	技能名：眩惑
 	相关武将：怀旧·法正
 	描述：出牌阶段，你可以将一张红桃手牌交给一名其他角色，然后你获得该角色的一张牌并交给除该角色外的其他角色。每阶段限一次。
+	引用：LuaNosXuanhuo
 	状态：验证通过
 ]]--
 LuaNosXuanhuoCard = sgs.CreateSkillCard{
@@ -746,6 +758,7 @@ LuaNosXuanhuo = sgs.CreateViewAsSkill{
 	技能名：雪恨
 	相关武将：☆SP·夏侯惇
 	描述：每个角色的回合结束阶段开始时，若你的体力牌为竖置状态，你须横置之，然后选择一项：1.弃置当前回合角色X张牌（X为你已损失的体力值）；2.视为对一名任意角色使用一张【杀】。
+	引用：LuaXuehen、LuaXuehenAvoidTriggeringCardsMove
 	状态：验证通过
 ]]--
 LuaXuehenDummyCard = sgs.CreateSkillCard{
@@ -844,6 +857,7 @@ LuaXuehenAvoidTriggeringCardsMove = sgs.CreateTriggerSkill{
 	技能名：血祭
 	相关武将：SP·关银屏
 	描述：出牌阶段，你可以弃置一张红色牌，对你攻击范围内的至多X名其他角色各造成1点伤害，然后这些角色各摸一张牌。X为你损失的体力值。每阶段限一次。 
+	引用：LuaXueji
 	状态：验证通过
 ]]--
 LuaXuejiCard = sgs.CreateSkillCard{
@@ -907,6 +921,7 @@ LuaXueji = sgs.CreateViewAsSkill{
 	技能名：血裔（主公技、锁定技）
 	相关武将：火·袁绍
 	描述：每有一名其他群雄角色存活，你的手牌上限便+2。
+	引用：LuaXueyi
 	状态：验证通过
 ]]--
 LuaXueyi = sgs.CreateMaxCardsSkill{
@@ -940,6 +955,7 @@ LuaXueyi = sgs.CreateMaxCardsSkill{
 	技能名：殉志
 	相关武将：倚天·姜伯约
 	描述：出牌阶段，你可以摸三张牌并变身为其他未上场或已阵亡的蜀势力角色，回合结束后你立即死亡 
+	引用：LuaXXunzhi
 	状态：0224验证通过
 ]]--
 LuaXXunzhiCard = sgs.CreateSkillCard{
@@ -957,15 +973,16 @@ LuaXXunzhiCard = sgs.CreateSkillCard{
 		local shu_generals = {}
 		for _,name in ipairs(all_generals) do
 			local general = sgs.Sanguosha:getGeneral(name)
-			if general:getKingdom() == "shu" and not table.contains(general_names, name) then
-				table.insert(shu_generals, name)
+			if general:getKingdom() == "shu" then
+				if not table.contains(general_names, name) then
+					table.insert(shu_generals, name)
+				end
 			end
 		end
 		local general = room:askForGeneral(source, table.concat(shu_generals, "+"))
 		source:setTag("newgeneral", sgs.QVariant(general))
 		local isSecondaryHero = source:getGeneralName() ~= "jiangboyue"
 		room:changeHero(source, general, false, false, isSecondaryHero, true)
-		
 		room:setPlayerFlag(source, "LuaXXunzhi")
 	end
 }

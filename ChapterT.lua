@@ -7,6 +7,7 @@
 	技能名：抬榇
 	相关武将：倚天·庞令明
 	描述：出牌阶段，你可以自减1点体力或弃置一张武器牌，弃置你攻击范围内的一名角色区域的两张牌。每回合中，你可以多次使用抬榇 
+	引用：LuaXTaichen
 	状态：验证通过
 ]]--
 LuaXTaichenCard = sgs.CreateSkillCard{
@@ -69,6 +70,7 @@ LuaXTaichen = sgs.CreateViewAsSkill{
 	技能名：贪婪
 	相关武将：智·许攸
 	描述：每当你受到一次伤害，可与伤害来源进行拼点：若你赢，你获得两张拼点牌 
+	引用：LuaXTanlan
 	状态：验证通过
 ]]--
 LuaXTanlan = sgs.CreateTriggerSkill{
@@ -113,6 +115,7 @@ LuaXTanlan = sgs.CreateTriggerSkill{
 	技能名：探囊（锁定技）
 	相关武将：翼·张飞
 	描述：你计算的与其他角色的距离-X（X为你已损失的体力值）。
+	引用：LuaXTannang
 	状态：验证通过
 ]]--
 LuaXTannang = sgs.CreateDistanceSkill{
@@ -133,6 +136,7 @@ LuaXTannang = sgs.CreateDistanceSkill{
 	技能名：天妒
 	相关武将：标准·郭嘉
 	描述：在你的判定牌生效后，你可以获得此牌。
+	引用：LuaTiandu
 	状态：验证通过
 ]]--
 LuaTiandu = sgs.CreateTriggerSkill{
@@ -154,6 +158,7 @@ LuaTiandu = sgs.CreateTriggerSkill{
 	技能名：天命
 	相关武将：铜雀台·汉献帝
 	描述：当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；若此时全场体力值最多的角色仅有一名（且不是你），该角色也可如此做 
+	引用：LuaXTianming
 	状态：验证通过
 ]]--
 LuaXTianming = sgs.CreateTriggerSkill{
@@ -227,6 +232,7 @@ LuaXTianming = sgs.CreateTriggerSkill{
 	技能名：天香
 	相关武将：风·小乔
 	描述：每当你受到伤害时，你可以弃置一张红桃手牌，将此伤害转移给一名其他角色，然后该角色摸X张牌（X为该角色当前已损失的体力值）。
+	引用：LuaTianxiang
 	状态：验证通过
 ]]--
 LuaTianxiangCard = sgs.CreateSkillCard{
@@ -245,7 +251,7 @@ LuaTianxiangCard = sgs.CreateSkillCard{
 	end
 }
 LuaTianxiangVS = sgs.CreateViewAsSkill{
-	name = "LuaTianxiangVS", 
+	name = "LuaTianxiang", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		if not to_select:isEquipped() then
@@ -306,6 +312,7 @@ LuaTianxiang = sgs.CreateTriggerSkill{
 	技能名：天义
 	相关武将：火·太史慈
 	描述：出牌阶段，你可以与一名其他角色拼点。若你赢，你获得以下技能直到回合结束：你使用【杀】时无距离限制；可以额外使用一张【杀】；使用【杀】时可以额外选择一个目标。若你没赢，你不能使用【杀】，直到回合结束。每阶段限一次。
+	引用：LuaTianyi、LuaTianyiClear
 	状态：验证通过
 ]]--
 LuaTianyiCard = sgs.CreateSkillCard{
@@ -373,6 +380,7 @@ LuaTianyiClear = sgs.CreateTriggerSkill{
 	技能名：挑衅
 	相关武将：山·姜维
 	描述：出牌阶段，你可以令一名你在其攻击范围内的其他角色选择一项：对你使用一张【杀】，或令你弃置其一张牌。每阶段限一次。
+	引用：LuaTiaoxin
 	状态：验证通过
 ]]--
 LuaTiaoxinCard = sgs.CreateSkillCard{
@@ -414,6 +422,7 @@ LuaTiaoxin = sgs.CreateViewAsSkill{
 	技能名：铁骑
 	相关武将：标准·马超、SP·马超
 	描述：当你使用【杀】指定一名角色为目标后，你可以进行一次判定，若判定结果为红色，该角色不可以使用【闪】对此【杀】进行响应。
+	引用：LuaTieji
 	状态：验证通过
 ]]--
 LuaTieji = sgs.CreateTriggerSkill{
@@ -442,6 +451,7 @@ LuaTieji = sgs.CreateTriggerSkill{
 	技能名：同心
 	相关武将：倚天·夏侯涓
 	描述：处于连理状态的两名角色，每受到一点伤害，你可以令你们两人各摸一张牌 
+	引用：LuaXTongxin
 	状态：验证通过
 ]]--
 LuaXTongxin = sgs.CreateTriggerSkill{
@@ -485,6 +495,7 @@ LuaXTongxin = sgs.CreateTriggerSkill{
 	技能名：偷渡
 	相关武将：倚天·邓士载
 	描述：当你的武将牌背面向上时若受到伤害，你可以弃置一张手牌并将你的武将牌翻面，视为对一名其他角色使用了一张【杀】
+	引用：LuaXToudu
 	状态：验证通过
 ]]--
 LuaXToudu = sgs.CreateTriggerSkill{
@@ -525,6 +536,7 @@ LuaXToudu = sgs.CreateTriggerSkill{
 	技能名：突骑（锁定技）
 	相关武将：贴纸·公孙瓒
 	描述：回合开始阶段开始时，若你的武将牌上有“扈”：你计算与其他角色的距离-X，直到回合结束，若X不大于2，你摸一张牌（X为你武将牌上“扈”的数量），然后你将所有“扈”置入弃牌堆。
+	引用：LuaXTuqi、LuaXTuqiDist
 	状态：验证通过
 ]]--
 LuaXTuqi = sgs.CreateTriggerSkill{
@@ -561,6 +573,7 @@ LuaXTuqiDist = sgs.CreateDistanceSkill{
 	技能名：突袭
 	相关武将：标准·张辽
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为获得一至两名其他角色的各一张手牌。
+	引用：LuaTuxi
 	状态：验证通过
 ]]--
 LuaTuxiCard = sgs.CreateSkillCard{
@@ -598,7 +611,7 @@ LuaTuxiCard = sgs.CreateSkillCard{
 	end
 }
 LuaTuxiVS = sgs.CreateViewAsSkill{
-	name = "LuaTuxiVS", 
+	name = "LuaTuxi", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaTuxiCard:clone()
@@ -639,6 +652,7 @@ LuaTuxi = sgs.CreateTriggerSkill{
 	技能名：屯田
 	相关武将：山·邓艾
 	描述：你的回合外，当你失去牌时，你可以进行一次判定，将非红桃结果的判定牌置于你的武将牌上，称为“田”；每有一张“田”，你计算的与其他角色的距离便-1。
+	引用：LuaTuntian、LuaTuntianGet
 	状态：验证通过
 ]]--
 LuaTuntian = sgs.CreateDistanceSkill{
