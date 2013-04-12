@@ -931,7 +931,7 @@ LuaXueyi = sgs.CreateMaxCardsSkill{
 		local players = target:getSiblings()
 		for _,player in sgs.qlist(players) do
 			if player:isAlive() then
-				if player:getKingdom() == "qun" th
+				if player:getKingdom() == "qun" then
 					extra = extra + 2
 				end
 			end
