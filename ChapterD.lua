@@ -669,13 +669,27 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 	引用：LuaDuanliang
 	状态：验证通过
 ]]--
-LuaDuanliang = sgs.CreateTargetModSkill{
-	name = "LuaDuanliang",
+LuaDuanliangMod = sgs.CreateTargetModSkill{
+	name = "#LuaDuanliangMod",
 	pattern = "SupplyShortage",
 	distance_limit_func = function(self, player)
 		if player:hasSkill(self:objectName()) then
 			return 1
 		end
+	end
+}
+LuaDuanliang = sgs.CreateViewAsSkill{
+	name = "LuaDuanliang",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		return to_select:isBlack() and not to_select:isKindOf("TrickCard")
+	end,
+	view_as = function(self, cards)
+		if #cards ~= 1 then return nil end
+		local shortage = sgs.Sanguosha:cloneCard("supply_shortage",cards[1]:getSuit(),cards[1]:getNumber())
+		shortage:setSkillName(self:objectName())
+		shortage:addSubcard(cards[1])
+		return shortage
 	end
 }
 --[[
