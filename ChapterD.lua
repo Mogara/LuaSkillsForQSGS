@@ -666,7 +666,7 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 	技能名：断粮
 	相关武将：林·徐晃
 	描述：你可以将一张黑色牌当【兵粮寸断】使用，此牌必须为基本牌或装备牌；你可以对距离2以内的一名其他角色使用【兵粮寸断】。 
-	引用：LuaDuanliang
+	引用：LuaDuanliangMod，LuaDuanliang
 	状态：验证通过
 ]]--
 LuaDuanliangMod = sgs.CreateTargetModSkill{
