@@ -321,24 +321,23 @@ LuaXChizhongKeep = sgs.CreateMaxCardsSkill{
 	end
 }
 LuaXChizhong = sgs.CreateTriggerSkill{
-	name = "#LuaXChizhong",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.Death},  
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaXChizhong",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.Death},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local splayer = room:findPlayerBySkillName(self:objectName())
-		if splayer then
-			if event == sgs.Death then
-				if player:objectName() ~= splayer:objectName() then
-					local maxhp = splayer:getMaxHp() + 1
-					room:setPlayerProperty(splayer, "maxhp", sgs.QVariant(maxhp))
-				end
-			end
+		local death = data:toDeath()
+		if death.who:objectName() ~= player:objectName() then
+			local maxhp = player:getMaxHp() + 1
+			room:setPlayerProperty(player, "maxhp", sgs.QVariant(maxhp))
+			return
+		end
+	end,
+	can_trigger = function(self, target)
+		if target then
+			return target:hasSkill(self:objectName())
 		end
 		return false
-	end, 
-	can_trigger = function(self, target)
-		return target
 	end
 }
 --[[
