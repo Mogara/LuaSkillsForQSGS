@@ -312,7 +312,7 @@ LuaTianxiang = sgs.CreateTriggerSkill{
 	技能名：天义
 	相关武将：火·太史慈
 	描述：出牌阶段，你可以与一名其他角色拼点。若你赢，你获得以下技能直到回合结束：你使用【杀】时无距离限制；可以额外使用一张【杀】；使用【杀】时可以额外选择一个目标。若你没赢，你不能使用【杀】，直到回合结束。每阶段限一次。
-	引用：LuaTianyi、LuaTianyiClear
+	引用：LuaTianyi、LuaTianyiTargetMod
 	状态：验证通过
 ]]--
 LuaTianyiCard = sgs.CreateSkillCard{
@@ -320,12 +320,7 @@ LuaTianyiCard = sgs.CreateSkillCard{
 	target_fixed = false, 
 	will_throw = false, 
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			if not to_select:isKongcheng() then
-				return to_select:objectName() ~= sgs.Self:objectName()
-			end
-		end
-		return false
+		return #targets == 0 and (not to_select:isKongcheng()) and to_select:objectName() ~= sgs.Self:objectName()
 	end,
 	feasible = function(self, targets)
 		return #targets == 1
@@ -335,46 +330,66 @@ LuaTianyiCard = sgs.CreateSkillCard{
 		if success then
 			room:setPlayerFlag(source, "tianyi_success")
 		else
-			room:setPlayerFlag(source, "tianyi_failed")
+			room:setPlayerCardLimitation(source, "use", "Slash", true)
 		end
-	end
+	end,
 }
-LuaTianyi = sgs.CreateViewAsSkill{
+LuaTianyiVS = sgs.CreateViewAsSkill{
 	name = "LuaTianyi", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
-	end, 
+	end,
 	view_as = function(self, cards) 
 		if #cards == 1 then
 			local card = LuaTianyiCard:clone()
 			card:addSubcard(cards[1])
 			return card
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
-		if not player:hasUsed("#LuaTianyiCard") then
-			return not player:isKongcheng()
-		end
-		return false
-	end
+		return (not player:hasUsed("#LuaTianyiCard")) and (not player:isKongcheng())
+	end,
 }
-LuaTianyiClear = sgs.CreateTriggerSkill{
-	name = "#LuaTianyiClear", 
-	frequency = sgs.Skill_Frequent, 
+LuaTianyi = sgs.CreateTriggerSkill{
+	name = "LuaTianyi",
 	events = {sgs.EventLoseSkill}, 
+	view_as_skill = LuaTianyiVS,
 	on_trigger = function(self, event, player, data)
 		if data:toString() == self:objectName() then
 			room:setPlayerFlag(player, "-tianyi_success")
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
-		if target then
-			return target:hasFlag("tianyi_success")
+		return target and target:hasFlag("tianyi_success")
+	end,
+}
+LuaTianyiTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaTianyiTargetMod",
+	frequency = sgs.Skill_NotFrequent,
+	pattern = "Slash",
+	residue_func = function(self, player)
+		if player:hasSkill(self:objectName()) and player:hasFlag("tianyi_success") then
+			return 1
+		else
+			return 0
 		end
-		return false
-	end
+	end,
+	distance_limit_func = function(self, player)
+		if player:hasSkill(self:objectName()) and player:hasFlag("tianyi_success") then
+			return 1000
+		else
+			return 0
+		end
+	end,
+	extra_target_func = function(self, player)
+		if player:hasSkill(self:objectName()) and player:hasFlag("tianyi_success") then
+			return 1
+		else
+			return 0
+		end
+	end,
 }
 --[[
 	技能名：挑衅
