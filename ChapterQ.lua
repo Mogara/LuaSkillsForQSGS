@@ -227,8 +227,16 @@ LuaQianxi = sgs.CreateTriggerSkill{
 			if card:isKindOf("Slash") then
 				if player:distanceTo(victim) <= 1 then
 					if room:askForSkillInvoke(player, "LuaQianxi", data) then
-						room:loseMaxHp(victim)
-						return true
+						local judge=sgs.JudgeStruct()
+						judge.pattern=sgs.QRegExp("(.*):(heart):(.*)")
+						judge.good=false
+						judge.reason=self:objectName()
+						judge.who=player
+						room:judge(judge)
+						if judge:isGood() then
+							room:loseMaxHp(victim)
+							return true
+						end
 					end
 				end
 			end
