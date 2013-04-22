@@ -354,17 +354,15 @@ LuaXShenli = sgs.CreateTriggerSkill{
 	引用：LuaShensu
 	状态：验证通过
 ]]--
+LuaShensu_Pattern = nil
 LuaShensuCard = sgs.CreateSkillCard{
 	name = "LuaShensuCard",
-	mute = false,
+	mute = true,
 	filter = function(self, targets, to_select)
 		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 		slash:setSkillName("LuaShensu") 
-		local extra = sgs.Sanguosha:correctCardTarget(sgs.TargetModSkill_ExtraTarget, sgs.Self, slash)
-		local intext = extra + 1 --考虑到TargetModSkill，用源码的那个函数targetFilter貌似不能无距离限制
-		if #targets < intext then
-			return sgs.Self:canSlash(to_select, slash, false) 
-		end
+		local extra = sgs.Sanguosha:correctCardTarget(sgs.TargetModSkill_ExtraTarget, sgs.Self, slash) + 1
+		return sgs.Self:canSlash(to_select, slash, false) and #targets < extra
 	end,
 	on_use = function(self, room, source, targets)
 		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
@@ -380,22 +378,22 @@ LuaShensuCard = sgs.CreateSkillCard{
 		room:useCard(use)
 	end,
 }
-LuaShensu_Pattern = nil --全局变量
 LuaShensuVS = sgs.CreateViewAsSkill{
 	name = "LuaShensu",
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		if string.sub(LuaShensu_Pattern,-1) == "1" then
+		if string.sub(LuaShensu_Pattern, -1) == "1" then
 			return false
-		elseif #selected == 0 then
-			return to_select:isKindOf("EquipCard")
+		else
+			return #selected == 0 and to_select:isKindOf("EquipCard")
 		end
-		return false
 	end,
 	view_as = function(self, cards)					
-		if string.sub(LuaShensu_Pattern,-1) == "1" then
+		if string.sub(LuaShensu_Pattern, -1) == "1" then
 			if #cards == 0 then
 				return LuaShensuCard:clone()
+			else
+				return nil
 			end
 		else
 			if #cards == 1 then
@@ -409,8 +407,8 @@ LuaShensuVS = sgs.CreateViewAsSkill{
 		return false
 	end,
 	enabled_at_response = function(self, player, pattern)
-		LuaShensu_Pattern = pattern --赋值pattern
-		return string.sub(LuaShensu_Pattern,1,-2) == "@@LuaShensu" and sgs.Slash_IsAvailable(player)
+		LuaShensu_Pattern = pattern 
+		return string.sub(LuaShensu_Pattern, 1, -2) == "@@LuaShensu" and sgs.Slash_IsAvailable(player)
 	end,
 }
 LuaShensu = sgs.CreateTriggerSkill{
@@ -424,7 +422,7 @@ LuaShensu = sgs.CreateTriggerSkill{
 		if change.to == sgs.Player_Judge then
 			if not player:isSkipped(sgs.Player_Judge) then
 				if not player:isSkipped(sgs.Player_Draw) then
-					if room:askForUseCard(player, "@@LuaShensu1", "@luashensu1", 1)  then
+					if room:askForUseCard(player, "@@LuaShensu1", "@LuaShensu1", 1) then
 						player:skip(sgs.Player_Judge)
 						player:skip(sgs.Player_Draw)
 					end
@@ -432,7 +430,7 @@ LuaShensu = sgs.CreateTriggerSkill{
 			end
 		elseif change.to == sgs.Player_Play then
 			if not player:isSkipped(sgs.Player_Play) then
-				if room:askForUseCard(player, "@@LuaShensu2", "@luashensu2", 2, sgs.Card_MethodDiscard) then
+				if room:askForUseCard(player, "@@LuaShensu2", "@LuaShensu2", 2, sgs.Card_MethodDiscard) then
 					player:skip(sgs.Player_Play)
 				end
 			end
