@@ -1,3 +1,4 @@
+
 --[[
 	代码速查手册（G区）
 	技能索引：
@@ -721,7 +722,7 @@ LuaGuixin = sgs.CreateTriggerSkill{
 		local count = damage.damage
 		local can_invoke = false
 		local targets = room:getOtherPlayers(player)
-		for i=0, count, 1 do
+		for i = 1, count, 1 do
 			for _,p in sgs.qlist(targets) do
 				if not p:isAllNude() then
 					can_invoke = true
