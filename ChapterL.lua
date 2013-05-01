@@ -1541,9 +1541,9 @@ require("bit")
 LuaLuoying = sgs.CreateTriggerSkill{
 	name = "LuaLuoying",
 	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardsMoveOneTime},
+	events = {sgs.CardsMoving},
 	on_trigger = function(self, event, player, data)
-		local room=player:getRoom()
+		local room = player:getRoom()
 		local move = data:toMoveOneTime()
 		local source = move.from
 		if source then
@@ -1563,7 +1563,7 @@ LuaLuoying = sgs.CreateTriggerSkill{
 						luoyingMove.to_place = sgs.Player_PlaceHand
 						local ids = sgs.QList2Table(move.card_ids)
 						local places = move.from_places
-						for i=1, #ids, 1 do
+						for i = 1, #ids, 1 do
 							local id = ids[i]
 							local place = places[i]
 							local suit = sgs.Sanguosha:getCard(id):getSuit()
@@ -1602,5 +1602,4 @@ LuaLuoying = sgs.CreateTriggerSkill{
 		end
 		return false
 	end,
-	priority = 4
 }
