@@ -21,9 +21,8 @@ LuaJilei = sgs.CreateTriggerSkill{
 		if source then
 			if room:askForSkillInvoke(player, self:objectName(), data) then
 			local choice = room:askForChoice(player, self:objectName(), "basic+equip+trick")
-				source:jilei(choice)
-				source:invoke("jilei", choice)
-				source:setFlags("jilei")
+			room:setPlayerJilei(source, choice)
+			room:setPlayerFlag(source, "jilei")
 			end
 		end
 	end
@@ -38,9 +37,9 @@ LuaJileiClear = sgs.CreateTriggerSkill{
 			local room = player:getRoom()
 			local list = room:getAllPlayers()
 			for _,p in sgs.qlist(list) do
-				if p:hasFlag("jilei") then
-					p:jilei(".")
-					p:invoke("jilei", ".")
+			if p:hasFlag("jilei") then
+			room:setPlayerFlag(p, "-jilei")
+			room:setPlayerJilei(p, "clear")
 				end
 			end
 		end
