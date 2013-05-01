@@ -209,7 +209,7 @@ LuaLeijiCard = sgs.CreateSkillCard{
 		judge.play_animation = true
 		judge.negative = true
 		room:judge(judge)
-		if judge.isBad() then
+		if judge:isBad() then
 			local damage = sgs.DamageStruct()
 			damage.card = nil
 			damage.damage = 2
