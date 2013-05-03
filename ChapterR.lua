@@ -174,34 +174,22 @@ LuaRende = sgs.CreateTriggerSkill{
 LuaRenjie = sgs.CreateTriggerSkill{
 	name = "LuaRenjie", 
 	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.Damaged, sgs.CardDiscarded, sgs.EventLoseSkill}, 
+	events = {sgs.Damaged,sgs.CardsMoveOneTime}, 
 	on_trigger = function(self, event, player, data)
-		if player:isAlive() then
-			if player:hasSkill(self:objectName()) then
-				if event == sgs.CardDiscarded then
-					if player:getPhase() == sgs.Player_Discard then
-						local card = data:toCard()
-						local n = card:subcardsLength()
-						if n > 0 then
-							player:gainMark("@bear", n)
-						end
-					end
-				elseif event == sgs.Damaged then
-					local damage = data:toDamage()
-					local count = damage.damage
-					player:gainMark("@bear", count)
-				end
-			end
-		elseif event == sgs.EventLoseSkill then
-			if data:toString() == self:objectName() then
-				player:loseAllMarks("@bear")
-			end
-		end
-		return false
-	end, 
-	can_trigger = function(self, target)
-		return (target ~= nil)
+		local room = player:getRoom()
+		if event == sgs.CardsMoveOneTime then 
+		if player:getPhase() == sgs.Player_Discard then
+			local move = data:toMoveOneTime()
+		if move.to_place == sgs.Player_DiscardPile and move.from:objectName() == player:objectName() then
+			local n = move.card_ids:length()
+			player:gainMark("@bear",n)
 	end
+end	
+		elseif event == sgs.Damaged then
+			local damage = data:toDamage()
+			player:gainMark("@bear",damage.damage)
+	end
+end	
 }
 --[[
 	技能名：肉林（锁定技）
