@@ -262,7 +262,7 @@ LuaShenjiHid = sgs.CreateTargetModSkill{
 	name = "#LuaShenjiHid",
 	pattern = "Slash",
 	extra_target_func = function(self, player)
-		if player:hasSkill(self:objectName()) then
+		if player:hasSkill("LuaShenji") then
 			if player:getWeapon() == nil then
 				return 2
 			end
