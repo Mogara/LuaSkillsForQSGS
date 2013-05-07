@@ -640,7 +640,7 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local death = data:toDeath()
 		if death.who:objectName() == player:objectName() then
-			local damage = data:toDamageStar()
+			local damage = death.damage
 			if damage then
 				local murderer = damage.from
 				if murderer then
