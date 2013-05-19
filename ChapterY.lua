@@ -112,6 +112,97 @@ LuaYanzheng = sgs.CreateViewAsSkill{
 	相关武将：神·周瑜
 	描述：出牌阶段，你可以选择一至三名角色，你分别对他们造成最多共3点火焰伤害（你可以任意分配），若你将对一名角色分配2点或更多的火焰伤害，你须先弃置四张不同花色的手牌并失去3点体力。
 ]]--
+Fire = function(player,target,damagePoint)
+	local damage = sgs.DamageStruct()
+	damage.from = player
+	damage.to = target
+	damage.damage = damagePoint
+	damage.nature = sgs.DamageStruct_Fire
+	player:getRoom():damage(damage)
+end
+LuaYeyanCard = sgs.CreateSkillCard{
+	name = "LuaYeyanCard",
+	will_throw = true,
+	
+	filter = function(self, targets, to_select, player)
+		if self:subcardsLength() == 0 then return #targets < 3 end
+		if self:subcardsLength() == 4 and #targets == 1 then return to_select:objectName() ~= (targets[1]:objectName() and player:objectName())
+		else if #targets == 0 then return to_select:objectName() ~= player:objectName()
+		end
+	end
+end,
+	on_effect = function(self,effect)
+		Fire(effect.from, effect.to, 1)
+end,
+	on_use = function(self, room, source, targets)
+		local subcards_length = self:subcardsLength()
+		if subcards_length == 0 then
+			source:loseMark("@flame")
+        for _,target in ipairs(targets) do
+            room:cardEffect(self, source, target)
+	end
+		elseif #targets == 2 then
+			source:loseMark("@flame")
+		local choice = room:askForChoice(source, self:objectName(), "2:1+1:2")
+		if choice == "2:1" then
+			Fire(source, targets[1], 2)
+			Fire(source, targets[2], 1)
+	end
+		if choice == "1:2" then
+			Fire(source, targets[1], 1)
+			Fire(source, targets[2], 2)
+	end
+			room:loseHp(source,3)
+		elseif #targets == 1 then
+			source:loseMark("@flame")
+		local choice = room:askForChoice(source, self:objectName(), "2+3")
+		if choice == "2" then
+			Fire(source, targets[1], 2)
+		else
+			Fire(source, targets[1], 3)
+	end
+			room:loseHp(source,3)
+	end
+end
+}
+
+LuaYeyanViewAsSkill = sgs.CreateViewAsSkill{
+	name = "Luayeyan",
+	n = 4,
+
+	view_filter = function(self, selected, to_select)
+		if #selected >= 4 then return false end
+		if to_select:isEquipped() then return false end
+		for _,card in ipairs(selected) do
+        if card:getSuit() == to_select:getSuit() then return false end
+	end
+		return true
+end,
+	view_as = function(self, cards)
+		if #cards == 0 then return LuaYeyanCard:clone() end
+		if #cards ~= 4 then return nil end
+		local YeyanCard = LuaYeyanCard:clone()
+		for _,card in ipairs(cards) do
+			YeyanCard:addSubcard(card)
+	end
+		return YeyanCard
+end,
+
+	enabled_at_play=function(self, player)
+		return player:getMark("@flame") >= 1
+end
+}
+
+LuaYeyan = sgs.CreateTriggerSkill{
+	name = "Luayeyan",
+	frequency = sgs.Skill_Limited,
+	events = {sgs.GameStart},
+	view_as_skill = LuaYeyanViewAsSkill,
+
+	on_trigger = function(self,event,player,data)
+		player:gainMark("@flame")
+end
+}
 --[[
 	技能名：遗计
 	相关武将：标准·郭嘉
