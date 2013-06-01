@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（S区）
 	技能索引：
-		伤逝、伤逝、烧营、涉猎、神愤、神戟、神君、神力、神速、神威、神智、师恩、识破、识破、恃才、恃勇、弑神、誓仇、授业、淑德、淑慎、双刃、双雄、水箭、水泳、死谏、死节、死战、颂词、颂威、随势
+		伤逝、伤逝、烧营、涉猎、神愤、神戟、神君、神力、神速、神威、神智、师恩、识破、3D识破、恃才、恃勇、弑神、誓仇、授业、淑德、淑慎、双刃、双雄、水箭、水泳、死谏、死节、死战、颂词、颂威、随势
 ]]--
 --[[
 	技能名：伤逝（锁定技）
@@ -585,10 +585,16 @@ LuaXShipo = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：识破（锁定技）
+	技能名：3D识破（锁定技）
 	相关武将：3D织梦·李儒
 	描述：你不能成为黑桃【杀】或黑桃锦囊的目标。 
 ]]--
+Lua3dShipo = sgs.CreateProhibitSkill{
+	name = "Lua3dShipo", 
+	is_prohibited = function(self, from, to, card) 
+		return card:isKindOf("Slash") or card:isKindOf("TrickCard") and card:getSuit() == sgs.Card_Spade
+	end
+}
 --[[
 	技能名：恃才（锁定技）
 	相关武将：智·许攸
