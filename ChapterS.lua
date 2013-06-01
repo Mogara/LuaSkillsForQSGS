@@ -1075,7 +1075,7 @@ LuaXShuijian = sgs.CreateTriggerSkill{
 LuaXShuiyong = sgs.CreateTriggerSkill{
 	name = "LuaXShuiyong",  
 	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.sgs.DamageInflicted},  
+	events = {sgs.DamageInflicted},  
 	on_trigger = function(self, event, player, data) 
 		local damage = data:toDamage()
 		return damage.nature == sgs.DamageStruct_Fire 
