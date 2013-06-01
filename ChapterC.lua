@@ -439,7 +439,7 @@ LuaChunlaoCard = sgs.CreateSkillCard{
 	target_fixed = true,
 	will_throw = false,
 	on_use = function(self, room, source, targets)
-		local ids = self.subcards
+		local ids = self:getSubcards()
 		for _,id in sgs.qlist(ids) do
 			source:addToPile("wine", id, true)
 		end
