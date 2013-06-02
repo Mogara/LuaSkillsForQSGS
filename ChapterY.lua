@@ -622,6 +622,28 @@ LuaYinlingClear = sgs.CreateTriggerSkill{
 	相关武将：3D织梦·孙鲁班
 	描述：你可以将一张装备牌当【酒】使用。 
 ]]--
+LuaYinsi = sgs.CreateViewAsSkill{
+	name = "LuaYinsi", 
+	n = 1,
+	
+	view_filter = function(self, selected, to_select)
+			return to_select:isKindOf("EquipCard")
+	end, 
+	
+	view_as = function(self, cards) 
+		if #cards ~= 1 then return end
+		local analeptic = sgs.Sanguosha:cloneCard("analeptic", cards[1]:getSuit(), cards[1]:getNumber())
+			analeptic:setSkillName(self:objectName())
+			analeptic:addSubcard(cards[1]:getId())
+		return analeptic
+	end, 
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("Analeptic")
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return string.find(pattern, "analeptic")
+	end
+}
 --[[
 	技能名：隐智
 	相关武将：贴纸·辛宪英
