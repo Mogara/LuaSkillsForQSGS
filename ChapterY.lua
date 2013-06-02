@@ -621,7 +621,7 @@ LuaYinlingClear = sgs.CreateTriggerSkill{
 	技能名：淫肆
 	相关武将：3D织梦·孙鲁班
 	描述：你可以将一张装备牌当【酒】使用。 
-	引用：LuaYinling、LuaYinlingClear
+	引用：LuaYinsi
 	状态：验证通过
 ]]--
 LuaYinsi = sgs.CreateViewAsSkill{
