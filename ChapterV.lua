@@ -2804,7 +2804,7 @@ LuaHujia = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local pattern = data:toStringList():first()
 		local prompt = data:toStringList():at(1)
-		if (pattern != "jink") or string.find(prompt, "@hujia-jink") then return false end
+		if (pattern ~= "jink") or string.find(prompt, "@hujia-jink") then return false end
 		local lieges = room:getLieges("wei", player)
 		if lieges:isEmpty() then return false end
 		if not room:askForSkillInvoke(player, self:objectName(), data) then return false end
