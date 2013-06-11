@@ -1,12 +1,12 @@
 --[[
 	代码速查手册（D区）
 	技能索引：
-		大喝、大雾、单骑、啖酪、当先、蹈矩、缔盟、洞察、毒计、毒士、毒医、度势、短兵、断肠、断粮、断指
+		大喝、大雾、单骑、胆守、啖酪、当先、蹈矩、缔盟、洞察、毒计、毒士、毒医、黩武、短兵、断肠、断粮、断指、度势、夺刀
 ]]--
 --[[
 	技能名：大喝
 	相关武将：☆SP·张飞
-	描述：出牌阶段，你可以与一名其他角色拼点；若你赢，该角色的非红心【闪】无效直到回合结束，你可将该角色拼点的牌交给场上一名体力不多于你的角色。若你没赢，你须展示手牌并选择一张弃置。每阶段限一次。
+	描述：出牌阶段限一次，你可以与一名角色拼点：若你赢，你可以将该角色的拼点牌交给一名体力值不多于你的角色，本回合该角色使用的非♥【闪】无效；若你没赢，你展示所有手牌，然后弃置一张手牌。
 	引用：LuaDahe、LuaDahePindian
 	状态：验证通过
 ]]--
@@ -127,7 +127,7 @@ LuaDahePindian = sgs.CreateTriggerSkill{
 --[[
 	技能名：大雾
 	相关武将：神·诸葛亮
-	描述：回合结束阶段开始时，你可以将X张“星”置入弃牌堆并选择X名角色，若如此做，每当这些角色受到的非雷电伤害结算开始时，防止此伤害，直到你的下回合开始。
+	描述：结束阶段开始时，你可以将X张“星”置入弃牌堆并选择X名角色，若如此做，你的下回合开始前，每当这些角色受到的非雷电伤害结算开始时，防止此伤害。
 	引用：LuaDawu
 	状态：验证通过
 ]]--
@@ -188,7 +188,7 @@ LuaDawu = sgs.CreateTriggerSkill{
 --[[
 	技能名：单骑（觉醒技）
 	相关武将：SP·关羽
-	描述：回合开始阶段，若你的手牌数大于你当前的体力值，且本局主公为曹操时，你须减1点体力上限并永久获得技能“马术”。
+	描述：准备阶段开始时，若你的手牌数大于体力值，且本局游戏主公为曹操，你减1点体力上限，然后获得技能“马术”。
 	引用：LuaDanji
 	状态：验证通过
 ]]--
@@ -217,6 +217,11 @@ LuaDanji = sgs.CreateTriggerSkill{
 		return false
 	end
 }
+--[[
+	技能名：胆守
+	相关武将：一将成名2013·朱然
+	描述： 每当你造成伤害后，你可以摸一张牌，然后结束当前回合并结束一切结算。
+]]--
 --[[
 	技能名：啖酪
 	相关武将：SP·杨修
@@ -291,7 +296,7 @@ LuaDangxian = sgs.CreateTriggerSkill{
 --[[
 	技能名：缔盟
 	相关武将：林·鲁肃
-	描述：出牌阶段，你可以选择两名其他角色并弃置等同于他们手牌数差的牌，然后交换他们的手牌。每阶段限一次。
+	描述：出牌阶段限一次，你可以选择两名其他角色并弃置X张牌（X为两名目标角色手牌数的差），令这些角色交换手牌。
 	引用：LuaDimeng
 	状态：验证通过
 ]]--
@@ -461,7 +466,7 @@ LuaXDushi = sgs.CreateTriggerSkill{
 --[[
 	技能名：毒医
 	相关武将：铜雀台·吉本
-	描述：出牌阶段，你可以亮出牌堆顶的一张牌并交给一名角色，若此牌为黑色，该角色不能使用或打出其手牌，直到回合结束。每阶段限一次。 
+	描述：出牌阶段限一次，你可以亮出牌堆顶的一张牌并交给一名角色，若此牌为黑色，该角色不能使用或打出其手牌，直到回合结束。
 	引用：LuaXDuyi
 	状态：验证通过
 ]]--
@@ -534,54 +539,10 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：度势
-	相关武将：国战·陆逊
-	描述：出牌阶段，你可以弃置一张红色手牌并选择任意数量的其他角色：若如此做，你与这些角色各摸两张牌并弃置两张牌。 
-	引用：LuaXDuoshi
-	状态：0224验证通过
-	附注：按照dadao.net修改，依次摸牌，然后再依次弃牌，而不是某人摸2弃2，再结算下一个
+	技能名：黩武
+	相关武将：SP·诸葛恪
+	描述：出牌阶段，你可以选择攻击范围内的一名其他角色并弃置X张牌：若如此做，你对该角色造成1点伤害。若你以此法令该角色进入濒死状态，濒死结算后你失去1点体力，且本阶段你不能再次发动“黩武”。（X为该角色当前的体力值）
 ]]--
-LuaXDuoshiCard = sgs.CreateSkillCard{
-	name = "LuaXDuoshiCard",
-	target_fixed = false,
-	will_throw = true,
-	filter = function(self, targets, to_select)
-		return to_select:objectName() ~= sgs.Self:objectName()
-	end,
-	feasible = function(self, targets)
-		return true
-	end,
-	on_use = function(self, room, source, targets)
-		source:drawCards(2)
-		for i=1, #targets, 1 do
-			targets[i]:drawCards(2)
-		end
-		room:askForDiscard(source, "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
-		for i=1, #targets, 1 do
-			room:askForDiscard(targets[i], "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
-		end
-	end,
-}
-LuaXDuoshi = sgs.CreateViewAsSkill{
-	name = "LuaXDuoshi",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		if to_select:isRed() then
-			if not to_select:isEquipped() then
-				return not sgs.Self:isJilei(to_select)
-			end
-		end
-		return false
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local await = LuaXDuoshiCard:clone()
-			await:addSubcard(cards[1])
-			await:setSkillName(self:objectName())
-			return await
-		end
-	end
-}
 --[[
 	技能名：短兵
 	相关武将：国战·丁奉
@@ -755,5 +716,59 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 	end, 
 	can_trigger = function(self, target)
 		return target
+	end
+}
+--[[
+	技能名：夺刀
+	相关武将：一将成名2013·潘璋&马忠
+	描述：每当你受到一次【杀】造成的伤害后，你可以弃置一张牌，获得伤害来源装备区的武器牌。
+]]--
+--[[
+	技能名：度势
+	相关武将：国战·陆逊
+	描述：出牌阶段限四次，你可以弃置一张红色手牌并选择任意数量的其他角色，你与这些角色各摸两张牌并弃置两张牌。
+	引用：LuaXDuoshi
+	状态：0224验证通过
+	附注：按照dadao.net修改，依次摸牌，然后再依次弃牌，而不是某人摸2弃2，再结算下一个
+]]--
+LuaXDuoshiCard = sgs.CreateSkillCard{
+	name = "LuaXDuoshiCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
+		return to_select:objectName() ~= sgs.Self:objectName()
+	end,
+	feasible = function(self, targets)
+		return true
+	end,
+	on_use = function(self, room, source, targets)
+		source:drawCards(2)
+		for i=1, #targets, 1 do
+			targets[i]:drawCards(2)
+		end
+		room:askForDiscard(source, "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
+		for i=1, #targets, 1 do
+			room:askForDiscard(targets[i], "LuaXDuoshi", 2, 2, false, true, "#LuaXDuoshi-discard")
+		end
+	end,
+}
+LuaXDuoshi = sgs.CreateViewAsSkill{
+	name = "LuaXDuoshi",
+	n = 1,
+	view_filter = function(self, selected, to_select)
+		if to_select:isRed() then
+			if not to_select:isEquipped() then
+				return not sgs.Self:isJilei(to_select)
+			end
+		end
+		return false
+	end,
+	view_as = function(self, cards)
+		if #cards == 1 then
+			local await = LuaXDuoshiCard:clone()
+			await:addSubcard(cards[1])
+			await:setSkillName(self:objectName())
+			return await
+		end
 	end
 }
