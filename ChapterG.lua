@@ -1,4 +1,3 @@
-
 --[[
 	代码速查手册（G区）
 	技能索引：
@@ -123,7 +122,7 @@ LuaXGangli = sgs.CreateTriggerSkill{
 				end
 			end
 		elseif event == sgs.Damaged then
-			if player:hasSkill(self:objectName()) then
+			if player:hasSkill(self:objectName()) and player:isAlive() then
 				local tag = player:getTag("Gangli")
 				local invoke = tag:toBool()
 				player:setTag("Gangli", sgs.QVariant(false))
