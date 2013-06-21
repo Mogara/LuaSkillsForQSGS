@@ -367,7 +367,7 @@ LuaLihun = sgs.CreateTriggerSkill{
 	相关武将：怀旧-标准·貂蝉-旧、SP·貂蝉、SP·台版貂蝉
 	描述：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】（不能使用【无懈可击】对此【决斗】进行响应）。 
 	引用：LuaLijian
-	状态：验证通过 
+	状态：（0224单机启动通过，不能连机）
 ]]--
 LuaLijianCard = sgs.CreateSkillCard{
 	name = "LuaLijianCard",
@@ -691,38 +691,50 @@ LuaLianpoDo = sgs.CreateTriggerSkill{
 	技能名：连营
 	相关武将：标准·陆逊、SP·台版陆逊、倚天·陆抗
 	描述：当你失去最后的手牌时，你可以摸一张牌。
-	引用：LuaLianYing
-	状态：验证通过
+	引用：LuaLianying、LuaLianyingForZeroMaxCards
+	状态：0610验证通过
 ]]--
-LuaLianYing = sgs.CreateTriggerSkill{
-	name = "LuaLianYing",
-	events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime},
+LuaLianying = sgs.CreateTriggerSkill{
+	name = "LuaLianying" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime} ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		local move = data:toMoveOneTime()
-		local source = move.from
-		if source and source:hasSkill(self:objectName()) then
-			if move.from_places:contains(sgs.Player_PlaceHand) then
-				if event == sgs.BeforeCardsMove then 
-					local handcards = player:handCards()
-					for _,id in sgs.qlist(handcards) do 
-						if not move.card_ids:contains(id) then 
-							return 
-						end
-					end
-					player:addMark(self:objectName())
-				else
-					if player:getMark(self:objectName()) > 0 then
-						player:removeMark(self:objectName())			 
-						if room:askForSkillInvoke(player, self:objectName(), data) then
-							player:drawCards(1)
-						end
-					end
+		if move.from and (move.from:objectName() == player:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
+			if event == sgs.BeforeCardsMove then
+				if player:isKongcheng() then return false end
+				for _, id in sgs.qlist(player:handCards()) do
+					if not move.card_ids:contains(id) then return false end
+				end
+				if (player:getMaxCards() == 0) and (player:getPhase() == sgs.Player_Discard) 
+						and (move.reason.m_reason == sgs.CardMoveReason_S_REASON_RULEDISCARD) then
+					player:getRoom():setPlayerFlag(player, "LuaLianyingZeroMaxCards")
+					return false
+				end
+				player:addMark(self:objectName())
+			else
+				if player:getMark(self:objectName()) == 0 then return false end
+				player:removeMark(self:objectName())
+				if player:askForSkillInvoke(self:objectName(), data) then
+					player:drawCards(1)
 				end
 			end
 		end
+		return false
 	end
-} 
+}
+LuaLianyingForZeroMaxCards = sgs.CreateTriggerSkill{
+	name = "#LuaLianyingForZeroMaxcards" ,
+	events = {sgs.EventPhaseChanging} ,
+	on_trigger = function(self, event, player, data)
+		local change = data:toPhaseChange()
+		if (change.from == sgs.Player_Discard) and player:hasFlag("LuaLianyingZeroMaxCards") then
+			player:getRoom():setPlayerFlag(player, "-LuaLianyingZeroMaxCards")
+			if player:askForSkillInvoke("LuaLianying") then player:drawCards(1) end
+		end
+		return false
+	end
+}
 --[[
 	技能名：烈斧
 	相关武将：3D织梦·潘凤
@@ -953,54 +965,50 @@ LuaLiuli = sgs.CreateTriggerSkill{
 	相关武将：标准·赵云、☆SP·赵云、翼·赵云、2013-3v3·赵云、SP·台版赵云
 	描述：你可以将一张【杀】当【闪】，一张【闪】当【杀】使用或打出。
 	引用：LuaLongdan
-	状态：验证通过
+	状态：0610验证通过
 ]]--
-sgs.LongdanPattern = {"pattern"}
 LuaLongdan = sgs.CreateViewAsSkill{
-	name = "LuaLongdan",
-	n = 1,
+	name = "LuaLongdan" ,
+	n = 1 ,
 	view_filter = function(self, selected, to_select)
-		if #selected == 0 then
-			local pattern = sgs.LongdanPattern[1]
+		if #selected > 0 then return false end
+		local card = to_select
+		local usereason = sgs.Sanguosha:getCurrentCardUseReason()
+		if usereason == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
+			return card:isKindOf("Jink")
+		elseif (usereason == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE) or (usereason == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE) then
+			local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
 			if pattern == "slash" then
-				return to_select:isKindOf("Jink")
-			elseif pattern == "jink" then
-				return to_select:isKindOf("Slash")
+				return card:isKindOf("Jink")
+			else
+				return card:isKindOf("Slash")
 			end
+		else
+			return false
 		end
-		return false
-	end,
+	end ,
 	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			if card:isKindOf("Slash") then
-				local jink = sgs.Sanguosha:cloneCard("jink", suit, point)
-				jink:addSubcard(card)
-				jink:setSkillName(self:objectName())
-				return jink
-			elseif card:isKindOf("Jink") then
-				local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
-				slash:addSubcard(card)
-				slash:setSkillName(self:objectName())
-				return slash
-			end
+		if #cards ~= 1 then return nil end
+		local originalCard = cards[1]
+		if originalCard:isKindOf("Slash") then
+			local jink = sgs.Sanguosha:cloneCard("jink", originalCard:getSuit(), originalCard:getNumber())
+			jink:addSubcard(originalCard)
+			jink:setSkillName(self:objectName())
+			return jink
+		elseif originalCard:isKindOf("Jink") then
+			local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())
+			slash:addSubcard(originalCard)
+			slash:setSkillName(self:objectName())
+			return slash
+		else
+			return nil
 		end
-	end,
-	enabled_at_play = function(self, player)
-		if sgs.Slash_IsAvailable(player) then
-			sgs.LongdanPattern = {"slash"}
-			return true
-		end
-		return false
-	end,
-	enabled_at_response = function(self, player, pattern)
-		if pattern == "jink" or pattern == "slash" then
-			sgs.LongdanPattern = {pattern}
-			return true
-		end
-		return false
+	end ,
+	enabled_at_play = function(self, target)
+		return sgs.Slash_IsAvailable(target)
+	end, 
+	enabled_at_response = function(self, target, pattern)
+		return (pattern == "slash") or (pattern == "jink")
 	end
 }
 --[[
@@ -1509,7 +1517,7 @@ LuaXNeoLuoyiBuff = sgs.CreateTriggerSkill{
 	相关武将：标准·甄姬、1v1·甄姬1v1、SP·甄姬、SP·台版甄姬
 	描述：准备阶段开始时，你可以进行一次判定，若判定结果为黑色，你获得生效后的判定牌且你可以重复此流程。 
 	引用：LuaLuoshen
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaLuoshen = sgs.CreateTriggerSkill{
 	name = "LuaLuoshen", 
@@ -1521,7 +1529,7 @@ LuaLuoshen = sgs.CreateTriggerSkill{
 			if player:getPhase() == sgs.Player_Start then
 				while player:askForSkillInvoke(self:objectName()) do
 					local judge = sgs.JudgeStruct()
-					judge.pattern = sgs.QRegExp("(.*):(spade|club):(.*)")
+					judge.pattern = ".|black"
 					judge.good = true
 					judge.reason = self:objectName()
 					judge.who = player
@@ -1545,6 +1553,7 @@ LuaLuoshen = sgs.CreateTriggerSkill{
 		return false
 	end
 }
+
 --[[
 	技能名：落雁（锁定技）
 	相关武将：SP·大乔&小乔
