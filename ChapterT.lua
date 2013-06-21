@@ -594,35 +594,28 @@ LuaXTuqiDist = sgs.CreateDistanceSkill{
 	相关武将：标准·张辽、SP·台版张辽
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为获得一至两名其他角色的各一张手牌。
 	引用：LuaTuxi
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaTuxiCard = sgs.CreateSkillCard{
 	name = "LuaTuxiCard",
 	target_fixed = false,
 	will_throw = true,
 	filter = function(self, targets, to_select) 
-		if #targets < 2 then
-			if to_select:objectName() ~= sgs.Self:objectName() then
-				return not to_select:isKongcheng()
-			end
+		if (#targets >= 2) or (to_select:objectName() == sgs.Self:objectName()) then
+			return false
 		end
-		return false
-	end,
-	feasible = function(self, targets)
-		return #targets > 0
+		return not to_select:isKongcheng()
 	end,
 	on_use = function(self, room, source, targets)
 		local moves = sgs.CardsMoveList()
 		local move1 = sgs.CardsMoveStruct()
-		local id1 = room:askForCardChosen(source, targets[1], "h", self:objectName())
-		move1.card_ids:append(id1)
+		move1.card_ids:append(room:askForCardChosen(source, targets[1], "h", self:objectName()))
 		move1.to = source
 		move1.to_place = sgs.Player_PlaceHand
 		moves:append(move1)
 		if #targets == 2 then
 			local move2 = sgs.CardsMoveStruct()
-			local id2 = room:askForCardChosen(source, targets[2], "h", self:objectName())
-			move2.card_ids:append(id2)
+			move2.card_ids:append(room:askForCardChosen(source, targets[2], "h", self:objectName()))
 			move2.to = source
 			move2.to_place = sgs.Player_PlaceHand
 			moves:append(move2)
@@ -668,6 +661,7 @@ LuaTuxi = sgs.CreateTriggerSkill{
 		return false
 	end
 }
+
 --[[
 	技能名：突袭
 	相关武将：1v1·张辽1v1
