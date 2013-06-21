@@ -609,7 +609,7 @@ LuaHuxiaoRemove = sgs.CreateTriggerSkill{
 	相关武将：标准·曹操、铜雀台·曹操
 	描述：当你需要使用或打出一张【闪】时，你可以令其他魏势力角色打出一张【闪】（视为由你使用或打出）。 
 	引用：LuaHujia
-	状态：0224验证通过
+	状态：0610验证通过
 ]]--
 LuaHujia = sgs.CreateTriggerSkill{
 	name = "LuaHujia$",
@@ -617,22 +617,20 @@ LuaHujia = sgs.CreateTriggerSkill{
 	events = {sgs.CardAsked},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local pattern = data:toString()
-		if pattern == "jink" then
-			local lieges = room:getLieges("wei", player)
-			if not lieges:isEmpty() then
-				if room:askForSkillInvoke(player, self:objectName()) then
-					local tohelp = sgs.QVariant()
-					tohelp:setValue(player)
-					for _,p in sgs.qlist(lieges) do
-						local prompt = string.format("@hujia-jink:%s", player:objectName())
-						local jink = room:askForCard(p, "jink", prompt, tohelp, sgs.Card_MethodResponse, player)
-						if jink then
-							room:provide(jink)
-							return true
-						end
-					end
-				end
+		local pattern = data:toStringList()[1]
+		local prompt = data:toStringList()[2]
+		if (pattern ~= "jink") or string.find(prompt, "@hujia-jink") then return false end
+		local lieges = room:getLieges("wei", player)
+		if lieges:isEmpty() then return false end
+		if not room:askForSkillInvoke(player, self:objectName(), data) then return false end
+		local tohelp = sgs.QVariant()
+		tohelp:setValue(player)
+		for _, p in sgs.qlist(lieges) do
+			local prompt = string.format("@hujia-jink:%s", player:objectName())
+			local jink = room:askForCard(p, "jink", prompt, tohelp, sgs.Card_MethodResponse, player)
+			if jink then
+				room:provide(jink)
+				return true
 			end
 		end
 		return false
