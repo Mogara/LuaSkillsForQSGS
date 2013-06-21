@@ -137,19 +137,18 @@ LuaXTannang = sgs.CreateDistanceSkill{
 	相关武将：标准·郭嘉、SP·台版郭嘉
 	描述：在你的判定牌生效后，你可以获得此牌。
 	引用：LuaTiandu
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaTiandu = sgs.CreateTriggerSkill{
 	name = "LuaTiandu",
 	frequency = sgs.Skill_Frequent,
 	events = {sgs.FinishJudge},
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		local judge = data:toJudge()
 		local card = judge.card
 		local card_data = sgs.QVariant()
 		card_data:setValue(card)
-		if room:askForSkillInvoke(player, self:objectName(), card_data) then
+		if player:askForSkillInvoke(self:objectName(), card_data) then
 			player:obtainCard(card)
 		end
 	end
