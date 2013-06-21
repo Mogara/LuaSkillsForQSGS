@@ -152,36 +152,37 @@ LuaXGangli = sgs.CreateTriggerSkill{
 	相关武将：标准·夏侯惇
 	描述：每当你受到一次伤害后，你可以进行一次判定，若判定结果不为红桃，则伤害来源选择一项：弃置两张手牌，或受到你对其造成的1点伤害。
 	引用：LuaGanglie
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaGanglie = sgs.CreateTriggerSkill{
 	name = "LuaGanglie", 
 	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.Damaged}, 
-	on_trigger = function(self, event, player, data) 
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
-		local source = damage.from
-		local source_data = sgs.QVariant()
-		source_data:setValue(source)
-		if room:askForSkillInvoke(player, self:objectName(), source_data) then
+		local from = damage.from
+		if room:askForSkillInvoke(player, self:objectName(), data) then
 			local judge = sgs.JudgeStruct()
-			judge.pattern = sgs.QRegExp("(.*):(heart):(.*)")
+			judge.pattern = ".|heart"
 			judge.good = false
 			judge.reason = self:objectName()
 			judge.who = player
 			room:judge(judge)
+			if (not from) or from:isDead() then return end
 			if judge:isGood() then
-				if not room:askForDiscard(source, self:objectName(), 2, 2, true) then
-					local damage = sgs.DamageStruct()
-					damage.from = player
-					damage.to = source
-					room:damage(damage)
+				if from:getHandcardNum() < 2 then
+					room:damage(sgs.DamageStruct(self:objectName(), player, from))
+				else
+					if not room:askForDiscard(from, self:objectName(), 2, 2, true) then
+						room:damage(sgs.DamageStruct(self:objectName(), player, from))
+					end
 				end
 			end
 		end
 	end
 }
+
 --[[
 	技能名：刚烈
 	相关武将：2013-3v3·夏侯惇
@@ -644,7 +645,7 @@ LuaGuzhengGet = sgs.CreateTriggerSkill{
 	相关武将：标准·诸葛亮、山·姜维、SP·台版诸葛亮
 	描述：准备阶段开始时，你可以观看牌堆顶的X张牌，然后将任意数量的牌以任意顺序置于牌堆顶，将其余的牌以任意顺序置于牌堆底。（X为存活角色数且至多为5）。
 	引用：LuaGuanxing
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaGuanxing = sgs.CreateTriggerSkill{
 	name = "LuaGuanxing",
@@ -658,7 +659,7 @@ LuaGuanxing = sgs.CreateTriggerSkill{
 				if count > 5 then
 					count = 5
 				end
-				local cards = room:getNCards(count, false)
+				local cards = room:getNCards(count)
 				room:askForGuanxing(player, cards, false)
 			end
 		end
