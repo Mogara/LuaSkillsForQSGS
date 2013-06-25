@@ -188,68 +188,33 @@ LuaXLexue = sgs.CreateViewAsSkill{
 	相关武将：风·张角
 	描述：当你使用或打出一张【闪】（若为使用则在选择目标后），你可以令一名角色进行一次判定，若判定结果为黑桃，你对该角色造成2点雷电伤害。
 	引用：LuaLeiji
-	状态：验证通过
+	状态：0610验证通过
 ]]--
-LuaLeijiCard = sgs.CreateSkillCard{
-	name = "LuaLeijiCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
-		return #targets == 0
-	end,
-	on_effect = function(self, effect)
-		local source = effect.from
-		local target = effect.to
-		local room = source:getRoom()
-		local judge = sgs.JudgeStruct()
-		judge.pattern = sgs.QRegExp("(.*):(spade):(.*)")
-		judge.good = false
-		judge.reason = self:objectName()
-		judge.who = target
-		judge.play_animation = true
-		judge.negative = true
-		room:judge(judge)
-		if judge:isBad() then
-			local damage = sgs.DamageStruct()
-			damage.card = nil
-			damage.damage = 2
-			damage.from = source
-			damage.to = target
-			damage.nature = sgs.DamageStruct_Thunder
-			room:damage(damage)
-		else
-			room:setEmotion(source, "bad")
-		end
-	end
-}
-LuaLeijiVS = sgs.CreateViewAsSkill{
-	name = "LuaLeiji", 
-	n = 0, 
-	view_as = function(self, cards) 
-		return LuaLeijiCard:clone()
-	end, 
-	enabled_at_play = function(self, player)
-		return false
-	end, 
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaLeiji"
-	end
-}
 LuaLeiji = sgs.CreateTriggerSkill{
-	name = "LuaLeiji", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.CardResponsed}, 
-	view_as_skill = LuaLeijiVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaLeiji" ,
+	events = {sgs.CardResponded} ,
+	on_trigger = function(self, event, player, data)
+		local card_star = data:toCardResponse().m_card
 		local room = player:getRoom()
-		local card = data:toResponsed().m_card
-		if card:isKindOf("Jink") then
-			room:askForUseCard(player, "@@LuaLeiji", "@LuaLeiji")
+		if card_star:isKindOf("Jink") then
+			local target = room:askForPlayerChosen(player, room:getAlivePlayers(), self:objectName(), "LuaLeiji-invoke", true, true)
+			if target then
+				local judge = sgs.JudgeStruct()
+				judge.pattern = ".|spade"
+				judge.good = false
+				judge.negative = true
+				judge.reason = self:objectName()
+				judge.who = target
+				room:judge(judge)
+				if judge:isBad() then
+					room:damage(sgs.DamageStruct(self:objectName(), player, target, 2, sgs.DamageStruct_Thunder))
+				end
+			end
 		end
 		return false
-	end, 
-	priority = 3
+	end
 }
+
 --[[
 	技能名：离魂
 	相关武将：☆SP·貂蝉
