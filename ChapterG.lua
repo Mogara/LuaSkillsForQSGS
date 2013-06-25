@@ -874,71 +874,46 @@ LuaGuicai = sgs.CreateTriggerSkill{
 	相关武将：风·张角
 	描述：在一名角色的判定牌生效前，你可以打出一张黑色牌替换之。
 	引用：LuaGuidao
-	状态：验证通过
+	状态：0610验证通过
 ]]--
-GuidaoCard = sgs.CreateSkillCard{
-	name = "GuidaoCard",
-	target_fixed = true,
-	will_throw = false
-}
-LuaGuidaoVS = sgs.CreateViewAsSkill{
-	name = "LuaGuidao",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		if #selected == 0 then
-			return to_select:isBlack()
-		end
-		return false
-	end,
-	view_as = function(self, cards)
-		if #cards == 0 then
-			return nil
-		end
-		local card = GuidaoCard:clone()
-		card:addSubcard(cards[1])
-		card:setSkillName(self:objectName())
-		return card
-	end,
-	enabled_at_play = function(self, player)
-		return false
-	end,
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@LuaGuidao"
-	end
-}
 LuaGuidao = sgs.CreateTriggerSkill{
-	name = "LuaGuidao",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.AskForRetrial},
-	view_as_skill = LuaGuidaoVS,
+	name = "LuaGuidao" ,
+	events = {sgs.AskForRetrial} ,
 	on_trigger = function(self, event, player, data)
-		if player:askForSkillInvoke(self:objectName(), data) then
-			local judge = data:toJudge()
-			local room = player:getRoom()
-			local card = room:askForCard(player, "@LuaGuidao", nil, data, sgs.AskForRetrial)
+		local judge = data:toJudge()
+		local prompt_list = {
+			"@guidao-card" ,
+			judge.who:objectName() ,
+			self:objectName() ,
+			judge.reason ,
+			string.format("%d", judge.card:getEffectiveId())
+		}
+		local prompt = table.concat(prompt_list, ":")
+		local room = player:getRoom()
+		local card = room:askForCard(player, ".|black", prompt, data, sgs.Card_MethodResponse, judge.who, true)
+		if card then
 			room:retrial(card, player, judge, self:objectName(), true)
-			return false
 		end
-	end,
+		return false
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if target:isKongcheng() then
-					for i=1, 4, 1 do
-						local equip = target:getEquip(i)
-						if equip:isBlack() then
-							return true
-						end
-					end
-					return false
-				else
-					return true
+		if not (target and target:isAlive() and target:hasSkill(self:objectName())) then return false end
+		if target:isKongcheng() then
+			local has_black = false
+			for i = 0, 3, 1 do
+				local equip = target:getEquip(i)
+				if equip and equip:isBlack() then
+					has_black = true
+					break
 				end
 			end
+			return has_black
+		else
+			return true
 		end
-		return false
 	end
 }
+
 --[[
 	技能名：国色
 	相关武将：标准·大乔、SP·台版大乔、SP·王战大乔
