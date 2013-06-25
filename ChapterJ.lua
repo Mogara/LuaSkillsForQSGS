@@ -1357,18 +1357,17 @@ LuaXJuao = sgs.CreateTriggerSkill{
 	相关武将：风·曹仁
 	描述：结束阶段开始时，你可以摸三张牌，然后将你的武将牌翻面。 
 	引用：LuaJushou
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaJushou = sgs.CreateTriggerSkill{
 	name = "LuaJushou",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
-		local phase = player:getPhase()
-		if phase == sgs.Player_Finish then
+		if player:getPhase() == sgs.Player_Finish then
 			local room = player:getRoom()
-			if room:askForSkillInvoke(player, self:objectName(), data) then
-				room:drawCards(player, 3, self:objectName())
+			if room:askForSkillInvoke(player, self:objectName()) then
+				player:drawCards(3)
 				player:turnOver()
 			end
 		end
