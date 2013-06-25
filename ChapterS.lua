@@ -351,93 +351,99 @@ LuaXShenli = sgs.CreateTriggerSkill{
 		1.跳过你的判定阶段和摸牌阶段。
 		2.跳过你的出牌阶段并弃置一张装备牌。
 		你每选择一项，视为对一名其他角色使用一张【杀】（无距离限制）。
-	引用：LuaShensu
-	状态：验证通过
+	引用：LuaShensu、LuaShensuNDL
+	状态：0610验证通过
 ]]--
-LuaShensu_Pattern = nil
 LuaShensuCard = sgs.CreateSkillCard{
-	name = "LuaShensuCard",
-	mute = true,
+	name = "LuaShensuCard" ,
 	filter = function(self, targets, to_select)
 		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-		slash:setSkillName("LuaShensu") 
-		local extra = sgs.Sanguosha:correctCardTarget(sgs.TargetModSkill_ExtraTarget, sgs.Self, slash) + 1
-		return sgs.Self:canSlash(to_select, slash, false) and #targets < extra
-	end,
-	on_use = function(self, room, source, targets)
-		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-		local change = sgs.SPlayerList()
 		slash:setSkillName("LuaShensu")
-		for _, play in ipairs (targets) do
-			change:append(play) 
+		local tarlist = sgs.PlayerList()
+		for i = 1, #targets, 1 do 
+			tarlist:append(targets[i])
 		end
-		local use = sgs.CardUseStruct()
-		use.card = slash
-		use.to = change
-		use.from = source
-		room:useCard(use)
-	end,
+		return slash:targetFilter(tarlist, to_select, sgs.Self)
+	end ,
+	on_use = function(self, room, source, targets)
+		local tarlist = sgs.SPlayerList()
+		for _, p in ipairs(targets) do
+			tarlist:append(p)
+		end
+		for _, p in sgs.qlist(tarlist) do
+			if not source:canSlash(p, nil, false) then
+				tarlist:removeOne(p)
+			end
+		end
+		if tarlist:length() > 0 then
+			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			slash:setSkillName("_LuaShensu")
+			room:useCard(sgs.CardUseStruct(slash, source, tarlist))
+		end
+	end
 }
 LuaShensuVS = sgs.CreateViewAsSkill{
-	name = "LuaShensu",
-	n = 1,
+	name = "LuaShensu" ,
+	n = 1 ,
 	view_filter = function(self, selected, to_select)
-		if string.sub(LuaShensu_Pattern, -1) == "1" then
-			return false
+		if string.find(sgs.Sanguosha:getCurrentCardUsePattern(), "1") then return false
 		else
-			return #selected == 0 and to_select:isKindOf("EquipCard")
+			return (#selected == 0) and to_select:isKindOf("EquipCard") and (not sgs.Self:isJilei(to_select))
 		end
-	end,
-	view_as = function(self, cards)					
-		if string.sub(LuaShensu_Pattern, -1) == "1" then
-			if #cards == 0 then
-				return LuaShensuCard:clone()
-			else
-				return nil
-			end
+	end ,
+	view_as = function(self, cards)
+		if string.find(sgs.Sanguosha:getCurrentCardUsePattern(), "1") then
+			if #cards == 0 then return LuaShensuCard:clone() else return nil end
 		else
-			if #cards == 1 then
-				local card = LuaShensuCard:clone()
-				card:addSubcard(cards[1])
-				return card
-			end
+			if #cards ~= 1 then return nil end
+			local card = LuaShensuCard:clone()
+			card:addSubcard(cards[1])
+			return card
 		end
-	end,
-	enabled_at_play = function(self, player)
+	end ,
+	enabled_at_play = function()
 		return false
-	end,
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		LuaShensu_Pattern = pattern 
-		return string.sub(LuaShensu_Pattern, 1, -2) == "@@LuaShensu" and sgs.Slash_IsAvailable(player)
-	end,
+		return string.find(pattern, "@@LuaShensu") and sgs.Slash_IsAvailable(player)
+	end
 }
 LuaShensu = sgs.CreateTriggerSkill{
-	name = "LuaShensu",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseChanging},
-	view_as_skill = LuaShensuVS,
+	name = "LuaShensu" ,
+	events = {sgs.EventPhaseChanging} ,
+	view_as_skill = LuaShensuVS ,
 	on_trigger = function(self, event, player, data)
-		local change = data:toPhaseChange()
 		local room = player:getRoom()
-		if change.to == sgs.Player_Judge then
-			if not player:isSkipped(sgs.Player_Judge) then
-				if not player:isSkipped(sgs.Player_Draw) then
-					if room:askForUseCard(player, "@@LuaShensu1", "@LuaShensu1", 1) then
-						player:skip(sgs.Player_Judge)
-						player:skip(sgs.Player_Draw)
-					end
+		local change = data:toPhaseChange()
+		if (change.to == sgs.Player_Judge) and (not player:isSkipped(sgs.Player_Judge)) and (not player:isSkipped(sgs.Player_Draw)) then
+			if sgs.Slash_IsAvailable(player) then
+				if room:askForUseCard(player, "@@LuaShensu1", "@shensu1", 1) then
+					player:skip(sgs.Player_Judge)
+					player:skip(sgs.Player_Draw)
 				end
 			end
-		elseif change.to == sgs.Player_Play then
-			if not player:isSkipped(sgs.Player_Play) then
-				if room:askForUseCard(player, "@@LuaShensu2", "@LuaShensu2", 2, sgs.Card_MethodDiscard) then
+		elseif sgs.Slash_IsAvailable(player) and (change.to == sgs.Player_Play) and (not player:isSkipped(sgs.Player_Play)) then
+			if player:canDiscard(player, "he") then
+				if room:askForUseCard(player, "@@LuaShensu2", "@shensu2", 2, sgs.Card_MethodDiscard) then
 					player:skip(sgs.Player_Play)
 				end
 			end
 		end
 		return false
-	end,
+	end
 }
+LuaShensuNDL = sgs.CreateTargetModSkill{
+	name = "#LuaShensu-slash-ndl" ,
+	pattern = "Slash" ,
+	distance_limit_func = function(self, player, card)
+		if player:hasSkill("LuaShensu") and (card:getSkillName() == "LuaShensu") then
+			return 1000
+		else
+			return 0
+		end
+	end
+}
+
 --[[
 	技能名：神威（锁定技）
 	相关武将：SP·暴怒战神
