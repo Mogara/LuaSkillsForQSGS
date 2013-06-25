@@ -98,8 +98,99 @@ LuaJiang = sgs.CreateTriggerSkill{
 	技能名：激将（主公技）
 	相关武将：标准·刘备、山·刘禅、怀旧-标准·刘备-旧
 	描述：当你需要使用或打出一张【杀】时，你可以令其他蜀势力角色打出一张【杀】（视为由你使用或打出）。
-	状态：验证失败
+	引用：LuaJijiang
+	状态：0610验证通过
 ]]--
+
+LuaJijiangCard = sgs.CreateSkillCard{
+	name = "LuaJijiangCard" ,
+	fliter = function(self, targets, to_select)
+		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		local plist = sgs.PlayerList()
+		for i = 1, #targets, 1 do
+			plist:append(targets[i])
+		end
+		return slash:targetFilter(plist, to_select, sgs.Self)
+	end ,
+	on_validate = function(self, cardUse) --这是0610新加的哦~~~~
+		cardUse.m_isOwnerUse = false
+		local liubei = cardUse.from
+		local targets = cardUse.to
+		room = liubei:getRoom()
+		local slash = nil
+		local lieges = room:getLieges("shu", liubei)
+		for _, target in sgs.qlist(targets) do
+			target:setFlags("LuaJijiangTarget")
+		end
+		for _, liege in sgs.qlist(lieges) do
+			slash = room:askForCard(liege, "slash", "@jijiang-slash:" .. liubei:objectName(), sgs.QVariant(), sgs.Card_MethodResponse, liubei) --未处理胆守
+			if slash then
+				for _, target in sgs.qlist(targets) do
+					target:setFlags("-LuaJijiangTarget")
+				end
+				return slash
+			end
+		end
+		for _, target in sgs.qlist(targets) do
+			target:setFlags("-LuaJijiangTarget")
+		end
+		room:setPlayerFlag(liubei, "Global_LuaJijiangFailed")
+		return nil
+	end
+}
+hasShuGenerals = function(player)
+	for _, p in sgs.qlist(player:getSiblings()) do
+		if p:isAlive() and (p:getKingdom() == "shu") then
+			return true
+		end
+	end
+	return false
+end
+LuaJijiangVS = sgs.CreateViewAsSkill{
+	name = "LuaJijiang$" ,
+	n = 0 ,
+	view_as = function()
+		return LuaJijiangCard:clone()
+	end ,
+	enabled_at_play = function(self, player)
+		return hasShuGenerals(player) 
+		   and player:hasLordSkill("LuaJijiang") 
+		   and (not player:hasFlag("Global_LuaJijiangFailed")) 
+		   and sgs.Slash_IsAvailable(player)
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		return hasShuGenerals(player) 
+		   and player:hasLordSkill("LuaJijiang")
+		   and ((pattern == "slash") or (pattern == "@jijiang"))
+		   and (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE)
+		   and (not player:hasFlag("Global_LuaJijiangFailed"))
+	end
+}
+LuaJijiang = sgs.CreateTriggerSkill{
+	name = "LuaJijiang$" ,
+	events = {sgs.CardAsked} ,
+	view_as_skill = LuaJijiangVS ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local pattern = data:toStringList()[1]
+		local prompt = data:toStringList()[2]
+		if (pattern ~= "slash") or string.find(prompt, "@jijiang-slash") then return false end
+		local lieges = room:getLieges("shu", player)
+		if lieges:isEmpty() then return false end
+		if not room:askForSkillInvoke(player, self:objectName(), data) then return false end
+		for _, liege in sgs.qlist(lieges) do
+			local slash = room:askForCard(liege, "slash", "@jijiang-slash:" .. player:objectName(), sgs.QVariant(), sgs.Card_MethodResponse, player)
+			if slash then
+				room:provide(slash)
+				return true
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target and target:hasLordSkill("LuaJijiang")
+	end
+}
 --[[
 	技能名：极略
 	相关武将：神·司马懿
