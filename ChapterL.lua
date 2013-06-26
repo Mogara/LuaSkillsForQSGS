@@ -538,26 +538,18 @@ LuaLihuoTarget = sgs.CreateTargetModSkill{
 	相关武将：火·庞统
 	描述：你可以将一张梅花手牌当【铁索连环】使用或重铸。
 	引用：LuaLianhuan
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaLianhuan = sgs.CreateViewAsSkill{
 	name = "LuaLianhuan", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
-		if to_select:isEquipped() then
-			return false
-		else
-			return to_select:getSuit() == sgs.Card_Club
-		end
+		return (not to_select:isEquipped()) and (to_select:getSuit() == sgs.Card_Club)
 	end, 
 	view_as = function(self, cards) 
 		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local id = card:getId()
-			local chain = sgs.Sanguosha:cloneCard("iron_chain", suit, point)
-			chain:addSubcard(id)
+			local chain = sgs.Sanguosha:cloneCard("iron_chain", cards[1]:getSuit(), cards[1]:getNumber())
+			chain:addSubcard(cards[1])
 			chain:setSkillName(self:objectName())
 			return chain
 		end
@@ -765,7 +757,7 @@ LuaLiegong = sgs.CreateTriggerSkill{
 	相关武将：火·祝融、1v1·祝融1v1
 	描述：每当你使用【杀】对目标角色造成一次伤害后，你可以与其拼点，若你赢，你获得该角色的一张牌。
 	引用：LuaLieren
-	状态：验证通过
+	状态：0610验证通过（但是和源码稍微有点区别）
 ]]--
 LuaLieren = sgs.CreateTriggerSkill{
 	name = "LuaLieren", 
@@ -773,29 +765,17 @@ LuaLieren = sgs.CreateTriggerSkill{
 	events = {sgs.Damage},  
 	on_trigger = function(self, event, player, data) 
 		local damage = data:toDamage()
+		local room = player:getRoom()
 		local target = damage.to
-		local slash = damage.card
-		if slash then
-			if slash:isKindOf("Slash") then
-				if not player:isKongcheng() then
-					if not target:isKongcheng() then
-						if target:objectName() ~= player:objectName() then
-							if not damage.chain then
-								if not damage.transfer then
-									local room = player:getRoom()
-									if room:askForSkillInvoke(player, self:objectName(), data) then
-										local success = player:pindian(target, self:objectName(), nil)
-										if success then
-											if not target:isNude() then
-												local id = room:askForCardChosen(player, target, "he", self:objectName())
-												room:obtainCard(player, id, false)
-											end
-										end
-									end
-								end
-							end
-						end
-					end
+		if damage.card and damage.card:isKindOf("Slash") and (not player:isKongcheng()) 
+				and (not target:isKongcheng()) and (target:objectName() ~= player:objectName() and (not damage.chain) and (not damage.transfer)) then
+			if room:askForSkillInvoke(player, self:objectName(), data) then
+				local success = player:pindian(target, "LuaLieren", nil)
+				if not success then return false end
+				if not target:isNude() then
+					local card_id = room:askForCardChosen(player, target, "he", self:objectName())
+					--local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+					room:obtainCard(player, sgs.Sanguosha:getCard(card_id), --[[reason,]] room:getCardPlace(card_id) ~= sgs.Player_PlaceHand)
 				end
 			end
 		end
@@ -1303,15 +1283,17 @@ LuaLuanji = sgs.CreateViewAsSkill{
 	技能名：乱武（限定技）
 	相关武将：林·贾诩、SP·贾诩
 	描述：出牌阶段，你可以令所有其他角色各选择一项：对距离最近的另一名角色使用一张【杀】，或失去1点体力。
-	引用：LuaLuanwu、LuaLuanwuMark
-	状态：验证通过
+	引用：LuaLuanwu、LuaChaos1
+	状态：0610验证通过
+	
+	Fs备注：其实可以把#@chaos-Lua-1直接写入LuaLuanwu的触发技里……
 ]]--
 LuaLuanwuCard = sgs.CreateSkillCard{
 	name = "LuaLuanwuCard", 
 	target_fixed = true, 
 	will_throw = true, 
 	on_use = function(self, room, source, targets)
-		source:loseMark("@chaos")
+		room:removePlayerMark(source, "@chaos")
 		local players = room:getOtherPlayers(source)
 		for _,p in sgs.qlist(players) do
 			if p:isAlive() then
@@ -1320,57 +1302,57 @@ LuaLuanwuCard = sgs.CreateSkillCard{
 		end
 	end,
 	on_effect = function(self, effect)
-		local dest = effect.to
-		local room = dest:getRoom()
-		local players = room:getOtherPlayers(dest)
-		local nearest = 1000
+		local room = effect.to:getRoom()
+		local players = room:getOtherPlayers(effect.to)
 		local distance_list = sgs.IntList()
+		local nearest = 1000
 		for _,player in sgs.qlist(players) do
-			local dist = dest:distanceTo(player)
-			distance_list:append(dist)
-			if dist < nearest then
-				nearest = dist
-			end
+			local distance = effect.to:distanceTo(player)
+			distance_list:append(distance)
+			nearest = math.min(nearest, distance)
 		end
 		local luanwu_targets = sgs.SPlayerList()
 		local count = distance_list:length()
-		for i=0, count, 1 do
-			local dist = distance_list:at(i)
-			if dist == nearest then
-				local player = players:at(i)
-				if dest:canSlash(player) then
-					luanwu_targets:append(player)
-				end
+		for i = 0, count - 1, 1 do
+			if (distance_list:at(i) == nearest) and effect.to:canSlash(players:at(i), nil, false) then
+				luanwu_targets:append(players:at(i))
 			end
 		end
 		if luanwu_targets:length() > 0 then
-			if not room:askForUseSlashTo(dest, luanwu_targets, "@luanwu-slash") then
-				room:loseHp(dest)
+			if not room:askForUseSlashTo(effect.to, luanwu_targets, "@luanwu-slash") then
+				room:loseHp(effect.to)
 			end
 		else
-			room:loseHp(dest)
+			room:loseHp(effect.to)
 		end
 	end
 }
-LuaLuanwu = sgs.CreateViewAsSkill{
+LuaLuanwuVS = sgs.CreateViewAsSkill{
 	name = "LuaLuanwu", 
 	n = 0, 
 	view_as = function(self, cards) 
 		return LuaLuanwuCard:clone()
 	end, 
 	enabled_at_play = function(self, player)
-		local count = player:getMark("@chaos")
-		return count > 0
+		return player:getMark("@chaos") >= 1
 	end
 }
-LuaLuanwuMark = sgs.CreateTriggerSkill{
-	name = "#LuaLuanwuMark",
+LuaLuanwu = sgs.CreateTriggerSkill{
+	name = "LuaLuanwu" ,
+	frequency = sgs.Skill_Limited ,
+	events = {} ,
+	view_as_skill = LuaLuanwuVS ,
+	on_trigger = function()end
+}
+LuaChaos1 = sgs.CreateTriggerSkill{
+	name = "#@chaos-Lua-1",
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.GameStart},
 	on_trigger = function(self, event, player, data)
 		player:gainMark("@chaos", 1)
 	end
 }
+
 --[[
 	技能名：裸衣
 	相关武将：标准·许褚、1v1·许褚1v1
