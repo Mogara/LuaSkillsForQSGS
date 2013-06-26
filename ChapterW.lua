@@ -36,7 +36,39 @@ LuaWansha = sgs.CreateTriggerSkill{
 	技能名：妄尊
 	相关武将：标准·袁术
 	描述：主公的准备阶段开始时，你可以摸一张牌，然后主公本回合手牌上限-1。 
+	引用：LuaWangzun、LuaWangzunMaxCards
+	状态：0610验证通过
 ]]--
+LuaWangzun = sgs.CreateTriggerSkill{
+	name = "LuaWangzun" ,
+	events = {sgs.EventPhaseStart} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:isLord() and (player:getPhase() == sgs.Player_Start) then
+			local yuanshu = room:findPlayerBySkillName(self:objectName())
+			if yuanshu then
+				if room:askForSkillInvoke(yuanshu, self:objectName()) then
+					yuanshu:drawCards(1)
+					room:setPlayerFlag(player, "LuaWangzunDecMaxCards")
+				end
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end
+}
+LuaWangzunMaxCards = sgs.CreateMaxCardsSkill{
+	name = "#LuaWangzunMaxCards" ,
+	extra_func = function(self, target)
+		if target:hasFlag("LuaWangzunDecMaxCards") then
+			return -1
+		else
+			return 0
+		end
+	end
+}
 --[[
 	技能名：危殆（主公技）
 	相关武将：智·孙策
