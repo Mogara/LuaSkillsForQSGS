@@ -767,29 +767,23 @@ LuaWushenTargetMod = sgs.CreateTargetModSkill{
 	相关武将：标准·关羽、翼·关羽、2013-3v3·关羽、1v1·关羽1v1
 	描述：你可以将一张红色牌当【杀】使用或打出。
 	引用：LuaWusheng
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaWusheng = sgs.CreateViewAsSkill{
 	name = "LuaWusheng",
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		if not to_select:isRed() then
-			return false
-		end
+		if not to_select:isRed() then return false end
 		local weapon = sgs.Self:getWeapon()
-		if weapon then
-			if to_select == weapon then
-				if to_select:objectName() == "Crossbow" then
-					return sgs.Self:canSlashWithoutCrossbow()
-				end
-			end
+		if (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY) and sgs.Self:getWeapon() 
+				and (card:getEffectiveId() == sgs.Self:getWeapon():getId()) and card:isKindOf("Crossbow") then
+			return sgs.Self:canSlashWithoutCrossbow()
+		else
+			return true
 		end
-		return true
 	end,
 	view_as = function(self, cards)
-		if #cards == 0 then
-			return nil
-		elseif #cards == 1 then
+		if #cards == 1 then
 			local card = cards[1]
 			local slash = sgs.Sanguosha:cloneCard("slash", card:getSuit(), card:getNumber()) 
 			slash:addSubcard(card:getId())
@@ -802,5 +796,5 @@ LuaWusheng = sgs.CreateViewAsSkill{
 	end, 
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "slash"
-	end,
+	end
 }
