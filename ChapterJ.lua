@@ -517,30 +517,22 @@ LuaJiangchiMod = sgs.CreateTargetModSkill{
 	相关武将：火·荀彧
 	描述：每当你受到1点伤害后，你可以令一名角色将手牌补至X张（X为该角色的体力上限且至多为5）。
 	引用：LuaJieming
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaJieming = sgs.CreateTriggerSkill{
-	name = "LuaJieming",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
+	name = "LuaJieming" ,
+	events = {sgs.Damaged} ,
 	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
 		local room = player:getRoom()
-		local count = data:toDamage().damage
-		for i=1, count, 1 do
-			if room:askForSkillInvoke(player, "LuaJieming", data) then
-				local targets = room:getAlivePlayers()
-				local dest = room:askForPlayerChosen(player, targets, "LuaJieming")
-				local toCount = dest:getMaxHp()
-				if toCount > 5 then
-					toCount = 5
-				end
-				local hasCount = dest:getHandcardNum()
-				local count = toCount - hasCount
-				if count > 0 then
-					room:drawCards(dest, count, "LuaJieming")
-				end
+		for i = 0, damage.damage - 1, 1 do
+			local to = room:askForPlayerChosen(player, room:getAlivePlayers(), self:objectName(), "jieming-invoke", true, true)
+			if not to then break end
+			local upper = math.min(5, to:getMaxHp())
+			local x = upper - to:getHandcardNum()
+			if x <= 0 then
 			else
-				break
+				to:drawCards(x)
 			end
 		end
 	end
@@ -550,48 +542,41 @@ LuaJieming = sgs.CreateTriggerSkill{
 	相关武将：标准·孙尚香、SP·孙尚香
 	描述：出牌阶段限一次，你可以弃置两张手牌并选择一名已受伤的男性角色，你和该角色各回复1点体力。 
 	引用：LuaJieyin
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaJieyinCard = sgs.CreateSkillCard{
-	name = "LuaJieyinCard",
-	target_fixed = false,
-	will_throw = true,
+	name = "LuaJieyinCard" ,
+	target_fixed = false ,
+	will_throw = true ,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			if to_select:isWounded() then
-				return to_select:isMale()
-			end
-		end
-		return false
-	end,
-	on_use = function(self, room, player, targets)
-		local dest = targets[1]
+		if #targets ~= 0 then return false end
+		return to_select:isMale() and to_select:isWounded() and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
+	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
 		local recover = sgs.RecoverStruct()
 		recover.card = self
-		recover.who = player
-		room:recover(player, recover, true)
-		room:recover(dest, recover, true)
+		recover.who = effect.from
+		room:recover(effect.from, recover, true)
+		room:recover(effect.to, recover, true)
 	end
 }
 LuaJieyin = sgs.CreateViewAsSkill{
-	name = "LuaJieyin",
-	n = 2,
+	name = "LuaJieyin" ,
+	n = 2 ,
 	view_filter = function(self, selected, to_select)
-		if #selected <2 then
-			return not to_select:isEquipped()
-		end
-		return false
-	end,
+		if (#selected > 1) or sgs.Self:isJilei(to_select) then return false end
+		return not to_select:isEquipped()
+	end ,
 	view_as = function(self, cards)
-		if #cards == 2 then
-			local card = LuaJieyinCard:clone()
-			card:addSubcard(cards[1])
-			card:addSubcard(cards[2])
-			return card
-		end
-	end,
+		if #cards ~= 2 then return nil end
+		jieyin_card = LuaJieyinCard:clone()
+		jieyin_card:addSubcard(cards[1])
+		jieyin_card:addSubcard(cards[2])
+		return jieyin_card
+	end ,
 	enabled_at_play = function(self, target)
-		return not target:hasUsed("#LuaJieyinCard")
+		return (target:getHandcardNum() >= 2) and (not target:hasUsed("#LuaJieyinCard"))
 	end
 }
 --[[
@@ -917,31 +902,26 @@ LuaJinjiu = sgs.CreateFilterSkill{
 	相关武将：林·董卓
 	描述：你可以将一张黑桃手牌当【酒】使用。
 	引用：LuaJiuchi
-	状态：验证通过
+	状态：0610验证通过（这是完全按照源码做的，修复了以前版本里面有TarMod但是只能使用一次酒池的Bug）
 ]]--
 LuaJiuchi = sgs.CreateViewAsSkill{
 	name = "LuaJiuchi", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
-		if not to_select:isEquipped() then
-			return to_select:getSuit() == sgs.Card_Spade
-		end
-		return false
+		return (not to_select:isEquipped()) and (to_select:getSuit() == sgs.Card_Spade)
 	end, 
 	view_as = function(self, cards) 
 		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local id = card:getId()
-			local analeptic = sgs.Sanguosha:cloneCard("analeptic", suit, point)
+			local analeptic = sgs.Sanguosha:cloneCard("analeptic", cards[1]:getSuit(), cards[1]:getNumber())
 			analeptic:setSkillName(self:objectName())
-			analeptic:addSubcard(id)
+			analeptic:addSubcard(cards[1])
 			return analeptic
 		end
 	end, 
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("Analeptic")
+		local newanal = sgs.Sanguosha:cloneCard("analeptic", sgs.Card_NoSuit, 0)
+		if player:isCardLimited(newanal, sgs.Card_MethodUse) or player:isProhibited(player, newanal) then return false end
+		return player:usedTimes("Analeptic") <= sgs.Sanguosha:correctCardTarget(sgs.TargetModSkill_Residue, player , newanal)
 	end, 
 	enabled_at_response = function(self, player, pattern)
 		return string.find(pattern, "analeptic")
@@ -1213,66 +1193,54 @@ LuaNosJujian = sgs.CreateViewAsSkill{
 	技能名：巨象（锁定技）
 	相关武将：林·祝融
 	描述：【南蛮入侵】对你无效；当其他角色使用的【南蛮入侵】在结算后置入弃牌堆时，你获得之。
-	引用：LuaJuxiang、LuaJuxiangSavageAssaultAvoid
-	状态：验证通过
+	引用：LuaSavageAssaultAvoid（与祸首一致，注意重复技能）、LuaJuxiang
+	状态：0610验证通过
 ]]--
-LuaJuxiang = sgs.CreateTriggerSkill{
-	name = "LuaJuxiang",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.CardsMoving,sgs.CardUsed},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.CardUsed then
-			local use = data:toCardUse()
-			if use.card:isVirtualCard() then
-				if use.card:isKindOf("SavageAssault") then
-					if use.card:subcardsLength() == 1 then
-						if sgs.Sanguosha:getCard(use.card:getSubcards():first()):isKindOf("SavageAssault") then
-							 room:setCardFlag(use.card:getSubcards():first(), "real_SA")
-						end
-					end
-				end
-			elseif use.card:isKindOf("SavageAssault") then
-				room:setCardFlag(use.card:getId(), "real_SA")
-			end
-		elseif event == sgs.CardsMoving then
-			local move = data:toMoveOneTime()
-			if move.card_ids:length() == 1 then
-				if move.from_places:contains(sgs.Player_PlaceTable) then
-					if move.to_place == sgs.Player_DiscardPile then
-						if move.reason.m_reason == sgs.CardMoveReason_S_REASON_USE then
-							local card = sgs.Sanguosha:getCard(move.card_ids:first())
-							if card:hasFlag("real_SA") then
-								local targets = room:getAllPlayers()
-								for _,p in sgs.qlist(targets) do
-									if p:hasSkill(self:objectName()) then
-										if p:objectName() ~= move.from:objectName() then
-											p:obtainCard(card)
-										end
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end,
-	can_trigger = function(self, target)
-		return target ~= nil
-	end
-}
-LuaJuxiangSavageAssaultAvoid = sgs.CreateTriggerSkill{
-	name = "#LuaJuxiangSavageAssaultAvoid",
-	frequency = sgs.Skill_Compulsory,
+LuaSavageAssaultAvoid = sgs.CreateTriggerSkill{
+	name = "#LuaSavageAssaultAvoid",
 	events = {sgs.CardEffected},
 	on_trigger = function(self, event, player, data)
 		local effect = data:toCardEffect()
 		if effect.card:isKindOf("SavageAssault") then
 			return true
+		else
+			return false
 		end
 	end
 }
+LuaJuxiang = sgs.CreateTriggerSkill{
+	name = "LuaJuxiang",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.BeforeCardsMove,sgs.CardUsed},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.CardUsed then
+			local use = data:toCardUse()
+			if use.card:isKindOf("SavageAssault") then
+				if use.card:isVirtualCard() and (use.card:subcardsLength() ~= 1) then return false end
+				if sgs.Sanguosha:getEngineCard(use.card:getEffectiveId())
+						and sgs.Sanguosha:getEngineCard(use.card:getEffectiveId()):isKindOf("SavageAssault") then
+					room:setCardFlag(use.card:getEffectiveId(), "real_SA")
+				end
+			end
+		elseif player and player:isAlive() and player:hasSkill(self:objectName()) then
+			local move = data:toMoveOneTime()
+			if (move.card_ids:length() == 1) and move.from_places:contains(sgs.Player_PlaceTable) and (move.to_place == sgs.Player_DiscardPile)
+					and (move.reason.m_reason == sgs.CardMoveReason_S_REASON_USE) then
+				local card = sgs.Sanguosha:getCard(move.card_ids:first())
+				if card:hasFlag("real_SA") and (player:objectName() ~= move.from:objectName()) then
+					player:obtainCard(card)
+					move.card_ids = sgs.IntList()
+					data:setValue(move)
+				end
+			end
+		end
+	end,
+	can_trigger = function(self, target)
+		return target
+	end
+}
+
 --[[
 	技能名：倨傲
 	相关武将：智·许攸
