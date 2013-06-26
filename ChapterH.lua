@@ -226,97 +226,80 @@ LuaXHantongKeep = sgs.CreateMaxCardsSkill{
 	技能名：好施
 	相关武将：林·鲁肃
 	描述：摸牌阶段，你可以额外摸两张牌，若此时你的手牌多于五张，则将一半（向下取整）的手牌交给全场手牌数最少的一名其他角色。
-	引用：LuaHaoshiGive、LuaHaoshi
-	状态：验证通过
+	引用：LuaHaoshiGive、LuaHaoshi、LuaHaoshiVS
+	状态：0610验证通过
 ]]--
 LuaHaoshiCard = sgs.CreateSkillCard{
 	name = "LuaHaoshiCard", 
 	target_fixed = false,
 	will_throw = false,
+	handling_method = sgs.Card_MethodNone ,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			if to_select:objectName() ~= sgs.Self:objectName() then
-				return to_select:getHandcardNum() == sgs.Self:getMark("LuaHaoshi")
-			end
-		end
-		return false
+		if (#targets ~= 0) or to_select:objectName() == sgs.Self:objectName() then return false end
+		return to_select:getHandcardNum() == sgs.Self:getMark("LuaHaoshi")
 	end,
 	on_use = function(self, room, source, targets)
-		if #targets == 1 then
-			local beggar = targets[1]
-			room:moveCardTo(self, beggar, sgs.Player_PlaceHand, false)
-			room:setEmotion(beggar, "draw-card")
-		end
+		room:moveCardTo(self, targets[1], sgs.Player_PlaceHand, false)
 	end
 }
 LuaHaoshiVS = sgs.CreateViewAsSkill{
 	name = "LuaHaoshi", 
 	n = 999, 
 	view_filter = function(self, selected, to_select)
-		if not to_select:isEquipped() then
-			local length = sgs.Self:getHandcardNum() / 2
-			return #selected < length
-		end
-		return false
+		if to_select:isEquipped() then return false end
+		local length = math.floor(sgs.Self:getHandcardNum() / 2)
+		return #selected < length
 	end, 
 	view_as = function(self, cards)
-		local count = sgs.Self:getHandcardNum() / 2
-		if #cards == count then
-			local card = LuaHaoshiCard:clone()
-			for _,cd in pairs(cards) do
-				card:addSubcard(cd)
-			end
-			return card
+		if #cards ~= math.floor(sgs.Self:getHandcardNum() / 2) then return nil end
+		local card = LuaHaoshiCard:clone()
+		for _, c in ipairs(cards) do
+			card:addSubcard(c)
 		end
+		return card
 	end, 
 	enabled_at_play = function(self, player)
 		return false
 	end, 
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@haoshi!"
+		return pattern == "@@LuaHaoshi"
 	end
 }
 LuaHaoshiGive = sgs.CreateTriggerSkill{
 	name = "#LuaHaoshiGive", 
 	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
+	events = {sgs.AfterDrawNCards},  
 	on_trigger = function(self, event, player, data) 
 		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Draw then
-			if player:hasFlag("LuaHaoshi") then
-				room:setPlayerFlag(player, "-LuaHaoshi")
-				if player:getHandcardNum() > 5 then	  
-					local other_players = room:getOtherPlayers(player)
-					local least = 1000
-					for _,p in sgs.qlist(other_players) do
-						least = math.min(p:getHandcardNum(), least)
-					end
-					room:setPlayerMark(player, "haoshi", least)
-					local used = room:askForUseCard(player, "@@haoshi!", "@haoshi")
-					if not used then
-						local beggar = nil
-						for _,p in sgs.qlist(other_players) do
-							if p:getHandcardNum() == least then
-								beggar = player
-								break
-							end
-						end
-						local n = player:getHandcardNum() / 2
-						local to_give = player:handCards():mid(0, n)
-						local haoshi_card = LuaHaoshiCard:clone()
-						for _,card_id in sgs.qlist(to_give) do
-							haoshi_card:addSubcard(card_id)
-						end
-						local targets = sgs.SPlayerList()
-						targets:append(beggar)
-						haoshi_card:on_use(haoshi_card, room, player, targets)
+		if player:hasFlag("LuaHaoshi") then
+			player:setFlags("-LuaHaoshi")
+			if player:getHandcardNum() <= 5 then return false end
+			local other_players = room:getOtherPlayers(player)
+			local least = 1000
+			for _, _player in sgs.qlist(other_players) do
+				least = math.min(_player:getHandcardNum(), least)
+			end
+			room:setPlayerMark(player, "LuaHaoshi", least)
+			local used = room:askForUseCard(player, "@@LuaHaoshi", "@haoshi", -1, sgs.Card_MethodNone)
+			if not used then
+				local beggar
+				for _, _player in sgs.qlist(other_players) do
+					if _player:getHandcardNum() == least then
+						beggar = _player
+						break
 					end
 				end
+				local n = math.floor(player:getHandcardNum() / 2)
+				local to_give = player:handCards():mid(0, n)
+				local haoshi_card = LuaHaoshiCard:clone()
+				for _, card_id in sgs.qlist(to_give) do
+					haoshi_card:addSubcard(card_id)
+				end
+				local targets = {beggar}
+				haoshi_card:on_use(room, player, targets)
 			end
 		end
-		return false
-	end, 
-	priority = -1
+	end
 }
 LuaHaoshi = sgs.CreateTriggerSkill{
 	name = "#LuaHaoshi", 
@@ -324,13 +307,14 @@ LuaHaoshi = sgs.CreateTriggerSkill{
 	events = {sgs.DrawNCards}, 
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if room:askForSkillInvoke(player, self:objectName()) then
+		if room:askForSkillInvoke(player, "LuaHaoshi") then
 			room:setPlayerFlag(player, "LuaHaoshi")
 			local count = data:toInt() + 2
 			data:setValue(count)
 		end
 	end
 }
+
 --[[
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾
