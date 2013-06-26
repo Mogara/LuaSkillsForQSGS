@@ -980,35 +980,31 @@ LuaXShuangren = sgs.CreateTriggerSkill{
 	相关武将：火·颜良文丑
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为进行一次判定，你获得生效后的判定牌，然后你可以将一张与此判定牌颜色不同的手牌当【决斗】使用，直到回合结束。 
 	引用：LuaShuangxiong
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaShuangxiongVS = sgs.CreateViewAsSkill{
 	name = "LuaShuangxiong", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
-		if not to_select:isEquipped() then
-			local value = sgs.Self:getMark("shuangxiong")
-			if value == 1 then
-				return to_select:isBlack()
-			elseif value == 2 then
-				return card:isRed()
-			end
+		if to_select:isEquipped() then return false end
+		local value = sgs.Self:getMark("LuaShuangxiong")
+		if value == 1 then
+			return to_select:isBlack()
+		elseif value == 2 then
+			return to_select:isRed()
 		end
 		return false
 	end, 
 	view_as = function(self, cards) 
 		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local duel = sgs.Sanguosha:cloneCard("duel", suit, point)
-			duel:addSubcard(card)
+			local duel = sgs.Sanguosha:cloneCard("duel", cards[1]:getSuit(), cards[1]:getNumber())
+			duel:addSubcard(cards[1])
 			duel:setSkillName(self:objectName())
 			return duel
 		end
 	end, 
 	enabled_at_play = function(self, player)
-		return player:getMark("shuangxiong") > 0
+		return (player:getMark("LuaShuangxiong") > 0) and (not player:isKongcheng())
 	end
 }
 LuaShuangxiong = sgs.CreateTriggerSkill{
@@ -1020,20 +1016,18 @@ LuaShuangxiong = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		if event == sgs.EventPhaseStart then
 			if player:getPhase() == sgs.Player_Start then
-				room:setPlayerMark(player, "shuangxiong", 0)
-			elseif player:getPhase() == sgs.Player_Draw then
+				room:setPlayerMark(player, "LuaShuangxiong", 0)
+			elseif (player:getPhase() == sgs.Player_Draw) and (player and player:isAlive() and player:hasSkill(self:objectName())) then
 				if player:askForSkillInvoke(self:objectName()) then
+					room:setPlayerFlag(player, "LuaShuangxiong") 
 					local judge = sgs.JudgeStruct()
-					judge.pattern = sgs.QRegExp("(.*)")
 					judge.good = true
 					judge.reason = self:objectName()
 					judge.who = player
 					room:judge(judge)
-					if judge.card:isRed() then
-						room:setPlayerMark(player, "shuangxiong", 1)
-					else
-						room:setPlayerMark(player, "shuangxiong", 2)
-					end
+					local markid = 2
+					if judge.card:isRed() then markid = 1 end
+					room:setPlayerMark(player, "LuaShuangxiong", markid)
 					return true
 				end
 			end
@@ -1041,18 +1035,12 @@ LuaShuangxiong = sgs.CreateTriggerSkill{
 			local judge = data:toJudge()
 			if judge.reason == self:objectName() then
 				player:obtainCard(judge.card)
-				return true
 			end
 		end
 		return false
 	end, 
 	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() then
-				return target:hasSkill(self:objectName())
-			end
-		end
-		return false
+		return target
 	end
 }
 --[[
@@ -1217,7 +1205,7 @@ LuaSongciClear = sgs.CreateTriggerSkill{
 	相关武将：林·曹丕、铜雀台·曹丕
 	描述：其他魏势力角色的判定牌为黑色且生效后，该角色可以令你摸一张牌。
 	引用：LuaSongwei
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaSongwei = sgs.CreateTriggerSkill{
 	name = "LuaSongwei$", 
@@ -1227,32 +1215,30 @@ LuaSongwei = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local judge = data:toJudge()
 		local card = judge.card
+		local caopis = sgs.SPlayerList()
 		if card:isBlack() then
-			local targets = room:getOtherPlayers(player)
-			for _,p in sgs.qlist(targets) do
+			for _, p in sgs.qlist(room:getOtherPlayers(player)) do
 				if p:hasLordSkill(self:objectName()) then
-					if player:askForSkillInvoke(self:objectName()) then
-						p:drawCards(1)
-						p:setFlags("songweiused")
-					end
+					caopis:append(p)
 				end
 			end
-			targets = room:getAllPlayers()
-			for _,p in sgs.qlist(targets) do
-				if p:hasFlag("songweiused") then
-					p:setFlags("-songweiused")
-				end
+		end
+		while not caopis:isEmpty() do
+			local caopi = room:askForPlayerChosen(player, caopis, self:objectName(), "@LuaSongwei-to", true)
+			if caopi then
+				caopi:drawCards(1)
+				caopis:removeOne(caopi)
+			else
+				break
 			end
 		end
 		return false
 	end, 
 	can_trigger = function(self, target)
-		if target then
-			return target:getKingdom() == "wei"
-		end
-		return false
+		return target and (target:getKingdom() == "wei")
 	end
 }
+
 --[[
 	技能：肃资
 	相关武将：1v1·夏侯渊1v1
