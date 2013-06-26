@@ -8,24 +8,19 @@
 	相关武将：火·诸葛亮
 	描述：你可以将一张黑色手牌当【无懈可击】使用。
 	引用：LuaKanpo
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaKanpo = sgs.CreateViewAsSkill{
 	name = "LuaKanpo", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
-		if to_select:isBlack() then
-			return not to_select:isEquipped()
-		end
-		return false
+		return to_select:isBlack() and (not to_select:isEquipped())
 	end, 
 	view_as = function(self, cards) 
 		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local ncard = sgs.Sanguosha:cloneCard("nullification", suit, point)
-			ncard:addSubcard(card)
+			local first = cards[1]
+			local ncard = sgs.Sanguosha:cloneCard("nullification", first:getSuit(), first:getNumber())
+			ncard:addSubcard(first)
 			ncard:setSkillName(self:objectName())
 			return ncard
 		end
@@ -37,14 +32,8 @@ LuaKanpo = sgs.CreateViewAsSkill{
 		return pattern == "nullification"
 	end,
 	enabled_at_nullification = function(self, player)
-		local handcards = player:getHandcards()
-		for _,card in sgs.qlist(handcards) do
-			if card:isBlack() then
-				return true
-			end
-			if card:objectName() == "nullification" then
-				return true
-			end
+		for _, card in sgs.qlist(player:getHandcards()) do
+			if card:isBlack() then return true end
 		end
 		return false
 	end
@@ -99,31 +88,18 @@ LuaXKegou = sgs.CreateTriggerSkill{
 	相关武将：标准·吕蒙
 	描述：若你于出牌阶段未使用或打出过【杀】，你可以跳过此回合的弃牌阶段。
 	引用：LuaKeji
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaKeji = sgs.CreateTriggerSkill{
-	name = "LuaKeji",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventPhaseChanging, sgs.CardResponsed},
+	name = "LuaKeji" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.EventPhaseChanging} ,
 	on_trigger = function(self, event, player, data)
-		if event == sgs.CardResponsed then
-			local phase = player:getPhase()
-			if phase == sgs.Player_Play then
-				local card = data:toResponsed().m_card
-				if card:isKindOf("Slash") then
-					player:setFlags("keji_use_slash")
-				end
-			end
-		elseif event == sgs.EventPhaseChanging then
-			local change = data:toPhaseChange()
-			local phase = change.to
-			if phase == sgs.Player_Discard then
-				if not player:hasFlag("keji_use_slash") then
-					if player:getSlashCount() == 0 then
-						if player:askForSkillInvoke(self:objectName()) then
-							player:skip(sgs.Player_Discard)
-						end
-					end
+		local change = data:toPhaseChange()
+		if change.to == sgs.Player_Discard then
+			if not player:hasFlag("Global_SlashInPlayPhase") then
+				if player:askForSkillInvoke(self:objectName()) then
+					player:skip(sgs.Player_Discard)
 				end
 			end
 		end
@@ -135,7 +111,7 @@ LuaKeji = sgs.CreateTriggerSkill{
 	相关武将：标准·诸葛亮、SP·台版诸葛亮、测试·五星诸葛
 	描述：若你没有手牌，你不能被选择为【杀】或【决斗】的目标。
 	引用：LuaKongcheng
-	状态：验证通过
+	状态：0224验证通过（0610禁止技接口有问题，只要加载LUA禁止技客户端就会闪退）
 ]]--
 LuaKongcheng = sgs.CreateProhibitSkill{
 	name = "LuaKongcheng",
@@ -300,39 +276,26 @@ LuaXKuangfu = sgs.CreateTriggerSkill{
 	相关武将：风·魏延
 	描述：每当你对距离1以内的一名角色造成1点伤害后，你回复1点体力。
 	引用：LuaKuanggu
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaKuanggu = sgs.CreateTriggerSkill{
 	name = "LuaKuanggu",
 	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.Damage, sgs.PreHpReduced},
+	events = {sgs.Damage, sgs.PreDamageDone},
 	on_trigger = function(self, event, player, data) 
 		local damage = data:toDamage()
-		local source = damage.from
-		local victim = damage.to
-		local count = damage.damage
 		local room = player:getRoom()
-		if event == sgs.PreHpReduced then
-			if source then
-				if source:hasSkill(self:objectName()) then
-					local dist = source:distanceTo(victim)
-					local value = sgs.QVariant(dist<=1)
-					room:setTag("InvokeKuanggu", value)
-				end
-			end
-		elseif event == sgs.Damage then
-			if player:hasSkill(self:objectName()) then
-				local tag = room:getTag("InvokeKuanggu")
-				local invoke = tag:toBool()
-				room:setTag("InvokeKuanggu", sgs.QVariant(false))
-				if invoke then
-					if player:isWounded() then
-						local recover = sgs.RecoverStruct()
-						recover.who = player
-						recover.recover = count
-						room:recover(player, recover)
-					end
-				end
+		if (event == sgs.PreDamageDone) and damage.from and damage.from:hasSkill(self:objectName()) and damage.from:isAlive() then
+			local weiyan = damage.from
+			weiyan:setTag("invokeLuaKuanggu", sgs.QVariant((weiyan:distanceTo(damage.to) <= 1)))
+		elseif (event == sgs.Damage) and player:hasSkill(self:objectName()) and player:isAlive() then
+			local invoke = player:getTag("invokeLuaKuanggu"):toBool()
+			player:setTag("invokeLuaKuanggu", sgs.QVariant(false))
+			if invoke and player:isWounded() then
+				local recover = sgs.RecoverStruct()
+				recover.who = player
+				recover.recover = damage.damage
+				room:recover(player, recover)
 			end
 		end
 		return false
