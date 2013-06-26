@@ -204,7 +204,7 @@ LuaQixi = sgs.CreateViewAsSkill{
 	相关武将：标准·陆逊、国战·陆逊、SP·台版陆逊
 	描述：你不能被选择为【顺手牵羊】和【乐不思蜀】的目标。
 	引用：LuaQianxun
-	状态：验证通过
+	状态：0224验证通过
 ]]--
 LuaQianxun = sgs.CreateProhibitSkill{
 	name = "LuaQianxun", 
@@ -258,39 +258,25 @@ LuaQianxi = sgs.CreateTriggerSkill{
 	相关武将：火·典韦
 	描述：出牌阶段限一次，你可以失去1点体力或弃置一张武器牌，并选择你攻击范围内的一名角色，对其造成1点伤害。
 	引用：LuaQiangxi
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaQiangxiCard = sgs.CreateSkillCard{
 	name = "LuaQiangxiCard", 
 	target_fixed = false, 
 	will_throw = true,
 	filter = function(self, targets, to_select) 
-		if #targets == 0 then
-			local subcards = self:getSubcards()
-			if subcards:length() > 0 then
-				local weapon = sgs.Self:getWeapon()
-				if weapon then
-					local card_id = subcards:first()
-					if weapon:getId() == card_id then
-						return sgs.Self:distanceTo(to_select) <= 1
-					end
-				end
-			end
-			return sgs.Self:inMyAttackRange(to_select)
+		if #targets ~= 0 then return false end
+		local rangefix = 0
+		if (not self:getSubcards():isEmpty()) and sgs.Self:getWeapon() and (sgs.Self:getWeapon():getId() == self:getSubcards():first()) then
+			local card = sgs.Self:getWeapon():getRealCard():toWeapon()
+			rangefix = rangefix + card:getRange() - 1
 		end
+		return sgs.Self:distanceTo(to_select, rangefix) <= sgs.Self:getAttackRange()
 	end,
-	on_use = function(self, room, source, targets)
-		local dest = targets[1]
-		local subcards = self:getSubcards()
-		if subcards:length() == 0 then
-			room:loseHp(source, 1)
-		end
-		local damage = sgs.DamageStruct()
-		damage.from = source
-		damage.to = dest
-		damage.damage = 1
-		damage.card = nil
-		room:damage(damage)
+	on_effect = function(self, effect)
+		local room = effect.to:getRoom()
+		if self:getSubcards():isEmpty() then room:loseHp(effect.from) end
+		room:damage(sgs.DamageStruct("LuaQiangxi", effect.from, effect.to))
 	end
 }
 LuaQiangxi = sgs.CreateViewAsSkill{
@@ -315,6 +301,7 @@ LuaQiangxi = sgs.CreateViewAsSkill{
 		return not player:hasUsed("#LuaQiangxiCard")
 	end
 }
+
 --[[
 	技能名：巧变
 	相关武将：山·张郃
@@ -539,17 +526,14 @@ LuaQinyin = sgs.CreateTriggerSkill{
 	相关武将：标准·华佗
 	描述： 出牌阶段限一次，你可以弃置一张手牌并选择一名已受伤的角色，令该角色回复1点体力。 
 	引用：LuaQingnang
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaQingnangCard = sgs.CreateSkillCard{
 	name = "LuaQingnangCard",
 	target_fixed = false, 
 	will_throw = true, 
 	filter = function(self, targets, to_select) 
-		if #targets == 0 then
-			return to_select:isWounded()
-		end
-		return false
+		return (#targets == 0) and (to_select:isWounded())
 	end,
 	feasible = function(self, targets)
 		if #targets == 1 then
@@ -589,9 +573,10 @@ LuaQingnang = sgs.CreateViewAsSkill{
 		end
 	end, 
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaQingnangCard")
+		return player:canDiscard(player, "h") and (not player:hasUsed("#LuaQingnangCard"))
 	end
 }
+
 --[[
 	技能名：倾城
 	相关武将：国战·邹氏
@@ -737,24 +722,18 @@ LuaQingguo = sgs.CreateViewAsSkill{
 	相关武将：火·荀彧
 	描述：出牌阶段限一次，你可以与一名当前的体力值大于你的角色拼点：若你赢，其对其攻击范围内你选择的另一名角色造成1点伤害。若你没赢，其对你造成1点伤害。
 	引用：LuaQuhu
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaQuhuCard = sgs.CreateSkillCard{
 	name = "LuaQuhuCard", 
 	target_fixed = false, 
 	will_throw = false, 
 	filter = function(self, targets, to_select) 
-		if #targets == 0 then
-			local player = sgs.Self
-			if to_select:getHp() > player:getHp() then
-				return not to_select:isKongcheng()
-			end
-		end
-		return false
+		return (#targets == 0) and (to_select:getHp() > sgs.Self:getHp()) and (not to_select:isKongcheng())
 	end,
 	on_use = function(self, room, source, targets) 
 		local tiger = targets[1]
-		local success = source:pindian(tiger, self:objectName(), self)
+		local success = source:pindian(tiger, self:objectName(), nil)
 		if success then
 			local players = room:getOtherPlayers(tiger)
 			local wolves = sgs.SPlayerList()
@@ -766,40 +745,24 @@ LuaQuhuCard = sgs.CreateSkillCard{
 			if wolves:isEmpty() then
 				return
 			end
-			local wolf = room:askForPlayerChosen(source, wolves, self:objectName())
-			local damage = sgs.DamageStruct()
-			damage.from = tiger
-			damage.to = wolf
-			room:damage(damage)
+			local wolf = room:askForPlayerChosen(source, wolves, self:objectName(), "@quhu-damage:" .. tiger:objectName())
+			room:damage(sgs.DamageStruct(self:objectName(), tiger, wolf))
 		else
-			local damage = sgs.DamageStruct()
-			damage.from = tiger
-			damage.to = source
-			room:damage(damage)
+			room:damage(sgs.DamageStruct(self:objectName(), tiger, source))
 		end
 	end
 }
 LuaQuhu = sgs.CreateViewAsSkill{
 	name = "LuaQuhu",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return not to_select:isEquipped()
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = LuaQuhuCard:clone()
-			card:addSubcard(cards[1])
-			card:setSkillName(self:objectName())
-			return card
-		end 
+	n = 0,
+	view_as = function()
+		return LuaQuhuCard:clone()
 	end,
 	enabled_at_play = function(self, player)
-		if not player:hasUsed("#LuaQuhuCard") then
-			return not player:isKongcheng()
-		end
-		return false
+		return (not player:hasUsed("#LuaQuhuCard")) and (not player:isKongcheng())
 	end
 }
+
 --[[
 	技能名：权计
 	相关武将：一将成名·钟会
