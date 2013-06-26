@@ -111,7 +111,32 @@ LuaYanzheng = sgs.CreateViewAsSkill{
 	技能名：耀武（锁定技）
 	相关武将：标准·华雄
 	描述：每当你受到红色【杀】的伤害时，伤害来源选择一项：回复1点体力，或摸一张牌。
+	引用：LuaYaowu
+	状态：0610验证通过
 ]]--
+LuaYaowu = sgs.CreateTriggerSkill{
+	name = "LuaYaowu" ,
+	events = {sgs.DamageInflicted} ,
+	frequency = sgs.Skill_Compulsory ,
+	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
+		if damage.card and damage.card:isKindOf("Slash") and damage.card:isRed() and damage.from and damage.from:isAlive() then
+			local choice = "draw"
+			if damage.from:isWounded() then
+				choice = room:askForChoice(damage.from, self:objectName(), "recover+draw", data)
+			end
+			if choice == "recover" then
+				local recover = sgs.RecoverStruct()
+				recover.who = damage.to
+				room:recover(damage.from, recover)
+			else
+				damage.from:drawCards(1)
+			end
+		end
+		return false
+	end
+}
+
 --[[
 	技能名：野心
 	相关武将：胆创·钟会
