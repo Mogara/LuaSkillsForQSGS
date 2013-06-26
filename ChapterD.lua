@@ -627,23 +627,15 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 	技能名：断粮
 	相关武将：林·徐晃
 	描述：你可以将一张黑色牌当【兵粮寸断】使用，此牌必须为基本牌或装备牌；你可以对距离2以内的一名其他角色使用【兵粮寸断】。 
-	引用：LuaDuanliangMod，LuaDuanliang
-	状态：验证通过
+	引用：LuaDuanliangTargetMod，LuaDuanliang
+	状态：0610验证通过
 ]]--
-LuaDuanliangMod = sgs.CreateTargetModSkill{
-	name = "#LuaDuanliangMod",
-	pattern = "SupplyShortage",
-	distance_limit_func = function(self, player)
-		if player:hasSkill(self:objectName()) then
-			return 1
-		end
-	end
-}
+
 LuaDuanliang = sgs.CreateViewAsSkill{
 	name = "LuaDuanliang",
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		return to_select:isBlack() and not to_select:isKindOf("TrickCard")
+		return to_select:isBlack() and (to_select:isKindOf("BasicCard") or to_select:isKindOf("EquipCard"))
 	end,
 	view_as = function(self, cards)
 		if #cards ~= 1 then return nil end
@@ -651,6 +643,17 @@ LuaDuanliang = sgs.CreateViewAsSkill{
 		shortage:setSkillName(self:objectName())
 		shortage:addSubcard(cards[1])
 		return shortage
+	end
+}
+LuaDuanliangTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaDuanliang-target",
+	pattern = "SupplyShortage",
+	distance_limit_func = function(self, player)
+		if player:hasSkill(self:objectName()) then
+			return 1
+		else
+			return 0
+		end
 	end
 }
 --[[
@@ -728,7 +731,7 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 	相关武将：国战·陆逊
 	描述：出牌阶段限四次，你可以弃置一张红色手牌并选择任意数量的其他角色，你与这些角色各摸两张牌并弃置两张牌。
 	引用：LuaXDuoshi
-	状态：0224验证通过
+	状态：0224验证通过（但无限四次）
 	附注：按照dadao.net修改，依次摸牌，然后再依次弃牌，而不是某人摸2弃2，再结算下一个
 ]]--
 LuaXDuoshiCard = sgs.CreateSkillCard{
