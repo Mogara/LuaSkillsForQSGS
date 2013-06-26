@@ -230,28 +230,23 @@ LuaXiangle = sgs.CreateTriggerSkill{
 	相关武将：标准·孙尚香、SP·孙尚香
 	描述：当你失去装备区里的一张牌时，你可以摸两张牌。
 	引用：LuaXiaoji
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaXiaoji = sgs.CreateTriggerSkill{
-	name = "LuaXiaoji", 
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.CardsMoveOneTime}, 
+	name = "LuaXiaoji" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.CardsMoveOneTime} ,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local move = data:toMoveOneTime()
-		local places = move.from_places
-		local source = move.from
-		if source and source:objectName() == player:objectName() then
-			if places:contains(sgs.Player_PlaceEquip) then
-				local n = 0
-				for _,place in sgs.qlist(places) do
-					if place == sgs.Player_PlaceEquip then
-						n = n + 1
-					end
-				end
-				local room = player:getRoom()
-				for i = 1, n, 1 do
+		if move.from and (move.from:objectName() == player:objectName()) and move.from_places:contains(sgs.Player_PlaceEquip) then
+			for i = 0, move.card_ids:length() - 1, 1 do
+				if not player:isAlive() then return false end
+				if move.from_places:at(i) == sgs.Player_PlaceEquip then
 					if room:askForSkillInvoke(player, self:objectName()) then
 						player:drawCards(2)
+					else
+						break
 					end
 				end
 			end
