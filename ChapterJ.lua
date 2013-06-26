@@ -1341,6 +1341,7 @@ LuaJushou = sgs.CreateTriggerSkill{
 		end
 	end
 }
+
 --[[
 	技能名：据守
 	相关武将：翼·曹仁
