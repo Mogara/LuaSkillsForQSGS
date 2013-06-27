@@ -322,79 +322,113 @@ LuaLihun = sgs.CreateTriggerSkill{
 		end
 	end
 }
+
 --[[
 	技能名：离间
 	相关武将：标准·貂蝉
 	描述：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】。 
+	引用：LuaLijian （需小幅修改）
+	状态：0610初步验证通过
+	注：仅需将旧版离间的 "duel:toTrick():setCancelable(false)" 那一行去掉即可
 ]]--
 --[[
 	技能名：离间
 	相关武将：怀旧-标准·貂蝉-旧、SP·貂蝉、SP·台版貂蝉
 	描述：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】（不能使用【无懈可击】对此【决斗】进行响应）。 
 	引用：LuaLijian
-	状态：（0224单机启动通过，不能连机）
+	状态：0610初步验证通过
 ]]--
+newDuel = function()
+	return sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
+end
 LuaLijianCard = sgs.CreateSkillCard{
-	name = "LuaLijianCard",
-	target_fixed = false,
-	will_throw = true,
+	name = "LuaLijianCard" ,
+	target_fixed = false ,
+	will_throw = true ,
 	filter = function(self, targets, to_select)
-		if #targets ~= 2 then
-			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
-			if to_select:isMale() then
-				return not sgs.Self:isProhibited(to_select, duel)
-			end
+		if not to_select:isMale() then return false end
+		if #targets == 0 then
+			return true
+		elseif #targets == 1 then
+			local duel = newDuel()
+			if to_select:isProhibited(targets[1], duel, targets[1]:getSiblings()) then return false end
+			if to_select:isCardLimited(duel, sgs.Card_MethodUse) then return false end
+			return true
 		elseif #targets == 2 then
-			local tag = sgs.QVariant(targets[1]:objectName())
-			sgs.Self:setTag("LualijianTarget", tag)
+			return false
 		end
-		return false
-	end,
+	end ,
 	feasible = function(self, targets)
-		return #targets == 2
-	end,
-	on_use = function(self, room, source, targets)
-		local LijianTarget = sgs.Self:getTag("LualijianTarget"):toString()
-		if LijianTarget ~= "" then
-			local from = nil
-			local to = nil
-			if LijianTarget == targets[1]:objectName() then
-				from = targets[2]
-				to = targets[1]
-			else
-				from = targets[1]
-				to = targets[2]
-			end
-			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
-			duel:toTrick():setCancelable(false)
-			duel:setSkillName("LuaLijian")
-			local use = sgs.CardUseStruct()
-            		use.card = duel
-            		use.from = from
-           	 	use.to:append(to)
-            		room:useCard(use)
-			source:removeTag("LualijianTarget")
-		end
-	end	
-}
-LuaLijian = sgs.CreateViewAsSkill{
-	name = "LuaLijian",
-	n = 1,
-	view_filter = function(self, selected, to_select)
+		if #targets ~= 2 then return false end
+		self:setUserString(targets[2]:objectName())
 		return true
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = LuaLijianCard:clone()
-			card:addSubcard(cards[1])
-			card:setSkillName(self:objectName())
-			return card
+	end ,
+	on_use = function(self, room, source, targets)
+		local LijianSource
+		local LijianTarget
+		for _, p in sgs.qlist(room:getAlivePlayers()) do
+			if p:hasFlag("LuaLijianServerDuelSource") then
+				LijianSource = p
+				p:setFlags("-LuaLijianServerDuelSource")
+			elseif p:hasFlag("LuaLijianServerDuelTarget") then
+				LijianTarget = p
+				p:setFlags("-LuaLijianServerDuelTarget")
+			end
 		end
-	end,
-	enabled_at_play = function()
-		return not sgs.Self:hasUsed("#LuaLijianCard")
+		if (not LijianSource) or (not LijianTarget) then return end
+		local duel = newDuel()
+		duel:toTrick():setCancelable(false)
+		duel:setSkillName(self:objectName())
+		room:useCard(sgs.CardUseStruct(duel, LijianSource, LijianTarget, false))
+	end ,
+	on_validate = function(self, cardUse)
+		if not self:getUserString() then return nil end
+		local room = cardUse.from:getRoom()
+		local duelSourceName = self:getUserString()
+		local duelSource = nil
+		for _, p in sgs.qlist(room:getAlivePlayers()) do
+			if p:objectName() == duelSourceName then
+				duelSource = p
+				break
+			end
+		end
+		if not duelSource then return nil end
+		local duelSourceFlag = false
+		for _, p in sgs.qlist(cardUse.to) do
+			if p:objectName() == duelSource:objectName() then
+				p:setFlags("LuaLijianServerDuelSource")
+				duelSourceFlag = true
+			else
+				p:setFlags("LuaLijianServerDuelTarget")
+			end
+		end
+		if not duelSourceFlag then
+			for _, p in sgs.qlist(cardUse.to) do
+				p:setFlags("-LuaLijianServerDuelTarget")
+			end
+			return nil
+		else
+			return self
+		end
 	end
 }
+LuaLijian = sgs.CreateViewAsSkill{
+	name = "LuaLijian" ,
+	n = 1 ,
+	view_filter = function(self, cards, to_select)
+		return (#cards == 0) and (not sgs.Self:isJilei(to_select))
+	end ,
+	view_as = function(self, cards)
+		if #cards ~= 1 then return nil end
+		local card = LuaLijianCard:clone()
+		card:addSubcard(cards[1])
+		return card
+	end ,
+	enabled_at_play = function(self, target)
+		return not target:hasUsed("#LuaLijianCard")
+	end
+}
+
 --[[
 	技能名：离迁（锁定技）
 	相关武将：倚天·夏侯涓
