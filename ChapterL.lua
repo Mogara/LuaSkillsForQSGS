@@ -1233,7 +1233,32 @@ LuaXDuojian = sgs.CreateTriggerSkill{
 	技能名：龙吟
 	相关武将：一将成名2013·关平
 	描述：每当一名角色于其出牌阶段内使用【杀】选择目标后，你可以弃置一张牌，令此【杀】不计入出牌阶段限制的使用次数，若此【杀】为红色，你摸一张牌。
+	引用：LuaLongyin 
+	状态：验证通过
 ]]--
+LuaLongyin = sgs.CreateTriggerSkill{
+	name = "LuaLongyin",  
+	events = {sgs.CardUsed},
+
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		local use = data:toCardUse()
+		if use.card:isKindOf("Slash") then
+		local me = room:findPlayerBySkillName(self:objectName())
+		if me and me:canDiscard(me,"he") and room:askForCard(me, "..", "@LuaLongyin", data,self:objectName()) then
+		if use.m_addHistory then
+			room:addPlayerHistory(player, use.card:getClassName(),-1)
+		if use.card:isRed() then
+			me:drawCards(1)
+				end
+			end
+		end
+	end
+end,
+	can_trigger = function(self, target)
+		return target:getPhase() == sgs.Player_Play
+	end	
+}
 --[[
 	技能名：龙吟（特定技）
 	相关武将：长坂坡·神赵云
