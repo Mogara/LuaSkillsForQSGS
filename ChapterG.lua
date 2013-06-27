@@ -105,14 +105,14 @@ LuaXGanran = sgs.CreateFilterSkill{
 LuaXGangli = sgs.CreateTriggerSkill{
 	name = "LuaXGangli",
 	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Damaged, sgs.PreHpReduced},
+	events = {sgs.Damaged, sgs.PreDamageDone},
 	on_trigger = function(self, event, player, data) 
 		local damage = data:toDamage()
 		local source = damage.from
 		local victim = damage.to
 		local count = damage.damage
 		local room = player:getRoom()
-		if event == sgs.PreHpReduced then
+		if event == sgs.PreDamageDone then
 			if victim then
 				if victim:hasSkill(self:objectName()) then
 					if source and source:objectName() ~= victim:objectName() then
