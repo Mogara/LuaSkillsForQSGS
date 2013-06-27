@@ -112,6 +112,8 @@ LuaAnxu = sgs.CreateViewAsSkill{
 	技能名：暗箭（锁定技）
 	相关武将：一将成名2013·潘璋&马忠
 	描述：每当你使用【杀】对目标角色造成伤害时，若你不在其攻击范围内，此伤害+1。
+	引用：LuaAnjian
+	状态：验证通过
 ]]--
 LuaAnjian = sgs.CreateTriggerSkill{
 	name = "LuaAnjian",  
