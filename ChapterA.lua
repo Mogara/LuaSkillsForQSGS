@@ -113,6 +113,21 @@ LuaAnxu = sgs.CreateViewAsSkill{
 	相关武将：一将成名2013·潘璋&马忠
 	描述：每当你使用【杀】对目标角色造成伤害时，若你不在其攻击范围内，此伤害+1。
 ]]--
+LuaAnjian = sgs.CreateTriggerSkill{
+	name = "LuaAnjian",  
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.DamageCaused},
+
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		local damage = data:toDamage()
+		if damage.chain or damage.transfer or not damage.by_user then return false end
+		if damage.from and not damage.to:inMyAttackRange(damage.from) then
+		damage.damage = damage.damage + 1
+		data:setValue(damage)
+	end
+end
+}
 --[[
 	技能名：傲才
 	相关武将：SP·诸葛恪
