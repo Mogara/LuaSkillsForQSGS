@@ -579,7 +579,7 @@ LuaXMingzhe = sgs.CreateTriggerSkill{
 			local room = player:getRoom()
 			if move.from:objectName() == player:objectName() then
 				if event == sgs.BeforeCardsMove then
-					local reason = bit.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+					local reason = bit._and(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
 					if (reason == sgs.CardMoveReason_S_REASON_USE) or (reason == sgs.CardMoveReason_S_REASON_DISCARD) or (reason == sgs.CardMoveReason_S_REASON_RESPONSE) then
 						local card
 						for _,card_id in sgs.qlist(move.card_ids) do
