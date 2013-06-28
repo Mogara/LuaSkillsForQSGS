@@ -1572,48 +1572,52 @@ LuaLuoshen = sgs.CreateTriggerSkill{
 	引用：LuaLuoying
 	状态：0610验证通过
 ]]--
+listIndexOf = function(theqlist, theitem)
+	local index = 0
+	for _, item in sgs.qlist(theqlist) do
+		if item == theitem then return index end
+		index = index + 1
+	end
+end
 LuaLuoying = sgs.CreateTriggerSkill{
 	name = "LuaLuoying",
-	events = {sgs.BeforeCardsMove},
 	frequency = sgs.Skill_Frequent,
+	events = {sgs.BeforeCardsMove},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local move = data:toMoveOneTime()
-		local source = move.from
-		if source:getSeat() == player:getSeat() or source == nil then 
-			return 
-		end
-		local reason = move.reason.m_reason
-		local reasonx = bit32.band(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
-		if move.to_place == sgs.Player_DiscardPile then
-			if reasonx == sgs.CardMoveReason_S_REASON_DISCARD or reason == sgs.CardMoveReason_S_REASON_JUDGEDONE then
-				local card_ids = sgs.IntList()
-				for i=0, (move.card_ids:length()-1), 1 do
-					local card_id = move.card_ids:at(i)
-					local card = sgs.Sanguosha:getCard(card_id)
-					local place = move.from_places:at(i)
-					if (card:getSuit() == sgs.Card_Club) and ((reason == sgs.CardMoveReasson_S_REASON_JUDGEDONE
-						and move.from_places:at(i) == sgs.Player_PlaceJudge 
-						and move.to_place == sgs.Player_DiscardPile) or (reason ~= sgs.CardMoveReasson_S_REASON_JUDGEDONE
-						and room:getCardOwner(card_id):getSeat() == source:getSeat()
-						and (move.from_places:at(i) == sgs.Player_PlaceHand or move.from_places:at(i) == sgs.Player_PlaceEquip))) then
-						card_ids:prepend(card_id)
-					end
+		if (move.from == nil) or (move.from:objectName() == player:objectName()) then return false end
+		if (move.to_place == sgs.Player_DiscardPile) 
+				and ((bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) 
+				or (move.reason.m_reason == sgs.CardMoveReason_S_REASON_JUDGEDONE)) then
+			local card_ids = sgs.IntList()
+			local i = 0
+			for _, card_id in sgs.qlist(move.card_ids) do
+				if (sgs.Sanguosha:getCard(card_id):getSuit() == sgs.Card_Club)
+						and (((move.reason.m_reason == sgs.CardMoveReasson_S_REASON_JUDGEDONE) 
+						and (move.from_places:at(i) == sgs.Player_PlaceJudge)
+						and (move.to_place == sgs.Player_DiscardPile))
+						or ((move.reason.m_reason ~= sgs.CardMoveReason_S_REASON_JUDGEDONE)
+						and (room:getCardOwner(card_id):objectName() == move.from:objectName())
+						and ((move.from_places:at(i) == sgs.Player_PlaceHand) or (move.from_places:at(i) == sgs.Player_PlaceEquip)))) then
+					card_ids:append(card_id)
 				end
-				if card_ids:isEmpty() or not player:askForSkillInvoke(self:objectName(),data) then 
-					return 
-				end
+				i = i + 1
+			end
+			if card_ids:isEmpty() then 
+				return false
+			elseif player:askForSkillInvoke(self:objectName(), data) then
 				while not card_ids:isEmpty() do
 					room:fillAG(card_ids, player)
 					local id = room:askForAG(player, card_ids, true, self:objectName())
-						if id == -1 then 
-							room:clearAG(player)
-							break 
-						end
-						card_ids:removeOne(id)
+					if id == -1 then
 						room:clearAG(player)
+						break
+					end
+					card_ids:removeOne(id)
+					room:clearAG(player)
 				end
-				if not card_ids:isEmpty() then 
+				if not card_ids:isEmpty() then
 					for _, id in sgs.qlist(card_ids) do
 						if move.card_ids:contains(id) then
 							move.from_places:removeAt(listIndexOf(move.card_ids, id))
@@ -1626,6 +1630,6 @@ LuaLuoying = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-		return
-	end,
+		return false
+	end
 }
