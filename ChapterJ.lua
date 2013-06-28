@@ -932,7 +932,9 @@ LuaJiuchi = sgs.CreateViewAsSkill{
 	相关武将：一将成名·曹植
 	描述：若你的武将牌正面朝上，你可以将你的武将牌翻面，视为使用一张【酒】；若你的武将牌背面朝上时你受到伤害，你可以在伤害结算后将你的武将牌翻转至正面朝上。
 	引用：LuaJiushi、LuaJiushiFlip
-	状态：验证通过
+	状态：0610验证通过
+
+	Fs备注：其实我感觉这个技能比较无语，有很多视为+触发技直接做成触发技带view_as_skill部分的那种形式，直接引用一个技能即可，这个技能源码上面还是引用两部分…………
 ]]--
 LuaJiushi = sgs.CreateViewAsSkill{
 	name = "LuaJiushi",
@@ -943,47 +945,38 @@ LuaJiushi = sgs.CreateViewAsSkill{
 		return analeptic
 	end, 
 	enabled_at_play = function(self, player)
-		if not player:hasUsed("Analeptic") then
-			return player:faceUp()
-		end
-		return false
+		return sgs.Analeptic_IsAvailable(player) and player:faceUp()
 	end, 
 	enabled_at_response = function(self, player, pattern)
-		if string.find(pattern, "analeptic") then
-			return player:faceUp()
-		end
-		return false
+		return string.find(pattern, "analeptic") and player:faceUp()
 	end
 }
 LuaJiushiFlip = sgs.CreateTriggerSkill{
-	name = "#LuaJiushiFlip", 
+	name = "#LuaJiushi-flip", 
 	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.CardUsed, sgs.PreHpReduced, sgs.DamageComplete},  
+	events = {sgs.PreCardUsed, sgs.PreDamageDone, sgs.DamageComplete},  
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if event == sgs.CardUsed then
+		if event == sgs.PreCardUsed then
 			local use = data:toCardUse()
 			local card = use.card
 			if card:getSkillName() == "LuaJiushi" then
 				player:turnOver()
 			end
-		elseif event == sgs.PreHpReduced then
-			local state = player:faceUp()
-			local tag = sgs.QVariant(state)
-			room:setTag("PredamagedFace", tag)
+		elseif event == sgs.PreDamageDone then
+			room:setTag("PredamagedFace", sgs.QVariant(player:faceUp()))
 		elseif event == sgs.DamageComplete then
-			local tag = room:getTag("PredamagedFace")
-			local faceup = tag:toBool()
+			local faceup = room:getTag("PredamagedFace"):toBool()
 			room:removeTag("PredamagedFace")
-			local state = player:faceUp()
-			if not (faceup or state) then
-				if player:askForSkillInvoke(self:objectName(), data) then
+			if not (faceup or player:faceUp()) then
+				if player:askForSkillInvoke("LuaJiushi", data) then
 					player:turnOver()
 				end
 			end
 		end
 	end
 }
+
 --[[
 	技能名：救援（主公技、锁定技）
 	相关武将：标准·孙权、测试·制霸孙权
@@ -1049,41 +1042,39 @@ LuaJiuyuan = sgs.CreateTriggerSkill{
 	相关武将：一将成名·徐庶
 	描述：回合结束阶段开始时，你可以弃置一张非基本牌，令一名其他角色选择一项：摸两张牌，或回复1点体力，或将其武将牌翻至正面朝上并重置之。
 	引用：LuaJujian
-	状态：验证通过
+	状态：0610验证通过
 ]]--
+
 LuaJujianCard = sgs.CreateSkillCard{
 	name = "LuaJujianCard",
 	target_fixed = false,
 	will_throw = true, 
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
+		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName())
 	end,
 	on_effect = function(self, effect) 
-		local source = effect.from
-		local dest = effect.to
-		local room = source:getRoom()
-		local choiceString = "draw"
-		if dest:isWounded() then
-			choiceString = choiceString.."+recover"
+		local room = effect.from:getRoom()
+
+		local choiceList = {"draw"}
+		if effect.to:isWounded() then
+			table.insert(choiceList, "recover")
 		end
-		if (not dest:faceUp()) or dest:isChained() then
-			choiceString = choiceString.."+reset"
+		if (not effect.to:faceUp()) or effect.to:isChained() then
+			table.insert(choiceList, "reset")
 		end
-		local choice
-		choice = room:askForChoice(dest, "LuaJujian", choiceString)
+		local choice = room:askForChoice(effect.to, "LuaJujian", table.concat(choiceList, "+"))
 		if choice == "draw" then
-			room:drawCards(dest, 2, self:objectName())
+			effect.to:drawCards(2)
 		elseif choice == "recover" then
 			local recover = sgs.RecoverStruct()
-			recover.who = dest
-			room:recover(dest, recover)
+			recover.who = effect.from
+			room:recover(effect.to, recover)
 		elseif choice == "reset" then
-			room:setPlayerProperty(dest, "chained", sgs.QVariant(false))
-			if not dest:faceUp() then
-				dest:turnOver()
+			if effect.to:isChained() then
+				room:setPlayerProperty(effect.to, "chained", sgs.QVariant(false))
+			end
+			if not effect.to:faceUp() then
+				effect.to:turnOver()
 			end
 		end
 	end
@@ -1092,14 +1083,13 @@ LuaJujianVS = sgs.CreateViewAsSkill{
 	name = "LuaJujian", 
 	n = 1, 
 	view_filter = function(self, selected, to_select)
-		return not to_select:isKindOf("BasicCard")
+		return (not to_select:isKindOf("BasicCard")) and (not sgs.Self:isJilei(to_select))
 	end, 
 	view_as = function(self, cards) 
 		if #cards == 1 then
-			local card = cards[1]
-			local vs_card = LuaJujianCard:clone()
-			vs_card:addSubcard(card)
-			return vs_card
+			local jujiancard = LuaJujianCard:clone()
+			jujiancard:addSubcard(cards[1])
+			return jujiancard
 		end
 	end, 
 	enabled_at_play = function(self, player)
@@ -1116,11 +1106,8 @@ LuaJujian = sgs.CreateTriggerSkill{
 	view_as_skill = LuaJujianVS, 
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local phase = player:getPhase()
-		if phase == sgs.Player_Finish then
-			if not player:isNude() then
-				room:askForUseCard(player, "@@LuaJujian", "@jujian-card")
-			end
+		if (player:getPhase() == sgs.Player_Finish) and player:canDiscard(player, "he") then
+			room:askForUseCard(player, "@@LuaJujian", "@jujian-card", -1, sgs.Card_MethodNone)
 		end
 		return false
 	end
