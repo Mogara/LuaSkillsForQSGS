@@ -1577,7 +1577,7 @@ LuaLuoying = sgs.CreateTriggerSkill{
 	events = {sgs.BeforeCardsMove},
 	frequency = sgs.Skill_Frequent,
 	on_trigger = function(self, event, player, data)
-		local room=player:getRoom()
+		local room = player:getRoom()
 		local move = data:toMoveOneTime()
 		local source = move.from
 		if source:getSeat() == player:getSeat() or source == nil then 
