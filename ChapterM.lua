@@ -350,7 +350,20 @@ LuaXMizhao = sgs.CreateTriggerSkill{
 	技能名：灭计（锁定技）
 	相关武将：一将成名2013·李儒
 	描述：你使用黑色非延时类锦囊牌的目标数上限至少为二。
+	引用：LuaMieji 
+	状态：验证通过
 ]]--
+LuaMieji = sgs.CreateTargetModSkill{
+	name = "LuaMieji",
+	pattern = "SingleTargetTrick|black",
+	extra_target_func = function(self, player)
+		if player:hasSkill(self:objectName()) then
+			return 1
+		else
+			return 0
+	end
+end
+}
 --[[
 	技能名：名士（锁定技）（0224及以前版）
 	相关武将：国战·孔融
