@@ -970,6 +970,8 @@ LuaXueyi = sgs.CreateMaxCardsSkill{
 	技能名：迅猛（锁定技）
 	相关武将：僵尸·僵尸
 	描述：你的杀造成的伤害+1。你的杀造成伤害时若你体力大于1，你流失1点体力。 
+	引用：LuaXunmeng 
+	状态：验证通过
 ]]--
 LuaXunmeng = sgs.CreateTriggerSkill{
 	name = "LuaXunmeng", 
