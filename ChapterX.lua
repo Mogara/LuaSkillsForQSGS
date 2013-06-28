@@ -971,6 +971,23 @@ LuaXueyi = sgs.CreateMaxCardsSkill{
 	相关武将：僵尸·僵尸
 	描述：你的杀造成的伤害+1。你的杀造成伤害时若你体力大于1，你流失1点体力。 
 ]]--
+LuaXunmeng = sgs.CreateTriggerSkill{
+	name = "LuaXunmeng", 
+	frequency = sgs.Skill_Compulsory, 
+	events = {sgs.ConfirmDamage}, 
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local damage = data:toDamage()
+		if damage.card and damage.card:isKindOf("Slash") then
+			damage.damage = damage.damage + 1
+			data:setValue(damage)
+		if player:getHp() > 1 then
+			room:loseHp(player)
+		end
+	end
+end
+}
 --[[
 	技能名：殉志
 	相关武将：倚天·姜伯约
