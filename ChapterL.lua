@@ -1570,71 +1570,62 @@ LuaLuoshen = sgs.CreateTriggerSkill{
 	相关武将：一将成名·曹植
 	描述：当其他角色的梅花牌因弃置或判定而置入弃牌堆时，你可以获得之。
 	引用：LuaLuoying
-	状态：0224验证通过
+	状态：0610验证通过
 ]]--
-require("bit")
 LuaLuoying = sgs.CreateTriggerSkill{
 	name = "LuaLuoying",
+	events = {sgs.BeforeCardsMove},
 	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardsMoving},
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
+		local room=player:getRoom()
 		local move = data:toMoveOneTime()
 		local source = move.from
-		if source then
-			if source:objectName() ~= player:objectName() then
-				if move.to_place == sgs.Player_DiscardPile then
-					local reason = move.reason.m_reason
-					local flag = false
-					if bit:_and(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
-						flag = true
+		if source:getSeat() == player:getSeat() or source == nil then 
+			return 
+		end
+		local reason = move.reason.m_reason
+		local reasonx = bit32.band(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+		if move.to_place == sgs.Player_DiscardPile then
+			if reasonx == sgs.CardMoveReason_S_REASON_DISCARD or reason == sgs.CardMoveReason_S_REASON_JUDGEDONE then
+				local card_ids = sgs.IntList()
+				for i=0, (move.card_ids:length()-1), 1 do
+					local card_id = move.card_ids:at(i)
+					local card = sgs.Sanguosha:getCard(card_id)
+					local place = move.from_places:at(i)
+					if (card:getSuit() == sgs.Card_Club) and ((reason == sgs.CardMoveReasson_S_REASON_JUDGEDONE
+						and move.from_places:at(i) == sgs.Player_PlaceJudge 
+						and move.to_place == sgs.Player_DiscardPile) or (reason ~= sgs.CardMoveReasson_S_REASON_JUDGEDONE
+						and room:getCardOwner(card_id):getSeat() == source:getSeat()
+						and (move.from_places:at(i) == sgs.Player_PlaceHand or move.from_places:at(i) == sgs.Player_PlaceEquip))) then
+						card_ids:prepend(card_id)
 					end
-					if reason == sgs.CardMoveReason_S_REASON_JUDGEDONE then
-						flag = true
-					end
-					if flag then
-						local luoyingMove = sgs.CardsMoveStruct()
-						luoyingMove.to = player
-						luoyingMove.to_place = sgs.Player_PlaceHand
-						local ids = sgs.QList2Table(move.card_ids)
-						local places = move.from_places
-						for i = 1, #ids, 1 do
-							local id = ids[i]
-							local place = places[i]
-							local suit = sgs.Sanguosha:getCard(id):getSuit()
-							if suit == sgs.Card_Club then
-								if place ~= sgs.Player_PlaceDelayedTrick then
-									if place ~= sgs.Player_PlaceSpecial then
-										if room:getCardPlace(id) == sgs.Player_DiscardPile then
-											luoyingMove.card_ids:append(id)
-										end
-									end
-								end
-							end
+				end
+				if card_ids:isEmpty() or not player:askForSkillInvoke(self:objectName(),data) then 
+					return 
+				end
+				while not card_ids:isEmpty() do
+					room:fillAG(card_ids, player)
+					local id = room:askForAG(player, card_ids, true, self:objectName())
+						if id == -1 then 
+							room:clearAG(player)
+							break 
 						end
-						if not luoyingMove.card_ids:isEmpty() then
-							if player:askForSkillInvoke(self:objectName(), data) then
-								if luoyingMove.card_ids:length() > 1 then
-									while (not luoyingMove.card_ids:isEmpty()) do
-										room:fillAG(luoyingMove.card_ids, player)
-										local card_id = room:askForAG(player, luoyingMove.card_ids, true, self:objectName())
-										player:invoke("clearAG")
-										if card_id == -1 then
-											break
-										end
-										luoyingMove.card_ids:removeOne(card_id)
-									end
-									if luoyingMove.card_ids:isEmpty() then
-										return false
-									end
-								end
-								room:moveCardsAtomic(luoyingMove, true)
-							end
+						card_ids:removeOne(id)
+						room:clearAG(player)
+				end
+				if not card_ids:isEmpty() then 
+					for _, id in sgs.qlist(card_ids) do
+						if move.card_ids:contains(id) then
+							move.from_places:removeAt(listIndexOf(move.card_ids, id))
+							move.card_ids:removeOne(id)
+							data:setValue(move)
 						end
+						room:moveCardTo(sgs.Sanguosha:getCard(id), player, sgs.Player_PlaceHand, move.reason, true)
+						if not player:isAlive() then break end
 					end
 				end
 			end
 		end
-		return false
+		return
 	end,
 }
