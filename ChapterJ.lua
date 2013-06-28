@@ -30,8 +30,8 @@ LuaJilei = sgs.CreateTriggerSkill{
 				local type_i = choice.."|.|.|hand"
 				room:setPlayerCardLimitation(source, "use,response,discard", type_i, true)
 				local typename = string.lower(string.gsub(choice,"Card",""))
-				if source:getMark("@LuaJilei_"..typename) == 0 then
-					room:addPlayerMark(source, "@LuaJilei_"..typename)
+				if source:getMark("@jilei_"..typename) == 0 then
+					room:addPlayerMark(source, "@jilei_"..typename)
 				end
 			end
 	end
@@ -46,7 +46,7 @@ LuaJileiClear = sgs.CreateTriggerSkill{
 			 if change.to ~= sgs.Player_NotActive then return end
 		elseif event == sgs.Death then 
 			local death = data:toDeath()
-			if death.who:objectName() == player:objectName() 
+			if death.who:objectName() ~= player:objectName() 
 				or player:objectName() ~= room:getCurrent():objectName() then
 					return 
 			end
@@ -58,7 +58,7 @@ LuaJileiClear = sgs.CreateTriggerSkill{
 					for _,jileity in ipairs(jileis) do
 						room:removePlayerCardLimitation(p, "use,response,discard", jileity.."|.|.|hand$1")
 						local typename = string.lower(string.gsub(jileity,"Card",""))
-						room:setPlayerMark(p, "@LuaJilei_"..typename, 0)
+						room:setPlayerMark(p, "@jilei_"..typename, 0)
 					end
 					p:removeTag("LuaJilei") 
 				end
