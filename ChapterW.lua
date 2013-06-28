@@ -407,7 +407,7 @@ LuaWushuang = sgs.CreateTriggerSkill{
 	相关武将：一将成名·徐庶
 	描述：你防止你造成或受到的任何锦囊牌的伤害。
 	引用：LuaWuyan
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaWuyan = sgs.CreateTriggerSkill{
 	name = "LuaWuyan",  
@@ -415,24 +415,12 @@ LuaWuyan = sgs.CreateTriggerSkill{
 	events = {sgs.DamageCaused, sgs.DamageInflicted}, 
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
-		local card = damage.card
-		if card then
-			if card:getTypeId() == sgs.Card_Trick then
-				if event == sgs.DamageInflicted then
-					if player:hasSkill(self:objectName()) then
-						return true
-					end
-				end
-				if event == sgs.DamageCaused then
-					local source = damage.from
-					if source then
-						if source:isAlive() then
-							if source:hasSkill(self:objectName()) then
-								return true
-							end
-						end
-					end
-				end
+		if damage.card and (damage.card:getTypeId() == sgs.Card_TypeTrick) then
+			if (event == sgs.DamageInflicted) and player:hasSkill(self:objectName()) then
+				return true
+			end
+			if (event == sgs.DamageCaused) and (damage.from and damage.from:isAlive() and damage.from:hasSkill(self:objectName())) then
+				return true
 			end
 		end
 		return false
