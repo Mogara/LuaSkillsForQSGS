@@ -174,6 +174,35 @@ LuaRende = sgs.CreateTriggerSkill{
 	相关武将：一将成名2013·曹冲
 	描述：一名其他角色处于濒死状态时，你可以将武将牌翻面并将所有手牌交给该角色，令该角色回复1点体力。
 ]]--
+LuaRenxinCard = sgs.CreateSkillCard{
+	name = "LuaRenxinCard", 
+	target_fixed = true, 
+
+	on_use = function(self, room, source, targets)
+		local who = room:getCurrentDyingPlayer()
+		if who then
+			source:turnOver()
+			room:obtainCard(who,source:wholeHandCards(),false)
+		local recover = sgs.RecoverStruct()
+			recover.who = source
+			room:recover(who,recover)
+	end
+end	
+}
+LuaRenxin = sgs.CreateViewAsSkill{
+	name = "LuaRenxin", 
+	n = 0,
+
+	view_as = function(self, cards)
+		return LuaRenxinCard:clone()
+end, 
+	enabled_at_play = function(self, player)
+		return false
+end,
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "peach" and not player:isKongcheng()
+end	
+}
 --[[
 	技能名：忍戒（锁定技）
 	相关武将：神·司马懿
