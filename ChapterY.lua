@@ -568,7 +568,7 @@ LuaXYicai = sgs.CreateTriggerSkill{
 	相关武将：一将成名·于禁
 	描述：若你的装备区没有防具牌，黑色的【杀】对你无效。
 	引用：LuaYizhong
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaYizhong = sgs.CreateTriggerSkill{
 	name = "LuaYizhong", 
@@ -582,13 +582,7 @@ LuaYizhong = sgs.CreateTriggerSkill{
 		return false
 	end, 
 	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				local armor = target:getArmor()
-				return (armor == nil)
-			end
-		end
-		return false
+		return target and target:isAlive() and target:hasSkill(self:objectName()) and (target:getArmor() == nil)
 	end
 }
 --[[
