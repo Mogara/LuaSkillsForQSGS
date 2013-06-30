@@ -581,45 +581,48 @@ luaXMingjianStop = sgs.CreateTriggerSkill{
 	引用：LuaXMingzhe
 	状态：通过
 ]]--
-require("bit")--按位操作所需库文件
-LuaXMingzhe = sgs.CreateTriggerSkill{
-	name = "LuaXMingzhe", 
-	requency = sgs.Skill_Frequent,
-	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
-	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_NotActive then
-			local move = data:toMoveOneTime()
-			local room = player:getRoom()
-			if move.from:objectName() == player:objectName() then
-				if event == sgs.BeforeCardsMove then
-					local reason = bit._and(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
-					if (reason == sgs.CardMoveReason_S_REASON_USE) or (reason == sgs.CardMoveReason_S_REASON_DISCARD) or (reason == sgs.CardMoveReason_S_REASON_RESPONSE) then
-						local card
-						for _,card_id in sgs.qlist(move.card_ids) do
-							card = sgs.Sanguosha:getCard(card_id)
-							if card:isRed() then
-								local place = room:getCardPlace(card_id)
-								if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
-									player:addMark(self:objectName())
-								end
-							end
+LuaXMingzhe=sgs.CreateTriggerSkill{ 
+	name="LuaXMingzhe",
+	frequency=sgs.Skill_Frequent,
+	events={sgs.BeforeCardsMove, sgs.CardsMoveOneTime},
+	on_trigger=function(self, event, player, data)
+		local room = player:getRoom()
+		if (player:getPhase() ~= sgs.Player_NotActive) then 
+			return 
+		end
+		local move = data:toMoveOneTime()
+		if move.from:objectName() ~= player:objectName() then 
+			return 
+		end
+		if event == sgs.BeforeCardsMove then 
+			local reason = move.reason.m_reason
+			local Yes = bit32.band(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD
+			or reason == sgs.CardMoveReason_S_REASON_USE or reason == sgs.CardMoveReason_S_REASON_RESPONSE 
+			if Yes then
+				local card
+				local i = 0
+				for _,id in sgs.qlist(move.card_ids) do
+					card = sgs.Sanguosha:getCard(id)
+					if move.from_places:at(i) == sgs.Player_PlaceHand 
+						or move.from_places:at(i) == sgs.Player_PlaceEquip then
+						if card and room:getCardOwner(id):getSeat() == player:getSeat() then 
+							player:addMark(self:objectName())							
 						end
 					end
-				else 
-					local count = player:getMark(self:objectName())
-					local i = 0
-					while i < count do
-						if player:askForSkillInvoke(self:objectName(), data) then
-							player:removeMark(self:objectName())
-							room:drawCards(player, 1)
-						end
-						i= i + 1
-					end
+					i = i + 1
 				end
 			end
+		else 
+			for i = 0, player:getMark(self:objectName()) - 1 do
+				if player:askForSkillInvoke(self:objectName(),data) then
+					player:drawCards(1) 
+				else 
+					break 
+				end
+			end
+			player:setMark(self:objectName(), 0) 
 		end
-		return false
-	end
+	end,
 }
 --[[
 	技能名：谋断（转化技）
