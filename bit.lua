@@ -1,4 +1,9 @@
 --[[
+  Presentation:
+  In fact, it is not necessary to call this part of functions now only if you do not believe the library of Lua...
+  This file will be removed after all skills disconnect from simulated bitwise operations.
+]]--
+--[[
   涉及位运算的技能请使用本文件的函数，将本文件放在游戏根目录，在需要使用位运算的lua中require("bit")即可访问变量bit
   例子：
   a,b按位与      bit:_and(a,b)
