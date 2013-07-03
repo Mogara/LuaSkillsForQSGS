@@ -596,8 +596,9 @@ LuaXMingzhe=sgs.CreateTriggerSkill{
 		end
 		if event == sgs.BeforeCardsMove then 
 			local reason = move.reason.m_reason
-			local Yes = bit32.band(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD
-			or reason == sgs.CardMoveReason_S_REASON_USE or reason == sgs.CardMoveReason_S_REASON_RESPONSE 
+			local reasonx = bit32.band(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+			local Yes = reasonx == sgs.CardMoveReason_S_REASON_DISCARD
+			or reasonx == sgs.CardMoveReason_S_REASON_USE or reasonx == sgs.CardMoveReason_S_REASON_RESPONSE 
 			if Yes then
 				local card
 				local i = 0
