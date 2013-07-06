@@ -94,31 +94,19 @@ LuaPaoxiao = sgs.CreateTargetModSkill{
 	相关武将：一将成名·徐盛
 	描述：每当你使用【杀】对目标角色造成一次伤害后，你可以令其摸X张牌（X为该角色当前的体力值且至多为5），然后该角色将其武将牌翻面。
 	引用：LuaPojun
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaPojun = sgs.CreateTriggerSkill{
-	name = "LuaPojun", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Damage},  
+	name = "LuaPojun" ,
+	events = {sgs.Damage} ,
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
-		local dest = damage.to
-		if not dest:isDead() then
-			local slash = damage.card
-			if slash then
-				if slash:isKindOf("Slash") then
-					if not damage.chain then
-						if not damage.transfer then
-							local room = player:getRoom()
-							if room:askForSkillInvoke(player, self:objectName(), data) then
-								local hp = dest:getHp()
-								local count = math.min(5, hp)
-								dest:drawCards(count)
-								dest:turnOver()
-							end
-						end
-					end
-				end
+		if damage.card and damage.card:isKindOf("Slash") and (not damage.chain) and (not damage.transfer)
+				and damage.to:isAlive() then
+			if player:getRoom():askForSkillInvoke(player, self:objectName(), data) then
+				local x = math.min(5, damage.to:getHp())
+				damage.to:drawCards(x)
+				damage.to:turnOver()
 			end
 		end
 		return false
