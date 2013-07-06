@@ -906,47 +906,40 @@ LuaZhuiyi = sgs.CreateTriggerSkill{
 	相关武将：一将成名·钟会
 	描述：准备阶段开始时，若“权”大于或等于三张，你减1点体力上限，摸两张牌或回复1点体力，然后获得技能“排异”。
 	引用：LuaZili
-	状态：验证通过
-]]--
+	状态：0610验证通过
+	备注：觉醒获得的排异为自带技能
+]]
 LuaZili = sgs.CreateTriggerSkill{
-	name = "LuaZili", 
-	frequency = sgs.Skill_Wake, 
-	events = {sgs.EventPhaseStart},
-	on_trigger = function(self, event, player, data) 
+	name = "LuaZili" ,
+	frequency = sgs.Skill_Wake ,
+	events = {sgs.EventPhaseStart} ,
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		room:setPlayerMark(player, "zili", 1)
-		player:gainMark("@waked")
-		room:loseMaxHp(player)
-		local choice
-		if player:getLostHp() > 0 then
-			choice = room:askForChoice(player, self:objectName(), "recover+draw")
-		else
-			choice = "draw"
-		end
-		if choice == "recover" then
-			local recover = sgs.RecoverStruct()
-			recover.who = player
-			room:recover(player, recover)
-		else
-			room:drawCards(player, 2)
-		end
-		room:acquireSkill(player, "paiyi")
-		return false
-	end, 
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if target:getPhase() == sgs.Player_Start then
-					if target:getMark("zili") == 0 then
-						local powers = target:getPile("power")
-						return powers:length() >= 3
-					end
+		room:addPlayerMark(player, "LuaZili")
+		if room:changeMaxHpForAwakenSkill(player) then
+			if player:isWounded() then
+				if room:askForChoice(player, self:objectName(), "recover+draw") == "recover" then
+					local recover = sgs.RecoverStruct()
+					recover.who = player
+					room:recover(player, recover)
+				else
+					room:drawCards(player, 2)
 				end
+			else
+				room:drawCards(player, 2)
 			end
+			room:acquireSkill(player, "paiyi")
 		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
+		   and (target:getPhase() == sgs.Player_Start)
+		   and (target:getMark("LuaZili") == 0)
+		   and (target:getPile("power"):length() >= 3)
 	end
 }
+
 --[[
 	技能名：自立（觉醒技）
 	相关武将：胆创·钟会
