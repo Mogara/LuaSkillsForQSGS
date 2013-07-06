@@ -768,28 +768,25 @@ LuaQuhu = sgs.CreateViewAsSkill{
 	相关武将：一将成名·钟会
 	描述：每当你受到1点伤害后，你可以摸一张牌，然后将一张手牌置于你的武将牌上，称为“权”；每有一张“权”，你的手牌上限便+1。
 	引用：LuaQuanji、LuaQuanjiKeep、LuaQuanjiRemove
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaQuanji = sgs.CreateTriggerSkill{
 	name = "LuaQuanji", 
 	frequency = sgs.Skill_Frequent, 
 	events = {sgs.Damaged}, 
 	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
 		local room = player:getRoom()
-		if room:askForSkillInvoke(player, self:objectName(), data) then
-			local damage = data:toDamage()
-			local x = damage.damage
-			for i=1, x, 1 do
+		local x = damage.damage
+		for i = 0, x - 1, 1 do
+			if player:askForSkillInvoke(self:objectName()) then
 				room:drawCards(player, 1)
 				if not player:isKongcheng() then
-					local card_id = -1
-					local handcards = player:handCards()
-					if handcards:length() == 1 then
-						room:getThread():delay(500)
-						card_id = handcards:first()
+					local card_id
+					if player:getHandcardNum() == 1 then
+						card_id = player:handCards():first()
 					else
-						local cards = room:askForExchange(player, self:objectName(), 1, false, "QuanjiPush")
-						card_id = cards:getSubcards():first()
+						card_id = room:askForExchange(player, self:objectName(), 1, false, "QuanjiPush"):getSubcards():first()
 					end
 					player:addToPile("power", card_id)
 				end
@@ -798,11 +795,12 @@ LuaQuanji = sgs.CreateTriggerSkill{
 	end
 }
 LuaQuanjiKeep = sgs.CreateMaxCardsSkill{
-	name = "#LuaQuanjiKeep", 
+	name = "#LuaQuanji-keep", 
 	extra_func = function(self, target) 
 		if target:hasSkill(self:objectName()) then
-			local powers = target:getPile("power")
-			return powers:length()
+			return target:getPile("power"):length()
+		else
+			return 0
 		end
 	end
 }
@@ -811,14 +809,13 @@ LuaQuanjiRemove = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Frequent, 
 	events = {sgs.EventLoseSkill}, 
 	on_trigger = function(self, event, player, data)
-		local name = data:toString()
-		if name == "LuaQuanji" then
-			player:removePileByName("power")
+		if data:toString() == "LuaQuanji" then
+			player:clearOnePrivatePile("power")
 		end
 		return false
 	end, 
 	can_trigger = function(self, target)
-		return (target ~= nil)
+		return target
 	end
 }
 --[[
