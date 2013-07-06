@@ -455,101 +455,81 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 	相关武将：一将成名·凌统
 	描述：当你失去装备区里的牌时，或于弃牌阶段内弃置了两张或更多的手牌后，你可以依次弃置一至两名其他角色的共计两张牌。
 	引用：LuaXuanfeng
-	状态：验证通过
+	状态：0610验证通过
 ]]--
+
 LuaXuanfengCard = sgs.CreateSkillCard{
-	name = "LuaXuanfengCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
-		if #targets < 2 then
-			if to_select:objectName() ~= sgs.Self:objectName() then
-				return not to_select:isNude()
-			end
-		end
-		return false
-	end,
+	name = "LuaXuanfengCard" ,
+	view_filter = function(self, targets, to_select)
+		if #targets >= 2 then return false end
+		if to_select:objectName() == sgs.Self:objectName() then return false end
+		return sgs.Self:canDiscard(to_select, "he")
+	end ,
 	on_use = function(self, room, source, targets)
 		local map = {}
 		local totaltarget = 0
-		for _,sp in pairs(targets) do
-			map[sp:objectName()] = 1
+		for _, sp in ipairs(targets) do
+			map[sp] = 1
 		end
 		totaltarget = #targets
 		if totaltarget == 1 then
-			for _,sp in pairs(targets) do
-				map[sp:objectName()] = map[sp:objectName()] + 1
+			for _, sp in ipairs(targets) do
+				map[sp] = map[sp] + 1
 			end
 		end
-		for _,sp in pairs(targets) do
-			while (map[sp:objectName()] > 0) do
-				if not sp:isNude() then
-					local card_id = room:askForCardChosen(source, sp, "he", "LuaXuanfeng")
+		for _, sp in ipairs(targets) do
+			while map[sp] > 0 do
+				if source:isAlive() and sp:isAlive() and source:canDiscard(sp, "he") then
+					local card_id = room:askForCardChosen(source, sp, "he", self:objectName(), false, sgs.Card_MethodDiscard)
 					room:throwCard(card_id, sp, source)
 				end
-				map[sp:objectName()] = map[sp:objectName()] - 1
+				map[sp] = map[sp] - 1
 			end
 		end
 	end
 }
 LuaXuanfengVS = sgs.CreateViewAsSkill{
-	name = "LuaXuanfeng", 
-	n = 0, 
-	view_as = function(self, cards) 
+	name = "LuaXuanfeng" ,
+	n = 0 ,
+	view_as = function()
 		return LuaXuanfengCard:clone()
-	end, 
-	enabled_at_play = function(self, player)
-		return false
-	end, 
-	enabled_at_response = function(self, player, pattern)
+	end ,
+	enabled_at_play = function()
+		return false 
+	end ,
+	enabled_at_response = function(self, target, pattern)
 		return pattern == "@@LuaXuanfeng"
 	end
 }
 LuaXuanfeng = sgs.CreateTriggerSkill{
-	name = "LuaXuanfeng",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.CardsMoveOneTime, sgs.EventPhaseStart}, 
-	view_as_skill = LuaXuanfengVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXuanfeng" ,
+	events = {sgs.CardsMoveOneTime, sgs.EventPhaseStart} ,
+	view_as_skill = LuaXuanfengVS ,
+	on_trigger = function(self, event, player, data)
 		if event == sgs.EventPhaseStart then
-			player:setMark("xuanfeng", 0)
+			player:setMark("LuaXuanfeng", 0)
 		elseif event == sgs.CardsMoveOneTime then
 			local move = data:toMoveOneTime()
-			local source = move.from
-			if source and source:objectName() == player:objectName() then
+			if (not move.from) or (move.from:objectName() ~= player:objectName()) then return false end
+			if (move.to_place == sgs.Player_DiscardPile) and (player:getPhase() == sgs.Player_Discard)
+					and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
+				player:setMark("LuaXuanfeng", player:getMark("LuaXuanfeng") + move.card_ids:length())
+			end
+			if ((player:getMark("LuaXuanfeng") >= 2) and (not player:hasFlag("LuaXuanfengUsed")))
+					or move.from_places:contains(sgs.Player_PlaceEquip) then
 				local room = player:getRoom()
-				local markcount = player:getMark("xuanfeng")
-				if move.to_place == sgs.Player_DiscardPile then
-					if player:getPhase() == sgs.Player_Discard then
-						room:setPlayerMark(player, "xuanfeng", markcount + move.card_ids:length())
+				local targets = sgs.SPlayerList()
+				for _, target in sgs.qlist(room:getOtherPlayers(player)) do
+					if player:canDiscard(target, "he") then
+						targets:append(target)
 					end
 				end
-				markcount = player:getMark("xuanfeng")
-				local flag = false
-				if markcount >= 2 then
-					flag = not player:hasFlag("xuanfeng_used")
-				end
-				if move.from_places:contains(sgs.Player_PlaceEquip) then
-					flag = true
-				end
-				if flag then
-					if markcount >= 2 then
-						room:setPlayerFlag(player, "xuanfeng_used")
-					end
-					local can_invoke = false
-					local other_players = room:getOtherPlayers(player)
-					for _,p in sgs.qlist(other_players) do
-						if not p:isNude() then
-							can_invoke = true
-							break
-						end
-					end
-					if can_invoke then
-						local choice = room:askForChoice(player, self:objectName(), "throw+nothing")
-						if choice == "throw" then
-							room:askForUseCard(player, "@@LuaXuanfeng", "@xuanfeng-card")
-						end
-					end
+				if targets:isEmpty() then return false end
+				local choice = room:askForChoice(player, self:objectName(), "throw+nothing") --这个地方令我非常无语…………用askForSkillInvoke不好么…………
+				if choice == "throw" then
+					--player:setFlags("LuaXuanfengUsed") --这是源码Bug的地方
+					if player:getPhase() == sgs.Player_Discard then player:setFlags("LuaXuanfengUsed") end --修复源码Bug
+					room:askForUseCard(player, "@@LuaXuanfeng", "@xuanfeng-card")
 				end
 			end
 		end
@@ -626,99 +606,79 @@ LuaNosXuanfeng = sgs.CreateTriggerSkill{
 	技能名：眩惑
 	相关武将：一将成名·法正
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为令一名其他角色摸两张牌，然后令其对其攻击范围内你选择的另一名角色使用一张【杀】，若该角色未如此做或其攻击范围内没有其他角色，你获得其两张牌。
-	引用：LuaXuanhuo
-	状态：验证通过
+	引用：LuaXuanhuo、LuaXuanhuoFakeMove
+	状态：0610验证通过
 ]]--
-LuaXuanhuoDummyCard = sgs.CreateSkillCard{
-	name = "LuaXuanhuoDummyCard",
-}
-LuaXuanhuoCard = sgs.CreateSkillCard{
-	name = "LuaXuanhuoCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
-	end,
-	on_effect = function(self, effect) 
-		local source = effect.from
-		local dest = effect.to
-		local room = source:getRoom()
-		room:drawCards(dest, 2)
-		if source:isAlive() and dest:isAlive() then
-			local can_use = false
-			local list = room:getOtherPlayers(dest)
-			for _,p in sgs.qlist(list) do
-				if dest:canSlash(p) then
-					can_use = true
-					break
-				end
-			end
-			local victim = nil
-			if can_use then
-				local targets = sgs.SPlayerList()
-				for _,v in sgs.qlist(list) do
-					if dest:canSlash(v) then
-						targets:append(v)
-					end
-				end
-				victim = room:askForPlayerChosen(source, targets, self:objectName())
-				local prompt = string.format("xuanhuo-slash:%s:%s", source:objectName(), victim:objectName())
-				if not room:askForUseSlashTo(dest, victim, prompt) then
-					if not dest:isNude() then
-						local first_id = room:askForCardChosen(source, dest, "he", self:objectName())
-						local dummy = LuaXuanhuoDummyCard:clone()
-						dummy:addSubcard(first_id)
-						dest:addToPile("#xuanhuo", dummy, false)
-						if not dest:isNude() then
-							local second_id = room:askForCardChosen(source, dest, "he", self:objectName())
-							dummy:addSubcard(second_id)
-						end
-						room:moveCardTo(dummy, source, sgs.Player_PlaceHand, false)
-					end
-				end
-			else
-				if not dest:isNude() then
-					local first_id = room:askForCardChosen(source, dest, "he", self:objectName())
-					local dummy = LuaXuanhuoDummyCard:clone()
-					dummy:addSubcard(first_id)
-					dest:addToPile("#xuanhuo", dummy, false)
-					if not dest:isNude() then
-						local second_id = room:askForCardChosen(source, dest, "he", self:objectName())
-						dummy:addSubcard(second_id)
-					end
-					room:moveCardTo(dummy, source, sgs.Player_PlaceHand, false)
-				end
-			end
-		end
-	end
-}
-LuaXuanhuoVS = sgs.CreateViewAsSkill{
-	name = "LuaXuanhuo", 
-	n = 0, 
-	view_as = function(self, cards) 
-		return LuaXuanhuoCard:clone()
-	end, 
-	enabled_at_play = function(self, player)
-		return false
-	end, 
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaXuanhuo"
-	end
-}
+
 LuaXuanhuo = sgs.CreateTriggerSkill{
-	name = "LuaXuanhuo", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart}, 
-	view_as_skill = LuaXuanhuoVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXuanhuo" ,
+	events = {sgs.EventPhaseStart} ,
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Draw then
-			if room:askForUseCard(player, "@@LuaXuanhuo", "@xuanhuo-card") then
+			local to = room:askForPlayerChosen(player, room:getOtherPlayers(player), self:objectName(), "xuanhuo-invoke", true, true)
+			if to then
+				room:drawCards(to, 2)
+				if (not player:isAlive()) or (not to:isAlive()) then return true end
+				local targets = sgs.SPlayerList()
+				for _, vic in sgs.qlist(room:getOtherPlayers(to)) do
+					if to:canSlash(vic) then
+						targets:append(vic)
+					end
+				end
+				local victim
+				if not targets:isEmpty() then
+					victim = room:askForPlayerChosen(player, targets, "xuanhuo_slash", "@dummy-slash2:" .. to:objectName())
+				end
+				if victim then --不得已写了两遍movecard…………
+					if not room:askForUseSlashTo(to, victim, "xuanhuo-slash:" .. player:objectName() .. ":" .. victim:objectName()) then
+						if to:isNude() then return true end
+						room:setPlayerFlag(to, "LuaXuanhuo_InTempMoving")
+						local first_id = room:askForCardChosen(player, to, "he", self:objectName())
+						local original_place = room:getCardPlace(first_id)
+						local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+						dummy:addSubcard(first_id)
+						to:addToPile("#xuanhuo", dummy, false)
+						if not to:isNude() then
+							local second_id = room:askForCardChosen(player, to, "he", self:objectName())
+							dummy:addSubcard(second_id)
+						end
+						room:moveCardTo(sgs.Sanguosha:getCard(first_id), to, original_place, false)
+						room:setPlayerFlag(to, "-LuaXuanhuo_InTempMoving")
+						room:moveCardTo(dummy, player, sgs.Player_PlaceHand, false)
+						--delete dummy
+					end
+				else
+					if to:isNude() then return true end
+					room:setPlayerFlag(to, "LuaXuanhuo_InTempMoving")
+					local first_id = room:askForCardChosen(player, to, "he", self:objectName())
+					local original_place = room:getCardPlace(first_id)
+					local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+					dummy:addSubcard(first_id)
+					to:addToPile("#xuanhuo", dummy, false)
+					if not to:isNude() then
+						local second_id = room:askForCardChosen(player, to, "he", self:objectName())
+						dummy:addSubcard(second_id)
+					end
+					room:moveCardTo(sgs.Sanguosha:getCard(first_id), to, original_place, false)
+					room:setPlayerFlag(to, "-LuaXuanhuo_InTempMoving")
+					room:moveCardTo(dummy, player, sgs.Player_PlaceHand, false)
+					--delete dummy
+				end
 				return true
 			end
+		end
+		return false
+	end
+}
+LuaXuanhuoFakeMove = sgs.CreateTriggerSkill{
+	name = "#LuaXuanhuo-fake-move" ,
+	events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime} ,
+	priority = 10 ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		for _, p in sgs.qlist(room:getAllPlayers()) do
+			if p:hasFlag("LuaXuanhuo_InTempMoving") then return true end
 		end
 		return false
 	end
