@@ -4159,7 +4159,6 @@ LuaZaiqi = sgs.CreateTriggerSkill{
 }
 
 
-
 --[[
 	技能名：巧变
 	相关武将：山·张郃
@@ -4286,7 +4285,7 @@ LuaQiaobian = sgs.CreateTriggerSkill{
 		return false
 	end
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target) and target:canDiscard(target, "h")
+		return (target and target:isAlive() and target:hasSkill(self:objectName())) and target:canDiscard(target, "h")
 	end
 }
 
@@ -4341,7 +4340,7 @@ LuaTuntian = sgs.CreateTriggerSkill{
 		end
 	end ,
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target) and (target:getPhase() == sgs.Player_NotActive)
+		return (target and target:isAlive() and target:hasSkill(self:objectName())) and (target:getPhase() == sgs.Player_NotActive)
 	end
 }
 LuaTuntianDistance = sgs.CreateDistanceSkill{
@@ -4361,7 +4360,7 @@ LuaTuntianClear = sgs.CreateTriggerSkill{
 		if data:toString() == "LuaTuntian" then
 			player:clearOnePrivatePile("field")
 		end
-	end
+	end ,
 	can_trigger = function(self, target)
 		return target
 	end
@@ -4385,7 +4384,7 @@ LuaZaoxian = sgs.CreateTriggerSkill{
 		end
 	end ,
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
 			and (target:getPhase() == sgs.Player_Start)
 			and (target:getMark("LuaZaoxian") == 0)
 			and (target:getPile("field"):length() >= 3)
@@ -4443,7 +4442,7 @@ LuaHunzi = sgs.CreateTriggerSkill{
 		return false
 	end ,
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
 				and (target:getMark("LuaHunzi") == 0)
 				and (target:getPhase() == sgs.Player_Start)
 				and (target:getHp() == 1)
@@ -4629,7 +4628,7 @@ LuaZhiji = sgs.CreateTriggerSkill{
 		return false
 	end ,
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
 				and (target:getMark("LuaZhiji") == 0)
 				and (target:getPhase() == sgs.Player_Start)
 				and target:isKongcheng()
@@ -4640,7 +4639,7 @@ LuaZhiji = sgs.CreateTriggerSkill{
 	相关武将：山·张昭张纮
 	描述：出牌阶段，你可以将手牌中的一张装备牌置于一名其他角色的装备区里（不能替换原装备），然后摸一张牌。
 	引用：LuaZhijian
-	状态：验证通过
+	状态：0610待验证
 ]]--
 LuaZhijianCard = sgs.CreateSkillCard{
 	name = "LuaZhijianCard" ,
@@ -4679,8 +4678,106 @@ LuaZhijian = sgs.CreateViewAsSkill{
 	相关武将：山·张昭张纮
 	描述：其他角色的弃牌阶段结束时，你可以将该角色于此阶段中弃置的一张牌从弃牌堆返回其手牌，若如此做，你可以获得弃牌堆里其余于此阶段中弃置的牌。
 	引用：LuaGuzheng、LuaGuzhengGet
-	状态：0610未做（太麻烦，还没有下手）
+	状态：0610待验证
 ]]--
+containCardGuzheng = function(cards_list, card_id)
+	for i = 1, #cards_list, 1 do
+		if cards_list[i] == card_id then return true end
+	end
+	return false
+end
+list2strGuzheng = function(cards_list)
+	local cards_str
+	if #cards_list == 0 then return "" end
+	cards_str = tostring(cards_list[1])
+	for i = 2, #cards_list, 1 do
+		cards_str = cards_str .. "+" .. tostring(cards_list[i])
+	end
+	return cards_str
+end
+str2listGuzheng = function(cards_str)
+	local cards_list = {}
+	local cards_str_list = cards_str:split("+")
+	for _, card_str in ipairs(cards_str_list) do
+		table.insert(cards_list, tonumber(card_str))
+	end
+	return cards_list
+end
+LuaGuzheng = sgs.CreateTriggerSkill{
+	name = "LuaGuzheng" ,
+	events = {sgs.CardsMoveOneTime} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local current = room:getCurrent()
+		local move = data:toMoveOneTime()
+		if player:objectName() == current:objectName() then return false end
+		if current:getPhase() == sgs.Player_Discard then
+			local guzhengToGet = str2listGuzheng(player:getTag("LuaGuzhengToGet"):toString())
+			local guzhengToOther = str2listGuzheng(player:getTag("LuaGuzhengToOther"):toString())
+			for _, card_id in sgs.qlist(move.card_ids) do
+				if bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
+					if move.from:objectName() == current:objectName() then
+						table.insert(guzhengToGet, card_id)
+					elseif not containCardGuzheng(guzhengToGet, card_id) then
+						table.insert(guzhengToOther, card_id)
+					end
+				end
+			end
+			player:setTag("LuaGuzhengToGet", sgs.QVariant(list2strGuzheng(guzhengToGet)))
+			player:setTag("LuaGuzhengToOther", sgs.QVariant(list2strGuzheng(guzhengToOther)))
+		end
+		return false
+	end
+}
+LuaGuzhengGet = sgs.CreateTriggerSkill{
+	name = "#LuaGuzheng-get" ,
+	events = {sgs.EventPhaseEnd} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local erzhang = room:findPlayerBySkillName(self:objectName())
+		if not erzhang then return false end
+		local guzheng_cardsToGet = str2listGuzheng(erzhang:getTag("LuaGuzhengToGet"):toString())
+		local guzheng_cardsToOther = str2listGuzheng(erzhang:getTag("LuaGuzhengToOther"):toString())
+		erzhang:removeTag("LuaGuzhengToGet")
+		erzhang:removeTag("LuaGuzhengToOther")
+		if player:isDead() then return false end
+		local cards = sgs.IntList()
+		local cardsToGet = sgs.IntList()
+		local cardsToOter = sgs.IntList()
+		for _, card_id in ipairs(guzheng_cardsToGet) do
+			if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
+				cardsToGet:append(card_id)
+				cards:append(card_id)
+			end
+		end
+		for _, card_id in ipairs(guzheng_cardsToOther) do
+			if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
+				cardsToOther:append(card_id)
+				cards:append(card_id)
+			end
+		end
+		if cardsToGet:isEmpty() then return false end
+		if erzhang:askForSkillInvoke("LuaGuzheng", sgs.QVariant(cards:length())) then
+			room:fillAG(cards, erzhang, cardsToOther)
+			local go_back = room:askForAG(erzhang, cardsToGet, false, "LuaGuzheng")
+			player:obtainCard(sgs.Sanguosha:getCard(go_back))
+			cards:removeOne(go_back)
+			room:clearAG(erzhang)
+			local move = sgs.CardsMoveStruct()
+			move.card_ids = cards
+			move.to = erzhang
+			move.to_place = sgs.Player_PlaceHand
+			local moves = sgs.CardsMoveList()
+			moves:append(move)
+			room:moveCardsAtomic(moves, true)
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target and (target:getPhase() == sgs.Player_Discard)
+	end
+}
+
 --[[
 	技能名：享乐（锁定技）
 	相关武将：山·刘禅
@@ -4925,7 +5022,10 @@ LuaWuhunClear = sgs.CreateTriggerSkill{
 				p:loseAllMarks("@nightmare")
 			end
 		end
-	end
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end ,
 }
 --[[
 	技能名：涉猎
@@ -5070,6 +5170,9 @@ LuaKuangbaoClear = sgs.CreateTriggerSkill{
 		if data:toString() == "LuaKuangbao" then
 			player:loseAllMarks("@wrath")
 		end
+	end ,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
@@ -5242,7 +5345,7 @@ LuaQixing = sgs.CreateTriggerSkill{
 		return false
 	end ,
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target) and (target:getPile("stars"):length() > 0)
+		return (target and target:isAlive() and target:hasSkill(self:objectName())) and (target:getPile("stars"):length() > 0)
 				and (target:getPhase() == sgs.Player_Draw)
 	end
 }
@@ -5451,6 +5554,9 @@ LuaRenjieClear = sgs.CreateTriggerSkill{
 		if data:toString() == "LuaRenjie" then
 			player:loseAllMarks("@bear")
 		end
+	end ,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
@@ -5473,7 +5579,7 @@ LuaBaiyin = sgs.CreateTriggerSkill{
 		return false
 	end ,
 	can_trigger = function(self,target)
-		return target and sgs.TriggerSkill_triggerable(target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
 				and (target:getPhase() == sgs.Player_Start)
 				and (target:getMark("LuaBaiyin") == 0)
 				and (target:getMark("@bear") >= 4)
@@ -5656,7 +5762,7 @@ LuaLonghun = sgs.CreateViewAsSkill{
 				or (string.find(pattern, "peach") and (not player:hasFlag("Global_PreventPeach")))
 				or (pattern == "nullification")
 	end ,
-	enabled_at_nullification(self, player)
+	enabled_at_nullification = function(self, player)
 		local n = math.max(1, player:getHp())
 		local count = 0
 		for _, card in sgs.qlist(player:getHandcards()) do
@@ -5669,8 +5775,6 @@ LuaLonghun = sgs.CreateViewAsSkill{
 		end
 	end
 }
-
-
 --[[
 	技能名：鸡肋
 	相关武将：SP·杨修
@@ -5713,7 +5817,7 @@ LuaDanalao = sgs.CreateTriggerSkill{
 	相关武将：SP·袁术、SP·台版袁术
 	描述：摸牌阶段，你额外摸等同于现存势力数的牌；弃牌阶段开始时，你须弃置等同于现存势力数的牌。
 	引用：LuaYongsi
-	状态：验证通过
+	状态：0610待验证
 ]]--
 getKingdomsYongsi = function(yuanshu)
 	local kingdoms = {}
@@ -5728,12 +5832,12 @@ getKingdomsYongsi = function(yuanshu)
 		end
 		if flag then table.insert(kingdoms, p:getKingdom()) end
 	end
-	return table.getn(kingdoms)
+	return #kingdoms
 end
 LuaYongsi = sgs.CreateTriggerSkill{
 	name = "LuaYongsi" ,
 	frequency = sgs.Skill_Compulsory ,
-	events = {sgs.DrawNCards, sgs.EventPhaseStart} ,
+	events = {sgs.DrawNCards, sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local x = getKingdomsYongsi(player)
@@ -5796,7 +5900,7 @@ LuaDanji = sgs.CreateTriggerSkill{
 		return false
 	end ,
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
 				and (target:getPhase() == sgs.Player_Start)
 				and (target:getMark("danji") == 0)
 				and (target:getHandcardNum() > target:getHp())
@@ -5982,6 +6086,9 @@ LuaHuxiaoClear = sgs.CreateTriggerSkill{
 		if data:toString() == "LuaHuxiao" then
 			player:getRoom():setPlayerMark(player, "LuaHuxiao", 0)
 		end
+	end ,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
@@ -6031,7 +6138,7 @@ LuaWuji = sgs.CreateTriggerSkill{
 		return false
 	end ,
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
 				and (target:getPhase() == sgs.Player_Finish)
 				and (target:getMark("LuaWuji") == 0)
 				and (target:getMark("LuaWuji_damage") >= 3)
@@ -6164,7 +6271,7 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 		return false
 	end ,
 	can_trigger = function(self, target)
-		return sgs.TriggerSkill_triggerable(target)
+		return (target and target:isAlive() and target:hasSkil(self:objectName()))
 				and (target:getPhase() == sgs.Player_Start)
 				and target:canDiscard(target, "h")
 				and hasDelayedTrickXiuluo(target)
