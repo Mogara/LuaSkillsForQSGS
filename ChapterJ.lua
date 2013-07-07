@@ -864,27 +864,19 @@ LuaXJincui = sgs.CreateTriggerSkill{
 	相关武将：一将成名·高顺
 	描述：你的【酒】均视为【杀】。
 	引用：LuaJinjiu
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaJinjiu = sgs.CreateFilterSkill{
-	name = "LuaJinjiu",
-	view_filter = function(self, to_select)
-		local room = sgs.Sanguosha:currentRoom()
-		local place = room:getCardPlace(to_select:getEffectiveId())
-		if place == sgs.Player_PlaceHand then
-			return to_select:objectName() == "analeptic"
-		end
-		return false
-	end, 
+	name = "LuaJinjiu" ,
+	view_filter = function(self, card)
+		return card:objectName() == "analeptic"
+	end ,
 	view_as = function(self, card)
-		local suit = card:getSuit()
-		local point = card:getNumber()
-		local id = card:getId()
-		local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
+		local slash = sgs.Sanguosha:cloneCard("slash", card:getSuit(), card:getNumber())
 		slash:setSkillName(self:objectName())
-		local vs_card = sgs.Sanguosha:getWrappedCard(id)
-		vs_card:takeOver(slash)
-		return vs_card
+		local wrap = sgs.Sanguosha:getWrappedCard(card:getId())
+		wrap:takeOver(slash)
+		return wrap
 	end
 }
 --[[
