@@ -625,38 +625,38 @@ LuaBiyue = sgs.CreateTriggerSkill{
 	相关武将：一将成名·吴国太
 	描述：当一名角色进入濒死状态时，你可以展示该角色的一张手牌，若此牌不为基本牌，该角色弃置之，然后回复1点体力。
 	引用：LuaBuyi
-	状态：0224验证通过
+	状态：0610验证通过
 ]]--
+
 LuaBuyi = sgs.CreateTriggerSkill{
 	name = "LuaBuyi",
 	events = {sgs.Dying},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local dying = data:toDying()
-		local target = dying.who
-		if target:getHp() <= 0 then
-			if not target:isKongcheng() then 
-				if room:askForSkillInvoke(player, self:objectName(), data) then
-					local card
-					if player:objectName() == target:objectName() then 
-						card = room:askForCardShow(target, player, "LuaBuyi")
-					else
-						local id = room:askForCardChosen(player, target, "h", self:objectName())
-						card = sgs.Sanguosha:getCard(id) 
+		local _player = dying.who
+		if _player:isKongcheng() then return false end
+		if _player:getHp() < 1 then
+			if room:askForSkillInvoke(player, self:objectName(), data) then
+				local card
+				if player:objectName() == _player:objectName() then 
+					card = room:askForCardShow(_player, player, "LuaBuyi")
+				else
+					local id = room:askForCardChosen(player, _player, "h", self:objectName())
+					card = sgs.Sanguosha:getCard(id) 
+				end
+				room:showCard(_player, card:getEffectiveId())
+				if card:getTypeId() ~= sgs.Card_TypeBasic then
+					if not _player:isJilei(card) then 
+						room:throwCard(card, _player)
 					end
-					room:showCard(target, card:getEffectiveId())
-					if card:getTypeId() ~= sgs.Card_TypeBasic then
-						if not target:isJilei(card) then 
-							room:throwCard(card, target)
-							local recover = sgs.RecoverStruct()
-							recover.who = player
-							room:recover(target, recover) 
-						end
-					end
-					return target:getHp() > 0 
+					local recover = sgs.RecoverStruct()
+					recover.who = player
+					room:recover(_player, recover) 		
 				end
 			end
 		end
+		return false
 	end,
 }
 --[[
