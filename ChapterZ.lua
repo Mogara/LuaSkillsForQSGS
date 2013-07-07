@@ -8,12 +8,13 @@
 	相关武将：僵尸·僵尸
 	描述：你的出牌阶段开始时，若人类玩家数-僵尸玩家数+1大于0，你多摸该数目的牌。 
 ]]--
+
 --[[
 	技能名：再起
-	相关武将：林·孟获、1v1·孟获1v1
+	相关武将：林·孟获
 	描述：摸牌阶段开始时，若你已受伤，你可以放弃摸牌，改为从牌堆顶亮出X张牌（X为你已损失的体力值），你回复等同于其中红桃牌数量的体力，然后将这些红桃牌置入弃牌堆，并获得其余的牌。
 	引用：LuaZaiqi
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaZaiqi = sgs.CreateTriggerSkill{
 	name = "LuaZaiqi",  
@@ -33,7 +34,6 @@ LuaZaiqi = sgs.CreateTriggerSkill{
 					move.to_place = sgs.Player_PlaceTable
 					move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TURNOVER, player:objectName(), self:objectName(), nil)
 					room:moveCardsAtomic(move, true)
-					room:getThread():delay(1000)
 					local card_to_throw = {}
 					local card_to_gotback = {}
 					for i=0, x-1, 1 do
@@ -47,22 +47,25 @@ LuaZaiqi = sgs.CreateTriggerSkill{
 						end
 					end
 					if #card_to_throw > 0 then
+						local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+						for _, id in ipairs(card_to_throw) do
+							dummy:addSubcard(id)
+						end
 						local recover = sgs.RecoverStruct()
 						recover.card = nil
 						recover.who = player
 						recover.recover = #card_to_throw
 						room:recover(player, recover)
 						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NATURAL_ENTER, player:objectName(), self:objectName(), nil)
-						for _,card in pairs(card_to_throw) do
-							room:throwCard(card, nil, nil)
-						end
+						room:throwCard(dummy, reason, nil)
 						has_heart = true
 					end
 					if #card_to_gotback > 0 then
-						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GOTBACK, player:objectName())
-						for _,card in pairs(card_to_gotback) do
-							room:obtainCard(player, card, true)
+						local dummy2 = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+						for _, id in ipairs(card_to_gotback) do
+							dummy2:addSubcard(id)
 						end
+						room:obtainCard(player, dummy2)
 					end
 					return true
 				end
@@ -736,50 +739,63 @@ LuaZhiheng = sgs.CreateViewAsSkill{
 	技能名：智迟（锁定技）
 	相关武将：一将成名·陈宫
 	描述：你的回合外，每当你受到一次伤害后，【杀】或非延时类锦囊牌对你无效，直到回合结束。
-	引用：LuaZhichiClear、LuaZhichi
-	状态：验证通过
+	引用：LuaZhichi、LuaZhichiProtect、LuaZhichiClear
+	状态：0610验证通过
 ]]--
-LuaZhichiClear = sgs.CreateTriggerSkill{
-	name = "#LuaZhichiClear",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.EventPhaseStart}, 
+LuaZhichi = sgs.CreateTriggerSkill{
+	name = "LuaZhichi" ,
+	events = {sgs.Damaged} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_NotActive then
-			local room = player:getRoom()
-			room:removeTag("Zhichi")
+		local room = player:getRoom()
+		if player:getPhase() ~= sgs.Player_NotActive then return false end
+		local current = room:getCurrent()
+		if current and current:isAlive() and (current:getPhase() ~= sgs.Player_NotActive) then
+			if player:getMark("@late") == 0 then
+				room:addPlayerMark(player, "@late")
+			end
+		end
+	end
+}
+LuaZhichiProtect = sgs.CreateTriggerSkill{
+	name = "#LuaZhichi-protect" ,
+	events = {sgs.CardEffected} ,
+	on_trigger = function(self, event, player, data)
+		local effect = data:toCardEffect()
+		if (effect.card:isKindOf("Slash") or effect.card:isNDTrick()) and (effect.to:getMark("@late") > 0) then
+			return true
 		end
 		return false
-	end, 
+	end ,
 	can_trigger = function(self, target)
 		return target
 	end
 }
-LuaZhichi = sgs.CreateTriggerSkill{
-	name = "LuaZhichi",
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.Damaged, sgs.CardEffected}, 
+LuaZhichiClear = sgs.CreateTriggerSkill{
+	name = "#LuaZhichi-clear" ,
+	events = {sgs.EventPhaseChanging, sgs.Death} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if player then
-			if player:getPhase() == sgs.Player_NotActive then
-				if event == sgs.Damaged then
-					if room:getCurrent():isAlive() then
-						local value = sgs.QVariant(player:objectName())
-						room:setTag("Zhichi", value)
-					end
-				elseif event == sgs.CardEffected then
-					local tag = room:getTag("Zhichi")
-					if tag:toString() == player:objectName() then
-						local effect = data:toCardEffect()
-						local card = effect.card
-						if card:isKindOf("Slash") or card:getTypeId() == sgs.Card_Trick then
-							return true
-						end
-					end
-				end
+		if event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then
+				return false
+			end
+		else
+			local death = data:toDeath()
+			if (death.who:objectName() ~= player:objectName()) or (player:objectName() ~= room:getCurrent():objectName()) then
+				return false
+			end
+		end
+		for _, p in sgs.qlist(room:getAllPlayers()) do
+			if p:getMark("@late") > 0 then
+				room:setPlayerMark(p, "@late", 0)
 			end
 		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
