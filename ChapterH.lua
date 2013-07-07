@@ -1061,29 +1061,31 @@ LuaHuangtian = sgs.CreateTriggerSkill{
 	相关武将：一将成名·马谡
 	描述：当你被其他角色杀死时，该角色弃置其所有的牌。
 	引用：LuaHuilei
-	状态：0224验证通过
+	状态：0610验证通过
 ]]--
 LuaHuilei = sgs.CreateTriggerSkill{
-	name = "LuaHuilei",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.Death},
+	name = "LuaHuilei", 
+	events = {sgs.Death} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
 		local death = data:toDeath()
-		if death.who:objectName() == player:objectName() then
-			local damage = death.damage
-			if damage then
-				local killer = damage.from 
-				killer:throwAllHandCardsAndEquips()
-			end
+		if death.who:objectName() ~= player:objectName() then return false end
+		local killer
+		if death.damage then
+			killer = death.damage.from
+		else
+			killer = nil
 		end
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return target:hasSkill(self:objectName())
+		if killer then
+			killer:throwAllHandCardsAndEquips()
 		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return target and target:hasSkill(self:objectName())
 	end
 }
+
 --[[
 	技能名：魂姿（觉醒技）
 	相关武将：山·孙策
