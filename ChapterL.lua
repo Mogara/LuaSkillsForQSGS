@@ -329,6 +329,7 @@ LuaLihun = sgs.CreateTriggerSkill{
 	描述：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】。 
 	引用：LuaLijian （需小幅修改）
 	状态：0610初步验证通过
+	
 	注：仅需将旧版离间的 "duel:toTrick():setCancelable(false)" 那一行去掉即可
 ]]--
 --[[
@@ -428,6 +429,90 @@ LuaLijian = sgs.CreateViewAsSkill{
 	end ,
 	enabled_at_play = function(self, target)
 		return not target:hasUsed("#LuaLijianCard")
+	end
+}
+
+--[[
+	技能名：离间
+	相关武将：标准·貂蝉
+	描述：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】。
+	引用：LuaLijian0701 （需小幅修改）
+	状态：0701验证通过
+	
+	注：仅需将旧版离间的 "duel:toTrick():setCancelable(false)" 那一行去掉即可
+]]--
+--[[
+	技能名：离间
+	相关武将：怀旧-标准·貂蝉-旧、SP·貂蝉、SP·台版貂蝉
+	描述：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】（不能使用【无懈可击】对此【决斗】进行响应）。
+	引用：LuaLijian0701
+	状态：0701验证通过
+]]--
+newDuel = function()
+	return sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
+end
+LuaLijianCard = sgs.CreateSkillCard{
+	name = "LuaLijianCard" ,
+	target_fixed = false ,
+	will_throw = true ,
+	filter = function(self, targets, to_select)
+		if not to_select:isMale() then return false end
+		if #targets == 0 then
+			return true
+		elseif #targets == 1 then
+			local duel = newDuel()
+			if to_select:isProhibited(targets[1], duel, targets[1]:getSiblings()) then return false end
+			if to_select:isCardLimited(duel, sgs.Card_MethodUse) then return false end
+			return true
+		elseif #targets == 2 then
+			return false
+		end
+	end ,
+	feasible = function(self, targets)
+		return #targets == 2
+	end ,
+	about_to_use = function(self, room, cardUse)
+		local diaochan = cardUse.from
+		local logg = sgs.LogMessage()
+		logg.from = diaochan
+		logg.to = cardUse.to
+		logg.type = "#UseCard"
+		logg.card_str = self:toString()
+		room:sendLog(logg)
+		local data = sgs.QVariant()
+		data:setValue(cardUse)
+		local thread = room:getThread()
+		thread:trigger(sgs.PreCardUsed, room, diaochan, data)
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_THROW, diaochan:objectName(), nil, "LuaLijian", nil)
+		room:moveCardTo(self, diaochan, nil, sgs.Player_DiscardPile, reason, true)
+		thread:trigger(sgs.CardUsed, room, diaochan, data)
+		thread:trigger(sgs.CardFinished, room, diaochan, data)
+	end ,
+	on_use = function(self, room, source, targets)
+		local to = targets[1]
+		local from = targets[2]
+		local duel = newDuel()
+		duel:toTrick():setCancelable(false)
+		duel:setSkillName(self:objectName())
+		if (not from:isCardLimited(duel, sgs.Card_MethodUse)) and (not from:isProhibited(to, duel)) then
+			room:useCard(sgs.CardUseStruct(duel, from, to))
+		end
+	end
+}
+LuaLijian0701 = sgs.CreateViewAsSkill{
+	name = "LuaLijian" ,
+	n = 1 ,
+	view_filter = function(self, cards, to_select)
+		return (#cards == 0) and (not sgs.Self:isJilei(to_select))
+	end ,
+	view_as = function(self, cards)
+		if #cards ~= 1 then return nil end
+		local card = LuaLijianCard:clone()
+		card:addSubcard(cards[1])
+		return card
+	end ,
+	enabled_at_play = function(self, target)
+		return target:canDiscard(target, "he") and (not target:hasUsed("#LuaLijianCard"))
 	end
 }
 
