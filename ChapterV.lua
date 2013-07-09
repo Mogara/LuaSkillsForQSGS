@@ -2789,8 +2789,7 @@ end,
 Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然的话我一个人边写边测，累也累死了…………
 突然发现大家测试的热情不是很高…………
 ]]
-
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 ----------------------------[[暂时不会去验证的技能]]----------------------------
 -------------------------------------------------------------------------------
 --[[
@@ -2836,19 +2835,11 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 ]]--
 
 --[[
-	技能名：离间
-	相关武将：标准·貂蝉、SP·貂蝉
-	描述：出牌阶段，你可以弃置一张牌并选择两名男性角色，视为其中一名男性角色对另一名男性角色使用一张【决斗】。此【决斗】不能被【无懈可击】响应。每阶段限一次。
-	引用：LuaLijian
-	状态：0610无法实现（由于此技能修改源码中的card:onUse()函数但是LUA中无此接口）
-]]--
-
---[[
 	技能名：无双（锁定技）
 	相关武将：标准·吕布、SP·最强神话、SP·暴怒战神
 	描述：当你使用【杀】指定一名角色为目标后，该角色需连续使用两张【闪】才能抵消；与你进行【决斗】的角色每次需连续打出两张【杀】。
 	引用：LuaWushuang
-	状态：0610貌似无法实现（和上几个版本一样，决斗部分还是写在源码的，悲催……）
+	状态：0610源码无法转化（没有对应QVariantList的SetValue接口）
 ]]--
 
 --[[
@@ -2856,7 +2847,7 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 	相关武将：标准·马超
 	描述：每当你指定【杀】的目标后，你可以进行一次判定，若判定结果为红色，该角色不能使用【闪】对此【杀】进行响应。
 	引用：
-	状态：0610未做（由于更换实现方法）(para提示：可以用toStringList，转换出来是一个table）
+	状态：0610源码无法转化（没有对应QVariantList的SetValue接口）
 ]]--
 
 --[[
@@ -2865,7 +2856,7 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 	描述：当你在出牌阶段内使用【杀】指定一名角色为目标后，以下两种情况，你可以令其不可以使用【闪】对此【杀】进行响应：
 		1.目标角色的手牌数大于或等于你的体力值。2.目标角色的手牌数小于或等于你的攻击范围。
 	引用：LuaLiegong
-	状态：0610未做（由于更换实现方法）(para提示：可以用toStringList，转换出来是一个table）
+	状态：0610源码无法转化（没有对应QVariantList的SetValue接口）
 ]]--
 
 --[[
@@ -2873,7 +2864,7 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 	相关武将：林·董卓
 	当你使用【杀】指定一名女性角色为目标后，该角色需连续使用两张【闪】才能抵消；当你成为女性角色使用【杀】的目标后，你需连续使用两张【闪】才能抵消。
 	引用：LuaRoulin
-	状态：0610未做（源代码更换使用和马超黄忠吕布相同的方法，暂时没有做的想法）
+	状态：0610源码无法转化（没有对应QVariantList的SetValue接口）
 ]]--
 
 --[[
@@ -2960,14 +2951,6 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 ]]--
 
 --[[
-	技能名：鸡肋
-	相关武将：SP·杨修
-	描述：每当你受到伤害时，你可以说出一种牌的类别，令伤害来源不能使用、打出或弃置其此类别的手牌，直到回合结束。
-	引用：LuaJilei、LuaJileiClear
-	状态：0610未做（还是不会tag里面存QStringList）
-]]--
-
---[[
 	技能名：伪帝（锁定技）
 	相关武将：SP·袁术、SP·台版袁术
 	描述：你拥有当前主公的主公技。
@@ -2975,26 +2958,10 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 ]]--
 
 --[[
-	技能名：豹变（锁定技）
-	相关武将：SP·夏侯霸
-	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
-	引用：LuaBaobian
-	状态：0610未做（还是不会tag里面存QStringList）
-]]--
-
---[[
-	技能名：笔伐
-	相关武将：SP·陈琳
-	描述：结束阶段开始时，你可以将一张手牌移出游戏并选择一名其他角色，该角色的回合开始时，观看该牌，然后选择一项：交给你一张与该牌类型相同的牌并获得该牌，或将该牌置入弃牌堆并失去1点体力。
-	引用：LuaBifa
-	状态：0610未做（字符串处理较麻烦）
-]]--
-
---[[
 	技能名：落雁（锁定技）
 	相关武将：SP·大乔&小乔
 	描述：若你的武将牌上有“星舞牌”，你视为拥有技能“天香”和“流离”。
-	状态：0610未做
+	状态：0610无法转换（源码getAcquiredSkills()为QSet类型，无法使用）
 ]]--
 
 --[[
@@ -3018,248 +2985,6 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 	状态：0610验证失败（QVariantList没有接口）
 ]]--
 
---[[
-	技能名：漫卷
-	相关武将：☆SP·庞统
-	描述：每当你将获得任何一张手牌，将之置于弃牌堆。若此情况处于你的回合中，你可依次将与该牌点数相同的一张牌从弃牌堆置于你的手上。
-	引用：LuaManjuan
-	状态：0610未做
-]]--
---[[
-class Manjuan: public TriggerSkill {
-public:
-    Manjuan(): TriggerSkill("manjuan") {
-        events << BeforeCardsMove;
-        frequency = Frequent;
-    }
-
-    void doManjuan(ServerPlayer *sp_pangtong, int card_id) const{
-        Room *room = sp_pangtong->getRoom();
-        sp_pangtong->setFlags("ManjuanInvoke");
-        QList<int> DiscardPile = room->getDiscardPile(), toGainList;
-        const Card *card = Sanguosha->getCard(card_id);
-        foreach (int id, DiscardPile) {
-            const Card *cd = Sanguosha->getCard(id);
-            if (cd->getNumber() == card->getNumber())
-                toGainList << id;
-        }
-        if (toGainList.isEmpty()) return;
-
-        room->fillAG(toGainList, sp_pangtong);
-        int id = room->askForAG(sp_pangtong, toGainList, false, objectName());
-        if (id != -1)
-            room->moveCardTo(Sanguosha->getCard(id), sp_pangtong, Player::PlaceHand, true);
-
-        room->clearAG(sp_pangtong);
-    }
-
-    virtual bool trigger(TriggerEvent, Room *room, ServerPlayer *sp_pangtong, QVariant &data) const{
-        if (sp_pangtong->hasFlag("ManjuanInvoke")) {
-            sp_pangtong->setFlags("-ManjuanInvoke");
-            return false;
-        }
-
-        CardsMoveOneTimeStruct move = data.value<CardsMoveOneTimeStruct>();
-        QList<int> ids;
-        CardMoveReason reason(CardMoveReason::S_REASON_PUT, sp_pangtong->objectName(), "manjuan", QString());
-        if (room->getTag("FirstRound").toBool())
-            return false;
-        if (sp_pangtong->hasFlag("ManjuanNullified"))
-            return false;
-        if (move.to != sp_pangtong || move.to_place != Player::PlaceHand)
-            return false;
-        room->broadcastSkillInvoke(objectName());
-        foreach (int card_id, move.card_ids) {
-            const Card *card = Sanguosha->getCard(card_id);
-            room->moveCardTo(card, NULL, NULL, Player::DiscardPile, reason);
-        }
-        ids = move.card_ids;
-        move.card_ids.clear();
-        data = QVariant::fromValue(move);
-
-        LogMessage log;
-        log.type = "$ManjuanGot";
-        log.from = sp_pangtong;
-        log.card_str = IntList2StringList(ids).join("+");
-        room->sendLog(log);
-
-        if (sp_pangtong->getPhase() == Player::NotActive || !sp_pangtong->askForSkillInvoke(objectName(), data))
-            return false;
-
-        foreach (int _card_id, ids)
-            doManjuan(sp_pangtong, _card_id);
-
-        return false;
-    }
-};
-]]
-
---[[
-	技能名：醉乡（限定技）
-	相关武将：☆SP·庞统
-	描述：准备阶段开始时，你可以将牌堆顶的三张牌置于你的武将牌上。此后每个准备阶段开始时，你重复此流程，直到你的武将牌上出现同点数的“醉乡牌”，然后你获得所有“醉乡牌”（不能发动“漫卷”）。你不能使用或打出“醉乡牌”中存在的类别的牌，且这些类别的牌对你无效。
-]]--
-
---[[
-class Zuixiang: public TriggerSkill {  //bgm_pangtong->addSkill(new MarkAssignSkill("@sleep", 1));
-public:
-    Zuixiang(): TriggerSkill("zuixiang") {
-        events << EventPhaseStart << SlashEffected << CardEffected;
-        frequency = Limited;
-
-        type[Card::TypeBasic] = "BasicCard";
-        type[Card::TypeTrick] = "TrickCard";
-        type[Card::TypeEquip] = "EquipCard";
-    }
-
-    void doZuixiang(ServerPlayer *player) const{
-        Room *room = player->getRoom();
-        room->broadcastSkillInvoke("zuixiang");
-        if (player->getPile("dream").isEmpty())
-            room->doLightbox("$ZuixiangAnimate", 3000);
-
-        QList<Card::CardType> type_list;
-        foreach (int card_id, player->getPile("dream")) {
-            const Card *c = Sanguosha->getCard(card_id);
-            type_list << c->getTypeId();
-        }
-
-        QList<int> ids = room->getNCards(3, false);
-        CardsMoveStruct move;
-        move.card_ids = ids;
-        move.to = player;
-        move.to_place = Player::PlaceTable;
-        move.reason = CardMoveReason(CardMoveReason::S_REASON_TURNOVER, player->objectName(), "zuixiang", QString());
-        room->moveCardsAtomic(move, true);
-
-        room->getThread()->delay();
-        room->getThread()->delay();
-
-        player->addToPile("dream", ids, true);
-        foreach (int id, ids) {
-            const Card *cd = Sanguosha->getCard(id);
-            if (type[cd->getTypeId()] == "EquipCard") {
-                if (player->getMark("Equips_Nullified_to_Yourself") == 0)
-                    room->setPlayerMark(player, "Equips_Nullified_to_Yourself", 1);
-                if (player->getMark("Equips_of_Others_Nullified_to_You") == 0)
-                    room->setPlayerMark(player, "Equips_of_Others_Nullified_to_You", 1);
-            }
-            if (!type_list.contains(cd->getTypeId())) {
-                type_list << cd->getTypeId();
-                room->setPlayerCardLimitation(player, "use,response", type[cd->getTypeId()], false);
-            }
-        }
-
-        QList<int> zuixiang = player->getPile("dream");
-        QSet<int> numbers;
-        bool zuixiangDone = false;
-        foreach (int id, zuixiang) {
-            const Card *card = Sanguosha->getCard(id);
-            if (numbers.contains(card->getNumber())) {
-                zuixiangDone = true;
-                break;
-            }            
-            numbers.insert(card->getNumber());
-        }
-        if (zuixiangDone) {
-            player->addMark("zuixiangHasTrigger");
-            room->setPlayerMark(player, "Equips_Nullified_to_Yourself", 0);
-            room->setPlayerMark(player, "Equips_of_Others_Nullified_to_You", 0);
-            room->removePlayerCardLimitation(player, "use,response", "BasicCard$0");
-            room->removePlayerCardLimitation(player, "use,response", "TrickCard$0");
-            room->removePlayerCardLimitation(player, "use,response", "EquipCard$0");
-
-            LogMessage log;
-            log.type = "$ZuixiangGot";
-            log.from = player;
-
-            log.card_str = IntList2StringList(zuixiang).join("+");
-            room->sendLog(log);
-
-            player->setFlags("ManjuanNullified");
-            CardMoveReason reason(CardMoveReason::S_REASON_PUT, player->objectName(), QString(), "zuixiang", "");
-            CardsMoveStruct move(zuixiang, player, Player::PlaceHand, reason);
-            room->moveCardsAtomic(move, true);
-            player->setFlags("-ManjuanNullified");
-        }
-    }
-
-    virtual bool trigger(TriggerEvent triggerEvent, Room *room, ServerPlayer *sp_pangtong, QVariant &data) const{
-        QList<int> zuixiang = sp_pangtong->getPile("dream");
-
-        if (triggerEvent == EventPhaseStart && sp_pangtong->getMark("zuixiangHasTrigger") == 0) {
-            if (sp_pangtong->getPhase() == Player::Start) {
-                if (sp_pangtong->getMark("@sleep") > 0) {
-                    if (!sp_pangtong->askForSkillInvoke(objectName()))
-                        return false;
-                    room->removePlayerMark(sp_pangtong, "@sleep");
-                    doZuixiang(sp_pangtong);
-                } else
-                    doZuixiang(sp_pangtong);
-            }
-        } else if (triggerEvent == CardEffected) {
-            if (zuixiang.isEmpty())
-                return false;
-
-            CardEffectStruct effect = data.value<CardEffectStruct>();
-            if (effect.card->isKindOf("Slash")) return false; // we'll judge it later
-            bool eff = true;
-            foreach (int card_id, zuixiang) {
-                const Card *c = Sanguosha->getCard(card_id);
-                if (c->getTypeId() == effect.card->getTypeId()) {
-                    eff = false;
-                    break;
-                }
-            }
-
-            if (!eff) {
-                LogMessage log;
-                log.type = effect.from ? "#ZuiXiang1" : "#ZuiXiang2";
-                log.from = effect.to;
-                if (effect.from)
-                    log.to << effect.from;
-                log.arg = effect.card->objectName();
-                log.arg2 = objectName();
-
-                room->sendLog(log);
-                room->broadcastSkillInvoke(objectName());
-                return true;
-            }
-        } else if (triggerEvent == SlashEffected) {
-            if (zuixiang.isEmpty())
-                return false;
-
-            SlashEffectStruct effect = data.value<SlashEffectStruct>();
-            bool eff = true;
-            foreach (int card_id, zuixiang) {
-                const Card *c = Sanguosha->getCard(card_id);
-                if (c->getTypeId() == Card::TypeBasic) {
-                    eff = false;
-                    break;
-                }
-            }
-
-            if (!eff) {
-                LogMessage log;
-                log.type = effect.from ? "#ZuiXiang1" : "#ZuiXiang2";
-                log.from = effect.to;
-                if (effect.from)
-                    log.to << effect.from;
-                log.arg = effect.slash->objectName();
-                log.arg2 = objectName();
-
-                room->sendLog(log);
-                room->broadcastSkillInvoke(objectName());
-                return true;
-            }
-        }
-        return false;
-    }
-
-private:
-    QMap<Card::CardType, QString> type;
-};
-]]
 --[[
 	技能名：言笑
 	相关武将：☆SP·大乔
@@ -4171,6 +3896,7 @@ LuaJiuyuan = sgs.CreateTriggerSkill{
 	end
 }
 
+
 --[[
 	技能名：黄天（主公技）
 	相关武将：风·张角
@@ -4532,7 +4258,7 @@ LuaTuntianClear = sgs.CreateTriggerSkill{
 	相关武将：山·邓艾
 	描述：回合开始阶段开始时，若“田”的数量达到3或更多，你须减1点体力上限，并获得技能“急袭”。
 	引用：LuaZaoxian
-	状态：验证通过
+	状态：0610待验证
 ]]--
 LuaZaoxian = sgs.CreateTriggerSkill{
 	name = "LuaZaoxian" ,
@@ -5419,7 +5145,7 @@ LuaShenfen = sgs.CreateViewAsSkill{
 	相关武将：神·吕布
 	描述：出牌阶段，你可以弃2枚“暴怒”标记并选择一名其他角色，该角色的防具无效且你获得技能“无双”，直到回合结束。
 	引用：LuaWuqian
-	状态：验证通过
+	状态：0610待验证
 ]]--
 LuaWuqianCard = sgs.CreateSkillCard{
 	name = "LuaWuqianCard" ,
@@ -6303,6 +6029,97 @@ LuaWuji = sgs.CreateTriggerSkill{
 }
 
 --[[
+	技能名：笔伐
+	相关武将：SP·陈琳
+	描述：结束阶段开始时，你可以将一张手牌移出游戏并选择一名其他角色，该角色的回合开始时，观看该牌，然后选择一项：交给你一张与该牌类型相同的牌并获得该牌，或将该牌置入弃牌堆并失去1点体力。
+	引用：LuaBifa
+	状态：0610待验证
+]]--
+
+LuaBifaCard = sgs.CreateSkillCard{
+	name = "LuaBifaCard" ,
+	will_throw = false ,
+	filter = function(self, targets, to_select)
+		return (#targets == 0) and (to_select:getPile("LuaBifa"):isEmpty()) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
+	on_use = function(self, room, source, targets)
+		local target = targets[1]
+		local _data = sgs.QVariant()
+		_data:setValue(source)
+		target:setTag("LuaBifaSource" .. tostring(self:getEffectiveId()), _data)
+		target:addToPile("LuaBifa", self, false)
+	end
+}
+LuaBifaVS = sgs.CreateViewAsSkill{
+	name = "LuaBifa" ,
+	n = 1;
+	view_fliter = function(self, selected, to_select)
+		return (#selected == 0) and (not to_select:isEquipped())
+	end ,
+	view_as = function(self, cards)
+		local card = LuaBifaCard:clone()
+		card:addSubcard(cards[1])
+		return card
+	end ,
+	enabled_at_play = function()
+		return false
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@@LuaBifa"
+	end ,
+}
+LuaBifa = sgs.CreateTriggerSkill{
+	name = "LuaBifa" ,
+	events == {sgs.EventPhaseStart} ,
+	view_as_skill = LuaBifaVS ,
+	on_trigger = function(self, event, player, data)
+		local room = player;getRoom()
+		if (player and player:isAlive() and player:hasSkill(self:objectName()) ) and (player:getPhase() == sgs.Player_Finish) and (not player:isKongcheng()) then
+			room:askForUseCard(player, "@@LuaBifa", "@bifa-remove", -1, sgs.Card_MethodNone)
+		elseif (player:getPhase() == sgs.Player_RoundStart) and (player:getPile("LuaBifa"):length() > 0) then
+			local bifa_list = player:getPile("LuaBifa")
+			while not bifa_list:isEmpty() do
+				local card_id = bifa_list:last()
+				local chenlin = player:getTag("LuaBifaSource" .. tostring(card_id)):toPlayer()
+				local ids = sgs.IntList()
+				ids:append(card_id)
+				room:fillAG(ids, player)
+				local cd = sgs.Sanguosha:getCard(card_id)
+				local pattern = ""
+				if cd:idKindOf("BasicCard") then
+					pattern = "BasicCard"
+				elseif cd:isKindOf("TrickCard") then
+					pattern = "TrickCard"
+				elseif cd:isKindOf("EquipCard") then
+					pattern = "EquipCard"
+				end
+				local data_for_ai = sgs.QVariant(pattern)
+				pattern = pattern .. "|.|.|hand"
+				local to_give = nil
+				if (not player:isKongcheng()) and chenlin and chenlin:isAlive() then
+					to_give = room:askForCard(player, pattern, "@bifa-give", data_for_ai, sgs.Card_MethodNone, chenlin)
+				end
+				if chenlin and to_give then
+					chenlin:obtainCard(to_give, false)
+					player:obtainCard(cd, false)
+				else
+					local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, nil, self:objectName(), nil)
+					room:throwCard(cd, reason, nil)
+					room:loseHp(player)
+				end
+				bifa_list:removeOne(card_id)
+				room:clearAG(player)
+				player:removeTag("LuaBifaSource" .. tostring(card_id))
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end ,
+}
+
+--[[
 	技能名：颂词
 	相关武将：SP·陈琳
 	描述：出牌阶段，你可以选择一项：1、令一名手牌数小于其当前的体力值的角色摸两张牌。2、令一名手牌数大于其当前的体力值的角色弃置两张牌。每名角色每局游戏限一次。
@@ -6462,6 +6279,85 @@ LuaShenji = sgs.CreateTargetModSkill{
 		end
 	end ,
 }
+
+--[[
+	技能名：豹变（锁定技）
+	相关武将：SP·夏侯霸
+	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
+	引用：LuaBaobian
+	状态：0610待验证（使用table全局变量，BaobianSkills Tag的类型由QStringList（在LUA里为table）变为string，然后在技能里面处理字符串（真TM麻烦！））
+]]--
+
+acquired_skillsBaobian = {}
+detached_skillsBaobian = {}
+LuaBaobianChange = function(room, player, hp, skill_name)
+	local baobian_skills = player:getTag("LuaBaobianSkills"):toString():split("|")
+	if player:getHp() <= hp then
+		if not baobian_skills:contains(skill_name) then
+			table.insert(acquired_skillsBaobian, skill_name)
+			table.insert(baobian_skills, skill_name)
+		end
+	else
+		if baobian_skills:contains(skill_name) then
+			table.insert(detached_skillsBaobian, "-" .. skill_name)
+			baobian_skills:removeOne(skill_name)
+		end
+	end
+	player:setTag("LuaBaobianSkills", sgs.QVariant(table.concat(baobian_skills, "|")))
+end
+LuaBaobian = sgs.CreateTriggerSkill{
+	name = "LuaBaobian" ,
+	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.GameStart, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill} ,
+	on_trigger = function(self, event, player, data)
+		if event == sgs.EventLoseSkill then
+			if data:toString() == self:objectName() then
+				local baobian_skills = player:getTag("LuaBaobianSkills"):toString():split("|")
+				local detachList = {}
+				for _, skill_name in ipairs(baobian_skills) do
+					table.insert(detachList, "-" .. skill_name)
+				end
+				room:handleAcquireDetachSkills(player, table.concat(detachList, "|"))
+				player:removeTag("LuaBaobianSkills")
+			end
+			return false
+		elseif event == sgs.EventAcquireSkill then
+			if data:toString() ~= self:objectName() then return false end
+		end
+		if not (player and player:isAlive() and player:hasSkill(self:objectName())) then return false end
+		acquired_skillsBaobian = {}
+		detached_skillsBaobian = {}
+		LuaBaobianChange(room, player, 1, "shensu")
+		LuaBaobianChange(room, player, 2, "paoxiao")
+		LuaBaobianChange(room, player, 3, "tiaoxin")
+		-----------------------------可能bug会很多-----------------------------
+		local ac = table.concat(acquired_skillsBaobian, "|")
+		local de = table.concat(detached_skillsBaobian, "|")
+		local plus = ""
+		if ac == "" then
+			if de == "" then
+				return false
+			else
+				plus = de
+			end
+		else
+			if de == "" then
+				plus = ac
+			else
+				plus = ac .. "|" .. de
+			end
+		end
+		-----------------------------------------------------------------------
+		if plus ~= "" then
+			room:handleAcquireDetachSkills(player, plus)
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end
+}
+
 --[[
 	技能名：星舞
 	相关武将：SP·大乔&小乔
@@ -6545,6 +6441,7 @@ LuaXingwu = sgs.CreateTriggerSkill{
 		return false
 	end
 }
+
 
 --[[
 	技能名：黩武
@@ -7227,7 +7124,7 @@ LuaAnxu = sgs.CreateViewAsSkill{
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaAnxuCard")
 	end
-}}
+}
 
 --[[
 	技能名：追忆
@@ -7565,6 +7462,199 @@ LuaYanzheng = sgs.CreateViewAsSkill{
 	enabled_at_nullification = function(self, player)
 		return (player:getHandcardNum() > player:getHp()) and (not player:getEquips():isEmpty())
 	end
+}
+
+--[[
+	技能名：漫卷
+	相关武将：☆SP·庞统
+	描述：每当你将获得任何一张手牌，将之置于弃牌堆。若此情况处于你的回合中，你可依次将与该牌点数相同的一张牌从弃牌堆置于你的手上。
+	引用：LuaManjuan
+	状态：0610待验证
+]]--
+
+LuaDoManjuan = function(sp_pangtong, card_id)
+	local room = sp_pangtong:getRoom()
+	sp_pangtong:setFlags("LuaManjuanInvoke")
+	local DiscardPile = room:getDiscardPile()
+	local toGainList = sgs.IntList()
+	local card = sgs.Sanguosha:getCard(card_id)
+	for _, id in sgs.qlist(DiscardPile) do
+		local cd = sgs.Sanguosha:getCard(id)
+		if cd:getNumber() == card:getNumber() then
+			toGainList:append(id)
+		end
+	end
+	if toGainList:isEmpty() then return end
+	room:fillAG(toGainList, sp_pangtong)
+	local id = room:askForAG(sp_pangtong, toGainList, false, self:objectName())
+	if id ~= -1 then
+		room:moveCardTo(sgs.Sanguosha:getCard(id), sp_pangtong, sgs.Player_PlaceHand, true)
+	end
+	room:clearAG(sp_pangtong)
+end
+LuaManjuan = sgs.CreateTriggerSkill{
+	name = "LuaManjuan" ,
+	events = {sgs.BeforeCardsMove} ,
+	frequency = sgs.Skill_Frequent ,
+	on_trigger = function(self, event, player, data)
+		if player:hasFlag("LuaManjuanInvoke") then
+			player:setFlags("-LuaManjuanInvoke")
+			return false
+		end
+		local room = player:getRoom()
+		local move = data:toMoveOneTime()
+		local ids = sgs.IntList()
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, player:objectName(), "LuaManjuan", nil)
+		if room:getTag("FirstRound"):toBool() then return false end
+		if player:hasFlag("LuaManjuanNullified") then return false end
+		if (move.to and (move.to:objectName() ~= player:objectName())) or (move.to_place ~= sgs.Player_PlaceHand) then return false end
+		for _, card_id in sgs.qlist(move.card_ids) do
+			local card = sgs.Sanguosha:getCard(card_id)
+			room:moveCardTo(card, nil, nil, sgs.Player_DiscardPile, reason)
+		end
+		ids = move.card_ids
+		move.card_ids:clear()
+		data:setValue(move)
+		if player:getPhase() ~= sgs.Player_NotActive then return false end
+		if not player:askForSkillInvoke(self:objectName(), data) then return false end
+		for _, _card_id in sgs.qlist(ids) do
+			LuaDoManjuan(player, _card_id)
+		end
+		return false
+	end 
+}
+
+
+--[[
+	技能名：醉乡（限定技）
+	相关武将：☆SP·庞统
+	描述：准备阶段开始时，你可以将牌堆顶的三张牌置于你的武将牌上。此后每个准备阶段开始时，你重复此流程，直到你的武将牌上出现同点数的“醉乡牌”，然后你获得所有“醉乡牌”（不能发动“漫卷”）。你不能使用或打出“醉乡牌”中存在的类别的牌，且这些类别的牌对你无效。
+	引用：LuaZuixiang、LuaSleep1
+	状态：0610待验证
+	
+	Fs注：此技能与“漫卷”有联系，而有联系部分使用的为本LUA手册的“漫卷”技能并非原版
+]]--
+
+LuaZuixiangType = {
+	sgs.Card_TypeBasic = "BasicCard" ,
+	sgs.Card_TypeTrick = "TrickCard" ,
+	sgs.Card_TypeEquip = "EquipCard" 
+}
+LuaDoZuixiang = function(player)
+	local room = player:getRoom()
+	local type_list = {
+		sgs.Card_TypeBasic = 0,
+		sgs.Card_TypeTrick = 0,
+		sgs.Card_TypeEquip = 0
+	}
+	for _, card_id in sgs.qlist(player:getPile("dream")) do
+		local c = sgs.Sanguosha:getCard(card_id)
+		type_list[c:getTypeId()] = 1
+	end
+	local ids = room:getNCards(3, false)
+	local move = sgs.CardsMoveStruct()
+	move.card_ids = ids
+	move.to = player
+	move.to_place = sgs.Player_PlaceTable
+	move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TURNOVER, player:objectName(), "LuaZuixiang", nil)
+	room:moveCardsAtomic(move, true)
+	player:addToPile("dream", ids, true)
+	for _, id in sgs.qlist(ids) do
+		local cd = sgs.Sanguosha:getCard(id)
+		if LuaZuixiangType[cd:getTypeId()] == "EquipCard" then
+			if player:getMark("Equips_Nullified_to_Yourself") == 0 then
+				room:setPlayerMark(player, "Equips_Nullified_to_Yourself", 1)
+			end
+			if player:getMark("Equips_of_Others_Nullified_to_You") == 0 then
+				room:setPlayerMark(player, "Equips_of_Others_Nullified_to_You", 1)
+			end
+		end
+		if type_list[cd:getTypeId()] == 0 then
+			type_list[cd:getTypeId()] = 1
+			room:setPlayerCardLimitation(player, "use,response", LuaZuixiangType[cd:getTypeId()], false)
+		end
+	end
+	local zuixiang = player:getPile("dream")
+	local numbers = {}
+	local zuixiangDone = false
+	for _, id in sgs.qlist(zuixiang) do
+		local card = sgs.Sanguosha:getCard(id)
+		if numbers:contains(card:getNumber()) then
+			zuixiangDone = true
+			break
+		end
+		table.insert(numbers, card:getNumber())
+	end
+	if zuixiangDone then
+		player:addMark("LuaZuixiangHasTrigger")
+		room:setPlayerMark(player, "Equips_Nullified_to_Yourself", 0)
+		room:setPlayerMark(player, "Equips_of_Others_Nullified_to_You", 0)
+		room:removePlayerCardLimitation(player, "use,response", "BasicCard$0")
+		room:removePlayerCardLimitation(player, "use,response", "TrickCard$0")
+		room:removePlayerCardLimitation(player, "use,response", "EquipCard%0")
+		player:setFlags("LuaManjuanNullified")
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, player:objectName(), nil, "LuaZuixiang", nil)
+		local move = sgs.CardsMoveStruct()
+		move.card_ids = zuixiang
+		move.to = player
+		move.to_place = sgs.Player_PlaceHand
+		move.reason = reason
+		room:moveCardsAtomic(move, true)
+		player:setFlags("-LuaManjuanNullified")
+	end
+end
+LuaZuixiang = sgs.CreateTriggerSkill{
+	name = "LuaZuixiang" ,
+	events = {sgs.EventPhaseStart, sgs.SlashEffected, sgs.CardEffected} ,
+	frequency = sgs.Skill_Limited ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local zuixiang = player:getPile("dream")
+		if (event == sgs.EventPhaseStart) and (player:getMark("LuaZuixiangHasTrigger") == 0) then
+			if player:getPhase() == sgs.Player_Start then
+				if player:getMark("@sleep") > 0 then
+					if not player:askForSkillInvoke(self:objectName()) then return false end
+					room:removePlayerMark(player, "@sleep")
+					doZuixiang(player)
+				else
+					doZuixiang(player)
+				end
+			end
+		elseif event == sgs.CardEffected then
+			if zuixiang:isEmpty() then return false end
+			local effect = data:toCardEffect()
+			if effect.card:isKindOf("Slash") then return false end
+			local eff = true
+			for _, card_id in sgs.qlist(zuixiang) do
+				local c = sgs.Sanguosha:getCard(card_id)
+				if c:getTypeId() == effect.card:getTypeId() then
+					eff = false
+					break
+				end
+			end
+			return not eff
+		elseif event == sgs.SlashEffected then
+			if zuixiang:isEmpty() then return false end
+			local effect = data:toSlashEffect()
+			local eff = true
+			for _, card_id in sgs.qlist(zuixiang) do
+				local c = sgs.Sanguosha:getCard(card_id)
+				if c:getTypeId() == sgs.Card_TypeBasic then
+					eff = false
+					break
+				end
+			end
+			return not eff
+		end
+		return false
+	end
+}
+LuaSleep1 = sgs.CreateTriggerSkill{
+	name = "#@sleep-Lua-1" ,
+	events = {sgs.GameStart} ,
+	on_trigger = function(self, event, player, data)
+		player:getRoom():setPlayerMark(player, "@sleep", 1)
+	end ,
 }
 
 --[[
@@ -8563,3 +8653,4 @@ LuaTuqiDistance = sgs.CreateDistanceSkill{
 		end
 	end
 }
+
