@@ -411,73 +411,55 @@ LuaXMingshi = sgs.CreateTriggerSkill{
 	相关武将：一将成名·陈宫
 	描述：出牌阶段限一次，你可以将一张装备牌或【杀】交给一名其他角色，该角色需视为对其攻击范围内你选择的另一名角色使用一张【杀】，若其未如此做或其攻击范围内没有使用【杀】的目标，其摸一张牌。
 	引用：LuaMingce
-	状态：验证通过
+	状态：0610验证通过
 ]]--
 LuaMingceCard = sgs.CreateSkillCard{
-	name = "LuaMingceCard", 
-	target_fixed = false, 
-	will_throw = false, 
-	on_effect = function(self, effect) 
-		local dest = effect.to
-		local source = effect.from
-		local room = dest:getRoom()
-		local can_use = false
+	name = "LuaMingceCard" ,
+	will_throw = false ,
+	handling_method = sgs.Card_MethodNone ,
+	on_effect = function(self, effect)
+		local room = effect.to:getRoom()
 		local targets = sgs.SPlayerList()
-		local list = room:getOtherPlayers(dest)
-		for _,p in sgs.qlist(list) do
-			if dest:canSlash(p) then
-				targets:append(p)
-				can_use = true
+		if sgs.Slash_IsAvailable(effect.to) then
+			for _, p in sgs.qlist(room:getOtherPlayers(effect.to)) do
+				if effect.to:canSlash(p) then
+					targets:append(p)
+				end
 			end
 		end
 		local target
-		local choicelist = {}
-		table.insert(choicelist, "draw")
-		if can_use then
+		local choicelist = {"draw"}
+		if (not targets:isEmpty()) and effect.from:isAlive() then
+			target = room:askForPlayerChosen(effect.from, targets, self:objectName(), "@dummy-slash2:" .. effect.to:objectName())
+			target:setFlags("LuaMingceTarget")
 			table.insert(choicelist, "use")
 		end
-		dest:obtainCard(self)
-		local choice
-		if #choicelist > 1 then
-			choice = room:askForChoice(dest, self:objectName(), "draw+use")
-		else
-			choice = choicelist[1]
-		end
+		effect.to:obtainCard(self)
+		local choice = room:askForChoice(effect.to, self:objectName(), table.concat(choicelist, "+"))
+		if target and target:hasFlag("LuaMingceTarget") then target:setFlags("-LuaMingceTarget") end
 		if choice == "use" then
-			if source:isAlive() then
-				target = room:askForPlayerChosen(source, targets, self:objectName())
+			if effect.to:canSlash(target, nil, false) then
 				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-				slash:setSkillName(self:objectName())
-				local card_use = sgs.CardUseStruct()
-				card_use.from = dest
-				card_use.to:append(target)
-				card_use.card = slash
-				room:useCard(card_use, false)
+				slash:setSkillName("_LuaMingce")
+				room:useCard(sgs.CardUseStruct(slash, effect.to, target), false)
 			end
 		elseif choice == "draw" then
-			dest:drawCards(1)
+			effect.to:drawCards(1)
 		end
 	end
 }
 LuaMingce = sgs.CreateViewAsSkill{
-	name = "LuaMingce", 
-	n = 1,
+	name = "LuaMingce" ,
+	n = 1 ,
 	view_filter = function(self, selected, to_select)
-		local typeID = to_select:getTypeId()
-		if typeID == sgs.Card_Equip then
-			return true
-		else
-			return to_select:isKindOf("Slash")
-		end
-	end, 
+		return to_select:isKindOf("EquipCard") or to_select:isKindOf("Slash")
+	end ,
 	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = cards[1]
-			local mc_card = LuaMingceCard:clone()
-			mc_card:addSubcard(card)
-			return mc_card
-		end
-	end, 
+		if #cards ~= 1 then return nil end
+		local mingcecard = LuaMingceCard:clone()
+		mingcecard:addSubcard(cards[1])
+		return mingcecard
+	end ,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaMingceCard")
 	end
