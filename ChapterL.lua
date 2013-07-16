@@ -246,7 +246,7 @@ LuaLihunCard = sgs.CreateSkillCard{
 			card:addSubcard(cd)
 		end
 		if not dest:isKongcheng() then
-			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TRANSFER, source:objectName(),			dest:objectName(), self:objectName(), "")
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TRANSFER, source:objectName(), dest:objectName(), self:objectName(), "")
 			room:moveCardTo(card, dest, source, sgs.Player_PlaceHand, reason, false)
 		end
 		dest:setFlags("LihunTarget")
