@@ -2430,7 +2430,7 @@ LuaXXiaoguo = sgs.CreateTriggerSkill{
 			local yuejin = room:findPlayerBySkillName(self:objectName())
 			if yuejin and yuejin:objectName() ~= player:objectName() then
 				if not yuejin:isKongcheng() then
-					if room:askForCard(yuejin, ".Basic", "@xiaoguo", sgs.QVariant(),sgs.Card_MethodDiscard)) then
+					if room:askForCard(yuejin, ".Basic", "@xiaoguo", sgs.QVariant(),sgs.Card_MethodDiscard) then
 						if not room:askForCard(player, ".Equip", "@xiaoguo-discard", sgs.QVariant(),sgs.Card_MethodDiscard) then
 							local damage = sgs.DamageStruct()
 							damage.card = nil
