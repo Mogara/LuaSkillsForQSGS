@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（Z区）
 	技能索引：
-		灾变、再起、凿险、早夭、战神、仗八、昭烈、昭心、昭心、贞烈、贞烈、镇威、镇卫、争锋、争功、争功、整军、直谏、直言、志继、制霸、制霸、制衡、智迟、智愚、忠义、筑楼、追忆、惴恐、自立、自守、宗室、纵火、纵适、纵玄、醉乡
+		灾变、再起、凿险、早夭、战神、仗八、昭烈、昭心、昭心、贞烈、贞烈·旧、镇威、镇卫、争锋、争功、争功、整军、直谏、直言、志继、制霸、制霸、制衡、智迟、智愚、忠义、筑楼、追忆、惴恐、自立、自守、宗室、纵火、纵适、纵玄、醉乡
 ]]--
 --[[
 	技能名：灾变（锁定技）
@@ -309,16 +309,57 @@ LuaZhaoXin = sgs.CreateTriggerSkill{
 	技能名：贞烈
 	相关武将：一将成名2012·王异
 	描述： 每当你成为一名其他角色使用的【杀】或非延时类锦囊牌的目标后，你可以失去1点体力，令此牌对你无效，然后你弃置其一张牌。
-]]--
---[[
-	技能名：贞烈
-	相关武将：怀旧-一将2·王异-旧
-	描述：在你的判定牌生效前，你可以从牌堆顶亮出一张牌代替之。
-	引用：LuaZhenlie
+	引用：LuaZhenlie 
 	状态：验证通过
 ]]--
 LuaZhenlie = sgs.CreateTriggerSkill{
-	name = "LuaZhenlie", 
+	name = "LuaZhenlie" ,
+	events = {sgs.TargetConfirmed,sgs.CardEffected,sgs.SlashEffected} ,
+	
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.TargetConfirmed then
+		local use = data:toCardUse()
+		if use.to:contains(player) and use.from:objectName() ~= player:objectName() then
+		if use.card:isKindOf("Slash") or use.card:isNDTrick() then
+		if room:askForSkillInvoke(player,self:objectName(),data) then
+			room:setCardFlag(use.card, "ZhenlieNullify")
+			player:setFlags("ZhenlieTarget")
+			room:loseHp(player)
+		if player:isAlive() and player:hasFlag("ZhenlieTarget") and player:canDiscard(use.from, "he") then
+		local id = room:askForCardChosen(player,use.from,"he",self:objectName(),false,sgs.Card_MethodDiscard)
+			room:throwCard(id,use.from,player)
+			end
+		end
+	end
+end
+		elseif event == sgs.CardEffected then
+		local effect1 = data:toCardEffect()
+		if not effect1.card:isKindOf("Slash") and effect1.card:hasFlag("ZhenlieNullify") and player:hasFlag("ZhenlieTarget") then
+			player:setFlags("-ZhenlieTarget")
+		return true
+	end
+		elseif event == sgs.SlashEffected then
+		local effect2 = data:toSlashEffect()
+		if effect2.slash:hasFlag("ZhenlieNullify") and player:hasFlag("ZhenlieTarget") then
+			player:setFlags("-ZhenlieTarget")
+		return true
+		end
+	end
+end,
+	can_trigger = function(self, target)
+		return target and target:isAlive() and target:hasSkill(self:objectName())
+end
+}
+--[[
+	技能名：贞烈·旧
+	相关武将：怀旧-一将2·王异-旧
+	描述：在你的判定牌生效前，你可以从牌堆顶亮出一张牌代替之。
+	引用：LuaNosZhenlie
+	状态：验证通过
+]]--
+LuaNosZhenlie = sgs.CreateTriggerSkill{
+	name = "LuaNosZhenlie", 
 	frequency = sgs.Skill_NotFrequent, 
 	events = {sgs.AskForRetrial}, 
 	on_trigger = function(self, event, player, data) 
