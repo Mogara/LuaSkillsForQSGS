@@ -233,7 +233,55 @@ LuaFeiying = sgs.CreateDistanceSkill{
 	技能名：焚城（限定技）
 	相关武将：一将成名2013·李儒
 	描述：出牌阶段，你可以令所有其他角色选择一项：弃置X张牌，或受到你对其造成的1点火焰伤害。（X为该角色装备区牌的数量且至少为1）
+	引用：LuaFencheng 
+	状态：验证通过
 ]]--
+LuaFenchengCard = sgs.CreateSkillCard{
+	name = "LuaFenchengCard",
+	mute = true,
+    target_fixed = true,
+	
+	on_use = function(self, room, source, targets)
+		local players = room:getOtherPlayers(source)
+			room:removePlayerMark(source, "@burn")
+		for _,p in sgs.qlist(players) do
+		if p:isAlive() then
+			room:cardEffect(self,source, p)
+		end
+	end
+end,
+	on_effect = function(self, effect)
+		local room = effect.to:getRoom()
+		local players = room:getOtherPlayers(effect.from)
+		for _,player in sgs.qlist(players) do
+		local length = player:getEquips():length()
+		if not player:canDiscard(effect.to,"he") or not room:askForDiscard(player,self:objectName(),length,length, true,true) then
+        room:damage(sgs.DamageStruct(self:objectName(),effect.from,player, 1,sgs.DamageStruct_Fire))
+		end
+	end
+end
+}
+LuaFenchengVs = sgs.CreateViewAsSkill{
+	name = "LuaFencheng", 
+	n = 0,
+
+	view_as = function(self, cards) 
+		return LuaFenchengCard:clone()
+	end, 
+	enabled_at_play = function(self, player)
+		return player:getMark("@burn") >= 1
+	end
+}
+LuaFencheng = sgs.CreateTriggerSkill{
+	name = "LuaFencheng" ,
+	frequency = sgs.Skill_Limited ,
+	events = {sgs.GameStart} ,
+	view_as_skill = LuaFenchengVs ,
+	
+	on_trigger = function(self, event, player, data)
+		player:gainMark("@burn",1)
+	end
+}
 --[[
 	技能名：焚心（限定技）
 	相关武将：铜雀台·灵雎、SP·灵雎
