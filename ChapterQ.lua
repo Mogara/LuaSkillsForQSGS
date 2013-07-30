@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（Q区）
 	技能索引：
-		七星、奇才、奇才、奇策、奇袭、谦逊、潜袭、潜袭、强袭、巧变、巧说、琴音、青釭、青囊、倾城、倾国、倾国、求援、驱虎、权计、权计、劝谏
+		七星、奇才、奇才、奇策、奇袭、谦逊、潜袭、潜袭、强袭、巧变、巧说、琴音、青釭、青囊、倾城、倾国、倾国1V1、求援、驱虎、权计、权计、劝谏
 ]]--
 --[[
 	技能名：七星
@@ -708,10 +708,32 @@ LuaQingguo = sgs.CreateViewAsSkill{
 	end
 }
 --[[
-	技能名：倾国
+	技能名：倾国1V1
 	相关武将：1v1·甄姬1v1
 	描述：你可以将一张装备区的装备牌当【闪】使用或打出。
+	引用：Lua1V1Qingguo 
+	状态：验证通过
 ]]--
+Lua1V1Qingguo = sgs.CreateViewAsSkill{
+	name = "Lua1V1Qingguo", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		return to_select:isEquipped()
+	end, 
+	view_as = function(self, cards) 
+		if #cards ~= 1 then return nil end
+		local jink = sgs.Sanguosha:cloneCard("jink",cards[1]:getSuit(),cards[1]:getNumber())
+			jink:setSkillName(self:objectName())
+			jink:addSubcard(cards[1]:getId())
+		return jink
+end, 
+	enabled_at_play = function(self, player)
+		return false
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "jink" and not player:getEquips():isEmpty()
+	end
+}
 --[[
 	技能名：求援
 	相关武将：一将成名2013·伏皇后
