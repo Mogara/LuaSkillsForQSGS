@@ -531,7 +531,36 @@ LuaZhijian = sgs.CreateViewAsSkill{
 	技能名：直言
 	相关武将：一将成名2013·虞翻
 	描述：结束阶段开始时，你可以令一名角色摸一张牌并展示之。若此牌为装备牌，该角色回复1点体力，然后使用之。
+	引用：LuaZhiyan
+	状态：验证通过
 ]]--
+LuaZhiyan = sgs.CreateTriggerSkill{
+	name = "LuaZhiyan",  
+	events = {sgs.EventPhaseStart},  
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() ~= sgs.Player_Finish then return false end
+		local to = room:askForPlayerChosen(player,room:getAlivePlayers(),self:objectName(),"zhiyan-invoke",true,true)
+		if to then
+		local ids = room:getNCards(1, false)
+		local card = sgs.Sanguosha:getCard(ids:first())
+			room:obtainCard(to,card, false)
+		if not to:isAlive() then return false end
+			room:showCard(to,ids:first())
+		if card:isKindOf("EquipCard") then
+		if to:isWounded() then
+		local recover = sgs.RecoverStruct()
+			recover.who = player
+			room:recover(to,recover)
+	end
+		if to:isAlive() and not to:isCardLimited(card,sgs.Card_MethodUse) then
+			room:useCard(sgs.CardUseStruct(card,to,to))
+			end
+		end
+	end
+end
+}
 --[[
 	技能名：志继（觉醒技）
 	相关武将：山·姜维
