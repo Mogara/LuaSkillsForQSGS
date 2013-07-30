@@ -4,6 +4,19 @@
   This file will be removed after all skills disconnect from simulated bitwise operations.
 ]]--
 --[[
+  啦啦神英文……我来翻译下：
+  事实上，现在除非你不信任LUA库，否则调用这部分函数已经完全没有必要了。
+  这个文件将在所有涉及位运算的技能全部与这个文件脱离关系之后删除。
+  
+  附带此文件与LUA的bit32库的函数对比：
+  bit:_xor     ==  bit32.bxor
+  bit:_and     ==  bit32.band  （其实貌似现在的代码当中只用到了这个）
+  bit:_or      ==  bit32.bor
+  bit:_not     ==  bit32.bnot
+  bit:_rshift  ==  bit32.rshift
+  bit:_lshift  ==  bit32.lshift
+]]--
+--[[
   涉及位运算的技能请使用本文件的函数，将本文件放在游戏根目录，在需要使用位运算的lua中require("bit")即可访问变量bit
   例子：
   a,b按位与      bit:_and(a,b)
