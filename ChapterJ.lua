@@ -1353,7 +1353,26 @@ LuaXNeoJushou = sgs.CreateTriggerSkill{
 	技能名：绝策
 	相关武将：一将成名2013·李儒
 	描述：你的回合内，一名体力值大于0的角色失去最后的手牌后，你可以对其造成1点伤害。
+	引用：LuaJuece 
+	状态：验证通过
 ]]--
+LuaJuece = sgs.CreateTriggerSkill{
+	name = "LuaJuece",
+	events = {sgs.CardsMoveOneTime},
+	priority = -1,
+
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		local move = data:toMoveOneTime()
+		if player:getPhase() ~= sgs.Player_NotActive and move.from and move.from_places:contains(sgs.Player_PlaceHand)
+	and move.from:isKongcheng() then
+		if room:askForSkillInvoke(player,self:objectName(),data) then
+		local from = room:findPlayer(move.from:getGeneralName())
+			room:damage(sgs.DamageStruct(self:objectName(),player,from))
+		end
+	end
+end
+}
 --[[
 	技能名：绝汲
 	相关武将：倚天·张儁乂
