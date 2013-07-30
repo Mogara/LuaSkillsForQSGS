@@ -255,6 +255,7 @@ end,
 		local players = room:getOtherPlayers(effect.from)
 		for _,player in sgs.qlist(players) do
 		local length = player:getEquips():length()
+		if length == 0 then length = 1 end
 		if not player:canDiscard(effect.to,"he") or not room:askForDiscard(player,self:objectName(),length,length, true,true) then
         room:damage(sgs.DamageStruct(self:objectName(),effect.from,player, 1,sgs.DamageStruct_Fire))
 		end
