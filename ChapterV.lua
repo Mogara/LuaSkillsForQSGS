@@ -2873,7 +2873,15 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
                 room->showCard(source, id);
         }
 ]]
-
+--[[
+	Rara:以上代码为更新各客户端的牌堆数，可以做如下转换：
+	if dummy:subcardsLength() > 0 then
+		room:doBroadcastNotify(56, string.format("%d", room:getDrawPile():length() - dummy:subcardsLength()))
+		source:obtainCard(dummy)
+		for _, id in sgs.qlist(dummy:getSubcards()) do
+			room:showCard(source, id)
+		end
+	end
 
 --[[
 	技能名：悲歌
