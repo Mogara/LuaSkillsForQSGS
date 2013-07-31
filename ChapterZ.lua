@@ -1119,7 +1119,99 @@ LuaXZonghuo = sgs.CreateTriggerSkill{
 	技能名：纵玄
 	相关武将：一将成名2013·虞翻
 	描述：当你的牌因弃置而置入弃牌堆前，你可以将其中任意数量的牌以任意顺序依次置于牌堆顶。
+	状态：0610验证通过（单机通过）
 ]]--
+LuaZongxuanCard = sgs.CreateSkillCard{
+	name = "LuaZongxuanCard", 
+	target_fixed = true, 
+	will_throw = false,
+	handling_method =sgs.Card_MethodNone,
+	on_use = function(self, room, source, targets)
+		local sbs = source:getTag("LuaZongxuan"):toString():split("+")
+		for _,cdid in sgs.qlist(self:getSubcards()) do table.insert(sbs, cdid)  end	
+		source:setTag("LuaZongxuan", sgs.QVariant(table.concat(sbs, "+")))
+	end
+}
+LuaZongxuanVS = sgs.CreateViewAsSkill{
+	name = "LuaZongxuan", 
+	n = 998, 
+	view_filter = function(self, selected, to_select)
+		local str = sgs.Self:property("LuaZongxuan"):toString()
+		return string.find(str, tostring(to_select:getEffectiveId())) end, 
+	view_as = function(self, cards)
+		if #cards ~= 0 then
+			local card = LuaZongxuanCard:clone()
+			for var=1,#cards do card:addSubcard(cards[var]) end
+			return card 
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		return false 
+	end,
+	enabled_at_response=function(self,player,pattern)	
+		return pattern == "@@LuaZongxuan" 
+	end,
+}
+function listIndexOf(theqlist, theitem)
+	local index = 0
+	for _, item in sgs.qlist(theqlist) do
+		if item == theitem then return index end
+		index = index + 1
+	end
+end
+LuaZongxuan = sgs.CreateTriggerSkill{
+	name = "LuaZongxuan",
+	view_as_skill = LuaZongxuanVS, 
+	events = {sgs.BeforeCardsMove},
+	on_trigger = function(self, event, player, data)
+		local room=player:getRoom()
+		local move = data:toMoveOneTime()
+		local source = move.from
+		if source:objectName() ~= player:objectName() then return end
+		local reason = move.reason.m_reason
+		if move.to_place == sgs.Player_DiscardPile then
+			if bit32.band(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
+				local zongxuan_card = sgs.IntList()
+				for i=0, (move.card_ids:length()-1), 1 do
+					local card_id = move.card_ids:at(i)
+					if room:getCardOwner(card_id):getSeat() == source:getSeat() 
+						and (move.from_places:at(i) == sgs.Player_PlaceHand 
+						or move.from_places:at(i) == sgs.Player_PlaceEquip) then
+						zongxuan_card:prepend(card_id)
+					end
+				end
+				if zongxuan_card:isEmpty() then 
+					return 
+				end 
+				local zongxuantable = sgs.QList2Table(zongxuan_card)
+				room:setPlayerProperty(player, "LuaZongxuan", sgs.QVariant(table.concat(zongxuantable, "+")))
+				while not zongxuan_card:isEmpty() do
+				if not room:askForUseCard(player, "@@LuaZongxuan", "@LuaZongxuanput") then break end
+				local subcards = sgs.IntList()
+				local subcards_variant = player:getTag("LuaZongxuan"):toString():split("+")
+				if #subcards_variant>0 then 
+					for _,ids in ipairs(subcards_variant) do subcards:append(ids) end
+					local zongxuan = player:property("LuaZongxuan"):toString():split("+")
+					for _, id in sgs.qlist(subcards) do
+						zongxuan_card:removeOne(id)
+						table.removeOne(zongxuan,tonumber(id))
+						if move.card_ids:contains(id) then
+							move.from_places:removeAt(listIndexOf(move.card_ids, id))
+							move.card_ids:removeOne(id)
+							data:setValue(move)
+						end
+						room:setPlayerProperty(player, "zongxuan_move", sgs.QVariant(tonumber(id)))
+						room:moveCardTo(sgs.Sanguosha:getCard(id), player, nil ,sgs.Player_DrawPile, move.reason, true)
+						if not player:isAlive() then break end
+					end
+				end
+				player:removeTag("LuaZongxuan") 
+				end
+			end
+		end
+		return
+	end,
+}
 --[[
 	技能名：醉乡（限定技）
 	相关武将：☆SP·庞统
