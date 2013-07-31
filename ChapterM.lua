@@ -22,7 +22,36 @@ LuaMashu = sgs.CreateDistanceSkill{
 	技能名：蛮裔
 	相关武将：1v1·孟获1v1、1v1·祝融1v1
 	描述：你登场时，你可以视为使用一张【南蛮入侵】。锁定技，【南蛮入侵】对你无效。
+	状态：验证通过（kof1v1模式下通过）
 ]]--
+LuaSavageAssaultAvoid = sgs.CreateTriggerSkill{
+	name = "#LuaSavageAssaultAvoid",
+	events = {sgs.CardEffected},
+	on_trigger = function(self, event, player, data)
+		local effect = data:toCardEffect()
+		if effect.card:isKindOf("SavageAssault") then
+			return true
+		else
+			return false
+		end
+	end
+}
+LuaManyi = sgs.CreateTriggerSkill{
+	name = "LuaManyi", 
+	events = {sgs.Debut}, 
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local opponent = player:getNext()
+		if not opponent:isAlive() then return end
+		local nm = sgs.Sanguosha:cloneCard("savage_assault", sgs.Card_NoSuit, 0)
+		nm:setSkillName(self:objectName())
+		if not nm:isAvailable(player) then nm = nil return end
+		if player:askForSkillInvoke(self:objectName()) then
+			room:useCard(sgs.CardUseStruct(nm, player, nil))
+			return 
+		end
+	end
+}
 --[[
 	技能名：漫卷
 	相关武将：☆SP·庞统
