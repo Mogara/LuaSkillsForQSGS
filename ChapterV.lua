@@ -13,6 +13,86 @@
 		弓骑、弘援、弘援、缓释、缓释、疠火
 ]]--
 --[[
+	技能名：天香
+	相关武将：风·小乔、SP·王战小乔
+	描述：每当你受到伤害时，你可以弃置一张红桃手牌，将此伤害转移给一名其他角色，然后该角色摸X张牌（X为该角色当前已损失的体力值）。
+	引用：LuaTianxiang
+	状态：验证失败（客户端闪退）
+]]--
+LuaTianxiangCard = sgs.CreateSkillCard{
+	name = "LuaTianxiangCard", 
+	target_fixed = false, 
+	will_throw = true, 
+	on_effect = function(self, effect) 
+		local target = effect.to
+		local room = target:getRoom()
+		room:setPlayerFlag(target, "TianxiangTarget")
+		local tag = room:getTag("TianxiangDamage")
+		local damage = tag:toDamage()
+		damage.to = target
+		damage.transfer = true
+		room:damage(damage)
+	end
+}
+LuaTianxiangVS = sgs.CreateViewAsSkill{
+	name = "LuaTianxiang", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		if not to_select:isEquipped() then
+			return to_select:getSuit() == sgs.Card_Heart
+		end
+		return false
+	end, 
+	view_as = function(self, cards)
+		local tianxiangCard = LuaTianxiangCard:clone()
+		tianxiangCard:addSubcard(cards[1])
+		return tianxiangCard
+	end, 
+	enabled_at_play = function(self, player)
+		return false
+	end, 
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@@tianxiang"
+	end
+}
+LuaTianxiang = sgs.CreateTriggerSkill{
+	name = "LuaTianxiang", 
+	frequency = sgs.Skill_NotFrequent, 
+	events = {sgs.DamageInflicted, sgs.DamageComplete}, 
+	view_as_skill = LuaTianxiangVS, 
+	on_trigger = function(self, event, player, data) 
+		local room = player:getRoom()
+		if event == sgs.DamageInflicted then
+			if player:isAlive() then
+				if player:hasSkill(self:objectName()) then
+					if not player:isKongcheng() then
+						local damage = data:toDamage()
+						local value = sgs.QVariant()
+						value:setValue(damage)
+						room:setTag("TianxiangDamage", value)
+						if room:askForUseCard(player, "@@tianxiang", "@tianxiang-card") then
+							return true
+						end
+					end
+				end
+			end
+		elseif event == sgs.DamageComplete then
+			if player:hasFlag("TianxiangTarget") then
+				if player:isAlive() then
+					room:setPlayerFlag(player, "-TianxiangTarget")
+					local count = player:getLostHp()
+					player:drawCards(count, false)
+				end
+			end
+		end
+		return false
+	end, 
+	can_trigger = function(self, target)
+		return target
+	end, 
+	priority = 2
+}
+--[[
 	技能名：不屈
 	相关武将：风·周泰
 	描述：每当你扣减1点体力后，若你当前的体力值为0：你可以从牌堆顶亮出一张牌置于你的武将牌上，若此牌的点数与你武将牌上已有的任何一张牌都不同，你不会死亡；若出现相同点数的牌，你进入濒死状态。
