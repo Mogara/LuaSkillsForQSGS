@@ -1357,18 +1357,26 @@ LuaXNeoJushou = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaJuece = sgs.CreateTriggerSkill{
-	name = "LuaJuece",
-	events = {sgs.CardsMoveOneTime},
-	priority = -1,
-
-	on_trigger = function(self, event, player, data) 
+	name = "LuaJuece" ,
+	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
+	
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local move = data:toMoveOneTime()
-		if player:getPhase() ~= sgs.Player_NotActive and move.from and move.from_places:contains(sgs.Player_PlaceHand)
-	and move.from:isKongcheng() then
-		if room:askForSkillInvoke(player,self:objectName(),data) then
+		if player:getPhase() ~= sgs.Player_NotActive and move.from and move.from_places:contains(sgs.Player_PlaceHand)then
 		local from = room:findPlayer(move.from:getGeneralName())
+		if event == sgs.BeforeCardsMove then
+		if from:isKongcheng() or from:getHp() < 1 then return false end
+		for _, id in sgs.qlist(from:handCards()) do
+		if not move.card_ids:contains(id) then return false end
+end
+			player:addMark(self:objectName())
+	else
+		if player:getMark(self:objectName()) == 0 then return false end
+			player:removeMark(self:objectName())
+		if room:askForSkillInvoke(player, self:objectName(),data) then
 			room:damage(sgs.DamageStruct(self:objectName(),player,from))
+			end
 		end
 	end
 end
