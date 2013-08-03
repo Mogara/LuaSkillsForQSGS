@@ -2869,7 +2869,7 @@ end,
 Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然的话我一个人边写边测，累也累死了…………
 突然发现大家测试的热情不是很高…………
 ]]
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 ----------------------------[[暂时不会去验证的技能]]----------------------------
 -------------------------------------------------------------------------------
 --[[
@@ -2937,6 +2937,31 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 	引用：LuaRoulin
 	状态：0610源码无法转化（没有对应QVariantList的SetValue接口）
 ]]--
+
+--[[
+	技能名：心战
+	相关武将：一将成名·马谡
+	描述：出牌阶段，若你的手牌数大于你的体力上限，你可以：观看牌堆顶的三张牌，然后亮出其中任意数量的红桃牌并获得之，其余以任意顺序置于牌堆顶。每阶段限一次。
+	引用：LuaXinzhan
+	状态：0610未完成（有部分代码不理解）
+]]--
+--[[ //部分代码如下：
+        if (dummy->subcardsLength() > 0) {
+            room->doBroadcastNotify(QSanProtocol::S_COMMAND_UPDATE_PILE, Json::Value(room->getDrawPile().length() + dummy->subcardsLength())); //应该是更新牌堆之类的吧，不明白，没有接口
+            source->obtainCard(dummy);
+            foreach (int id, dummy->getSubcards())
+                room->showCard(source, id);
+        }
+]]
+--[[
+	Rara:以上代码为更新各客户端的牌堆数，可以做如下转换：
+	if dummy:subcardsLength() > 0 then
+		room:doBroadcastNotify(56, string.format("%d", room:getDrawPile():length() - dummy:subcardsLength()))
+		source:obtainCard(dummy)
+		for _, id in sgs.qlist(dummy:getSubcards()) do
+			room:showCard(source, id)
+		end
+	end
 
 --[[
 	技能名：悲歌
@@ -3228,7 +3253,7 @@ LuaYiji = sgs.CreateTriggerSkill{
 			moves:append(move)
 			--[[room->notifyMoveCards(true, moves, false, _guojia);
 				room->notifyMoveCards(false, moves, false, _guojia); 
-			]]
+			]] --这是干什么用的……sanguosha.i里面没有这函数啊…………
 			local origin_yiji = yiji_cards
 			while room:askForYiji(player, yiji_cards, self:objectName(), true, false, true, -1, room:getAlivePlayers()) do
 				local move = sgs.CardsMoveStruct()
@@ -3269,6 +3294,7 @@ LuaYiji = sgs.CreateTriggerSkill{
 					dummy:addSubcard(id)
 				end
 				player:obtainCard(dummy, false)
+				--delete dummy; --LUA里面怎么delete……求指教
 			end
 		end
 	end
@@ -3304,7 +3330,7 @@ LuaTianxiangCard = sgs.CreateSkillCard{
 		end
 		damage.to = effect.to
 		damage.transfer = true
-		room:damage(damage)
+		room:damage(damage) -- 未处理胆守
 	end
 }
 LuaTianxiangVS = sgs.CreateViewAsSkill{
@@ -4074,8 +4100,6 @@ LuaBaonve = sgs.CreateTriggerSkill{
 	end
 }
 
-
-
 -------------------------------------------------------------------------------
 ---------------------------------[[就这么多了]]---------------------------------
 -------------------------------------------------------------------------------
@@ -4085,7 +4109,7 @@ LuaBaonve = sgs.CreateTriggerSkill{
 	相关武将：标准·刘备
 	描述：出牌阶段限一次，你可以将任意数量的手牌交给其他角色，若此阶段你给出的牌张数达到两张或更多时，你回复1点体力。
 	引用：LuaRende
-	状态：0610待验证
+	状态：061待验证
 ]]--
 LuaRendeCard = sgs.CreateSkillCard{
 	name = "LuaRendeCard" ,
@@ -4180,68 +4204,6 @@ LuaRende = sgs.CreateTriggerSkill{
 	end ,
 	can_trigger = function(self, player)
 		return player and (player:getMark("LuaRende") > 0)
-	end
-}
-
---[[
-	技能名：心战
-	相关武将：一将成名·马谡
-	描述：出牌阶段，若你的手牌数大于你的体力上限，你可以：观看牌堆顶的三张牌，然后亮出其中任意数量的红桃牌并获得之，其余以任意顺序置于牌堆顶。每阶段限一次。
-	引用：LuaXinzhan
-	状态：0610待验证（感谢啦啦SLG）
-]]--
-LuaXinzhanCard = sgs.CreateSkillCard{
-	name = "LuaXinzhanCard" ,
-	target_fixed = true ,
-	on_use = function(self, room, source, targets)
-		local cards = room:getNCards(3)
-		local left = cards
-		local hearts = sgs.IntList()
-		local non_hearts = sgs.IntList()
-		for _, card_id in sgs.qlsit(cards) do
-			local card = sgs.Sanguosha:getCard(card_id)
-			if card:getSuit() == sgs.Card_Heart then
-				hearts:append(card_id)
-			else
-				non_hearts:append(card_id)
-			end
-		end
-		local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-		if not hearts:isEmpty() then
-			repeat
-				room:fillAG(left, source, non_hearts)
-				local card_id = room:askForAG(source, hearts, true, "LuaXinzhan")
-				if (card_id == -1) then
-					room:clearAG(source)
-					break
-				end
-				hearts:removeOne(card_id)
-				left:removeOne(card_id)
-				dummy:addSubcard(card_id)
-				room:clearAG(source)
-			until hearts:isEmpty()
-			if dummy:subcardsLength > 0 then
-				room:doBroadcastNotify(56, string.format("%d", room:getDrawPile():length() - dummy:subcardsLength()))
-				--room:doBroadcastNotify(56, tostring(room:getDrawPile():length() + dummy:subcardsLength()))  --@啦啦SLG 总感觉这个才是对的…………
-				source:obtainCard(dummy)
-				for _, id in sgs.qlist(dummy:getSubcards()) do
-					room:showCard(source, id)
-				end
-			end
-		end
-		if not left:isEmpty() then
-			room:askForGuanxing(source, left, true)
-		end
-	end ,
-}
-LuaXinzhan = sgs.CreateViewAsSkill{
-	name = "LuaXinzhan" ,
-	n = 0, 
-	view_as = function()
-		return LuaXinzhanCard:clone()
-	end ,
-	enabled_at_play = function(self, player)
-		return (not player:hasUsed("#LuaXinzhanCard")) and (player:getHandcardNum() > player:getMaxHp())
 	end
 }
 
@@ -11123,4 +11085,3 @@ LuaNosQicai = sgs.CreateTargetModSkill{
 		end
 	end
 }
-
