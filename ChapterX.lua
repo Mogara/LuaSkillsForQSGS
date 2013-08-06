@@ -460,7 +460,7 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 
 LuaXuanfengCard = sgs.CreateSkillCard{
 	name = "LuaXuanfengCard" ,
-	view_filter = function(self, targets, to_select)
+	filter = function(self, targets, to_select)
 		if #targets >= 2 then return false end
 		if to_select:objectName() == sgs.Self:objectName() then return false end
 		return sgs.Self:canDiscard(to_select, "he")
