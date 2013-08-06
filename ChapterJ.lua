@@ -104,7 +104,7 @@ LuaJiang = sgs.CreateTriggerSkill{
 
 LuaJijiangCard = sgs.CreateSkillCard{
 	name = "LuaJijiangCard" ,
-	fliter = function(self, targets, to_select)
+	filter = function(self, targets, to_select)
 		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 		local plist = sgs.PlayerList()
 		for i = 1, #targets, 1 do
