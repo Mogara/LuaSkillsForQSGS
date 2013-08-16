@@ -134,4 +134,163 @@ end
 	技能名：傲才
 	相关武将：SP·诸葛恪
 	描述：你的回合外，每当你需要使用或打出一张基本牌时，你可以观看牌堆顶的两张牌，然后使用或打出其中一张该类别的基本牌。
+	状态：0610验证通过[与源码略有区别]
 ]]--
+function view(room, player, ids, enabled, disabled) 
+	local result = -1
+    	room:notifySkillInvoked(player, "LuaAocai")
+    	if enabled:isEmpty() then
+		room:fillAG(ids, player)
+		room:getThread():delay(tonumber(sgs.GetConfig("OriginAIDelay", "")))
+		room:clearAG(player) --直接关闭
+	else 
+        room:fillAG(ids, player, disabled)
+        local id = room:askForAG(player, enabled, true, "LuaAocai")
+		if id ~= -1 then 
+			ids:removeOne(id) 
+			result = id
+		end
+        room:clearAG(player)
+     end
+--room:doBroadcastNotify(sgs.CommandType.S_COMMAND_UPDATE_PILE, tostring(drawPile:length())) 无效果不知道为什么
+	local dummy = sgs.Sanguosha:cloneCard("jink")
+	local moves = {}
+	if ids:length() > 0 then
+		for _, id in sgs.qlist(ids) do table.insert(moves, id) end	
+		local unmoves = sgs.reverse(moves)
+		for _, id in ipairs(unmoves) do dummy:addSubcard(id) end
+		player:addToPile("#LuaAocai", dummy, false) --只能强制移到特殊区域再移动到摸牌堆
+		room:moveCardTo(dummy, nil, sgs.Player_DrawPile, false)
+	end  
+	if result == -1 then
+		room:setPlayerFlag(player, "Global_LuaAocaiFailed")
+	end   
+    return result
+end
+LuaAocaiVS = sgs.CreateViewAsSkill{
+	name = "LuaAocai",
+	n = 0,
+	enabled_at_play = function()
+		return false 
+	end,
+	enabled_at_response=function(self, player, pattern)
+		 if (player:getPhase() ~= sgs.Player_NotActive or player:hasFlag("Global_LuaAocaiFailed")) then return end
+		 if pattern == "slash" then
+        	 	return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE
+       		elseif (pattern == "peach") then
+        		 return not player:hasFlag("Global_PreventPeach")
+        	elseif string.find(pattern, "analeptic") then
+			return true 
+		end
+			return false 
+		end,
+	view_as = function(self, cards)
+		local acard = LuaAocaiCard:clone()
+		local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
+		if pattern == "peach+analeptic" and sgs.Self:hasFlag("Global_PreventPeach") then 
+			pattern = "analeptic" 
+		end
+		acard:setUserString(pattern)
+			return acard 
+		end,
+}
+LuaAocai = sgs.CreateTriggerSkill{
+	name = "LuaAocai",
+	view_as_skill = LuaAocaiVS,
+	events={sgs.CardAsked},
+	on_trigger=function(self,event,player,data)
+		if player:getPhase() ~= sgs.Player_NotActive then return end
+		local room = player:getRoom()
+		local pattern = data:toStringList()[1]
+		if (pattern == "slash" or pattern == "jink") 
+			and room:askForSkillInvoke(player, self:objectName(), data) then 
+			local ids = room:getNCards(2, false)
+			local enabled, disabled = sgs.IntList(), sgs.IntList()
+			for _,id in sgs.qlist(ids) do
+				if string.find(sgs.Sanguosha:getCard(id):objectName(), pattern) then 
+					enabled:append(id) 
+				else 
+					disabled:append(id)  
+				end
+			end
+			local id = view(room, player, ids, enabled, disabled)
+			if id ~= -1 then
+				local card = sgs.Sanguosha:getCard(id)
+				room:provide(card)
+				return true
+			end
+		end
+	end,
+}
+LuaAocaiCard=sgs.CreateSkillCard{
+	name="LuaAocaiCard",
+	will_throw = false,
+	filter = function(self, targets, to_select)
+		local name = ""
+		local card
+		local plist = sgs.PlayerList()
+		for i = 1, #targets do plist:append(targets[i]) end
+		local aocaistring = self:getUserString()
+		if aocaistring ~= "" then 
+			local uses = aocaistring:split("+")
+			name = uses[1]
+			card = sgs.Sanguosha:cloneCard(name)
+		end
+		return card and card:targetFilter(plist, to_select, sgs.Self) and not sgs.Self:isProhibited(to_select, card, plist)
+	end ,
+	feasible = function(self, targets)
+		local name = ""
+		local card
+		local plist = sgs.PlayerList()
+		for i = 1, #targets do plist:append(targets[i]) end
+		local aocaistring = self:getUserString()
+		if aocaistring ~= "" then 
+			local uses = aocaistring:split("+")
+			name = uses[1]
+			card = sgs.Sanguosha:cloneCard(name)
+		end
+		return card and card:targetsFeasible(plist, sgs.Self) 
+	end,
+	on_validate_in_response = function(self, user)
+		local room = user:getRoom()
+		local ids = room:getNCards(2, false)
+		local aocaistring = self:getUserString()
+		local names = aocaistring:split("+")
+		if table.contains(names, "slash") then
+			table.insert(names,"fire_slash")
+			table.insert(names,"thunder_slash")
+		end
+		local enabled, disabled = sgs.IntList(), sgs.IntList()
+		for _,id in sgs.qlist(ids) do
+			if table.contains(names, sgs.Sanguosha:getCard(id):objectName()) then 
+				enabled:append(id) 
+			else 
+				disabled:append(id)  
+			end
+		end
+		local id = view(room, user, ids, enabled, disabled)
+		return sgs.Sanguosha:getCard(id)
+	end,
+	on_validate = function(self, cardUse)
+		cardUse.m_isOwnerUse = false
+		local user = cardUse.from
+		local room = user:getRoom()
+		local ids = room:getNCards(2, false)
+		local aocaistring = self:getUserString()
+		local names = aocaistring:split("+")
+		if table.contains(names, "slash") then
+			table.insert(names,"fire_slash")
+			table.insert(names,"thunder_slash")
+		end
+		local enabled, disabled = sgs.IntList(), sgs.IntList()
+		for _,id in sgs.qlist(ids) do
+			if table.contains(names, sgs.Sanguosha:getCard(id):objectName()) then 
+				enabled:append(id) 
+			else 
+				disabled:append(id)  
+			end
+		end
+		local id = view(room, user, ids, enabled, disabled)
+		return sgs.Sanguosha:getCard(id)
+	end
+}
