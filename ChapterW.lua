@@ -796,7 +796,7 @@ LuaWusheng = sgs.CreateViewAsSkill{
 		if not to_select:isRed() then return false end
 		local weapon = sgs.Self:getWeapon()
 		if (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY) and sgs.Self:getWeapon() 
-				and (card:getEffectiveId() == sgs.Self:getWeapon():getId()) and card:isKindOf("Crossbow") then
+				and (to_select:getEffectiveId() == sgs.Self:getWeapon():getId()) and to_select:isKindOf("Crossbow") then
 			return sgs.Self:canSlashWithoutCrossbow()
 		else
 			return true
