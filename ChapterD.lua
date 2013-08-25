@@ -725,7 +725,23 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 	技能名：夺刀
 	相关武将：一将成名2013·潘璋&马忠
 	描述：每当你受到一次【杀】造成的伤害后，你可以弃置一张牌，获得伤害来源装备区的武器牌。
+	引用：LuaDuodao
+	状态：验证通过
 ]]--
+LuaDuodao = sgs.CreateTriggerSkill{
+	name = "LuaDuodao" ,
+	events = {sgs.Damaged} ,
+
+	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
+		if not damage.card or not damage.card:isKindOf("Slash") or player:isNude() then return false end
+		if player:getRoom():askForCard(player, "..", "@duodao-get",data, self:objectName()) then
+		if damage.from and damage.from:getWeapon() then
+			player:obtainCard(damage.from:getWeapon())
+		end
+	end
+end
+}
 --[[
 	技能名：度势
 	相关武将：国战·陆逊
