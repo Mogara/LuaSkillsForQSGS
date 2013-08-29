@@ -341,13 +341,13 @@ LuaBeige = sgs.CreateTriggerSkill{
 			local victim = damage.to
 			if not victim:isDead() then
 				local room = player:getRoom()
-				local list = room:getAlivePlayers()
+				local list = room:findPlayersBySkillName(self:objectName())
 				for _,p in sgs.qlist(list) do
 					if not p:isNude() then
 						if p:askForSkillInvoke(self:objectName(), data) then
 							room:askForDiscard(p, self:objectName(), 1, 1, false, true)
 							local judge = sgs.JudgeStruct()
-							judge.pattern = sgs.QRegExp("(.*):(.*):(.*)")
+							judge.pattern = “.”
 							judge.good = true
 							judge.who = victim
 							judge.reason = self:objectName()
