@@ -4524,7 +4524,7 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 			local skills = death.damage.from:getVisibleSkillList()
 			local detachList = {}
 			for _, skill in sgs.qlist(skills) do
-				if skill:getLocation() == sgs.Skill_Right and (not skill:isAttachedLordSkill) then
+				if skill:getLocation() == sgs.Skill_Right and (not skill:isAttachedLordSkill()) then
 					detachList:append("-" .. skill:objectName())
 				end
 			end
