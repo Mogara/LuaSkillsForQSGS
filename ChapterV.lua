@@ -4513,48 +4513,33 @@ LuaBeige = sgs.CreateTriggerSkill{
 	引用：LuaDuanchang
 	状态：0610未做
 ]]--
---[[
-class Duanchang: public TriggerSkill {
-public:
-    Duanchang(): TriggerSkill("duanchang") {
-        events << Death;
-        frequency = Compulsory;
-    }
+LuaDuanchang = sgs.CreateTriggerSkill{
+	name = "LuaDuanchang" ,
+	events = {sgs.Death} ,
+	frequency = sgs.Skill_Compulsory ,
+	on_trigger = function(self, event, player, data)
+		local death = data:toDeath()
+		if death.who:objectName() ~= player:objectName() then return false end
+		if death.damage and death.damage.from then
+			local skills = death.damage.from:getVisibleSkillList()
+			local detachList = {}
+			for _, skill in sgs.qlist(skills) do
+				if skill:getLocation() == sgs.Skill_Right and (not skill:isAttachedLordSkill) then
+					detachList:append("-" .. skill:objectName())
+				end
+			end
+			player:getRoom():handleAcquireDetachSkills(death.damage.from, table.concat(detachList, "|"))
+			if death.damage.from:isAlive() then
+				death.damage.from:gainMark("@duanchang")
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target and target:hasSkill(self:objectName())
+	end ,
+}
 
-    virtual bool triggerable(const ServerPlayer *target) const{
-        return target != NULL && target->hasSkill(objectName());
-    }
-
-    virtual bool trigger(TriggerEvent, Room *room, ServerPlayer *player, QVariant &data) const{
-        DeathStruct death = data.value<DeathStruct>();
-        if (death.who != player)
-            return false;
-
-        if (death.damage && death.damage->from) {
-            LogMessage log;
-            log.type = "#DuanchangLoseSkills";
-            log.from = player;
-            log.to << death.damage->from;
-            log.arg = objectName();
-            room->sendLog(log);
-            room->broadcastSkillInvoke(objectName());
-            room->notifySkillInvoked(player, objectName());
-
-            QList<const Skill *> skills = death.damage->from->getVisibleSkillList();
-            QStringList detachList;
-            foreach (const Skill *skill, skills) {
-                if (skill->getLocation() == Skill::Right && !skill->inherits("SPConvertSkill") && !skill->isAttachedLordSkill())
-                    detachList.append("-" + skill->objectName());
-            }
-            room->handleAcquireDetachSkills(death.damage->from, detachList);
-            if (death.damage->from->isAlive())
-                death.damage->from->gainMark("@duanchang");
-        }
-
-        return false;
-    }
-};
-]]
 --[[
 	技能名：屯田
 	相关武将：山·邓艾
