@@ -359,47 +359,64 @@ LuaWuqianClear = sgs.CreateTriggerSkill{
 	相关武将：标准·吕布、SP·最强神话、SP·暴怒战神、SP·台版吕布
 	描述：当你使用【杀】指定一名角色为目标后，该角色需连续使用两张【闪】才能抵消；与你进行【决斗】的角色每次需连续打出两张【杀】。
 	引用：LuaWushuang
-	状态：验证通过
+	状态：0901验证通过
+	
+	备注：0610版本中源码上有个WushuangInvoke就可以触发决斗无双效果，但无奈没有QVariant::toIntList和QVariant:setValue(QList <int>)这两个接口所以杀的无双效果无法实现
 ]]--
+Table2IntList = function(theTable)
+	local result = sgs.IntList()
+	for i = 1, #theTable, 1 do
+		result:append(theTable[i])
+	end
+	return result
+end
 LuaWushuang = sgs.CreateTriggerSkill{
-	name = "LuaWushuang", 
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.TargetConfirmed, sgs.SlashProceed},
-	on_trigger = function(self, event, player, data) 
-		local room = player:getRoom()
+	name = "LuaWushuang" ,
+	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.TargetConfirmed, sgs.CardFinished} ,
+	on_trigger = function(self, event, player, data)
 		if event == sgs.TargetConfirmed then
 			local use = data:toCardUse()
-			local card = use.card
-			if card:isKindOf("Slash") then
-				if use.from:objectName() == player:objectName() then
-					room:setCardFlag(card, "WushuangInvke")
+			local can_invoke = false
+			if use.card:isKindOf("Slash") and (player and player:isAlive() and player:hasSkill(self:objectName())) and (use.from:objectName() == player:objectName()) then
+				can_invoke = true 
+				local jink_table = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
+				for i = 0, use.to:length() - 1, 1 do
+					if jink_table[i + 1] == 1 then
+						jink_table[i + 1] = 2 --只要设置出两张闪就可以了，不用两次askForCard
+					end
 				end
-			elseif card:isKindOf("Duel") then
-				room:setCardFlag(card, "WushuangInvke")
+				local jink_data = sgs.QVariant()
+				jink_data:setValue(Table2IntList(jink_table))
+				player:setTag("Jink_" .. use.card:toString(), jink_data)
 			end
-		elseif event == sgs.SlashProceed then
-			local effect = data:toSlashEffect()
-			local dest = effect.to
-			if effect.slash:hasFlag("WushuangInvke") then
-				local slasher = player:objectName()
-				local hint = string.format("@wushuang-jink-1:%s", slasher)
-				local first_jink = room:askForCard(dest, "jink", hint, sgs.QVariant(), sgs.CardUsed, player)
-				local second_jink = nil
-				if first_jink then
-					hint = string.format("@wushuang-jink-2:%s", slasher)
-					second_jink = room:askForCard(dest, "jink", hint, sgs.QVariant(), sgs.CardUsed, player)
+			if use.card:isKindOf("Duel") then
+				if (use.from and use.from:isAlive() and use.from:hasSkill(self:objectName())) and (use.from:objectName() == player:objectName()) then
+					can_invoke = true
 				end
-				local jink = nil
-				if first_jink and second_jink then
-					jink = sgs.Sanguosha:cloneCard("Jink", sgs.Card_NoSuit, 0)
-					jink:addSubcard(first_jink)
-					jink:addSubcard(second_jink)
+				if (player and player:isAlive() and player:hasSkill(self:objectName())) and use.to:contains(player) then
+					can_invoke = true
 				end
-				room:slashResult(effect, jink)
 			end
-			return true
+			if not can_invoke then return false end
+			if use.card:isKindOf("Duel") then
+				player:getRoom():setPlayerMark(player, "WushuangTarget", 1) --决斗的具体部分在源码中
+			end
+		elseif event == sgs.CardFinished then
+			local use = data:toCardUse()
+			if use.card:isKindOf("Duel") then
+				local room = player:getRoom()
+				for _, lvbu in sgs.qlist(room:getAllPlayers()) do
+					if lvbu:getMark("WushuangTarget") > 0 then
+						room:setPlayerMark(lvbu, "WushuangTarget", 0)
+					end
+				end
+			end
 		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
