@@ -365,28 +365,48 @@ LuaTiaoxin = sgs.CreateViewAsSkill{
 	相关武将：标准·马超、SP·马超、1v1·马超1v1、SP·台版马超
 	描述：当你使用【杀】指定一名角色为目标后，你可以进行一次判定，若判定结果为红色，该角色不可以使用【闪】对此【杀】进行响应。
 	引用：LuaTieji
-	状态：验证通过
+	状态：0901验证通过
+	
+	备注：和无双一样的问题，由于0610缺少QVariant::toIntList()和QVariant::setValue(QList <int>)而导致技能无法实现
+	Fs吐槽下：上一个版本的技能谁写的？技能明明不是SlashProceed时机发动的！！
 ]]--
+Table2IntList = function(theTable)
+	local result = sgs.IntList()
+	for i = 1, #theTable, 1 do
+		result:append(theTable[i])
+	end
+	return result
+end
 LuaTieji = sgs.CreateTriggerSkill{
-	name = "LuaTieji",
-	frequency = sgs.Skill_NotFrequency,
-	events = {sgs.SlashProceed},
+	name = "LuaTieji" ,
+	events = {sgs.TargetConfirmed} ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if not room:askForSkillInvoke(player, self:objectName()) then
-			return false
+		local use = data:toCardUse()
+		if (player:objectName() ~= use.from:objectName()) or (not use.card:isKindOf("Slash")) then return false end
+		local jink_table = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
+		local index = 1
+		for _, p in sgs.qlist(use.to) do
+			local _data = sgs.QVariant()
+			_data:setValue(p)
+			if player:askForSkillInvoke(self:objectName(), _data) then
+				p:setFlags("LuaTiejiTarget")
+				local judge = sgs.JudgeStruct()
+				judge.pattern = ".|red"
+				judge.good = true
+				judge.reason = self:objectName()
+				judge.who = player
+				player:getRoom():judge(judge)
+				if judge:isGood() then
+					jink_table[index] = 0
+				end
+				p:setFlags("-LuaTiejiTarget")
+			end
+			index = index + 1
 		end
-		local judge = sgs.JudgeStruct()
-		judge.pattern = sgs.QRegExp("(.*):(heart|diamond):(.*)")
-		judge.good = true
-		judge.reason = self:objectName()
-		judge.who = player
-		room:judge(judge)
-		if judge:isGood() then
-			local effect = data:toSlashEffect()
-			room:slashResult(effect, nil)	  
-			return true
-		end
+		local jink_data = sgs.QVariant()
+		jink_data:setValue(Table2IntList(jink_table))
+		player:setTag("Jink_" .. use.card:toString(), jink_data)
+		return false
 	end
 }
 --[[
