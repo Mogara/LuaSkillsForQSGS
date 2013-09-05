@@ -3274,7 +3274,7 @@ LuaTongji = sgs.CreateProhibitSkill{
 	相关武将：标准·郭嘉
 	描述：每当你受到1点伤害后，你可以观看牌堆顶的两张牌，将其中一张交给一名角色，然后将另一张交给一名角色。
 	引用：LuaYiji
-	状态：0610验证失败
+	状态：0901验证失败（由于CardsMoveStruct在sanguosha.i中缺少成员变量导致NotifyMoveCards造成客户端闪退）
 ]]--
 LuaYiji = sgs.CreateTriggerSkill{
 	name = "LuaYiji",
@@ -3287,8 +3287,8 @@ LuaYiji = sgs.CreateTriggerSkill{
 		for i = 0, x - 1, 1 do
 			if not player:isAlive() then return end
 			if not room:askForSkillInvoke(player, self:objectName()) then return end
-			--[[local _guojia = sgs.SPlayerList()
-			_guojia:append(player)]]
+			local _guojia = sgs.SPlayerList()
+			_guojia:append(player)
 			local yiji_cards = room:getNCards(2, false)
 			local move = sgs.CardsMoveStruct()
 			move.card_ids = yiji_cards
@@ -3299,9 +3299,8 @@ LuaYiji = sgs.CreateTriggerSkill{
 			move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PREVIEW, player:objectName(), self:objectName(), nil)
 			local moves = sgs.CardsMoveList()
 			moves:append(move)
-			--[[room->notifyMoveCards(true, moves, false, _guojia);
-				room->notifyMoveCards(false, moves, false, _guojia);
-			]]
+			room:notifyMoveCards(true, moves, false, _guojia)
+			room:notifyMoveCards(false, moves, false, _guojia)
 			local origin_yiji = yiji_cards
 			while room:askForYiji(player, yiji_cards, self:objectName(), true, false, true, -1, room:getAlivePlayers()) do
 				local move = sgs.CardsMoveStruct()
@@ -3319,9 +3318,8 @@ LuaYiji = sgs.CreateTriggerSkill{
 				origin_yiji = yiji_cards
 				local moves = sgs.CardsMoveList()
 				moves:append(move)
-				--[[room->notifyMoveCards(true, moves, false, _guojia);
-					room->notifyMoveCards(false, moves, false, _guojia);
-				]]
+				room:notifyMoveCards(true, moves, false, _guojia)
+				room:notifyMoveCards(false, moves, false, _guojia)
 				if not player:isAlive() then return end
 			end
 			if not yiji_cards:isEmpty() then
@@ -3334,9 +3332,8 @@ LuaYiji = sgs.CreateTriggerSkill{
 				move.card_ids = yiji_cards
 				local moves = sgs.CardsMoveList()
 				moves:append(move)
-				--[[room->notifyMoveCards(true, moves, false, _guojia);
-					room->notifyMoveCards(false, moves, false, _guojia);
-				]]
+				room:notifyMoveCards(true, moves, false, _guojia)
+				room:notifyMoveCards(false, moves, false, _guojia)
 				local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 				for _, id in sgs.qlist(yiji_cards) do
 					dummy:addSubcard(id)
