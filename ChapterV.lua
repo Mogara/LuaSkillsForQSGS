@@ -3805,7 +3805,7 @@ LuaBaonve = sgs.CreateTriggerSkill{
 	相关武将：标准·郭嘉
 	描述：每当你受到1点伤害后，你可以观看牌堆顶的两张牌，将其中一张交给一名角色，然后将另一张交给一名角色。
 	引用：LuaYiji
-	状态：0901（06）待验证
+	状态：0901（06）验证失败（askForYiji里面那个小循环没有起到任何作用，导致服务器更新而客户端未更新造成卡牌）
 ]]--
 LuaYiji = sgs.CreateTriggerSkill{
 	name = "LuaYiji",
