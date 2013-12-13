@@ -12,7 +12,7 @@
 ]]--
 LuaNiepan = sgs.CreateTriggerSkill{
 	name = "LuaNiepan",
-	frequency = sgs.Skill_Limited, 
+	frequency = sgs.Skill_Limited,
 	events = {sgs.AskForPeaches},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
@@ -38,7 +38,7 @@ LuaNiepan = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:hasSkill(self:objectName()) then

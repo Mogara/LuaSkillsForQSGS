@@ -53,15 +53,15 @@ LuaBazhen = sgs.CreateTriggerSkill{
 --[[
 	技能名：霸刀
 	相关武将：智·华雄
-	描述：当你成为黑色的【杀】目标时，你可以对你攻击范围内的一名其他角色使用一张【杀】 
+	描述：当你成为黑色的【杀】目标时，你可以对你攻击范围内的一名其他角色使用一张【杀】
 	引用：LuaXBadao
 	状态：验证通过
 ]]--
 LuaXBadao = sgs.CreateTriggerSkill{
-	name = "LuaXBadao",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.CardEffected},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXBadao",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.CardEffected},
+	on_trigger = function(self, event, player, data)
 		local effect = data:toCardEffect()
 		local slash = effect.card
 		if slash:isKindOf("Slash") and slash:isBlack() then
@@ -81,10 +81,10 @@ LuaXBadao = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaXBawangCard = sgs.CreateSkillCard{
-	name = "LuaXBawangCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
+	name = "LuaXBawangCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
 		if #targets < 2 then
 			if to_select:objectName() ~= sgs.Self:objectName() then
 				if not (to_select:isKongcheng() and to_select:hasSkill("kongcheng")) then
@@ -93,7 +93,7 @@ LuaXBawangCard = sgs.CreateSkillCard{
 			end
 		end
 	end,
-	on_effect = function(self, effect) 
+	on_effect = function(self, effect)
 		local source = effect.from
 		local target = effect.to
 		local room = source:getRoom()
@@ -109,24 +109,24 @@ LuaXBawangCard = sgs.CreateSkillCard{
 	end
 }
 LuaXBawangVS = sgs.CreateViewAsSkill{
-	name = "LuaXBawangVS", 
-	n = 0, 
-	view_as = function(self, cards) 
+	name = "LuaXBawangVS",
+	n = 0,
+	view_as = function(self, cards)
 		return LuaXBawangCard:clone()
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return false
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "@@LuaXBawang"
 	end
 }
 LuaXBawang = sgs.CreateTriggerSkill{
-	name = "LuaXBawang",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.SlashMissed},  
-	view_as_skill = LuaXBawangVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXBawang",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.SlashMissed},
+	view_as_skill = LuaXBawangVS,
+	on_trigger = function(self, event, player, data)
 		local effect = data:toSlashEffect()
 		local target = effect.to
 		if not target:isNude() then
@@ -146,7 +146,7 @@ LuaXBawang = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	priority = 2
 }
 --[[
@@ -223,7 +223,7 @@ LuaBaiyin = sgs.CreateTriggerSkill{
 --[[
 	技能名：豹变（锁定技）
 	相关武将：SP·夏侯霸
-	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。 
+	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。
 	引用：LuaBaobian
 	状态：0224验证通过
 ]]--÷
@@ -246,10 +246,10 @@ BaobianChange = function(room, player, hp, skill_name)
 	player:setTag("BaobianSkills", sgs.QVariant(table.concat(baobian_skills, "+")))
 end
 LuaBaobian = sgs.CreateTriggerSkill{
-	name = "LuaBaobian",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.GameStart, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaBaobian",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.GameStart, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill},
+	on_trigger = function(self, event, player, data)
 		if event == sgs.EventLoseSkill then
 			if data:toString() == self:objectName() then
 				local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
@@ -266,10 +266,10 @@ LuaBaobian = sgs.CreateTriggerSkill{
 			BaobianChange(room, player, 3, "tiaoxin")
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
-	end, 
+	end,
 }
 --[[
 	技能名：暴虐（主公技）
@@ -290,7 +290,7 @@ LuaBaonue = sgs.CreateTriggerSkill{
 			local can_invoke = tag:toBool()
 			if can_invoke then
 				room:removeTag("InvokeBaonue")
-				local list = room:getOtherPlayers(player)	
+				local list = room:getOtherPlayers(player)
 				for _,lord in sgs.qlist(list) do
 					if lord:hasLordSkill(self:objectName()) then
 						if room:askForSkillInvoke(player, self:objectName(), data) then
@@ -299,7 +299,7 @@ LuaBaonue = sgs.CreateTriggerSkill{
 							judge.good = true
 							judge.reason = self:objectName()
 							judge.who = player
-							room:judge(judge)				
+							room:judge(judge)
 							if judge:isGood() then
 								local recover = sgs.RecoverStruct()
 								recover.who = player
@@ -314,7 +314,7 @@ LuaBaonue = sgs.CreateTriggerSkill{
 			if source then
 				local kingdom = source:getKingdom()
 				if kingdom == "qun" then
-					room:setTag("InvokeBaonue", sgs.QVariant(true))			
+					room:setTag("InvokeBaonue", sgs.QVariant(true))
 				end
 			end
 		end
@@ -393,10 +393,10 @@ LuaBeige = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaXBeifa = sgs.CreateTriggerSkill{
-	name = "LuaXBeifa",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.CardsMoveOneTime},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXBeifa",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.CardsMoveOneTime},
+	on_trigger = function(self, event, player, data)
 		if player:isKongcheng() then
 			local move = data:toMoveOneTime()
 			if move.from and move.from:objectName() == player:objectName() then
@@ -431,7 +431,7 @@ LuaXBeifa = sgs.CreateTriggerSkill{
 --[[
 	技能名：备粮
 	相关武将：长坂坡·神张飞
-	描述：摸牌阶段，你可以选择放弃摸牌，将手牌补至等同于你体力上限的张数。 
+	描述：摸牌阶段，你可以选择放弃摸牌，将手牌补至等同于你体力上限的张数。
 	引用：LuaXBeiliang
 	状态：验证通过
 ]]--
@@ -441,10 +441,10 @@ LuaXBeiliang = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Draw then
-			if player:getHandcardNum() < player:getMaxHp() then 
+			if player:getHandcardNum() < player:getMaxHp() then
 				if room:askForSkillInvoke(player, self:objectName()) then
 					local x = player:getMaxHp() - player:getHandcardNum()
-					player:drawCards(x) 
+					player:drawCards(x)
 					return true
 				end
 			end
@@ -494,10 +494,10 @@ LuaBenghuai = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaBifaCard = sgs.CreateSkillCard{
-	name = "LuaBifa", 
-	target_fixed = false, 
-	will_throw = false, 
-	filter = function(self, targets, to_select) 
+	name = "LuaBifa",
+	target_fixed = false,
+	will_throw = false,
+	filter = function(self, targets, to_select)
 		if #targets == 0 then
 			local bifalist = to_select:getPile("bifa")
 			if bifalist:isEmpty() then
@@ -506,7 +506,7 @@ LuaBifaCard = sgs.CreateSkillCard{
 		end
 		return false
 	end,
-	on_use = function(self, room, source, targets) 
+	on_use = function(self, room, source, targets)
 		local target = targets[1]
 		local keystr = string.format("BifaSource%d", self:getEffectiveId())
 		local tag = sgs.QVariant()
@@ -519,35 +519,35 @@ LuaBifaCard = sgs.CreateSkillCard{
 	end
 }
 LuaBifaVS = sgs.CreateViewAsSkill{
-	name = "LuaBifa", 
-	n = 1, 
+	name = "LuaBifa",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local card = LuaBifaCard:clone()
 			card:addSubcard(cards[1])
 			return card
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return false
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "@@LuaBifa"
 	end
 }
 LuaBifa = sgs.CreateTriggerSkill{
-	name = "LuaBifa",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart}, 
-	view_as_skill = LuaBifaVS, 
+	name = "LuaBifa",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	view_as_skill = LuaBifaVS,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:isAlive() and player:hasSkill(self:objectName()) then
 			if player:getPhase() == sgs.Player_Finish then
-				if not player:isKongcheng() then 
+				if not player:isKongcheng() then
 					room:askForUseCard(player, "@@LuaBifa", "@bifa-remove")
 					return false
 				end
@@ -595,7 +595,7 @@ LuaBifa = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
 	end
@@ -603,7 +603,7 @@ LuaBifa = sgs.CreateTriggerSkill{
 --[[
 	技能名：闭月
 	相关武将：标准·貂蝉、SP貂蝉、☆SP貂蝉、1v1·貂蝉1v1、怀旧-标准·貂蝉-旧、SP·台版貂蝉
-	描述：结束阶段开始时，你可以摸一张牌。 
+	描述：结束阶段开始时，你可以摸一张牌。
 	引用：LuaBiyue
 	状态：验证通过
 ]]--
@@ -639,20 +639,20 @@ LuaBuyi = sgs.CreateTriggerSkill{
 		if _player:getHp() < 1 then
 			if room:askForSkillInvoke(player, self:objectName(), data) then
 				local card
-				if player:objectName() == _player:objectName() then 
+				if player:objectName() == _player:objectName() then
 					card = room:askForCardShow(_player, player, "LuaBuyi")
 				else
 					local id = room:askForCardChosen(player, _player, "h", self:objectName())
-					card = sgs.Sanguosha:getCard(id) 
+					card = sgs.Sanguosha:getCard(id)
 				end
 				room:showCard(_player, card:getEffectiveId())
 				if card:getTypeId() ~= sgs.Card_TypeBasic then
-					if not _player:isJilei(card) then 
+					if not _player:isJilei(card) then
 						room:throwCard(card, _player)
 					end
 					local recover = sgs.RecoverStruct()
 					recover.who = player
-					room:recover(_player, recover) 		
+					room:recover(_player, recover)
 				end
 			end
 		end
@@ -666,47 +666,47 @@ LuaBuyi = sgs.CreateTriggerSkill{
 	引用：LuaBuqu、LuaBuquRemove
 	状态：验证通过
 ]]--
-function Remove(SP) 
+function Remove(SP)
 	local room = SP:getRoom()
 	local card_ids = SP:getPile("buqu")
-	local re = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", "LuaBuqu", "") 
+	local re = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", "LuaBuqu", "")
 	local lack = 1 - SP:getHp()
 	if lack <= 0 then
 		for _,id in sgs.qlist(card_ids) do
 			local card = sgs.Sanguosha:getCard(id)
-			room:throwCard(card, re, nil) 
+			room:throwCard(card, re, nil)
 		end
 	else
 		local to_remove = card_ids:length() - lack
 		for var = 1, to_remove do
-			if not card_ids:isEmpty() then 
+			if not card_ids:isEmpty() then
 				room:fillAG(card_ids)
 				local card_id = room:askForAG(SP, card_ids, false, "LuaBuqu")
-				if card_id ~= -1 then 
+				if card_id ~= -1 then
 					card_ids:removeOne(card_id)
-					room:throwCard(sgs.Sanguosha:getCard(card_id), re, nil) 
+					room:throwCard(sgs.Sanguosha:getCard(card_id), re, nil)
 				end
-				room:broadcastInvoke("clearAG") 
+				room:broadcastInvoke("clearAG")
 			end
 		end
 	end
 end
-LuaBuqu = sgs.CreateTriggerSkill{ 
+LuaBuqu = sgs.CreateTriggerSkill{
 	name = "LuaBuqu",
 	events = {sgs.PostHpReduced, sgs.AskForPeachesDone},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.PostHpReduced then
-			if player:getHp() < 1 then 
-				if room:askForSkillInvoke(player, self:objectName()) then 
+			if player:getHp() < 1 then
+				if room:askForSkillInvoke(player, self:objectName()) then
 					room:setTag(self:objectName(), sgs.QVariant(player:objectName()))
 					local buqu = player:getPile("buqu")
 					local lack = 1 - player:getHp()
 					local n = lack - buqu:length()
-					if n > 0 then 
+					if n > 0 then
 						local CAS = room:getNCards(n, false)
-						for _,id in sgs.qlist(CAS) do 
-							player:addToPile("buqu", id) 
+						for _,id in sgs.qlist(CAS) do
+							player:addToPile("buqu", id)
 						end
 					end
 					local buqun = player:getPile("buqu")
@@ -715,39 +715,39 @@ LuaBuqu = sgs.CreateTriggerSkill{
 					for _,id in sgs.qlist(buqun) do
 						local card = sgs.Sanguosha:getCard(id)
 						local Nm = card:getNumber()
-						if table.contains(nub, Nm) then 
-							duplicate_numbers:append(Nm) 
-						else 
-							table.insert(nub, Nm) 
+						if table.contains(nub, Nm) then
+							duplicate_numbers:append(Nm)
+						else
+							table.insert(nub, Nm)
 						end
 					end
-					if duplicate_numbers:isEmpty() then 
-						room:setTag(self:objectName(), sgs.QVariant()) 
-						return true 
+					if duplicate_numbers:isEmpty() then
+						room:setTag(self:objectName(), sgs.QVariant())
+						return true
 					end
 				end
 			end
-		elseif event == sgs.AskForPeachesDone then 
+		elseif event == sgs.AskForPeachesDone then
 			local buqun = player:getPile("buqu")
-			if player:getHp() > 0 then 
-				return 
+			if player:getHp() > 0 then
+				return
 			end
-			if room:getTag(self:objectName()):toString() ~= player:objectName() then 
-				return 
+			if room:getTag(self:objectName()):toString() ~= player:objectName() then
+				return
 			end
 			local duplicate_numbers = sgs.IntList()
 			local nub = {}
 			for _,id in sgs.qlist(buqun) do
 				local card = sgs.Sanguosha:getCard(id)
 				local Nm = card:getNumber()
-				if table.contains(nub, Nm) and not duplicate_numbers:contains(Nm) then 
-					duplicate_numbers:append(Nm) 
-				else 
-					table.insert(nub, Nm) 
+				if table.contains(nub, Nm) and not duplicate_numbers:contains(Nm) then
+					duplicate_numbers:append(Nm)
+				else
+					table.insert(nub, Nm)
 				end
 			end
-			if duplicate_numbers:isEmpty() then 
-				room:setPlayerFlag(player, "-dying") 
+			if duplicate_numbers:isEmpty() then
+				room:setPlayerFlag(player, "-dying")
 				return true
 			end
 		end
@@ -760,20 +760,20 @@ LuaBuquRemove = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		if event == sgs.HpRecover then
 			if player:hasSkill("LuaBuqu") then
-				if player:getPile("buqu"):length() > 0 then 
-					Remove(player) 
+				if player:getPile("buqu"):length() > 0 then
+					Remove(player)
 				end
 			end
 		elseif event == sgs.EventLoseSkill then
 			if data:toString() == "LuaBuqu" then
 				player:removePileByName("LuaBuqu")
-				if player:getHp() <= 0 then 
-					room:enterDying(player, nil) 
+				if player:getHp() <= 0 then
+					room:enterDying(player, nil)
 				end
 			end
 		end
 	end,
 	can_trigger = function(self, target)
-		return target 
+		return target
 	end
 }

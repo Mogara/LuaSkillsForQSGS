@@ -6,7 +6,7 @@
 --[[
 	技能名：反间
 	相关武将：标准·周瑜
-	描述：出牌阶段限一次，若你有手牌，你可以令一名其他角色选择一种花色，然后该角色获得你的一张手牌再展示之，若此牌的花色与其所选的不同，你对其造成1点伤害。 
+	描述：出牌阶段限一次，若你有手牌，你可以令一名其他角色选择一种花色，然后该角色获得你的一张手牌再展示之，若此牌的花色与其所选的不同，你对其造成1点伤害。
 	引用：LuaFanjian
 	状态：验证通过
 ]]--
@@ -47,7 +47,7 @@ LuaFanjian = sgs.CreateViewAsSkill{
 	end,
 	enabled_at_play = function(self, player)
 		if not player:isKongcheng() then
-			return not player:hasUsed("#LuaFanjianCard") 
+			return not player:hasUsed("#LuaFanjianCard")
 		end
 		return false
 	end
@@ -55,15 +55,15 @@ LuaFanjian = sgs.CreateViewAsSkill{
 --[[
 	技能名：反间
 	相关武将：翼·周瑜
-	描述：出牌阶段，你可以选择一张手牌，令一名其他角色说出一种花色后展示并获得之，若猜错则其受到你对其造成的1点伤害。每阶段限一次。 
+	描述：出牌阶段，你可以选择一张手牌，令一名其他角色说出一种花色后展示并获得之，若猜错则其受到你对其造成的1点伤害。每阶段限一次。
 	引用：LuaXNeoFanjian
 	状态：验证通过
 ]]--
 LuaXNeoFanjianCard = sgs.CreateSkillCard{
-	name = "LuaXNeoFanjianCard", 
-	target_fixed = false, 
-	will_throw = false, 
-	on_effect = function(self, effect) 
+	name = "LuaXNeoFanjianCard",
+	target_fixed = false,
+	will_throw = false,
+	on_effect = function(self, effect)
 		local source = effect.from
 		local target = effect.to
 		local room = source:getRoom()
@@ -84,18 +84,18 @@ LuaXNeoFanjianCard = sgs.CreateSkillCard{
 	end
 }
 LuaXNeoFanjian = sgs.CreateViewAsSkill{
-	name = "LuaXNeoFanjian", 
-	n = 1, 
+	name = "LuaXNeoFanjian",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local card = LuaXNeoFanjianCard:clone()
 			card:addSubcard(cards[1])
 			return card
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		if not player:isKongcheng() then
 			return not player:hasUsed("#LuaXNeoFanjianCard")
@@ -233,14 +233,14 @@ LuaFeiying = sgs.CreateDistanceSkill{
 	技能名：焚城（限定技）
 	相关武将：一将成名2013·李儒
 	描述：出牌阶段，你可以令所有其他角色选择一项：弃置X张牌，或受到你对其造成的1点火焰伤害。（X为该角色装备区牌的数量且至少为1）
-	引用：LuaFencheng 
+	引用：LuaFencheng
 	状态：验证通过
 ]]--
 LuaFenchengCard = sgs.CreateSkillCard{
 	name = "LuaFenchengCard",
 	mute = true,
-    target_fixed = true,
-	
+	target_fixed = true,
+
 	on_use = function(self, room, source, targets)
 		local players = room:getOtherPlayers(source)
 			room:removePlayerMark(source, "@burn")
@@ -257,18 +257,18 @@ end,
 		local length = player:getEquips():length()
 		if length == 0 then length = 1 end
 		if not player:canDiscard(effect.to,"he") or not room:askForDiscard(player,self:objectName(),length,length, true,true) then
-        room:damage(sgs.DamageStruct(self:objectName(),effect.from,player, 1,sgs.DamageStruct_Fire))
+		room:damage(sgs.DamageStruct(self:objectName(),effect.from,player, 1,sgs.DamageStruct_Fire))
 		end
 	end
 end
 }
 LuaFenchengVs = sgs.CreateViewAsSkill{
-	name = "LuaFencheng", 
+	name = "LuaFencheng",
 	n = 0,
 
-	view_as = function(self, cards) 
+	view_as = function(self, cards)
 		return LuaFenchengCard:clone()
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return player:getMark("@burn") >= 1
 	end
@@ -278,7 +278,7 @@ LuaFencheng = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Limited ,
 	events = {sgs.GameStart} ,
 	view_as_skill = LuaFenchengVs ,
-	
+
 	on_trigger = function(self, event, player, data)
 		player:gainMark("@burn",1)
 	end
@@ -291,10 +291,10 @@ LuaFencheng = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaXFenxin = sgs.CreateTriggerSkill{
-	name = "LuaXFenxin",  
-	frequency = sgs.Skill_Limited, 
-	events = {sgs.AskForPeachesDone},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXFenxin",
+	frequency = sgs.Skill_Limited,
+	events = {sgs.AskForPeachesDone},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local mode = room:getMode()
 		if string.sub(mode, -1) == "p" or string.sub(mode, -2) == "pd" or string.sub(mode, -2) == "pz" then
@@ -325,7 +325,7 @@ LuaXFenxin = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
 	end
@@ -437,10 +437,10 @@ LuaXFenxun = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaFenyong = sgs.CreateTriggerSkill{
-	name = "LuaFenyong",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Damaged, sgs.DamageInflicted}, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaFenyong",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.Damaged, sgs.DamageInflicted},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.Damaged then
 			if player:getMark("@fenyong") == 0 then
@@ -454,16 +454,16 @@ LuaFenyong = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 }
 LuaFenyongClear = sgs.CreateTriggerSkill{
-	name = "#LuaFenyongClear", 
-	frequency = sgs.Skill_Frequent, 
+	name = "#LuaFenyongClear",
+	frequency = sgs.Skill_Frequent,
 	events = {sgs.EventLoseSkill},
 	on_trigger = function(self, event, player, data)
 		player:loseAllMarks("@fenyong")
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if not target:hasSkill("LuaFenyong") then
@@ -481,41 +481,41 @@ LuaFenyongClear = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaXFengyinCard = sgs.CreateSkillCard{
-	name = "LuaXFengyinCard", 
-	target_fixed = true, 
-	will_throw = false, 
-	on_use = function(self, room, source, targets) 
+	name = "LuaXFengyinCard",
+	target_fixed = true,
+	will_throw = false,
+	on_use = function(self, room, source, targets)
 		local target = room:getCurrent()
 		target:obtainCard(self)
 		room:setPlayerFlag(target, "fengyin_target")
 	end
 }
 LuaXFengyinVS = sgs.CreateViewAsSkill{
-	name = "LuaXFengyin", 
-	n = 1, 
+	name = "LuaXFengyin",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		return to_select:isKindOf("Slash")
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local card = LuaXFengyinCard:clone()
 			card:addSubcard(cards[1])
 			return card
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return false
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "@@LuaXFengyin"
 	end
 }
 LuaXFengyin = sgs.CreateTriggerSkill{
-	name = "LuaXFengyin",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseChanging, sgs.EventPhaseStart},  
-	view_as_skill = LuaXFengyinVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXFengyin",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseChanging, sgs.EventPhaseStart},
+	view_as_skill = LuaXFengyinVS,
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local splayer = room:findPlayerBySkillName(self:objectName())
 		if splayer then
@@ -536,7 +536,7 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
 	end
@@ -566,10 +566,10 @@ KingdomCount = function(targets)
 	return kingdoms
 end
 LuaFuli = sgs.CreateTriggerSkill{
-	name = "LuaFuli",  
-	frequency = sgs.Skill_Limited, 
-	events = {sgs.AskForPeaches},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaFuli",
+	frequency = sgs.Skill_Limited,
+	events = {sgs.AskForPeaches},
+	on_trigger = function(self, event, player, data)
 		local dying_data = data:toDying()
 		local dest = dying_data.who
 		if dest:objectName() == player:objectName() then
@@ -586,7 +586,7 @@ LuaFuli = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:isAlive() then
@@ -674,10 +674,10 @@ LuaXFuluan = sgs.CreateTriggerSkill{
 	状态：0224验证通过
 ]]--
 LuaXFuzuo = sgs.CreateTriggerSkill{
-	name = "LuaXFuzuo",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.PindianVerifying},   
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXFuzuo",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.PindianVerifying},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local zhangzhao = room:findPlayerBySkillName(self:objectName())
 		if zhangzhao then
@@ -702,7 +702,7 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
 	end

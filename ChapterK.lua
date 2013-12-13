@@ -11,12 +11,12 @@
 	状态：0610验证通过
 ]]--
 LuaKanpo = sgs.CreateViewAsSkill{
-	name = "LuaKanpo", 
-	n = 1, 
+	name = "LuaKanpo",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		return to_select:isBlack() and (not to_select:isEquipped())
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local first = cards[1]
 			local ncard = sgs.Sanguosha:cloneCard("nullification", first:getSuit(), first:getNumber())
@@ -24,10 +24,10 @@ LuaKanpo = sgs.CreateViewAsSkill{
 			ncard:setSkillName(self:objectName())
 			return ncard
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return false
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "nullification"
 	end,
@@ -41,15 +41,15 @@ LuaKanpo = sgs.CreateViewAsSkill{
 --[[
 	技能名：克构（觉醒技）
 	相关武将：倚天·陆抗
-	描述：回合开始阶段开始时，若你是除主公外唯一的吴势力角色，你须减少1点体力上限并获得技能“连营” 
+	描述：回合开始阶段开始时，若你是除主公外唯一的吴势力角色，你须减少1点体力上限并获得技能“连营”
 	引用：LuaXKegou
 	状态：验证通过
 ]]--
 LuaXKegou = sgs.CreateTriggerSkill{
-	name = "LuaXKegou",  
-	frequency = sgs.Skill_Wake, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXKegou",
+	frequency = sgs.Skill_Wake,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		local siblings = player:getSiblings()
 		for _,p in sgs.qlist(siblings) do
 			if p:isAlive() then
@@ -67,7 +67,7 @@ LuaXKegou = sgs.CreateTriggerSkill{
 		room:loseMaxHp(player)
 		room:acquireSkill(player, "lianying")
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:isAlive() and target:hasSkill(self:objectName()) then
@@ -156,10 +156,10 @@ LuaKurou = sgs.CreateViewAsSkill{
 	状态：验证通过
 ]]--
 LuaKuangbao = sgs.CreateTriggerSkill{
-	name = "LuaKuangbao", 
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.GameStart, sgs.Damage, sgs.Damaged},   
-	on_trigger = function(self, event, player, data) 
+	name = "LuaKuangbao",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.GameStart, sgs.Damage, sgs.Damaged},
+	on_trigger = function(self, event, player, data)
 		if event == sgs.GameStart then
 			player:gainMark("@wrath", 2)
 		else
@@ -178,10 +178,10 @@ LuaKuangbao = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaKuangfengCard = sgs.CreateSkillCard{
-	name = "LuaKuangfengCard", 
-	target_fixed = true, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
+	name = "LuaKuangfengCard",
+	target_fixed = true,
+	will_throw = true,
+	filter = function(self, targets, to_select)
 		return #targets == 0
 	end,
 	on_use = function(self, room, source, targets)
@@ -197,23 +197,23 @@ LuaKuangfengCard = sgs.CreateSkillCard{
 	end
 }
 LuaKuangfengVS = sgs.CreateViewAsSkill{
-	name = "LuaKuangfeng", 
+	name = "LuaKuangfeng",
 	n = 0,
 	view_as = function(self, cards)
 		return LuaKuangfengCard:clone()
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return false
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "@@kuangfeng"
 	end
 }
 LuaKuangfeng = sgs.CreateTriggerSkill{
-	name = "LuaKuangfeng", 
-	frequency = sgs.Skill_Frequent, 
+	name = "LuaKuangfeng",
+	frequency = sgs.Skill_Frequent,
 	events = {sgs.DamageForseen},
-	view_as_skill = LuaKuangfengVS, 
+	view_as_skill = LuaKuangfengVS,
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
 		if damage.nature == sgs.DamageStruct_Fire then
@@ -221,7 +221,7 @@ LuaKuangfeng = sgs.CreateTriggerSkill{
 			data:setValue(damage)
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			return target:getMark("@gale") > 0
@@ -232,15 +232,15 @@ LuaKuangfeng = sgs.CreateTriggerSkill{
 --[[
 	技能名：狂斧
 	相关武将：国战·潘凤
-	描述：每当你使用的【杀】对一名角色造成一次伤害后，你可以将其装备区里的一张牌弃置或置入你的装备区。 
+	描述：每当你使用的【杀】对一名角色造成一次伤害后，你可以将其装备区里的一张牌弃置或置入你的装备区。
 	引用：LuaXKuangfu
 	状态：0224验证通过
 ]]--
 LuaXKuangfu = sgs.CreateTriggerSkill{
-	name = "LuaXKuangfu",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Damage},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXKuangfu",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.Damage},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
 		local target = damage.to
@@ -280,9 +280,9 @@ LuaXKuangfu = sgs.CreateTriggerSkill{
 ]]--
 LuaKuanggu = sgs.CreateTriggerSkill{
 	name = "LuaKuanggu",
-	frequency = sgs.Skill_Compulsory, 
+	frequency = sgs.Skill_Compulsory,
 	events = {sgs.Damage, sgs.PreDamageDone},
-	on_trigger = function(self, event, player, data) 
+	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
 		local room = player:getRoom()
 		if (event == sgs.PreDamageDone) and damage.from and damage.from:hasSkill(self:objectName()) and damage.from:isAlive() then
@@ -299,7 +299,7 @@ LuaKuanggu = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
 	end
@@ -312,10 +312,10 @@ LuaKuanggu = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaKuiwei = sgs.CreateTriggerSkill{
-	name = "LuaKuiwei", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart}, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaKuiwei",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		local phase = player:getPhase()
 		local weaponCount = 0
 		local room = player:getRoom()
@@ -357,7 +357,7 @@ LuaKuiwei = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:isAlive() then
@@ -368,6 +368,6 @@ LuaKuiwei = sgs.CreateTriggerSkill{
 				end
 			end
 		end
-	end, 
+	end,
 	priority = 3
 }

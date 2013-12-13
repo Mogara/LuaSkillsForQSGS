@@ -18,7 +18,7 @@ LuaEnyuan = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		if event == sgs.CardsMoveOneTime then
 			local move = data:toMoveOneTime()
-			if move.to and (move.to:objectName() == player:objectName()) and move.from and move.from:isAlive() 
+			if move.to and (move.to:objectName() == player:objectName()) and move.from and move.from:isAlive()
 					and (move.from:objectName() ~= move.to:objectName())
 					and (move.card_ids:length() >= 2)
 					and (move.reason.m_reason ~= sgs.CardMoveReason_S_REASON_PREVIEWGIVE) then

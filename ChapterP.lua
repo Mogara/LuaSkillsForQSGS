@@ -11,10 +11,10 @@
 	状态：验证通过
 ]]--
 LuaPaiyiCard = sgs.CreateSkillCard{
-	name = "LuaPaiyiCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
+	name = "LuaPaiyiCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
 		return #targets == 0
 	end,
 	on_use = function(self, room, source, targets)
@@ -45,11 +45,11 @@ LuaPaiyiCard = sgs.CreateSkillCard{
 	end
 }
 LuaPaiyi = sgs.CreateViewAsSkill{
-	name = "LuaPaiyi", 
-	n = 0, 
+	name = "LuaPaiyi",
+	n = 0,
 	view_as = function(self, cards)
 		return LuaPaiyiCard:clone()
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		local powers = player:getPile("power")
 		if not powers:isEmpty() then
@@ -82,7 +82,7 @@ LuaPaoxiao = sgs.CreateTargetModSkill{
 --[[
 	技能名：捧日
 	相关武将：3D织梦·程昱
-	描述：出牌阶段，你可以获得一名其他角色的一张牌，视为该角色对你使用一张【杀】。每阶段限一次。 
+	描述：出牌阶段，你可以获得一名其他角色的一张牌，视为该角色对你使用一张【杀】。每阶段限一次。
 ]]--
 --[[
 	技能名：翩仪（锁定技）

@@ -70,7 +70,7 @@ LuaGanlu = sgs.CreateViewAsSkill{
 --[[
 	技能名：感染（锁定技）
 	相关武将：僵尸·僵尸
-	描述：你的装备牌都视为铁锁连环。 
+	描述：你的装备牌都视为铁锁连环。
 	引用：LuaXGanran
 	状态：验证通过
 ]]--
@@ -98,15 +98,15 @@ LuaXGanran = sgs.CreateFilterSkill{
 --[[
 	技能名：刚戾
 	相关武将：3D织梦·程昱
-	描述：每当你受到其他角色造成的1点伤害后，你可以：选择除伤害来源外的另一名角色，视为伤害来源对该角色使用一张【杀】（此【杀】无距离限制且不计入出牌阶段使用次数限制）。 
+	描述：每当你受到其他角色造成的1点伤害后，你可以：选择除伤害来源外的另一名角色，视为伤害来源对该角色使用一张【杀】（此【杀】无距离限制且不计入出牌阶段使用次数限制）。
 	引用：LuaXGangli
 	状态：验证通过
 ]]--
 LuaXGangli = sgs.CreateTriggerSkill{
 	name = "LuaXGangli",
-	frequency = sgs.Skill_NotFrequent, 
+	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.Damaged, sgs.PreDamageDone},
-	on_trigger = function(self, event, player, data) 
+	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
 		local source = damage.from
 		local victim = damage.to
@@ -142,7 +142,7 @@ LuaXGangli = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
 	end
@@ -155,9 +155,9 @@ LuaXGangli = sgs.CreateTriggerSkill{
 	状态：0610验证通过
 ]]--
 LuaGanglie = sgs.CreateTriggerSkill{
-	name = "LuaGanglie", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Damaged}, 
+	name = "LuaGanglie",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.Damaged},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
@@ -191,15 +191,15 @@ LuaGanglie = sgs.CreateTriggerSkill{
 --[[
 	技能名：刚烈
 	相关武将：翼·夏侯惇
-	描述：每当你受到一次伤害后，你可以进行一次判定，若判定结果不为红桃，你选择一项：令伤害来源弃置两张手牌，或受到你对其造成的1点伤害。 
+	描述：每当你受到一次伤害后，你可以进行一次判定，若判定结果不为红桃，你选择一项：令伤害来源弃置两张手牌，或受到你对其造成的1点伤害。
 	引用：LuaXNeoGanglie
 	状态：验证通过
 ]]--
 LuaXNeoGanglie = sgs.CreateTriggerSkill{
-	name = "LuaXNeoGanglie",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Damaged},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXNeoGanglie",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.Damaged},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
 		local from = damage.from
@@ -299,8 +299,8 @@ LuaGongqi = sgs.CreateViewAsSkill{
 	状态：0224验证通过
 ]]--
 LuaNosGongqi = sgs.CreateViewAsSkill{
-	name = "LuaNosGongqi", 
-	n = 1, 
+	name = "LuaNosGongqi",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		local weapon = sgs.Self:getWeapon()
 		if weapon then
@@ -311,8 +311,8 @@ LuaNosGongqi = sgs.CreateViewAsSkill{
 			end
 		end
 		return to_select:getTypeId() == sgs.Card_Equip
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local card = cards[1]
 			local suit = card:getSuit()
@@ -323,10 +323,10 @@ LuaNosGongqi = sgs.CreateViewAsSkill{
 			slash:setSkillName(self:objectName())
 			return slash
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return sgs.Slash_IsAvailable(player)
-	end, 
+	end,
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "slash"
 	end
@@ -345,7 +345,7 @@ LuaNosGongqiTargetMod = sgs.CreateTargetModSkill{
 --[[
 	技能名：攻心
 	相关武将：神·吕蒙
-	描述：出牌阶段限一次，你可以观看一名其他角色的手牌，然后选择其中一张♥牌并选择一项：弃置之，或将之置于牌堆顶。 
+	描述：出牌阶段限一次，你可以观看一名其他角色的手牌，然后选择其中一张♥牌并选择一项：弃置之，或将之置于牌堆顶。
 	引用：LuaGongxin
 	状态：验证通过
 ]]--
@@ -372,7 +372,7 @@ LuaGongxin = sgs.CreateViewAsSkill{
 	view_as = function(self, cards)
 		local card = LuaGongxinCard:clone()
 		card:setSkillName(self:objectName())
-		return card 
+		return card
 	end,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaGongxinCard")
@@ -381,15 +381,15 @@ LuaGongxin = sgs.CreateViewAsSkill{
 --[[
 	技能名：共谋
 	相关武将：倚天·钟士季
-	描述：回合结束阶段开始时，可指定一名其他角色：其在摸牌阶段摸牌后，须给你X张手牌（X为你手牌数与对方手牌数的较小值），然后你须选择X张手牌交给对方 
+	描述：回合结束阶段开始时，可指定一名其他角色：其在摸牌阶段摸牌后，须给你X张手牌（X为你手牌数与对方手牌数的较小值），然后你须选择X张手牌交给对方
 	引用：LuaXGongmou、LuaXGongmouExchange
 	状态：验证通过
 ]]--
 LuaXGongmou = sgs.CreateTriggerSkill{
-	name = "LuaXGongmou",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXGongmou",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local phase = player:getPhase()
 		if phase == sgs.Player_Finish then
@@ -410,10 +410,10 @@ LuaXGongmou = sgs.CreateTriggerSkill{
 	end
 }
 LuaXGongmouExchange = sgs.CreateTriggerSkill{
-	name = "#LuaXGongmouExchange",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.EventPhaseStart},  
-	on_trigger = function(self, event, player, data) 
+	name = "#LuaXGongmouExchange",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		if player:getPhase() == sgs.Player_Draw then
 			player:loseMark("@conspiracy")
 			local room = player:getRoom()
@@ -436,13 +436,13 @@ LuaXGongmouExchange = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			return target:getMark("@conspiracy") > 0
 		end
 		return false
-	end, 
+	end,
 	priority = -2
 }
 --[[
@@ -454,15 +454,15 @@ LuaXGongmouExchange = sgs.CreateTriggerSkill{
 --[[
 	技能名：固守
 	相关武将：智·田丰
-	描述：回合外，当你使用或打出一张基本牌时，可以摸一张牌 
+	描述：回合外，当你使用或打出一张基本牌时，可以摸一张牌
 	引用：LuaXGushou
 	状态：验证通过
 ]]--
 LuaXGushou = sgs.CreateTriggerSkill{
-	name = "LuaXGushou",  
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.CardUsed, sgs.CardResponsed},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXGushou",
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.CardUsed, sgs.CardResponsed},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local current = room:getCurrent()
 		if current and current:objectName() ~= player:objectName() then
@@ -504,7 +504,7 @@ function strcontain(a, b)
 		end
 	end
 	return k
-end 
+end
 LuaGuzheng = sgs.CreateTriggerSkill{
 	name = "LuaGuzheng",
 	frequency = sgs.Skill_NotFrequent,
@@ -668,15 +668,15 @@ LuaGuanxing = sgs.CreateTriggerSkill{
 --[[
 	技能名：归汉
 	相关武将：倚天·蔡昭姬
-	描述：出牌阶段，你可以主动弃置两张相同花色的红色手牌，和你指定的一名其他存活角色互换位置。每阶段限一次 
+	描述：出牌阶段，你可以主动弃置两张相同花色的红色手牌，和你指定的一名其他存活角色互换位置。每阶段限一次
 	引用：LuaXGuihan
 	状态：验证通过
 ]]--
 LuaXGuihanCard = sgs.CreateSkillCard{
-	name = "LuaXGuihanCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	on_effect = function(self, effect) 
+	name = "LuaXGuihanCard",
+	target_fixed = false,
+	will_throw = true,
+	on_effect = function(self, effect)
 		local source = effect.from
 		local target = effect.to
 		local room = source:getRoom()
@@ -684,8 +684,8 @@ LuaXGuihanCard = sgs.CreateSkillCard{
 	end
 }
 LuaXGuihan = sgs.CreateViewAsSkill{
-	name = "LuaXGuihan", 
-	n = 2, 
+	name = "LuaXGuihan",
+	n = 2,
 	view_filter = function(self, selected, to_select)
 		if not to_select:isEquipped() then
 			if #selected == 0 then
@@ -696,8 +696,8 @@ LuaXGuihan = sgs.CreateViewAsSkill{
 			end
 		end
 		return false
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 2 then
 			local card = LuaXGuihanCard:clone()
 			for _,cd in pairs(cards) do
@@ -705,7 +705,7 @@ LuaXGuihan = sgs.CreateViewAsSkill{
 			end
 			return card
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaXGuihanCard")
 	end
@@ -757,7 +757,7 @@ LuaGuixin = sgs.CreateTriggerSkill{
 	相关武将：倚天·魏武帝
 	描述：回合结束阶段，你可以做以下二选一：
 		1. 永久改变一名其他角色的势力
-		2. 永久获得一项未上场或已死亡角色的主公技。(获得后即使你不是主公仍然有效) 
+		2. 永久获得一项未上场或已死亡角色的主公技。(获得后即使你不是主公仍然有效)
 	引用：LuaXWeiwudiGuixin
 	状态：验证通过
 ]]--
@@ -766,7 +766,7 @@ LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
 	events = {sgs.EventPhaseProceeding},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Finish then 
+		if player:getPhase() == sgs.Player_Finish then
 			if room:askForSkillInvoke(player, self:objectName()) then
 				local choice = room:askForChoice(player, self:objectName(), "modify+obtain")
 				local others = room:getOtherPlayers(player)
@@ -776,7 +776,7 @@ LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
 					ai_data:setValue(to_modify)
 					room:setTag("Guixin2Modify", ai_data)
 					local kingdom = room:askForChoice(player, self:objectName(), "wei+shu+wu+qun")
-					room:removeTag("Guixin2Modify")		   
+					room:removeTag("Guixin2Modify")
 					local old_kingdom = to_modify:getKingdom()
 					room:setPlayerProperty(to_modify, "kingdom", sgs.QVariant(kingdom))
 				elseif choice == "obtain" then
@@ -785,22 +785,22 @@ LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
 						table.removeOne(lords, p:getGeneralName())
 					end
 					local lord_skills = {}
-					for _, lord in ipairs(lords) do 
+					for _, lord in ipairs(lords) do
 						local general = sgs.Sanguosha:getGeneral(lord)
 						local skills = general:getSkillList()
-						for _, skill in sgs.qlist(skills) do 
+						for _, skill in sgs.qlist(skills) do
 							if skill:isLordSkill() then
 								if not player:hasSkill(skill:objectName()) then
 									table.insert(lord_skills, skill:objectName())
 								end
 							end
-						end	
+						end
 					end
 					if #lord_skills > 0 then
 						local choices = table.concat(lord_skills, "+")
 						local skill_name = room:askForChoice(player, self:objectName(), choices)
-						local skill = sgs.Sanguosha:getSkill(skill_name)		   
-						room:acquireSkill(player, skill) 
+						local skill = sgs.Sanguosha:getSkill(skill_name)
+						room:acquireSkill(player, skill)
 						local jiemingEX = sgs.Sanguosha:getTriggerSkill(skill:objectName())
 						jiemingEX:trigger(sgs.GameStart, room, player, sgs.QVariant())
 					end

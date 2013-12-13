@@ -6,7 +6,7 @@
 --[[
 	技能名：仁德
 	相关武将：标准·刘备
-	描述：出牌阶段限一次，你可以将任意数量的手牌以任意分配方式交给任意数量的其他角色，然后当你于以此法交给其他角色的手牌首次达到两张或更多时，你回复1点体力。 
+	描述：出牌阶段限一次，你可以将任意数量的手牌以任意分配方式交给任意数量的其他角色，然后当你于以此法交给其他角色的手牌首次达到两张或更多时，你回复1点体力。
 ]]--
 --[[
 	技能名：仁德
@@ -16,9 +16,9 @@
 	状态：验证通过
 ]]--
 LuaRendeCard = sgs.CreateSkillCard{
-	name = "LuaRendeCard", 
-	target_fixed = false, 
-	will_throw = false, 
+	name = "LuaRendeCard",
+	target_fixed = false,
+	will_throw = false,
 	on_use = function(self, room, source, targets)
 		local target
 		if #targets == 0 then
@@ -48,12 +48,12 @@ LuaRendeCard = sgs.CreateSkillCard{
 	end
 }
 LuaRendeVS = sgs.CreateViewAsSkill{
-	name = "LuaRende", 
-	n = 999, 
+	name = "LuaRende",
+	n = 999,
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards > 0 then
 			local rende_card = LuaRendeCard:clone()
 			for i=1, #cards, 1 do
@@ -65,15 +65,15 @@ LuaRendeVS = sgs.CreateViewAsSkill{
 	end
 }
 LuaRende = sgs.CreateTriggerSkill{
-	name = "LuaRende", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
-	view_as_skill = LuaRendeVS, 
+	name = "LuaRende",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	view_as_skill = LuaRendeVS,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		room:setPlayerMark(player, "rende", 0)
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:isAlive() then
@@ -95,9 +95,9 @@ LuaRende = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaRendeCard = sgs.CreateSkillCard{
-	name = "LuaRendeCard", 
-	target_fixed = false, 
-	will_throw = false, 
+	name = "LuaRendeCard",
+	target_fixed = false,
+	will_throw = false,
 	on_use = function(self, room, source, targets)
 		local target
 		if #targets == 0 then
@@ -127,15 +127,15 @@ LuaRendeCard = sgs.CreateSkillCard{
 	end
 }
 LuaRendeVS = sgs.CreateViewAsSkill{
-	name = "LuaRende", 
-	n = 2, 
+	name = "LuaRende",
+	n = 2,
 	view_filter = function(self, selected, to_select)
 		if not to_select:isEquipped() then
 			local markCount = sgs.Self:getMark("rende")
 			return #selected + markCount < 2
 		end
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards > 0 then
 			local rende_card = LuaRendeCard:clone()
 			for i=1, #cards, 1 do
@@ -147,15 +147,15 @@ LuaRendeVS = sgs.CreateViewAsSkill{
 	end
 }
 LuaRende = sgs.CreateTriggerSkill{
-	name = "LuaRende", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart},  
-	view_as_skill = LuaRendeVS, 
+	name = "LuaRende",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	view_as_skill = LuaRendeVS,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		room:setPlayerMark(player, "rende", 0)
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:isAlive() then
@@ -175,8 +175,8 @@ LuaRende = sgs.CreateTriggerSkill{
 	描述：一名其他角色处于濒死状态时，你可以将武将牌翻面并将所有手牌交给该角色，令该角色回复1点体力。
 ]]--
 LuaRenxinCard = sgs.CreateSkillCard{
-	name = "LuaRenxinCard", 
-	target_fixed = true, 
+	name = "LuaRenxinCard",
+	target_fixed = true,
 
 	on_use = function(self, room, source, targets)
 		local who = room:getCurrentDyingPlayer()
@@ -187,21 +187,21 @@ LuaRenxinCard = sgs.CreateSkillCard{
 			recover.who = source
 			room:recover(who,recover)
 	end
-end	
+end
 }
 LuaRenxin = sgs.CreateViewAsSkill{
-	name = "LuaRenxin", 
+	name = "LuaRenxin",
 	n = 0,
 
 	view_as = function(self, cards)
 		return LuaRenxinCard:clone()
-end, 
+end,
 	enabled_at_play = function(self, player)
 		return false
 end,
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "peach" and not player:isKongcheng()
-end	
+end
 }
 --[[
 	技能名：忍戒（锁定技）
@@ -211,24 +211,24 @@ end
 	状态：验证通过
 ]]--
 LuaRenjie = sgs.CreateTriggerSkill{
-	name = "LuaRenjie", 
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.Damaged,sgs.CardsMoveOneTime}, 
+	name = "LuaRenjie",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.Damaged,sgs.CardsMoveOneTime},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if event == sgs.CardsMoveOneTime then 
+		if event == sgs.CardsMoveOneTime then
 		if player:getPhase() == sgs.Player_Discard then
 			local move = data:toMoveOneTime()
 		if move.to_place == sgs.Player_DiscardPile and move.from:objectName() == player:objectName() then
 			local n = move.card_ids:length()
 			player:gainMark("@bear",n)
 	end
-end	
+end
 		elseif event == sgs.Damaged then
 			local damage = data:toDamage()
 			player:gainMark("@bear",damage.damage)
 	end
-end	
+end
 }
 --[[
 	技能名：肉林（锁定技）
@@ -259,10 +259,10 @@ askForDoubleJink = function(player, slasher, reason)
 	end
 end
 LuaRoulin = sgs.CreateTriggerSkill{
-	name = "LuaRoulin", 
-	frequency = sgs.Skill_Compulsory, 
+	name = "LuaRoulin",
+	frequency = sgs.Skill_Compulsory,
 	events = {sgs.SlashProceed},
-	on_trigger = function(self, event, player, data) 
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local effect = data:toSlashEffect()
 		local source = effect.from
@@ -279,7 +279,7 @@ LuaRoulin = sgs.CreateTriggerSkill{
 			return true
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:hasSkill(self:objectName()) then
@@ -298,10 +298,10 @@ LuaRoulin = sgs.CreateTriggerSkill{
 	状态：验证通过（但袁术通过伪帝若愚觉醒后不能获得激将）
 ]]--
 LuaRuoyu = sgs.CreateTriggerSkill{
-	name = "LuaRuoyu$", 
-	frequency = sgs.Skill_Wake, 
-	events = {sgs.EventPhaseStart}, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaRuoyu$",
+	frequency = sgs.Skill_Wake,
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local can_invoke = true
 		local list = room:getAllPlayers()
@@ -325,7 +325,7 @@ LuaRuoyu = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		if target then
 			if target:getPhase() == sgs.Player_Start then

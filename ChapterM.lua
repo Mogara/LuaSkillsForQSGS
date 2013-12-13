@@ -37,8 +37,8 @@ LuaSavageAssaultAvoid = sgs.CreateTriggerSkill{
 	end
 }
 LuaManyi = sgs.CreateTriggerSkill{
-	name = "LuaManyi", 
-	events = {sgs.Debut}, 
+	name = "LuaManyi",
+	events = {sgs.Debut},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local opponent = player:getNext()
@@ -48,7 +48,7 @@ LuaManyi = sgs.CreateTriggerSkill{
 		if not nm:isAvailable(player) then nm = nil return end
 		if player:askForSkillInvoke(self:objectName()) then
 			room:useCard(sgs.CardUseStruct(nm, player, nil))
-			return 
+			return
 		end
 	end
 }
@@ -128,7 +128,7 @@ LuaManjuan = sgs.CreateTriggerSkill{
 					for _,card_id in sgs.qlist(move.card_ids) do
 						DoManjuan(player, card_id, self:objectName())
 					end
-				else 
+				else
 					DoManjuan(player, card_id, self:objectName())
 				end
 				return event ~= sgs.CardsMoveOneTime
@@ -141,15 +141,15 @@ LuaManjuan = sgs.CreateTriggerSkill{
 --[[
 	技能名：猛进
 	相关武将：火·庞德、SP·庞德
-	描述：当你使用的【杀】被目标角色的【闪】抵消时，你可以弃置其一张牌。 
+	描述：当你使用的【杀】被目标角色的【闪】抵消时，你可以弃置其一张牌。
 	引用：LuaMengjin
 	状态：验证通过
 ]]--
 LuaMengjin = sgs.CreateTriggerSkill{
-	name = "LuaMengjin",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.SlashMissed},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaMengjin",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.SlashMissed},
+	on_trigger = function(self, event, player, data)
 		local effect = data:toSlashEffect()
 		local dest = effect.to
 		if dest:isAlive() then
@@ -163,7 +163,7 @@ LuaMengjin = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	priority = 2
 }
 --[[
@@ -221,16 +221,16 @@ LuaMiji = sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaXMixinCard = sgs.CreateSkillCard{
-	name = "LuaXMixinCard", 
-	target_fixed = false, 
-	will_throw = false, 
-	filter = function(self, targets, to_select) 
+	name = "LuaXMixinCard",
+	target_fixed = false,
+	will_throw = false,
+	filter = function(self, targets, to_select)
 		if #targets == 0 then
 			return to_select:objectName() ~= sgs.Self:objectName()
 		end
 		return false
 	end,
-	on_effect = function(self, effect) 
+	on_effect = function(self, effect)
 		local source = effect.from
 		local target = effect.to
 		local room = source:getRoom()
@@ -260,18 +260,18 @@ LuaXMixinCard = sgs.CreateSkillCard{
 	end
 }
 LuaXMixin = sgs.CreateViewAsSkill{
-	name = "LuaXMixin", 
-	n = 1, 
+	name = "LuaXMixin",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local card = LuaXMixinCard:clone()
 			card:addSubcard(cards[1])
 			return card
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaXMixinCard")
 	end
@@ -284,16 +284,16 @@ LuaXMixin = sgs.CreateViewAsSkill{
 	状态：验证通过
 ]]--
 LuaXMizhaoCard = sgs.CreateSkillCard{
-	name = "LuaXMizhaoCard", 
-	target_fixed = false, 
-	will_throw = true, 
-	filter = function(self, targets, to_select) 
+	name = "LuaXMizhaoCard",
+	target_fixed = false,
+	will_throw = true,
+	filter = function(self, targets, to_select)
 		if #targets == 0 then
 			return to_select:objectName() ~= sgs.Self:objectName()
 		end
 		return false
 	end,
-	on_effect = function(self, effect) 
+	on_effect = function(self, effect)
 		local source = effect.from
 		local target = effect.to
 		target:obtainCard(effect.card, false)
@@ -314,12 +314,12 @@ LuaXMizhaoCard = sgs.CreateSkillCard{
 	end
 }
 LuaXMizhaoVS = sgs.CreateViewAsSkill{
-	name = "LuaXMizhao", 
-	n = 999, 
+	name = "LuaXMizhao",
+	n = 999,
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		local count = sgs.Self:getHandcardNum()
 		if #cards == count then
 			local card = LuaXMizhaoCard:clone()
@@ -328,7 +328,7 @@ LuaXMizhaoVS = sgs.CreateViewAsSkill{
 			end
 			return card
 		end
-	end, 
+	end,
 	enabled_at_play = function(self, player)
 		if not player:isKongcheng() then
 			return not player:hasUsed("#LuaXMizhaoCard")
@@ -337,11 +337,11 @@ LuaXMizhaoVS = sgs.CreateViewAsSkill{
 	end
 }
 LuaXMizhao = sgs.CreateTriggerSkill{
-	name = "LuaXMizhao",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.Pindian},  
-	view_as_skill = LuaXMizhaoVS, 
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXMizhao",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.Pindian},
+	view_as_skill = LuaXMizhaoVS,
+	on_trigger = function(self, event, player, data)
 		local pindian = data:toPindian()
 		if pindian.reason == self:objectName() then
 			local fromNumber = pindian.from_card:getNumber()
@@ -369,17 +369,17 @@ LuaXMizhao = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
-	end, 
+	end,
 	priority = -1
 }
 --[[
 	技能名：灭计（锁定技）
 	相关武将：一将成名2013·李儒
 	描述：你使用黑色非延时类锦囊牌的目标数上限至少为二。
-	引用：LuaMieji 
+	引用：LuaMieji
 	状态：验证通过
 ]]--
 LuaMieji = sgs.CreateTargetModSkill{
@@ -396,14 +396,14 @@ end
 --[[
 	技能名：名士（锁定技）（0224及以前版）
 	相关武将：国战·孔融
-	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。 
+	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。
 	引用：LuaXMingshi
 	状态：0224验证通过
 ]]--
 LuaXMingshi = sgs.CreateTriggerSkill{
-	name = "LuaXMingshi",  
-	frequency = sgs.Skill_Compulsory, 
-	events = {sgs.DamageInflicted},  
+	name = "LuaXMingshi",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.DamageInflicted},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
@@ -505,19 +505,19 @@ LuaMingce = sgs.CreateViewAsSkill{
 LuaXMingjianCard = sgs.CreateSkillCard{
 	name = "LuaXMingjianCard",
 	target_fixed = true,
-	will_throw = false, 
+	will_throw = false,
 	on_use = function(self, room, source, targets)
-		local target = room:getCurrent()			
+		local target = room:getCurrent()
 		target:addToPile("jian", self)
-	end 
+	end
 }
 LuaXMingjianVS = sgs.CreateViewAsSkill{
-	name = "LuaXMingjian", 
-	n = 1, 
+	name = "LuaXMingjian",
+	n = 1,
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
-	end, 
-	view_as = function(self, cards) 
+	end,
+	view_as = function(self, cards)
 		if #cards == 1 then
 			local card = cards[1]
 			local vs_card = LuaXMingjianCard:clone()
@@ -525,19 +525,19 @@ LuaXMingjianVS = sgs.CreateViewAsSkill{
 			vs_card:addSubcard(card)
 			return vs_card
 		end
-	end, 
-	enabled_at_play=function()
-		return false 
 	end,
-	enabled_at_response = function(self,player,pattern) 
-		return pattern == "@@LuaXMingjian" 
+	enabled_at_play=function()
+		return false
+	end,
+	enabled_at_response = function(self,player,pattern)
+		return pattern == "@@LuaXMingjian"
 	end
 }
 LuaXMingjian = sgs.CreateTriggerSkill{
-	name = "LuaXMingjian", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.EventPhaseStart}, 
-	view_as_skill = LuaXMingjianVS, 
+	name = "LuaXMingjian",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.EventPhaseStart},
+	view_as_skill = LuaXMingjianVS,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local phase = player:getPhase()
@@ -555,13 +555,13 @@ LuaXMingjian = sgs.CreateTriggerSkill{
 						return false
 					elseif choice == "ming" then
 						local data = sgs.QVariant()
-						data:setValue(player) 
+						data:setValue(player)
 						local card = room:askForCard(xin, ".|.|.|.|.", "@mingjiana", data, "LuaXMingjian")
 						if card then
 							player:skip(sgs.Player_Judge)
 						end
 					elseif choice == "jian"  then
-						room:askForUseCard(xin, "@@LuaXMingjian", "@mingjianb", -1, sgs.Card_MethodNone) 
+						room:askForUseCard(xin, "@@LuaXMingjian", "@mingjianb", -1, sgs.Card_MethodNone)
 					end
 				end
 			end
@@ -575,12 +575,12 @@ LuaXMingjian = sgs.CreateTriggerSkill{
 luaXMingjianStop = sgs.CreateTriggerSkill{
 	name = "#luaXMingjianStop",
 	priority = 5,
-	events = sgs.AskForRetrial ,		
+	events = sgs.AskForRetrial ,
 	on_trigger = function(self, event, player, data)
 		local judge = data:toJudge()
 		local jianpile = judge.who:getPile("jian")
 		return not jianpile:isEmpty()
-	end,	  
+	end,
 	can_trigger = function()
 		return true
 	end
@@ -588,51 +588,51 @@ luaXMingjianStop = sgs.CreateTriggerSkill{
 --[[
 	技能名：明哲
 	相关武将：新3V3·诸葛瑾
-	描述：你的回合外，当你因使用、打出或弃置而失去一张红色牌时，你可以摸一张牌。 
+	描述：你的回合外，当你因使用、打出或弃置而失去一张红色牌时，你可以摸一张牌。
 	引用：LuaXMingzhe
 	状态：通过
 ]]--
-LuaXMingzhe=sgs.CreateTriggerSkill{ 
+LuaXMingzhe=sgs.CreateTriggerSkill{
 	name="LuaXMingzhe",
 	frequency=sgs.Skill_Frequent,
 	events={sgs.BeforeCardsMove, sgs.CardsMoveOneTime},
 	on_trigger=function(self, event, player, data)
 		local room = player:getRoom()
-		if (player:getPhase() ~= sgs.Player_NotActive) then 
-			return 
+		if (player:getPhase() ~= sgs.Player_NotActive) then
+			return
 		end
 		local move = data:toMoveOneTime()
-		if move.from:objectName() ~= player:objectName() then 
-			return 
+		if move.from:objectName() ~= player:objectName() then
+			return
 		end
-		if event == sgs.BeforeCardsMove then 
+		if event == sgs.BeforeCardsMove then
 			local reason = move.reason.m_reason
 			local reasonx = bit32.band(reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
 			local Yes = reasonx == sgs.CardMoveReason_S_REASON_DISCARD
-			or reasonx == sgs.CardMoveReason_S_REASON_USE or reasonx == sgs.CardMoveReason_S_REASON_RESPONSE 
+			or reasonx == sgs.CardMoveReason_S_REASON_USE or reasonx == sgs.CardMoveReason_S_REASON_RESPONSE
 			if Yes then
 				local card
 				local i = 0
 				for _,id in sgs.qlist(move.card_ids) do
 					card = sgs.Sanguosha:getCard(id)
-					if move.from_places:at(i) == sgs.Player_PlaceHand 
+					if move.from_places:at(i) == sgs.Player_PlaceHand
 						or move.from_places:at(i) == sgs.Player_PlaceEquip then
-						if card and room:getCardOwner(id):getSeat() == player:getSeat() then 
-							player:addMark(self:objectName())							
+						if card and room:getCardOwner(id):getSeat() == player:getSeat() then
+							player:addMark(self:objectName())
 						end
 					end
 					i = i + 1
 				end
 			end
-		else 
+		else
 			for i = 0, player:getMark(self:objectName()) - 1 do
 				if player:askForSkillInvoke(self:objectName(),data) then
-					player:drawCards(1) 
-				else 
-					break 
+					player:drawCards(1)
+				else
+					break
 				end
 			end
-			player:setMark(self:objectName(), 0) 
+			player:setMark(self:objectName(), 0)
 		end
 	end,
 }
@@ -644,9 +644,9 @@ LuaXMingzhe=sgs.CreateTriggerSkill{
 	状态：验证通过
 ]]--
 LuaMouduanStart = sgs.CreateTriggerSkill{
-	name = "#LuaMouduanStart", 
-	frequency = sgs.Skill_Frequency, 
-	events = {sgs.GameStart}, 
+	name = "#LuaMouduanStart",
+	frequency = sgs.Skill_Frequency,
+	events = {sgs.GameStart},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		player:gainMark("@wu")
@@ -656,9 +656,9 @@ LuaMouduanStart = sgs.CreateTriggerSkill{
 	priority = -1
 }
 LuaMouduan = sgs.CreateTriggerSkill{
-	name = "LuaMouduan", 
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.TurnStart, sgs.CardsMoveOneTime}, 
+	name = "LuaMouduan",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.TurnStart, sgs.CardsMoveOneTime},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local source = room:findPlayerBySkillName(self:objectName())
@@ -666,7 +666,7 @@ LuaMouduan = sgs.CreateTriggerSkill{
 			local move = data:toMoveOneTime()
 			if move.from then
 				if move.from:objectName() == player:objectName() then
-					if player:getMark("@wu") > 0 then	
+					if player:getMark("@wu") > 0 then
 						local handcardnum = player:getHandcardNum()
 						if handcardnum <= 2 then
 							player:loseMark("@wu")
@@ -700,16 +700,16 @@ LuaMouduan = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return (target ~= nil)
 	end
 }
 LuaMouduanClear = sgs.CreateTriggerSkill{
 	name = "#LuaMouduanClear",
-	frequency = sgs.Skill_Frequent, 
-	events = {sgs.EventLoseSkill}, 
-	on_trigger = function(self, event, player, data) 
+	frequency = sgs.Skill_Frequent,
+	events = {sgs.EventLoseSkill},
+	on_trigger = function(self, event, player, data)
 		local name = data:toString()
 		if name == "LuaMouduan" then
 			if player:getMark("@wu") > 0 then
@@ -723,7 +723,7 @@ LuaMouduanClear = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return not target:hasSkill("LuaMouduan")
 	end
@@ -731,15 +731,15 @@ LuaMouduanClear = sgs.CreateTriggerSkill{
 --[[
 	技能名：谋溃
 	相关武将：铜雀台·穆顺、SP·伏完
-	描述：当你使用【杀】指定一名角色为目标后，你可以选择一项：摸一张牌，或弃置其一张牌。若如此做，此【杀】被【闪】抵消时，该角色弃置你的一张牌。 
+	描述：当你使用【杀】指定一名角色为目标后，你可以选择一项：摸一张牌，或弃置其一张牌。若如此做，此【杀】被【闪】抵消时，该角色弃置你的一张牌。
 	引用：LuaXMoukui
 	状态：验证通过
 ]]--
 LuaXMoukui = sgs.CreateTriggerSkill{
-	name = "LuaXMoukui",  
-	frequency = sgs.Skill_NotFrequent, 
-	events = {sgs.TargetConfirmed, sgs.SlashMissed, sgs.CardFinished},  
-	on_trigger = function(self, event, player, data) 
+	name = "LuaXMoukui",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.TargetConfirmed, sgs.SlashMissed, sgs.CardFinished},
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.TargetConfirmed then
 			local use = data:toCardUse()
@@ -796,7 +796,7 @@ LuaXMoukui = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end, 
+	end,
 	can_trigger = function(self, target)
 		return target
 	end

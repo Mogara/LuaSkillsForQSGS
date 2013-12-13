@@ -3020,14 +3020,14 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 
 --[[
 void XianzhenSlashCard::onUse(Room *room, const CardUseStruct &card_use) const{
-    ServerPlayer *target = card_use.from->tag["XianzhenTarget"].value<PlayerStar>();
-    if (target == NULL || target->isDead())
-        return;
+	ServerPlayer *target = card_use.from->tag["XianzhenTarget"].value<PlayerStar>();
+	if (target == NULL || target->isDead())
+		return;
 
-    if (!card_use.from->canSlash(target, NULL, false))
-        return;
+	if (!card_use.from->canSlash(target, NULL, false))
+		return;
 
-    room->askForUseSlashTo(card_use.from, target, "@xianzhen-slash");
+	room->askForUseSlashTo(card_use.from, target, "@xianzhen-slash");
 }
 ]]
 
@@ -3077,47 +3077,47 @@ void XianzhenSlashCard::onUse(Room *room, const CardUseStruct &card_use) const{
 --[[
 class Dongcha: public PhaseChangeSkill{
 public:
-    Dongcha():PhaseChangeSkill("dongcha"){
+	Dongcha():PhaseChangeSkill("dongcha"){
 
-    }
+	}
 
-    virtual bool onPhaseChange(ServerPlayer *jiawenhe) const{
-        switch(jiawenhe->getPhase()){
-        case Player::Start:{
-                if(jiawenhe->askForSkillInvoke(objectName())){
-                    Room *room = jiawenhe->getRoom();
-                    QList<ServerPlayer *> players = room->getOtherPlayers(jiawenhe);
-                    ServerPlayer *dongchaee = room->askForPlayerChosen(jiawenhe, players, objectName());
-                    room->setPlayerFlag(dongchaee, "dongchaee");
-                    room->setTag("Dongchaee", dongchaee->objectName());
-                    room->setTag("Dongchaer", jiawenhe->objectName());
+	virtual bool onPhaseChange(ServerPlayer *jiawenhe) const{
+		switch(jiawenhe->getPhase()){
+		case Player::Start:{
+				if(jiawenhe->askForSkillInvoke(objectName())){
+					Room *room = jiawenhe->getRoom();
+					QList<ServerPlayer *> players = room->getOtherPlayers(jiawenhe);
+					ServerPlayer *dongchaee = room->askForPlayerChosen(jiawenhe, players, objectName());
+					room->setPlayerFlag(dongchaee, "dongchaee");
+					room->setTag("Dongchaee", dongchaee->objectName());
+					room->setTag("Dongchaer", jiawenhe->objectName());
 
-                    room->showAllCards(dongchaee, jiawenhe);
-                }
+					room->showAllCards(dongchaee, jiawenhe);
+				}
 
-                break;
-            }
+				break;
+			}
 
-        case Player::Finish:{
-                Room *room = jiawenhe->getRoom();
-                QString dongchaee_name = room->getTag("Dongchaee").toString();
-                if(!dongchaee_name.isEmpty()){
-                    ServerPlayer *dongchaee = room->findChild<ServerPlayer *>(dongchaee_name);
-                    room->setPlayerFlag(dongchaee, "-dongchaee");
+		case Player::Finish:{
+				Room *room = jiawenhe->getRoom();
+				QString dongchaee_name = room->getTag("Dongchaee").toString();
+				if(!dongchaee_name.isEmpty()){
+					ServerPlayer *dongchaee = room->findChild<ServerPlayer *>(dongchaee_name);
+					room->setPlayerFlag(dongchaee, "-dongchaee");
 
-                    room->setTag("Dongchaee", QVariant());
-                    room->setTag("Dongchaer", QVariant());
-                }
+					room->setTag("Dongchaee", QVariant());
+					room->setTag("Dongchaer", QVariant());
+				}
 
-                break;
-            }
+				break;
+			}
 
-        default:
-            break;
-        }
+		default:
+			break;
+		}
 
-        return false;
-    }
+		return false;
+	}
 };
 ]]
 
@@ -3141,21 +3141,21 @@ public:
 
 const Card *WeidaiCard::validateInResponse(ServerPlayer *user, bool &continuable) const {
 //现在这个版本的validateInResponse已经没有bool引用了啊，这么写是不是运行不了么？这个技能有bug？
-    continuable = true;
-    Room *room = user->getRoom();
-    foreach (ServerPlayer *liege, room->getLieges("wu", user)) {
-        QVariant tohelp = QVariant::fromValue((PlayerStar)user);
-        QString prompt = QString("@weidai-analeptic:%1").arg(user->objectName());
-        const Card *card = room->askForCard(liege, ".|spade|2~9|hand", prompt, tohelp, Card::MethodDiscard, user);
-        if(card){
-            Analeptic *ana = new Analeptic(card->getSuit(), card->getNumber());
-            ana->setSkillName("weidai");
-            ana->addSubcard(card);
-            return ana;
-        }
-    }
-    room->setPlayerFlag(user, "Global_WeidaiFailed");
-    return NULL;
+	continuable = true;
+	Room *room = user->getRoom();
+	foreach (ServerPlayer *liege, room->getLieges("wu", user)) {
+		QVariant tohelp = QVariant::fromValue((PlayerStar)user);
+		QString prompt = QString("@weidai-analeptic:%1").arg(user->objectName());
+		const Card *card = room->askForCard(liege, ".|spade|2~9|hand", prompt, tohelp, Card::MethodDiscard, user);
+		if(card){
+			Analeptic *ana = new Analeptic(card->getSuit(), card->getNumber());
+			ana->setSkillName("weidai");
+			ana->addSubcard(card);
+			return ana;
+		}
+	}
+	room->setPlayerFlag(user, "Global_WeidaiFailed");
+	return NULL;
 }
 ]]
 
@@ -3549,10 +3549,10 @@ LuaDimengCard = sgs.CreateSkillCard{
 		local n2 = b:getHandcardNum()
 		--[[ //这段代码不知道什么意思，也不知道怎么转换
 		foreach (ServerPlayer *p, room->getAlivePlayers()) {
-            if (p != a && p != b)
-                room->doNotify(p, QSanProtocol::S_COMMAND_EXCHANGE_KNOWN_CARDS,
-                               QSanProtocol::Utils::toJsonArray(a->objectName(), b->objectName()));
-        }
+			if (p != a && p != b)
+				room->doNotify(p, QSanProtocol::S_COMMAND_EXCHANGE_KNOWN_CARDS,
+							   QSanProtocol::Utils::toJsonArray(a->objectName(), b->objectName()));
+		}
 		]]
 		local exchangeMove = sgs.CardsMoveList()
 		local move1 = sgs.CardsMoveStruct()
