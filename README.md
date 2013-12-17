@@ -3,6 +3,9 @@ LuaSkillsForQSGS
 
 新版太阳神三国杀武将技能代码速查手册（Lua版）
 
+Fs: Most of the skills is written in the year 2012, and can't be used in the newest 1210 & 1217 versions anymore.
+Coders needed badly, for we should update the skills to the newest version.
+
 If you find BUG in reading, please click the following issue to let us know. We would fix it as quickly as possible.
 https://github.com/DGAH/LuaSkillsForQSGS/issues/7
 
