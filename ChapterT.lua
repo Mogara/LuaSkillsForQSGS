@@ -325,42 +325,33 @@ LuaTianyiTargetMod = sgs.CreateTargetModSkill{
 }
 --[[
 	技能名：挑衅
-	相关武将：山·姜维、1v1·姜维1v1
-	描述：出牌阶段限一次，你可以选择一名攻击范围内含有你的其他角色，该角色需对你使用一张【杀】，否则你弃置其一张牌。
+	相关武将：山·姜维，1V1姜维
+	描述：出牌阶段，你可以令一名你在其攻击范围内的其他角色选择一项：对你使用一张【杀】，或令你弃置其一张牌。每阶段限一次。
 	引用：LuaTiaoxin
-	状态：验证通过
+	状态：1227验证通过
 ]]--
 LuaTiaoxinCard = sgs.CreateSkillCard{
-	name = "LuaTiaoxinCard",
-	target_fixed = false,
-	will_throw = true,
+	name = "LuaTiaoxinCard" ,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			if to_select:inMyAttackRange(sgs.Self) then
-				return to_select:objectName() ~= sgs.Self:objectName()
-			end
-		end
-		return false
-	end,
+		return #targets == 0 and to_select:inMyAttackRange(sgs.Self) and to_select:objectName() ~= sgs.Self:objectName()
+	end ,
 	on_effect = function(self, effect)
-		local source = effect.from
-		local dest = effect.to
-		local room = source:getRoom()
-		local prompt = string.format("@tiaoxin-slash:%s", source:objectName())
-		if not room:askForUseSlashTo(dest, source, prompt) then
-			if not dest:isNude() then
-				local chosen = room:askForCardChosen(source, dest, "he", self:objectName())
-				room:throwCard(chosen, dest, source)
-			end
+		local room = effect.from:getRoom()
+		local use_slash = false
+		if effect.to:canSlash(effect.from, nil, false) then
+			use_slash = room:askForUseSlashTo(effect.to,effect.from, "@tiaoxin-slash:" .. effect.from:objectName())
+		end
+		if (not use_slash) and effect.from:canDiscard(effect.to, "he") then
+			room:throwCard(room:askForCardChosen(effect.from,effect.to, "he", "LuaTiaoxin", false, sgs.Card_MethodDiscard), effect.to, effect.from)
 		end
 	end
 }
 LuaTiaoxin = sgs.CreateViewAsSkill{
 	name = "LuaTiaoxin",
-	n = 0,
-	view_as = function(self, cards)
+	n = 0 ,
+	view_as = function()
 		return LuaTiaoxinCard:clone()
-	end,
+	end ,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaTiaoxinCard")
 	end
