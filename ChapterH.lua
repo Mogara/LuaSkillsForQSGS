@@ -453,6 +453,7 @@ LuaHongyan = sgs.CreateFilterSkill{
 		return new_card
 	end
 }
+
 --[[
 	技能名：后援
 	相关武将：智·蒋琬
@@ -554,47 +555,50 @@ LuaXCaizhaojiHujia = sgs.CreateTriggerSkill{
 	技能名：虎啸
 	相关武将：SP·关银屏
 	描述：你于出牌阶段每使用一张【杀】被【闪】抵消，此阶段你可以额外使用一张【杀】。
-	引用：LuaHuxiaoCount、LuaHuxiao、LuaHuxiaoRemove
-	状态：尚未验证
+	引用：LuaHuxiaoCount、LuaHuxiao、LuaHuxiaoClear
+	状态：1217验证通过
 ]]--
+LuaHuxiao = sgs.CreateTargetModSkill{
+	name = "LuaHuxiao",
+	
+	residue_func = function(self, from)
+		if from:hasSkill(self:objectName()) then
+			return from:getMark(self:objectName())
+		else
+			return 0
+		end
+	end
+}
 LuaHuxiaoCount = sgs.CreateTriggerSkill{
-	name = "#LuaHuxiaoCount",
+	name = "#LuaHuxiao-count" ,
 	events = {sgs.SlashMissed,sgs.EventPhaseChanging},
+
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		if event == sgs.SlashMissed then
 			if player:getPhase() == sgs.Player_Play then
-				player:gainMark("huxiao", 1)
+				room:addPlayerMark(player, "LuaHuxiao")
 			end
 		elseif event == sgs.EventPhaseChanging then
 			local change = data:toPhaseChange()
 			if change.from == sgs.Player_Play then
-				local x = player:getMark("huxiao")
-				if x > 0 then
-					player:loseMark("huxiao", x)
+				if player:getMark("LuaHuxiao") > 0 then
+					room:setPlayerMark(player, "LuaHuxiao", 0)
 				end
 			end
 		end
-	end,
+	end
 }
-LuaHuxiao = sgs.CreateTargetModSkill{
-	name = "LuaHuxiao",
-	pattern = "Slash",
-	residue_func = function(self, player)
-		local num = player:getMark("huxiao")
-		if player:hasSkill(self:objectName()) then
-			return num
-		end
-	end,
-}
-LuaHuxiaoRemove = sgs.CreateTriggerSkill{
-	name = "#LuaHuxiaoRemove"
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventLoseSkill},
+LuaHuxiaoClear = sgs.CreateTriggerSkill{
+	name = "LuaHuxiao-clear" ,
+	events = {sgs.EventLoseSkill} ,
 	on_trigger = function(self, event, player, data)
-		if data:toString() == "huxiao" then
-			room:setPlayerMark(player, "huxiao", 0)
+		if data:toString() == "LuaHuxiao" then
+			player:getRoom():setPlayerMark(player, "LuaHuxiao", 0)
 		end
-		return false
+	end,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
