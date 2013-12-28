@@ -73,21 +73,18 @@ LuaJileiClear = sgs.CreateTriggerSkill{
 	相关武将：山·孙策
 	描述：每当你使用（指定目标后）或被使用（成为目标后）一张【决斗】或红色的【杀】时，你可以摸一张牌。
 	引用：LuaJiang
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaJiang = sgs.CreateTriggerSkill{
-	name = "LuaJiang",
-	frequency = sgs.Skill_Frequent,
+	name = "LuaJiang" ,
 	events = {sgs.TargetConfirmed},
+	frequency = sgs.Skill_Frequent,
+
 	on_trigger = function(self, event, player, data)
 		local use = data:toCardUse()
-		local source = use.from
-		local targets = use.to
-		if source:objectName() == player:objectName() or targets:contains(player) then
-			local card = use.card
-			if card:isKindOf("Duel") or (card:isKindOf("Slash") and card:isRed()) then
-				local room = player:getRoom()
-				if room:askForSkillInvoke(player, self:objectName(), data) then
+		if (use.from:objectName() == player:objectName()) or use.to:contains(player) then
+			if use.card:isKindOf("Duel") or (use.card:isKindOf("Slash") and use.card:isRed()) then
+				if player:askForSkillInvoke(self:objectName(),data) then
 					player:drawCards(1)
 				end
 			end
