@@ -482,54 +482,40 @@ LuaXZhenggong = sgs.CreateTriggerSkill{
 	相关武将：山·张昭张纮
 	描述：出牌阶段，你可以将手牌中的一张装备牌置于一名其他角色的装备区里（不能替换原装备），然后摸一张牌。
 	引用：LuaZhijian
-	状态：验证通过
+	状态：1227验证通过
 ]]--
 LuaZhijianCard = sgs.CreateSkillCard{
-	name = "LuaZhijianCard",
-	target_fixed = false,
+	name = "LuaZhijianCard" ,
 	will_throw = false,
+	handling_method = sgs.Card_MethodNone,
+
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			if to_select:objectName() ~= sgs.Self:objectName() then
-				local subs = self:getSubcards()
-				local id = subs:first()
-				local card = sgs.Sanguosha:getCard(id)
-				if card:isKindOf("Weapon") then
-					return not to_select:getWeapon()
-				elseif card:isKindOf("Armor") then
-					return not to_select:getArmor()
-				elseif card:isKindOf("DefensiveHorse") then
-					return not to_select:getDefensiveHorse()
-				elseif card:isKindOf("OffensiveHorse") then
-					return not to_select:getOffensiveHorse()
-				end
-			end
-		end
-		return false
+		if not #targets == 0 or to_select:objectName() == sgs.Self:objectName() then return false end
+		local card = sgs.Sanguosha:getCard(self:getSubcards():first())
+		local equip = card:getRealCard():toEquipCard()
+		local equip_index = equip:location()
+		return to_select:getEquip(equip_index) == nil
 	end,
+	
 	on_effect = function(self, effect)
-		local source = effect.from
-		local room = source:getRoom()
-		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, source:objectName(), "LuaZhijian", "")
-		room:moveCardTo(self, source, effect.to, sgs.Player_PlaceEquip, reason)
-		source:drawCards(1)
+		local erzhang = effect.from
+		erzhang:getRoom():moveCardTo(self, erzhang, effect.to, sgs.Player_PlaceEquip,
+									sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT,
+													   erzhang:objectName(), self:objectName(), nil))
+		erzhang:drawCards(1)
 	end
 }
 LuaZhijian = sgs.CreateViewAsSkill{
-	name = "LuaZhijian",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		if not to_select:isEquipped() then
-			return to_select:getTypeId() == sgs.Card_Equip
-		end
-		return false
-	end,
+	name = "LuaZhijian" ,
+	n = 1 ,
+	view_filter = function(self, cards, to_select)
+		return (not to_select:isEquipped()) and (to_select:getTypeId() == sgs.Card_TypeEquip)
+	end ,
 	view_as = function(self, cards)
-		if #cards == 1 then
-			local zhijian_card = LuaZhijianCard:clone()
-			zhijian_card:addSubcard(cards[1])
-			return zhijian_card
-		end
+		if #cards ~= 1 then return nil end
+		local zhijian_card = LuaZhijianCard:clone()
+		zhijian_card:addSubcard(cards[1])
+		return zhijian_card
 	end
 }
 --[[
@@ -569,46 +555,38 @@ end
 --[[
 	技能名：志继（觉醒技）
 	相关武将：山·姜维
-	描述：准备阶段开始时，若你没有手牌，你选择一项：1.回复1点体力；2.摸两张牌。然后你减1点体力上限，获得技能“观星”。
+	描述：回合开始阶段开始时，若你没有手牌，你须选择一项：回复1点体力，或摸两张牌。然后你减1点体力上限，并获得技能“观星”。
 	引用：LuaZhiji
-	状态：验证通过
+	状态：1227验证通过
 ]]--
 LuaZhiji = sgs.CreateTriggerSkill{
-	name = "LuaZhiji",
-	frequency = sgs.Skill_Wake,
-	events = {sgs.EventPhaseStart},
-	on_trigger = function(self, event, player, data) --必须
+	name = "LuaZhiji" ,
+	frequency = sgs.Skill_Wake ,
+	events = {sgs.EventPhaseStart} ,
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local draw
-		if player:getLostHp() > 0 then
-			choice = room:askForChoice(player, self:objectName(), "draw+recover")
-		else
-			choice = "draw"
-		end
-		if choice == "recover" then
-			local recover = sgs.RecoverStruct()
-			recover.who = player
-			room:recover(player, recover)
+		if player:isWounded() then
+			if room:askForChoice(player, self:objectName(), "recover+draw") == "recover" then
+				local recover = sgs.RecoverStruct()
+				recover.who = player
+				room:recover(player, recover)
+			else
+				room:drawCards(player, 2)
+			end
 		else
 			room:drawCards(player, 2)
 		end
-		room:setPlayerMark(player, "zhiji", 1)
-		player:gainMark("@waked")
-		room:acquireSkill(player, "guanxing")
-		room:loseMaxHp(player)
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if target:getMark("zhiji") == 0 then
-					if target:getPhase() == sgs.Player_Start then
-						return target:isKongcheng()
-					end
-				end
-			end
+		room:addPlayerMark(player, "LuaZhiji")
+		if room:changeMaxHpForAwakenSkill(player) then
+			room:acquireSkill(player, "guanxing")
 		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
+				and (target:getMark("LuaZhiji") == 0)
+				and (target:getPhase() == sgs.Player_Start)
+				and target:isKongcheng()
 	end
 }
 --[[
