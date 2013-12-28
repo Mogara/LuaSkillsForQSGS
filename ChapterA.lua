@@ -119,7 +119,6 @@ LuaAnjian = sgs.CreateTriggerSkill{
 	name = "LuaAnjian",
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.DamageCaused},
-
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
@@ -127,8 +126,8 @@ LuaAnjian = sgs.CreateTriggerSkill{
 		if damage.from and not damage.to:inMyAttackRange(damage.from) then
 		damage.damage = damage.damage + 1
 		data:setValue(damage)
+		end
 	end
-end
 }
 --[[
 	技能名：傲才

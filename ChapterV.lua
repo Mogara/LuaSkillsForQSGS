@@ -4730,7 +4730,7 @@ LuaTiaoxinCard = sgs.CreateSkillCard{
 		local room = effect.from:getRoom()
 		local use_slash = false
 		if effect.to:canSlash(effect.from, nil, false) then
-			use_slash = room:askForUseSlashTo(effect,to, effect,from, "@tiaoxin-slash:" .. effect.from:objectName())
+			use_slash = room:askForUseSlashTo(effect.to, effect.from, "@tiaoxin-slash:" .. effect.from:objectName())
 		end
 		if (not use_slash) and effect.from:canDiscard(effect.to, "he") then
 			room:throwCard(room:askForCardChosen(effect.from, effect.to, "he", "LuaTiaoxin", false, sgs.Card_MethodDiscard), effect.to, effect.from)
