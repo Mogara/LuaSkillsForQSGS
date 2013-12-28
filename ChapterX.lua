@@ -197,32 +197,30 @@ LuaXianzhenClear = sgs.CreateTriggerSkill{
 	相关武将：山·刘禅
 	描述：当其他角色使用【杀】指定你为目标时，需弃置一张基本牌，否则此【杀】对你无效。
 	引用：LuaXiangle
-	状态：验证通过
+	状态：1227验证通过
 ]]--
 LuaXiangle = sgs.CreateTriggerSkill{
-	name = "LuaXiangle",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.SlashEffected, sgs.TargetConfirming},
+	name = "LuaXiangle" ,
+	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.SlashEffected, sgs.TargetConfirming} ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		if event == sgs.TargetConfirming then
 			local use = data:toCardUse()
-			local slash = use.card
-			if slash and slash:isKindOf("Slash") then
-				local ai_data = sgs.QVariant()
-				ai_data:setValue(player)
-				if not room:askForCard(use.from, ".Basic", "@xiangle-discard", ai_data, sgs.CardDiscarded) then
-					player:addMark("xiangle")
+			if use.card and use.card:isKindOf("Slash") then
+				player:setMark("LuaXiangle", 0)
+				local dataforai = sgs.QVariant()
+				dataforai:setValue(player)
+				if not player:getRoom():askForCard(use.from,".Basic","@xiangle-discard",dataforai) then
+					player:addMark("LuaXiangle")
 				end
 			end
 		else
-			local count = player:getMark("xiangle")
-			if count > 0 then
-				player:setMark("xiangle", count - 1)
+			local effect= data:toSlashEffect()
+			if player:getMark("LuaXiangle") > 0 then
+				player:removeMark("LuaXiangle")
 				return true
 			end
 		end
-		return false
 	end
 }
 --[[
