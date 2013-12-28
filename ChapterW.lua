@@ -775,34 +775,30 @@ LuaWuji = sgs.CreateTriggerSkill{
 	相关武将：神·关羽
 	描述：你的红桃手牌均视为【杀】；你使用红桃【杀】时无距离限制。
 	引用：LuaWushen、LuaWushenTargetMod
-	状态：0224验证通过
+	状态：1227验证通过
 ]]--
 LuaWushen = sgs.CreateFilterSkill{
 	name = "LuaWushen",
-	view_filter = function(self, to_select)
+	
+	view_filter = function(self,to_select)
 		local room = sgs.Sanguosha:currentRoom()
-		local id = to_select:getEffectiveId()
-		local place = room:getCardPlace(id)
-		if to_select:getSuit() == sgs.Card_Heart then
-			return place == sgs.Player_PlaceHand
-		end
-		return false
+		local place = room:getCardPlace(to_select:getEffectiveId())
+		return (to_select:getSuit() == sgs.Card_Heart) and (place == sgs.Player_PlaceHand)
 	end,
+	
 	view_as = function(self, card)
-		local suit = card:getSuit()
-		local point = card:getNumber()
-		local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
+		local slash = sgs.Sanguosha:cloneCard("Slash", card:getSuit(), card:getNumber())
 		slash:setSkillName(self:objectName())
-		local id = card:getId()
-		local vs_card = sgs.Sanguosha:getWrappedCard(id)
-		vs_card:takeOver(slash)
-		return vs_card
+		local _card = sgs.Sanguosha:getWrappedCard(card:getId())
+		_card:takeOver(slash)
+		return _card
 	end
 }
 LuaWushenTargetMod = sgs.CreateTargetModSkill{
 	name = "#LuaWushen-target",
+
 	distance_limit_func = function(self, from, card)
-		if from:hasSkill("LuaWushen") and card:getSuit() == sgs.Card_Heart then
+		if from:hasSkill("LuaWushen") and (card:getSuit() == sgs.Card_Heart) then
 			return 1000
 		else
 			return 0
