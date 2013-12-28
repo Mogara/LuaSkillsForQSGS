@@ -298,49 +298,41 @@ LuaRoulin = sgs.CreateTriggerSkill{
 --[[
 	技能名：若愚（主公技、觉醒技）
 	相关武将：山·刘禅
-	描述：准备阶段开始时，若你是当前的体力值最小的角色（或之一），你加1点体力上限，回复1点体力，然后获得技能“激将”。
+	描述：回合开始阶段开始时，若你的体力是全场最少的（或之一），你须加1点体力上限，回复1点体力，并获得技能“激将”。
 	引用：LuaRuoyu
-	状态：验证通过（但袁术通过伪帝若愚觉醒后不能获得激将）
+	状态：1227验证通过
 ]]--
 LuaRuoyu = sgs.CreateTriggerSkill{
 	name = "LuaRuoyu$",
-	frequency = sgs.Skill_Wake,
 	events = {sgs.EventPhaseStart},
+	frequency = sgs.Skill_Wake,
+	
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local can_invoke = true
-		local list = room:getAllPlayers()
-		for _,p in sgs.qlist(list) do
+		for _, p in sgs.qlist(room:getAllPlayers()) do
 			if player:getHp() > p:getHp() then
 				can_invoke = false
 				break
 			end
 		end
 		if can_invoke then
-			room:setPlayerMark(player, "ruoyu", 1)
-			player:gainMark("@waked")
-			local maxhp = player:getMaxHp()
-			local value = sgs.QVariant(maxhp+1)
-			room:setPlayerProperty(player, "maxhp", value)
-			local recover = sgs.RecoverStruct()
-			recover.who = player
-			room:recover(player, recover)
-			if player:isLord() then
-				room:acquireSkill(player, "jijiang")
-			end
-		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			if target:getPhase() == sgs.Player_Start then
-				if target:hasLordSkill(self:objectName()) then
-					if target:isAlive() then
-						return target:getMark("ruoyu") == 0
-					end
+			room:addPlayerMark(player, "LuaRuoyu")
+			if room:changeMaxHpForAwakenSkill(player, 1) then
+				local recover = sgs.RecoverStruct()
+				recover.who = player
+				room:recover(player, recover)
+				if player:isLord() then
+					room:acquireSkill(player, "jijiang")
 				end
 			end
 		end
-		return false
+	end,
+
+	can_trigger = function(self, target)
+		return target and (target:getPhase() == sgs.Player_Start)
+				and target:hasLordSkill("LuaRuoyu")
+				and target:isAlive()
+				and (target:getMark("LuaRuoyu") == 0)
 	end
 }
