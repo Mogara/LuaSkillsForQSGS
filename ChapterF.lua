@@ -135,60 +135,54 @@ LuaFankui = sgs.CreateTriggerSkill{
 	相关武将：山·刘禅
 	描述：你可以跳过你的出牌阶段，若如此做，你在回合结束时可以弃置一张手牌令一名其他角色进行一个额外的回合。
 	引用：LuaFangquan、LuaFangquanGive
-	状态：尚未验证
+	状态：1217验证通过
 ]]--
 LuaFangquan = sgs.CreateTriggerSkill{
-	name = "LuaFangquan",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseChanging},
+	name = "LuaFangquan" ,
+	events = {sgs.EventPhaseChanging} ,
 	on_trigger = function(self, event, player, data)
-		local change = data:toPhaseChange()
-		local nextphase = change.to
 		local room = player:getRoom()
-		if nextphase == sgs.Player_Play then
-			if not player:isSkipped(sgs.Player_Play) then
-				if room:askForSkillInvoke(player, self:objectName(), data) then
-					room:setPlayerFlag(player, "fangquan")
-					player:skip(sgs.Player_Play)
-				end
+		local change = data:toPhaseChange()
+		if change.to == sgs.Player_Play then
+			local invoked = false
+			if player:isSkipped(sgs.Player_Play) then return false end
+			invoked = player:askForSkillInvoke(self:objectName())
+			if invoked then
+				player:setFlags("LuaFangquan")
+				player:skip(sgs.Player_Play)
 			end
-		elseif nextphase == sgs.Player_NotActive then
-			if player:hasFlag("fangquan") then
-				if not player:isKongcheng() then
-					if room:askForDiscard(player, "fangquan", 1, 1, true) then
-						local list = room:getOtherPlayers(player)
-						local target = room:askForPlayerChosen(player, list, self:objectName())
-						local value = sgs.QVariant()
-						value:setValue(target)
-						room:setTag("FangquanTarget", value)
-					end
-				end
+		elseif change.to == sgs.Player_NotActive then
+			if player:hasFlag("LuaFangquan") then
+				if not player:canDiscard(player, "h") then return false end
+				if not room:askForDiscard(player, "LuaFangquan", 1, 1, true) then return false end
+				local _player = room:askForPlayerChosen(player, room:getOtherPlayers(player), self:objectName())
+				local p = _player
+				local playerdata = sgs.QVariant()
+				playerdata:setValue(p)
+				room:setTag("LuaFangquanTarget", playerdata)
 			end
 		end
+		return false
 	end
 }
 LuaFangquanGive = sgs.CreateTriggerSkill{
-	name = "#LuaFangquanGive",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventPhaseStart},
+	name = "#LuaFangquan-give" ,
+	events = {sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local tag = room:getTag("FangquanTarget")
-		if tag then
-			local target = tag:toPlayer()
-			room:removeTag("FangquanTarget")
+		if room:getTag("LuaFangquanTarget") then
+			local target = room:getTag("LuaFangquanTarget"):toPlayer()
+			room:removeTag("LuaFangquanTarget")
 			if target and target:isAlive() then
 				target:gainAnExtraTurn()
 			end
 		end
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return target:getPhase() == sgs.Player_NotActive
-		end
 		return false
-	end
-	priority = -4
+	end ,
+	can_trigger = function(self, target)
+		return target and (target:getPhase() == sgs.Player_NotActive)
+	end ,
+	priority = 1
 }
 --[[
 	技能名：放逐
