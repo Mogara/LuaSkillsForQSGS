@@ -191,33 +191,27 @@ LuaXBaijiang = sgs.CreateTriggerSkill{
 --[[
 	技能名：拜印（觉醒技）
 	相关武将：神·司马懿
-	描述：准备阶段开始时，若你拥有4枚或更多的“忍”标记，你减1点体力上限，然后获得技能“极略”。
+	描述：回合开始阶段开始时，若你拥有4枚或更多的“忍”标记，你须减1点体力上限，并获得技能“极略”。
 	引用：LuaBaiyin
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaBaiyin = sgs.CreateTriggerSkill{
-	name = "LuaBaiyin",
-	frequency = sgs.Skill_Wake,
-	events = {sgs.EventPhaseStart},
+	name = "LuaBaiyin" ,
+	frequency = sgs.Skill_Wake ,
+	events = {sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		room:setPlayerMark(player, "baiyin", 1)
-		player:gainMark("@waked")
-		room:loseMaxHp(player)
-		room:acquireSkill(player, "jilve")
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if target:getPhase() == sgs.Player_Start then
-					if target:getMark("baiyin") == 0 then
-						return target:getMark("@bear") >= 4
-					end
-				end
-			end
+		room:setPlayerMark(player,"LuaBaiyin",1)
+		if room:changeMaxHpForAwakenSkill(player) then
+			room:acquireSkill(player, "jilve")
 		end
 		return false
+	end ,
+	can_trigger = function(self,target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
+				and (target:getPhase() == sgs.Player_Start)
+				and (target:getMark("LuaBaiyin") == 0)
+				and (target:getMark("@bear") >= 4)
 	end
 }
 --[[
