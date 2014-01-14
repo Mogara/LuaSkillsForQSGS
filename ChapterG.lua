@@ -721,41 +721,42 @@ LuaXGuihan = sgs.CreateViewAsSkill{
 	相关武将：神·曹操
 	描述：每当你受到1点伤害后，你可以分别从每名其他角色的区域获得一张牌，然后将你的武将牌翻面。
 	引用：LuaGuixin
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaGuixin = sgs.CreateTriggerSkill{
-	name = "LuaGuixin",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
+	name = "LuaGuixin" ,
+	events = {sgs.Damaged} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
+		local n = player:getMark("LuaGuixinTimes")
+		player:setMark("LuaGuixinTimes", 0)
 		local damage = data:toDamage()
-		local count = damage.damage
-		local can_invoke = false
-		local targets = room:getOtherPlayers(player)
-		for i = 1, count, 1 do
-			for _,p in sgs.qlist(targets) do
+		local players = room:getOtherPlayers(player)
+		for i = 0, damage.damage - 1, 1 do
+			local can_invoke = false
+			for _, p in sgs.qlist(players) do
 				if not p:isAllNude() then
 					can_invoke = true
 					break
 				end
 			end
-			if can_invoke then
-				if player:askForSkillInvoke(self:objectName()) then
-					local targets = room:getOtherPlayers(player)
-					for _,p in sgs.qlist(targets) do
-						if not p:isAllNude() then
-							local card_id = room:askForCardChosen(player, p, "hej", self:objectName())
-							room:obtainCard(player, card_id, true)
-						end
+			if not can_invoke then break end
+			player:addMark("LuaGuixinTimes")
+			if player:askForSkillInvoke(self:objectName(), data) then
+				player:setFlags("LuaGuixinUsing")
+				for _, _player in sgs.qlist(players) do
+					if _player:isAlive() and (not _player:isAllNude()) then
+						local card_id = room:askForCardChosen(player, _player, "hej", self:objectName())
+						room:obtainCard(player, sgs.Sanguosha:getCard(card_id), room:getCardPlace(card_id) ~= sgs.Player_PlaceHand)
 					end
-					can_invoke = false
-					player:turnOver()
 				end
+				player:turnOver()
+				player:setFlags("-LuaGuixinUsing")
 			else
 				break
 			end
 		end
+		player:setMark("LuaGuixinTimes", n)
 	end
 }
 --[[
@@ -825,57 +826,33 @@ LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
 	相关武将：标准·司马懿
 	描述：在一名角色的判定牌生效前，你可以打出一张手牌代替之。
 	引用：LuaGuicai
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-GuicaiCard = sgs.CreateSkillCard{
-	name = "GuicaiCard",
-	target_fixed = true,
-	will_throw = false,
-}
-LuaGuicaiVS = sgs.CreateViewAsSkill{
-	name = "LuaGuicai",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		if #selected == 0 then
-			return not to_select:isEquipped()
-		end
-		return false
-	end,
-	view_as = function(self, cards)
-		if #cards == 0 then
-			return nil
-		end
-		local card = GuicaiCard:clone()
-		card:addSubcard(cards[1])
-		card:setSkillName(self:objectName())
-		return card
-	end,
-	enabled_at_play = function(self, player)
-		return false
-	end,
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@LuaGuicai"
-	end
-}
 LuaGuicai = sgs.CreateTriggerSkill{
-	name = "LuaGuicai",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.AskForRetrial},
-	view_as_skill = LuaGuicaiVS,
+	name = "LuaGuicai" ,
+	events = {sgs.AskForRetrial} ,
 	on_trigger = function(self, event, player, data)
-		if player:askForSkillInvoke(self:objectName(), data) then
-			local judge = data:toJudge()
-			local room = player:getRoom()
-			local card = room:askForCard(player, "@LuaGuicai", nil, data, sgs.AskForRetrial)
-			room:retrial(card, player, judge, self:objectName())
-			return false
+		local room = player:getRoom()
+		if player:isKongcheng() then return false end
+		local judge = data:toJudge()
+		local prompt_list = {
+			"@guicai-card" ,
+			judge.who:objectName() ,
+			self:objectName() ,
+			judge.reason ,
+			string.format("%d", judge.card:getEffectiveId())
+		}
+		local prompt = table.concat(prompt_list, ":")
+		local forced = false
+		if player:getMark("JilveEvent") == sgs.AskForRetrial then forced = true end
+		local askforcardpattern = "."
+		if forced then askforcardpattern = ".!" end
+		local card = room:askForCard(player, askforcardpattern, prompt, data, sgs.Card_MethodResponse, judge.who, true)
+		if forced and (card == nil) then
+			card = player:getRandomHandCard()
 		end
-	end,
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				return not target:isKongcheng()
-			end
+		if card then
+			room:retrial(card, player, judge, self:objectName())
 		end
 		return false
 	end
