@@ -113,20 +113,16 @@ LuaKeji = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：空城（锁定技）
-	相关武将：标准·诸葛亮、SP·台版诸葛亮、测试·五星诸葛
+	相关武将：标准·诸葛亮、测试·五星诸葛
 	描述：若你没有手牌，你不能被选择为【杀】或【决斗】的目标。
 	引用：LuaKongcheng
-	状态：0224验证通过（0610禁止技接口有问题，只要加载LUA禁止技客户端就会闪退）
+	状态：1217验证通过
 ]]--
 LuaKongcheng = sgs.CreateProhibitSkill{
 	name = "LuaKongcheng",
 	is_prohibited = function(self, from, to, card)
-		if to:hasSkill(self:objectName()) then
-			if to:isKongcheng() then
-				return card:isKindOf("Slash") or card:isKindOf("Duel")
-			end
-		end
-	end,
+		return to:hasSkill(self:objectName()) and (card:isKindOf("Slash") or card:isKindOf("Duel")) and to:isKongcheng()
+	end
 }
 --[[
 	技能名：苦肉
@@ -155,24 +151,37 @@ LuaKurou = sgs.CreateViewAsSkill{
 }
 --[[
 	技能名：狂暴（锁定技）
-	相关武将：神·吕布、SP·SP神吕布
+	相关武将：神·吕布
 	描述：游戏开始时，你获得2枚“暴怒”标记；每当你造成或受到1点伤害后，你获得1枚“暴怒”标记。
-	引用：LuaKuangbao
-	状态：验证通过
+	引用：LuaKuangbao、LuaWrath2、LuaKuangbaoClear
+	状态：1217验证通过
 ]]--
 LuaKuangbao = sgs.CreateTriggerSkill{
-	name = "LuaKuangbao",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.GameStart, sgs.Damage, sgs.Damaged},
+	name = "LuaKuangbao" ,
+	events = {sgs.Damage, sgs.Damaged} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
-		if event == sgs.GameStart then
-			player:gainMark("@wrath", 2)
-		else
-			local damage = data:toDamage()
-			local count = damage.damage
-			player:gainMark("@wrath", count)
+		local damage = data:toDamage()
+		player:getRoom():addPlayerMark(player,"@wrath",damage.damage)
+	end
+}
+LuaWrath2 = sgs.CreateTriggerSkill{
+	name = "#@wrath-Lua-2" ,
+	events = {sgs.GameStart} ,
+	on_trigger = function(self, event, player, data)
+		player:getRoom():addPlayerMark(player,"@wrath",2)
+	end
+}
+LuaKuangbaoClear = sgs.CreateTriggerSkill{
+	name = "LuaKuangbao-clear" ,
+	events = {sgs.EventLoseSkill} ,
+	on_trigger = function(self, event, player, data)
+		if data:toString() == "LuaKuangbao" then
+			player:loseAllMarks("@wrath")
 		end
-		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
