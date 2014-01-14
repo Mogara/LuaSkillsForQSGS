@@ -976,48 +976,27 @@ LuaJiushiFlip = sgs.CreateTriggerSkill{
 	相关武将：标准·孙权、测试·制霸孙权
 	描述：其他吴势力角色使用的【桃】指定你为目标后，回复的体力+1。
 	引用：LuaJiuyuan
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaJiuyuan = sgs.CreateTriggerSkill{
 	name = "LuaJiuyuan$",
 	frequency = sgs.Skill_Compulsory,
-	events = {sgs.AskForPeachesDone, sgs.TargetConfirmed, sgs.HpRecover},
+	events = {sgs.TargetConfirmed, sgs.PreHpRecover},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.TargetConfirmed then
 			local use = data:toCardUse()
-			local peach = use.card
-			local source = use.from
-			if peach:isKindOf("Peach") then
-				if source then
-					if source:getKingdom() == "wu" then
-						if source:objectName() ~= player:objectName() then
-							if player:hasFlag("dying") then
-								room:setPlayerFlag(player, "jiuyuan")
-								room:setCardFlag(peach, "jiuyuan")
-							end
-						end
-					end
-				end
+			if use.card:isKindOf("Peach") and use.from and (use.from:getKingdom() == "wu")
+					and (player:objectName() ~= use.from:objectName()) and player:hasFlag("Global_Dying") then
+				room:setCardFlag(use.card, "LuaJiuyuan")
 			end
-		elseif event == sgs.HpRecover then
+		elseif event == sgs.PreHpRecover then
 			local rec = data:toRecover()
-			local peach = rec.card
-			if peach then
-				if peach:hasFlag("jiuyuan") then
-					rec.recover = rec.recover + 1
-					data:setValue(rec)
-				end
-			end
-		elseif event == sgs.AskForPeachesDone then
-			if player:hasFlag("jiuyuan") then
-				room:setPlayerFlag(player, "-jiuyuan")
-				if player:getHp() > 0 then
-					room:getThread():delay(2000)
-				end
+			if rec.card and rec.card:hasFlag("LuaJiuyuan") then
+				rec.recover = rec.recover + 1
+				data:setValue(rec)
 			end
 		end
-		return false
 	end,
 	can_trigger = function(self, target)
 		if target then
@@ -1463,26 +1442,24 @@ LuaXJuejiGet = sgs.CreateTriggerSkill{
 	技能名：绝境（锁定技）
 	相关武将：神·赵云
 	描述：摸牌阶段，你摸牌的数量改为你已损失的体力值+2；你的手牌上限+2。
-	引用：LuaJuejing、LuaJuejingKeep
-	状态：验证通过
+	引用：LuaJuejing、LuaJuejingDraw
+	状态：1217验证通过
 ]]--
-LuaJuejing = sgs.CreateTriggerSkill{
-	name = "#LuaJuejingDraw",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.DrawNCards},
-	on_trigger = function(self, event, player, data)
-		local count = data:toInt()
-		local lose = player:getLostHp()
-		count = count + lose
-		data:setValue(count)
-	end
-}
-LuaJuejingKeep = sgs.CreateMaxCardsSkill{
-	name = "LuaJuejing",
+LuaJuejing = sgs.CreateMaxCardsSkill{
+	name = "LuaJuejing" ,
 	extra_func = function(self, target)
 		if target:hasSkill(self:objectName()) then
 			return 2
+		else
+			return 0
 		end
+	end
+}
+LuaJuejingDraw = sgs.CreateTriggerSkill{
+	name = "#LuaJuejing-draw" ,
+	events = {sgs.DrawNCards} ,
+	on_trigger = function(self, event, player, data)
+		data:setValue(data:toInt() + player:getLostHp())
 	end
 }
 --[[
