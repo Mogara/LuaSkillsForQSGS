@@ -227,43 +227,29 @@ LuaDanji = sgs.CreateTriggerSkill{
 	相关武将：SP·杨修
 	描述：当一张锦囊牌指定包括你在内的多名目标后，你可以摸一张牌，若如此做，此锦囊牌对你无效。
 	引用：LuaDanlao
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-LuaDanlao = sgs.CreateTriggerSkill{
-	name = "LuaDanlao",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.TargetConfirmed, sgs.CardEffected},
+LuaDanalao = sgs.CreateTriggerSkill{
+	name = "LuaDanlao" ,
+	events = {sgs.TargetConfirmed, sgs.CardEffected} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.TargetConfirmed then
 			local use = data:toCardUse()
-			local targets = use.to
-			local card = use.card
-			if targets:length() > 1 then
-				if targets:contains(player) then
-					if card:isKindOf("TrickCard") then
-						if room:askForSkillInvoke(player, self:objectName(), data) then
-							local id = card:getEffectiveId()
-							room:setTag("Danlao", sgs.QVariant(id))
-							player:drawCards(1)
-						end
-					end
-				end
+			if (use.to:length() <= 1) or (not use.to:contains(player)) or (not use.card:isKindOf("TrickCard")) then
+				return false
 			end
-		elseif event == sgs.CardEffected then
-			if player:isAlive() then
-				if player:hasSkill(self:objectName()) then
-					local effect = data:toCardEffect()
-					local card = effect.card
-					local tag = room:getTag("Danlao")
-					local id = tag:toInt()
-					if id == card:getEffectiveId() then
-						room:removeTag("Danlao")
-					end
-					return true
-				end
-			end
+			if not room:askForSkillInvoke(player, self:objectName(), data) then return false end
+			player:setTag("LuaDanlao", sgs.QVariant(use.card:toString()))
+			player:drawCards(1)
+		else
+			if (not player:isAlive()) or (not player:hasSkill(self:objectName())) then return false end
+			local effect = data:toCardEffect()
+			if player:getTag("LuaDanlao") == nil or (player:getTag("LuaDanlao"):toString() ~= effect.card:toString()) then return false end
+			player:setTag("LuaDanlao", sgs.QVariant(""))
+			return true
 		end
+		return false
 	end
 }
 --[[
@@ -541,8 +527,70 @@ LuaXDuyi = sgs.CreateTriggerSkill{
 --[[
 	技能名：黩武
 	相关武将：SP·诸葛恪
-	描述：出牌阶段，你可以选择攻击范围内的一名其他角色并弃置X张牌：若如此做，你对该角色造成1点伤害。若你以此法令该角色进入濒死状态，濒死结算后你失去1点体力，且本阶段你不能再次发动“黩武”。（X为该角色当前的体力值）
+	描述：出牌阶段，你可以选择攻击范围内的一名其他角色并弃置X张牌：若如此做，你对该角色造成1点伤害。
+		若你以此法令该角色进入濒死状态，濒死结算后你失去1点体力，且本阶段你不能再次发动“黩武”。（X为该角色当前的体力值）
+	状态：1217验证通过
 ]]--
+LuaDuwuCard = sgs.CreateSkillCard{
+	name = "LuaDuwuCard" ,
+	filter = function(self, targets, to_select)
+		if (#targets ~= 0) or (math.max(0, to_select:getHp()) ~= self:subcardsLength()) then return false end
+		if (not sgs.Self:inMyAttackRange(to_select)) or (sgs.Self:objectName() == to_select:objectName()) then return false end
+		if sgs.Self:getWeapon() and self:getSubcards():contains(sgs.Self:getWeapon():getId()) then
+			local weapon = sgs.Self:getWeapon():getRealCard():toWeapon()
+			local distance_fix = weapon:getRange() - 1
+			if sgs.Self:getOffensiveHorse() and self:getSubcards():contains(sgs.Self:getOffensiveHorse():getId()) then
+				distance_fix = distance_fix + 1
+			end
+			return sgs.Self:distanceTo(to_select, distance_fix) <= sgs.Self:getAttackRange()
+		elseif sgs.Self:getOffensiveHorse() and self:getSubcards():contains(sgs.Self:getOffensiveHorse():getId()) then
+			return sgs.Self:distanceTo(to_select, 1) <= sgs.Self:getAttackRange()
+		else
+			return true
+		end
+	end ,
+	on_effect = function(self, effect)
+		effect.from:getRoom():damage(sgs.DamageStruct("LuaDuwu", effect.from, effect.to))
+	end
+}
+LuaDuwuVS = sgs.CreateViewAsSkill{
+	name = "LuaDuwu" ,
+	n = 999 ,
+	view_filter = function()
+		return true
+	end ,
+	view_as = function(self, cards)
+		local duwu = LuaDuwuCard:clone()
+		if #cards ~= 0 then
+			for _, c in ipairs(cards) do
+				duwu:addSubcard(c)
+			end
+		end
+		return duwu
+	end ,
+	enabled_at_play = function(self, player)
+		return player:canDiscard(player, "he") and (not player:hasFlag("LuaDuwuEnterDying"))
+	end
+}
+LuaDuwu = sgs.CreateTriggerSkill{
+	name = "LuaDuwu" ,
+	events = sgs.AskForPeachesDone,--DB:Lua没有QuitDying时机，在这里处理方式略有不同
+	view_as_skill = LuaDuwuVS ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local dying = data:toDying()
+		if dying.damage and (dying.damage:getReason() == "LuaDuwu") then
+			local from = dying.damage.from
+			if from and from:isAlive() then
+				room:setPlayerFlag(from, "LuaDuwuEnterDying")
+				room:loseHp(from,1)
+			end
+		end
+	end,
+	can_trigger = function(self, target)
+		return target
+	end
+}
 --[[
 	技能名：短兵
 	相关武将：国战·丁奉
