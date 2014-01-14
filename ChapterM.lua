@@ -170,7 +170,63 @@ LuaMengjin = sgs.CreateTriggerSkill{
 	技能名：秘计
 	相关武将：一将成名2012·王异
 	描述：结束阶段开始时，若你已受伤，你可以摸一至X张牌（X为你已损失的体力值），然后将相同数量的手牌以任意分配方式交给任意数量的其他角色。
+	引用：LuaMiji
+	状态：1217验证通过
 ]]--
+LuaMiji = sgs.CreateTriggerSkill{
+	name = "LuaMiji" ,
+	events = {sgs.EventPhaseStart} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if (player:getPhase() == sgs.Player_Finish) and player:isWounded() then
+			if player:askForSkillInvoke(self:objectName()) then
+				local draw_num = {}
+				for i = 1, player:getLostHp(), 1 do
+					table.insert(draw_num, tostring(i))
+				end
+				local num = tonumber(room:askForChoice(player, "LuaMiji_draw", table.concat(draw_num, "+")))
+				player:drawCards(num, self:objectName())
+				if not player:isKongcheng() then
+					local n = 0
+					while true do
+						local original_handcardnum = player:getHandcardNum()
+						if (n < num) and (not player:isKongcheng()) then
+							local handcards = player:handCards()
+							if (not room:askForYiji(player,handcards,self:objectName(),false, false, false, num - n)) then break end
+							n = n + (original_handcardnum - player:getHandcardNum())
+						else
+							break
+						end
+					end
+					if (n < num) and (not player:isKongcheng()) then
+						local rest_num = num - n
+						while true do
+							local handcard_list = player:handCards()
+							--qShuffle(handcard_list);
+							math.randomseed(os.time)
+							local give = math.random(1, rest_num)
+							rest_num = rest_num - give
+							local to_give
+							if handcard_list:length() < give then
+								to_give = handcard_list
+							else
+								to_give = handcard_list:mid(0, give)
+							end
+							local receiver = room:getOtherPlayers(player):at(math.random(0, player:aliveCount() - 1))
+							local dummy = sgs.Sanguosha:getCard("slash", sgs.Card_NoSuit, 0)
+							for _, id in sgs.qlist(to_give) do
+								dummy:addSubcard(id)
+							end
+							room:obtainCard(receiver, dummy, false)
+							if (rest_num == 0) or player:isKongcheng() then break end
+						end
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：秘计
 	相关武将：怀旧-一将2·王异-旧
