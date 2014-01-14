@@ -195,84 +195,61 @@ LuaShelie = sgs.CreateTriggerSkill{
 		return true
 	end
 }
+
 --[[
 	技能名：神愤
-	相关武将：神·吕布、SP·SP神吕布
-	描述：出牌阶段限一次，你可以弃六枚“暴怒”标记并选择所有其他角色，对这些角色各造成1点伤害，然后这些角色先各弃置其装备区里的所有牌，再各弃置四张手牌，最后你将你的武将牌翻面。
+	相关武将：神·吕布
+	描述：出牌阶段，你可以弃6枚“暴怒”标记，对所有其他角色各造成1点伤害，所有其他角色先弃置各自装备区里的牌，再弃置四张手牌，然后将你的武将牌翻面。每阶段限一次。
 	引用：LuaShenfen
-	状态：验证通过
+	状态：1217验证通过（未处理胆守）
 ]]--
 LuaShenfenCard = sgs.CreateSkillCard{
-	name = "LuaShenfenCard",
-	target_fixed = true,
-	will_throw = true,
+	name = "LuaShenfenCard" ,
+	target_fixed = true ,
 	on_use = function(self, room, source, targets)
+		source:setFlags("LuaShenfenUsing")
 		source:loseMark("@wrath", 6)
 		local players = room:getOtherPlayers(source)
-		for _,player in sgs.qlist(players) do
-			local damage = sgs.DamageStruct()
-			damage.card = self
-			damage.from = source
-			damage.to = player
-			room:damage(damage)
+		for _, player in sgs.qlist(players) do
+			room:damage(sgs.DamageStruct("LuaShenfen", source, player))
 		end
-		for _,player in sgs.qlist(players) do
+		for _, player in sgs.qlist(players) do
 			player:throwAllEquips()
 		end
-		for _,player in sgs.qlist(players) do
-			local count = player:getHandcardNum()
-			if count <= 4 then
-				player:throwAllHandCards()
-			else
-				room:askForDiscard(player, self:objectName(), 4, 4)
-			end
+		for _, player in sgs.qlist(players) do
+			room:askForDiscard(player, "LuaShenfen", 4, 4)
 		end
 		source:turnOver()
+		source:setFlags("-LuaShenfenUsing")
 	end
 }
 LuaShenfen = sgs.CreateViewAsSkill{
-	name = "LuaShenfen",
+	name = "LuaShenfen" ,
 	n = 0,
-	view_as = function(self, cards)
+	
+	view_as = function()
 		return LuaShenfenCard:clone()
-	end,
-	enabled_at_play = function(self, player)
-		if player:getMark("@wrath") >= 6 then
-			return not player:hasUsed("#LuaShenfenCard")
-		end
-		return false
+	end ,
+	
+	enabled_at_play = function(self,player)
+		return player:getMark("@wrath") >= 6 and not player:hasUsed("#LuaShenfenCard")
 	end
 }
 --[[
 	技能名：神戟
 	相关武将：SP·暴怒战神、2013-3v3·吕布
 	描述：若你的装备区没有武器牌，当你使用【杀】时，你可以额外选择至多两个目标。
-	状态：尚未验证
-	附注：由于TargetModSkill为锁定技，与描述有出入，所以创建一个仅提供按键图标的空壳视为技，功能由TargetModSkill实现。
+	状态：1217验证通过
 ]]--
-LuaShenji = sgs.CreateViewAsSkill{
-	name = "LuaShenji",
-	n = 0,
-	view_filter = function(self, selected, to_select)
-		return false
-	end,
-	view_as = function(self, cards)
-		return false
-	end,
-	enabled_at_play = function(self, player)
-		return false
-	end,
-}
-LuaShenjiHid = sgs.CreateTargetModSkill{
-	name = "#LuaShenjiHid",
-	pattern = "Slash",
-	extra_target_func = function(self, player)
-		if player:hasSkill("LuaShenji") then
-			if player:getWeapon() == nil then
-				return 2
-			end
+LuaShenji = sgs.CreateTargetModSkill{
+	name = "LuaShenji" ,
+	extra_target_func = function(self, from)
+		if from:hasSkill(self:objectName()) and from:getWeapon() == nil then
+			return 2
+		else
+			return 0
 		end
-	end,
+	end
 }
 --[[
 	技能名：神君（锁定技）
@@ -448,28 +425,28 @@ LuaShensuNDL = sgs.CreateTargetModSkill{
 		end
 	end
 }
-
 --[[
 	技能名：神威（锁定技）
 	相关武将：SP·暴怒战神
 	描述：摸牌阶段，你额外摸两张牌；你的手牌上限+2。
-	引用：LuaShenwei、LuaShenweiKeep
-	状态：验证通过
+	引用：LuaShenwei、LuaShenweiDraw
+	状态：1217验证通过
 ]]--
-LuaShenwei = sgs.CreateTriggerSkill{
-	name = "LuaShenwei",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.DrawNCards},
+LuaShenweiDraw = sgs.CreateTriggerSkill{
+	name = "#LuaShenwei-draw" ,
+	events = {sgs.DrawNCards} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
-		local count = data:toInt() + 2
-		data:setValue(count)
+		data:setValue(data:toInt() + 2)
 	end
 }
-LuaShenweiKeep = sgs.CreateMaxCardsSkill{
-	name = "#LuaShenwei",
+LuaShenwei = sgs.CreateMaxCardsSkill{
+	name = "LuaShenwei" ,
 	extra_func = function(self, target)
 		if target:hasSkill(self:objectName()) then
 			return 2
+		else
+			return 0
 		end
 	end
 }
@@ -1146,78 +1123,55 @@ LuaXSizhan = sgs.CreateTriggerSkill{
 	技能名：颂词
 	相关武将：SP·陈琳
 	描述：出牌阶段，你可以选择一项：1、令一名手牌数小于其当前的体力值的角色摸两张牌。2、令一名手牌数大于其当前的体力值的角色弃置两张牌。每名角色每局游戏限一次。
-	引用：LuaSongci、LuaSongciClear
-	状态：验证通过
+	引用：LuaSongci
+	状态：1217验证通过
 ]]--
 LuaSongciCard = sgs.CreateSkillCard{
-	name = "LuaSongciCard",
-	target_fixed = false,
-	will_throw = true,
+	name = "LuaSongciCard" ,
 	filter = function(self, targets, to_select)
-		if to_select:getMark("@songci") == 0 then
-			local num = to_select:getHandcardNum()
-			local hp = to_select:getHp()
-			return num ~= hp
-		end
-		return false
-	end,
+		return (#targets == 0) and (to_select:getMark("@songci") == 0) and (to_select:getHandcardNum() ~= to_select:getHp())
+	end ,
 	on_effect = function(self, effect)
-		local target = effect.to
-		local handcard_num = target:getHandcardNum()
-		local hp = target:getHp()
-		local room = target:getRoom()
-		if handcard_num ~= hp then
-			target:gainMark("@songci")
-			if handcard_num > hp then
-				room:askForDiscard(target, "LuaSongci", 2, 2, false, true)
-			elseif handcard_num < hp then
-				room:drawCards(target, 2, "LuaSongci")
-			end
+		local handcard_num = effect.to:getHandcardNum()
+		local hp = effect.to:getHp()
+		effect.to:gainMark("@songci")
+		if handcard_num > hp then
+			effect.to:getRoom():askForDiscard(effect.to, "LuaSongci", 2, 2, false, true)
+		else
+			effect.to:drawCards(2, "LuaSongci")
 		end
 	end
 }
-LuaSongci = sgs.CreateViewAsSkill{
-	name = "LuaSongci",
-	n = 0,
-	view_as = function(self, cards)
+LuaSongciVS = sgs.CreateViewAsSkill{
+	name = "LuaSongci" ,
+	n = 0 ,
+	view_as = function()
 		return LuaSongciCard:clone()
-	end,
+	end ,
 	enabled_at_play = function(self, player)
-		if player:getMark("@songci") == 0 then
-			if player:getHandcardNum() ~= player:getHp() then
-				return true
-			end
-		end
-		local siblings = player:getSiblings()
-		for _,sib in sgs.qlist(siblings) do
-			if sib:getMark("@songci") == 0 then
-				if sib:getHandcardNum() ~= sib:getHp() then
-					return true
-				end
-			end
+		if (player:getMark("@songci") == 0) and (player:getHandcardNum() ~= player:getHp()) then return true end
+		for _, sib in sgs.qlist(player:getSiblings()) do
+			if (sib:getMark("@songci") == 0) and (sib:getHandcardNum() ~= sib:getHp()) then return true end
 		end
 		return false
 	end
 }
-LuaSongciClear = sgs.CreateTriggerSkill{
-	name = "#LuaSongciClear",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.Death},
+LuaSongci = sgs.CreateTriggerSkill{
+	name = "LuaSongci" ,
+	events = {sgs.Death} ,
+	view_as_skill = LuaSongciVS ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local list = room:getAllPlayers()
-		for _,p in sgs.qlist(list) do
+		local death = data:toDeath()
+		if death.who:objectName() ~= player:objectName() then return false end
+		for _, p in sgs.qlist(player:getRoom():getAllPlayers()) do
 			if p:getMark("@songci") > 0 then
-				room:setPlayerMark(p, "@songci", 0)
+				player:getRoom():setPlayerMark(p, "@songci", 0)
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			return target:hasSkill(self:objectName())
-		end
-		return false
+		return target and target:hasSkill(self:objectName())
 	end
 }
 --[[
