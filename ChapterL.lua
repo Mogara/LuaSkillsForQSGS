@@ -692,83 +692,75 @@ LuaLianhuan = sgs.CreateViewAsSkill{
 	相关武将：神·司马懿
 	描述：若你在一回合内杀死了至少一名角色，此回合结束后，你可以进行一个额外的回合。
 	引用：LuaLianpoCount、LuaLianpo、LuaLianpoDo
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaLianpoCount = sgs.CreateTriggerSkill{
-	name = "#LuaLianpoCount",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.Death},
+	name = "#LuaLianpo-count" ,
+	events = {sgs.Death, sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
-		local damage = data:toDamageStar()
-		if damage then
-			local killer = damage.from
-			if killer then
-				if killer:hasSkill("LuaLianpo") then
-					local room = killer:getRoom()
-					if room:getCurrent():isAlive() then
-						killer:addMark("lianpo")
-					end
-				end
+		if event == sgs.Death then
+			local death = data:toDeath()
+			if death.who:objectName() ~= player:objectName() then return false end
+			local killer
+			if death.damage then
+				killer = death.damage.from
+			else
+				killer = nil
+			end
+			local current = player:getRoom():getCurrent()
+			if killer and current and current:isAlive() and (current:getPhase() ~= sgs.Playr_NotActive) then
+				killer:addMark("LuaLianpo")
+			end
+		elseif player:getPhase() == sgs.Player_NotActive then
+			for _, p in sgs.qlist(player:getRoom():getAlivePlayers()) do
+				p:setMark("LuaLianpo", 0)
 			end
 		end
-		return false
 	end,
-	can_trigger = function(self, target)
+	can_trigger = function(self,target)
 		return target
 	end
 }
 LuaLianpo = sgs.CreateTriggerSkill{
-	name = "LuaLianpo",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
+	name = "LuaLianpo" ,
+	events = {sgs.EventPhaseChanging} ,
+	--frequency = sgs.Skill_Frequent , 这句话源代码没有，但是我感觉应该加上，毕竟连破一点副作用都没有
+	priority = 1,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local source = room:findPlayerBySkillName(self:objectName())
-		if source then
-			if source:getMark("lianpo") > 0 then
-				source:setMark("lianpo", 0)
-				if source:askForSkillInvoke("lianpo") then
-					local p = sgs.QVariant()
-					p:setValue(source)
-					room:setTag("LianpoInvoke", p)
-				end
-			end
-		end
+		local change = data:toPhaseChange()
+		if change.to ~= sgs.Player_NotActive then return false end
+		local shensimayi = player:getRoom():findPlayerBySkillName("LuaLianpo")
+		if (not shensimayi) or (shensimayi:getMark("LuaLianpo") <= 0) then return false end
+		local n = shensimayi:getMark("LuaLianpo")
+		shensimayi:setMark("LuaLianpo",0)
+		if not shensimayi:askForSkillInvoke("LuaLianpo") then return false end
+		local p = shensimayi
+		local playerdata = sgs.QVariant()
+		playerdata:setValue(p)
+		player:getRoom():setTag("LuaLianpoInvoke", playerdata)
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			return target:getPhase() == sgs.Player_NotActive
-		end
-		return false
-	end,
-	priority = -1
+		return target
+	end
 }
 LuaLianpoDo = sgs.CreateTriggerSkill{
-	name = "#LuaLianpoDo",
-	frequency = sgs.Skill_Frequent,
+	name = "LuaLianpo-do" ,
 	events = {sgs.EventPhaseStart},
+	priority = 1 ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local tag = room:getTag("LianpoInvoke")
-		if tag then
-			local target = tag:toPlayer()
-			room:removeTag("LianpoInvoke")
-			if target then
-				if target:isAlive() then
-					target:gainAnExtraTurn()
-				end
+		if room:getTag("LuaLianpoInvoke") then
+			local target = room:getTag("LuaLianpoInvoke"):toPlayer()
+			room:removeTag("LuaLianpoInvoke")
+			if target and target:isAlive() then
+				target:gainAnExtraTurn()
 			end
 		end
-		return false
 	end,
 	can_trigger = function(self, target)
-		if target then
-			return target:getPhase() == sgs.Player_NotActive
-		end
-		return false
-	end,
-	priority = -3
+		return target and (target:getPhase() == sgs.Player_NotActive)
+	end
 }
 --[[
 	技能名：连营
@@ -1074,115 +1066,89 @@ LuaLongdan = sgs.CreateViewAsSkill{
 	相关武将：神·赵云
 	描述：你可以将同花色的X张牌按下列规则使用或打出：红桃当【桃】，方块当具火焰伤害的【杀】，梅花当【闪】，黑桃当【无懈可击】（X为你当前的体力值且至少为1）。
 	引用：LuaLonghun
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-sgs.LonghunPattern = {"spade", "heart", "club", "diamond"}
 LuaLonghun = sgs.CreateViewAsSkill{
-	name = "LuaLonghun",
-	n = 999,
+	name = "LuaLonghun" ,
+	n = 999 ,
 	view_filter = function(self, selected, to_select)
-		local hp = sgs.Self:getHp()
-		local n = math.max(1, hp)
-		if #selected < n then
-			if n > 1 then
-				if #selected > 0 then
-					local suit = selected[1]:getSuit()
-					return to_select:getSuit() == suit
+		local n = math.max(1, sgs.Self:getHp())
+		if (#selected >= n) or to_select:hasFlag("using") then return false end
+		if (n > 1) and (not (#selected == 0)) then
+			local suit = selected[1]:getSuit()
+			return to_select:getSuit() == suit
+		end
+		if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
+			if sgs.Self:isWounded() and (to_select:getSuit() == sgs.Card_Heart) then
+				return true
+			elseif sgs.Slash_IsAvailable(sgs.Self) and (to_select:getSuit() == sgs.Card_Diamond) then
+				if sgs.Self:getWeapon() and (to_select:getEffectiveId() == self:getWeapon():getId())
+						and to_select:isKindOf("Crossbow") then
+					return sgs.Self:canSlashWithoutCrossbow()
+				else
+					return true
 				end
+			else
+				return false
 			end
-			local suit = to_select:getSuit()
-			if sgs.LonghunPattern[1] == "true" and suit == sgs.Card_Spade then
-				return true
-			elseif sgs.LonghunPattern[2] == "true" and suit == sgs.Card_Heart then
-				return true
-			elseif sgs.LonghunPattern[3] == "true" and suit == sgs.Card_Club then
-				return true
-			elseif sgs.LonghunPattern[4] == "true" and suit == sgs.Card_Diamond then
-				return true
+		elseif (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE)
+				or (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE) then
+			local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
+			if pattern == "jink" then
+				return to_select:getSuit() == sgs.Card_Club
+			elseif pattern == "nullification" then
+				return to_select:getSuit() == sgs.Card_Spade
+			elseif string.find(pattern, "peach") then
+				return to_select:getSuit() == sgs.Card_Heart
+			elseif pattern == "slash" then
+				return to_select:getSuit() == sgs.Card_Diamond
 			end
+			return false
 		end
 		return false
-	end,
+	end ,
 	view_as = function(self, cards)
-		local hp = sgs.Self:getHp()
-		local n = math.max(1, hp)
-		if #cards == n then
-			local card = cards[1]
-			local new_card = nil
-			local suit = card:getSuit()
-			local number = 0
-			if #cards == 1 then
-				number = card:getNumber()
-			end
-			if suit == sgs.Card_Spade then
-				new_card = sgs.Sanguosha:cloneCard("nullification", suit, number)
-			elseif suit == sgs.Card_Heart then
-				new_card = sgs.Sanguosha:cloneCard("peach", suit, number)
-			elseif suit == sgs.Card_Club then
-				new_card = sgs.Sanguosha:cloneCard("jink", suit, number)
-			elseif suit == sgs.Card_Diamond then
-				new_card = sgs.Sanguosha:cloneCard("fire_slash", suit, number)
-			end
-			if new_card then
-				new_card:setSkillName(self:objectName())
-				for _,cd in pairs(cards) do
-					new_card:addSubcard(cd)
-				end
-			end
-			return new_card
+		local n = math.max(1, sgs.Self:getHp())
+		if #cards ~= n then return nil end
+		local card = cards[1]
+		local new_card = nil
+		if card:getSuit() == sgs.Card_Spade then
+			new_card = sgs.Sanguosha:cloneCard("nullification", sgs.Card_SuitToBeDecided, 0)
+		elseif card:getSuit() == sgs.Card_Heart then
+			new_card = sgs.Sanguosha:cloneCard("peach", sgs.Card_SuitToBeDecided, 0)
+		elseif card:getSuit() == sgs.Card_Club then
+			new_card = sgs.Sanguosha:cloneCard("jink", sgs.Card_SuitToBeDecided, 0)
+		elseif card:getSuit() == sgs.Card_Diamond then
+			new_card = sgs.Sanguosha:cloneCard("fire_slash", sgs.Card_SuitToBeDecided, 0)
 		end
-	end,
+		if new_card then
+			new_card:setSkillName(self:objectName())
+			for _, c in ipairs(cards) do
+				new_card:addSubcard(c)
+			end
+		end
+		return new_card
+	end ,
 	enabled_at_play = function(self, player)
-		sgs.LonghunPattern = {"false", "false", "false", "false"}
-		local flag = false
-		if player:isWounded() then
-			sgs.LonghunPattern[2] = "true"
-			flag = true
-		end
-		if sgs.Slash_IsAvailable(player) then
-			sgs.LonghunPattern[4] = "true"
-			flag = true
-		end
-		return flag
-	end,
+		return player:isWounded() or sgs.Slash_IsAvailable(player)
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		sgs.LonghunPattern = {"false", "false", "false", "false"}
-		if pattern == "slash" then
-			sgs.LonghunPattern[4] = "true"
-			return true
-		elseif pattern == "jink" then
-			sgs.LonghunPattern[3] = "true"
-			return true
-		elseif string.find(pattern, "peach") then
-			sgs.LonghunPattern[2] = "true"
-			return true
-		elseif pattern == "nullification" then
-			sgs.LonghunPattern[1] = "true"
-			return true
-		end
-		return false
-	end,
+		return (pattern == "slash")
+				or (pattern == "jink")
+				or (string.find(pattern, "peach") and (not player:hasFlag("Global_PreventPeach")))
+				or (pattern == "nullification")
+	end ,
 	enabled_at_nullification = function(self, player)
-		sgs.LonghunPattern = {"true", "false", "false", "false"}
-		local hp = player:getHp()
-		local n = math.max(1, hp)
+		local n = math.max(1, player:getHp())
 		local count = 0
-		local cards = player:getHandcards()
-		for _,card in sgs.qlist(cards) do
-			if card:objectName() == "nullification" then
-				return true
-			end
-			if card:getSuit() == sgs.Card_Spade then
-				count = count + 1
-			end
+		for _, card in sgs.qlist(player:getHandcards()) do
+			if card:getSuit() == sgs.Card_Spade then count = count + 1 end
+			if count >= n then return true end
 		end
-		cards = player:getEquips()
-		for _,card in sgs.qlist(cards) do
-			if card:getSuit() == sgs.Card_Spade then
-				count = count + 1
-			end
+		for _, card in sgs.qlist(player:getEquips()) do
+			if card:getSuit() == sgs.Card_Spade then count = count + 1 end
+			if count >= n then return true end
 		end
-		return count >= n
 	end
 }
 --[[
@@ -1490,36 +1456,29 @@ LuaChaos1 = sgs.CreateTriggerSkill{
 		player:gainMark("@chaos", 1)
 	end
 }
-
 --[[
 	技能名：裸衣
-	相关武将：标准·许褚、1v1·许褚1v1
+	相关武将：标准·许褚
 	描述：摸牌阶段，你可以少摸一张牌，若如此做，你使用的【杀】或【决斗】（你为伤害来源时）造成的伤害+1，直到回合结束。
 	引用：LuaLuoyiBuff、LuaLuoyi
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaLuoyiBuff = sgs.CreateTriggerSkill{
 	name = "#LuaLuoyiBuff",
 	frequency = sgs.Skill_Frequent,
-	events = {sgs.ConfirmDamage},
+	events = {sgs.DamageCaused},
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
+		if damage.chain or damage.transfer or (not damage.by_user) then return false end
 		local reason = damage.card
-		if reason then
-			if reason:isKindOf("Slash") or reason:isKindOf("Duel") then
-				damage.damage = damage.damage + 1
-				data:setValue(damage)
-			end
+		if reason and (reason:isKindOf("Slash") or reason:isKindOf("Duel")) then
+			damage.damage = damage.damage + 1
+			data:setValue(damage)
 		end
 		return false
 	end,
 	can_trigger = function(self, target)
-		if target then
-			if target:hasFlag("LuaLuoyi") then
-				return target:isAlive()
-			end
-		end
-		return false
+		return target and target:hasFlag("LuaLuoyi") and target:isAlive()
 	end
 }
 LuaLuoyi = sgs.CreateTriggerSkill{
