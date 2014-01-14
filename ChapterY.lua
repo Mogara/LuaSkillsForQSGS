@@ -311,22 +311,19 @@ LuaXYitian = sgs.CreateTriggerSkill{
 	相关武将：SP·公孙瓒、翼·公孙瓒、翼·赵云
 	描述：若你当前的体力值大于2，你计算的与其他角色的距离-1；若你当前的体力值小于或等于2，其他角色计算的与你的距离+1。
 	引用：LuaYicong
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaYicong = sgs.CreateDistanceSkill{
-	name = "LuaYicong",
+	name = "LuaYicong" ,
 	correct_func = function(self, from, to)
-		if from:hasSkill(self:objectName()) then
-			if from:getHp() > 2 then
-				return -1
-			end
+		local correct = 0
+		if from:hasSkill(self:objectName()) and (from:getHp() > 2) then
+			correct = correct - 1
 		end
-		if to:hasSkill(self:objectName()) then
-			if to:getHp() <= 2 then
-				return 1
-			end
+		if to:hasSkill(self:objectName()) and (to:getHp() <= 2) then
+			correct = correct + 1
 		end
-		return 0
+		return correct
 	end
 }
 --[[
@@ -832,78 +829,35 @@ LuaYingzi = sgs.CreateTriggerSkill{
 	相关武将：SP·袁术、SP·台版袁术
 	描述：摸牌阶段，你额外摸等同于现存势力数的牌；弃牌阶段开始时，你须弃置等同于现存势力数的牌。
 	引用：LuaYongsi
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-YongsiGetKingdoms = function(targets)
+getKingdomsYongsi = function(yuanshu)
 	local kingdoms = {}
-	for _,target in sgs.qlist(targets) do
+	local room = yuanshu:getRoom()
+	for _, p in sgs.qlist(room:getAlivePlayers()) do
 		local flag = true
-		local kingdom = target:getKingdom()
-		for _,k in pairs(kingdoms) do
-			if k == kingdom then
+		for _, k in ipairs(kingdoms) do
+			if p:getKingdom() == k then
 				flag = false
 				break
 			end
 		end
-		if flag then
-			table.insert(kingdoms, kingdom)
-		end
+		if flag then table.insert(kingdoms, p:getKingdom()) end
 	end
-	return kingdoms
+	return #kingdoms
 end
-LuaYongsiDummyCard = sgs.CreateSkillCard{
-	name = "LuaYongsiDummyCard",
-}
 LuaYongsi = sgs.CreateTriggerSkill{
-	name = "LuaYongsi",
-	frequency = sgs.Skill_Compulsory,
+	name = "LuaYongsi" ,
+	frequency = sgs.Skill_Compulsory ,
 	events = {sgs.DrawNCards, sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local players = room:getAlivePlayers()
+		local x = getKingdomsYongsi(player)
 		if event == sgs.DrawNCards then
-			local kingdoms = YongsiGetKingdoms(players)
-			local count = data:toInt() + #kingdoms
-			data:setValue(count)
-		elseif event == sgs.EventPhaseStart and player:getPhase() == sgs.Player_Discard then
-			local kingdoms = YongsiGetKingdoms(players)
-			local x = #kingdoms
-			local total = 0
-			local jilei_cards = {}
-			local handcards = player:getHandcards()
-			for _,card in sgs.qlist(handcards) do
-				if player:isJilei(card) then
-					table.insert(jilei_cards, card)
-				end
-			end
-			total = handcards:length() - #jilei_cards + player:getEquips():length()
-			if x >= total then
-				if player:hasFlag("jilei") then
-					local dummy_card = LuaYongsiDummyCard:clone()
-					for _,card in pairs(jilei_cards) do
-						if handcards:contains(card) then
-							handcards:removeOne(card)
-						end
-					end
-					local count = 0
-					for _,card in sgs.qlist(handcards) do
-						dummy_card:addSubcard(card)
-						count = count + 1
-					end
-					local equips = player:getEquips()
-					for _,equip in sgs.qlist(equips) do
-						dummy_card:addSubcard(equip)
-						count = count + 1
-					end
-					if count > 0 then
-						room:throwCard(dummy_card, player)
-					end
-					room:showAllCards(player)
-				else
-					player:throwAllHandCardsAndEquips()
-				end
-			else
-				room:askForDiscard(player, "yongsi", x, x, false, true)
+			data:setValue(data:toInt() + x)
+		elseif (event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_Discard) then
+			if x > 0 then
+				room:askForDiscard(player, "LuaYongsi", x, x, false, true)
 			end
 		end
 		return false
