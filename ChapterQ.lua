@@ -211,15 +211,15 @@ LuaQixi = sgs.CreateViewAsSkill{
 }
 --[[
 	技能名：谦逊（锁定技）
-	相关武将：标准·陆逊、国战·陆逊、SP·台版陆逊
+	相关武将：标准·陆逊、国战·陆逊
 	描述：你不能被选择为【顺手牵羊】和【乐不思蜀】的目标。
 	引用：LuaQianxun
-	状态：0224验证通过
+	状态：1217验证通过
 ]]--
 LuaQianxun = sgs.CreateProhibitSkill{
 	name = "LuaQianxun",
 	is_prohibited = function(self, from, to, card)
-		return card:isKindOf("Snatch") or card:isKindOf("Indulgence")
+		return to:hasSkill(self:objectName()) and (card:isKindOf("Snatch") or card:isKindOf("Indulgence"))
 	end
 }
 --[[
@@ -476,54 +476,41 @@ LuaQiaobian = sgs.CreateTriggerSkill{
 	相关武将：神·周瑜
 	描述：当你于弃牌阶段内弃置了两张或更多的手牌后，你可以令所有角色各回复1点体力或各失去1点体力。每阶段限一次。
 	引用：LuaQinyin
-	状态：验证通过
-]]--
-perform = function(player, skill_name)
-	local room = player:getRoom()
-	local result = room:askForChoice(player, skill_name, "up+down")
-	local all_players = room:getAllPlayers()
-	if result == "up" then
-		for _,p in sgs.qlist(all_players) do
-			local recover = sgs.RecoverStruct()
-			recover.who = player
-			room:recover(p, recover)
+	状态：1217验证通过
+]]--	
+LuaQinyin = sgs.CreateTriggerSkill{
+	name = "LuaQinyin" ,
+	events = {sgs.CardsMoveOneTime, sgs.EventPhaseStart} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() ~= sgs.Player_Discard then return false end
+		if event == sgs.CardsMoveOneTime then
+			local move = data:toMoveOneTime()
+			if (move.from:objectName() == player:objectName()) and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
+				player:setMark("LuaQinyin", player:getMark("LuaQinyin") + move.card_ids:length())
+				if (not player:hasFlag("LuaQinyinUsed")) and (player:getMark("LuaQinyin") >= 2) then
+					if player:askForSkillInvoke(self:objectName()) then
+						player:setFlags("LuaQinyinUsed")
+		local result = room:askForChoice(player, "LuaQinyin", "up+down")
+		local all_players = room:getAllPlayers()
+		if result == "up" then
+			for _, player in sgs.qlist(all_players) do
+				local recover = sgs.RecoverStruct()
+				recover.who = player
+				room:recover(player, recover)
 		end
-	elseif result == "down" then
-		for _,p in sgs.qlist(all_players) do
-			room:loseHp(p)
+		elseif result == "down" then
+			for _, player in sgs.qlist(all_players) do
+				room:loseHp(player)
+				end
+			end
 		end
 	end
 end
-LuaQinyin = sgs.CreateTriggerSkill{
-	name = "LuaQinyin",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.CardsMoveOneTime, sgs.EventPhaseStart},
-	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_Discard then
-			if event == sgs.CardsMoveOneTime then
-				local move = data:toMoveOneTime()
-				local source = move.from
-				if source:objectName() == player:objectName() then
-					if move.to_place == sgs.Player_DiscardPile then
-						local count = player:getMark("qinyin")
-						count = count + move.card_ids:length()
-						player:setMark("qinyin", count)
-					end
-					if not player:hasFlag("qinyin_used") then
-						if player:getMark("qinyin") >= 2 then
-							if player:askForSkillInvoke(self:objectName()) then
-								local room = player:getRoom()
-								room:setPlayerFlag(player, "qinyin_used")
-								perform(player, self:objectName())
-							end
-						end
-					end
-				end
-			elseif event == sgs.EventPhaseStart then
-				player:setMark("qinyin", 0)
-			end
+		elseif event == sgs.EventPhaseStart then
+			player:setMark("qinyin", 0)
+			player:setFlags("-QinyinUsed")
 		end
-		return false
 	end
 }
 --[[
