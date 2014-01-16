@@ -1082,7 +1082,7 @@ LuaLonghun = sgs.CreateViewAsSkill{
 			if sgs.Self:isWounded() and (to_select:getSuit() == sgs.Card_Heart) then
 				return true
 			elseif sgs.Slash_IsAvailable(sgs.Self) and (to_select:getSuit() == sgs.Card_Diamond) then
-				if sgs.Self:getWeapon() and (to_select:getEffectiveId() == self:getWeapon():getId())
+				if sgs.Self:getWeapon() and (to_select:getEffectiveId() == sgs.Self:getWeapon():getId())
 						and to_select:isKindOf("Crossbow") then
 					return sgs.Self:canSlashWithoutCrossbow()
 				else
