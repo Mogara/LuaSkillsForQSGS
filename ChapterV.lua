@@ -835,7 +835,7 @@ LuaBaonve = sgs.CreateTriggerSkill{
 	相关武将：标准·郭嘉
 	描述：每当你受到1点伤害后，你可以观看牌堆顶的两张牌，将其中一张交给一名角色，然后将另一张交给一名角色。
 	引用：LuaYiji
-	状态：0901（06）验证失败（askForYiji里面那个小循环没有起到任何作用，导致服务器更新而客户端未更新造成卡牌）
+	状态：1217待验证（原有问题：askForYiji里面那个小循环没有起到任何作用，导致服务器更新而客户端未更新造成卡牌）
 ]]--
 LuaYiji = sgs.CreateTriggerSkill{
 	name = "LuaYiji",
@@ -857,7 +857,10 @@ LuaYiji = sgs.CreateTriggerSkill{
 			moves:append(move)
 			room:notifyMoveCards(true, moves, false, _guojia)
 			room:notifyMoveCards(false, moves, false, _guojia)
-			local origin_yiji = yiji_cards
+			local origin_yiji = sgs.IntList()
+			for _, id in sgs.qlist(yiji_cards) do
+				origin_yiji:append(id)
+			end
 			while room:askForYiji(player, yiji_cards, self:objectName(), true, false, true, -1, room:getAlivePlayers()) do
 				local move = sgs.CardsMoveStruct(sgs.IntList(), player, nil, sgs.Player_PlaceHand, sgs.Player_PlaceTable,
 							sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PREVIEW, player:objectName(), self:objectName(), nil))
@@ -867,7 +870,10 @@ LuaYiji = sgs.CreateTriggerSkill{
 						yiji_cards:removeOne(id)
 					end
 				end
-				origin_yiji = yiji_cards
+				origin_yiji = sgs.IntList()
+				for _, id in sgs.qlist(yiji_cards) do
+					origin_yiji:append(id)
+				end
 				local moves = sgs.CardsMoveList()
 				moves:append(move)
 				room:notifyMoveCards(true, moves, false, _guojia)
@@ -1108,7 +1114,7 @@ LuaXinzhanCard = sgs.CreateSkillCard{
 			end
 		end
 		if not left:isEmpty() then
-			room:askForGuanxing(source, left, true)
+			room:askForGuanxing(source, left, sgs.Room_GuanxingUpOnly)
 		end
 	end ,
 }
@@ -1128,7 +1134,7 @@ LuaXinzhan = sgs.CreateViewAsSkill{
 	相关武将：山·张郃
 	描述：你可以弃置一张手牌，跳过你的一个阶段（回合开始和回合结束阶段除外），若以此法跳过摸牌阶段，你获得其他至多两名角色各一张手牌；若以此法跳过出牌阶段，你可以将一名角色装备区或判定区里的一张牌移动到另一名角色区域里的相应位置。
 	引用：LuaQiaobian
-	状态：1227验证失败
+	状态：1227待验证
 ]]--
 LuaQiaobianCard = sgs.CreateSkillCard{
 	name = "LuaQiaobianCard" ,
@@ -1197,7 +1203,7 @@ LuaQiaobianCard = sgs.CreateSkillCard{
 			room:setTag("LuaQiaobianTarget", _targetdata)
 			local to = room:askForPlayerChosen(player, tos, self:objectName(), "@qiaobian-to:::" .. card:objectName())
 			if to then
-				room:movecardto(card, from, to, place, sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TRANSFER, player:objectName(), self:objectName(), nil))
+				room:moveCardTo(card, from, to, place, sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TRANSFER, player:objectName(), self:objectName(), nil))
 			end
 			room:removeTag("LuaQiaobianTarget")
 		end
@@ -1205,7 +1211,7 @@ LuaQiaobianCard = sgs.CreateSkillCard{
 }
 LuaQiaobianVS = sgs.CreateViewAsSkill{
 	name = "LuaQiaobian" ,
-	n = 0
+	n = 0 ,
 	view_as = function()
 		return LuaQiaobianCard:clone()
 	end ,
@@ -1218,7 +1224,7 @@ LuaQiaobianVS = sgs.CreateViewAsSkill{
 }
 LuaQiaobian = sgs.CreateTriggerSkill{
 	name = "LuaQiaobian" ,
-	events == {sgs.EventPhaseChanging} ,
+	events = {sgs.EventPhaseChanging} ,
 	view_as_skill = LuaQiaobianVS ,
 	on_trigger = function(self, event, player, data)
 		local change = data:toPhaseChange()
@@ -1349,19 +1355,19 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 	技能名：屯田
 	相关武将：山·邓艾
 	描述：你的回合外，当你失去牌时，你可以进行一次判定，将非红桃结果的判定牌置于你的武将牌上，称为“田”；每有一张“田”，你计算的与其他角色的距离便-1。
-	引用：LuaTuntian、LuaTuntianDistance、LuaTuntianClear
-	状态：1227验证失败
+	引用：LuaTuntian、LuaTuntianDistance
+	状态：1227待验证
 ]]--
 LuaTuntian = sgs.CreateTriggerSkill{
 	name = "LuaTuntian" ,
-	events == {sgs.CardsMoveOnetime, sgs.FinishJudge} ,
+	events = {sgs.CardsMoveOnetime, sgs.FinishJudge} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.CardsMoveOneTime then
 			local move = data:toMoveOneTime()
 			if (move.from:objectName() == player:objectName())
 					and (move.from_places:contains(sgs.Player_PlaceHand)
-					or move.from_placds:contains(sgs.Player_PlaceEquip)) then
+					or move.from_places:contains(sgs.Player_PlaceEquip)) then
 				if player:askForSkillInvoke(self:objectName(), data) then
 					local judge = sgs.JudgeStruct()
 					judge.pattern = ".|heart"
@@ -1392,28 +1398,16 @@ LuaTuntianDistance = sgs.CreateDistanceSkill{
 		end
 	end
 }
-LuaTuntianClear = sgs.CreateTriggerSkill{
-	name = "#LuaTuntian-clear" ,
-	events = {sgs.EventLoseSkill} ,
-	on_trigger = function(self, event, player, data)
-		if data:toString() == "LuaTuntian" then
-			player:clearOnePrivatePile("field")
-		end
-	end ,
-	can_trigger = function(self, target)
-		return target
-	end
-}
 --[[
 	技能名：魂姿（觉醒技）
 	相关武将：山·孙策
 	描述：回合开始阶段开始时，若你的体力为1，你须减1点体力上限，并获得技能“英姿”和“英魂”。
 	引用：LuaHunzi
-	状态：1217验证失败
+	状态：1217待验证
 ]]--
 LuaHunzi = sgs.CreateTriggerSkill{
 	name = "LuaHunzi" ,
-	events == {sgs.EventPhaseStart} ,
+	events = {sgs.EventPhaseStart} ,
 	frequency = sgs.Skill_Wake ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
@@ -1475,7 +1469,7 @@ LuaZhiba2 = sgs.CreateViewAsSkill{
 }
 LuaZhiba = sgs.CreateTriggerSkill{
 	name = "LuaZhiba$" ,
-	events == {sgs.GameStart, sgs.EventAcquireSkill, sgs.EventLoseSkill, sgs.Pindian, sgs.EventPhaseChanging} ,
+	events = {sgs.GameStart, sgs.EventAcquireSkill, sgs.EventLoseSkill, sgs.Pindian, sgs.EventPhaseChanging} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if ((event == sgs.GameStart) and (player:isLord()))
@@ -1655,7 +1649,7 @@ LuaGuzhengGet = sgs.CreateTriggerSkill{
 	相关武将：神·吕蒙
 	描述：出牌阶段，你可以观看任意一名角色的手牌，并可以展示其中一张红桃牌，然后将其弃置或置于牌堆顶。每阶段限一次。
 	引用：LuaGongxin
-	状态：1227验证失败
+	状态：1227待验证
 ]]--
 LuaGongxinCard = sgs.CreateSkillCard{
 	name = "LuaGongxinCard" ,
@@ -1663,8 +1657,27 @@ LuaGongxinCard = sgs.CreateSkillCard{
 		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName())
 	end ,
 	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
 		if not effect.to:isKongcheng() then
-			effect.from:getRoom():doGongxin(effect.from, effect.to)
+			local ids = sgs.IntList()
+			for _, card in sgs.qlist(effect.to:getHandCards()) do
+				if card:getSuit() == sgs.Card_Heart then
+					ids:append(card:getEffectiveId())
+				end
+			end
+			local card_id = room:doGongxin(effect.from, effect,to, ids, "LuaGongxin")
+			if (card_id == -1) then return end
+			local result = room:askForChoice(effect.from, "LuaGongxin", "discard+put")
+			effect.from:removeTag("LuaGongxin")
+			if result == "discard" then
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_DISMANTLE, effect.from:objectName(), nil, "LuaGongxin", nil)
+				room:throwCard(sgs.Sanguosha:getCard(card_id), reason, effect.to, effect.from)
+			else
+				effect.from:setFlags("Global_GongxinOperator")
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, effect.from:objectName(), nil, "LuaGongxin", nil)
+				room:moveCardTo(sgs.Sanguosha:getCard(card_id), effect.to, nil, sgs.Player_DrawPile, reason, true)
+				effect.from:setFlags("-Global_GongxinOperator")
+			end
 		end
 	end
 }
@@ -2040,7 +2053,7 @@ LuaBifaVS = sgs.CreateViewAsSkill{
 }
 LuaBifa = sgs.CreateTriggerSkill{
 	name = "LuaBifa" ,
-	events == {sgs.EventPhaseStart} ,
+	events = {sgs.EventPhaseStart} ,
 	view_as_skill = LuaBifaVS ,
 
 	on_trigger = function(self, event, player, data)
@@ -2170,7 +2183,7 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	相关武将：二将成名·荀攸
 	描述：每当你受到一次伤害后，你可以摸一张牌，然后展示所有手牌，若颜色均相同，伤害来源弃置一张手牌。
 	引用：LuaZhiyu
-	状态：1217验证失败（getColor无接口）
+	状态：1217待验证（换用是否为红色来判断是否颜色相同）
 ]]--
 LuaZhiyu = sgs.CreateTriggerSkill{
 	name = "LuaZhiyu" ,
@@ -2182,10 +2195,10 @@ LuaZhiyu = sgs.CreateTriggerSkill{
 			if player:isKongcheng() then return false end
 			room:showAllCards(player)
 			local cards = player:getHandcards()
-			local color = cards:first():getColor()
+			local isred = cards:first():isRed()
 			local same_color = true
 			for _, card in sgs.qlist(cards) do
-				if card:getColor() ~= color then
+				if card:isRed() ~= isred then
 					same_color = false
 					break
 				end
