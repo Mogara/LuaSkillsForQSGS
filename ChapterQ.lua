@@ -226,16 +226,85 @@ LuaQianxun = sgs.CreateProhibitSkill{
 	技能名：潜袭
 	相关武将：一将成名2012·马岱
 	描述：准备阶段开始时，你可以进行一次判定，然后令一名距离为1的角色不能使用或打出与判定结果颜色相同的手牌，直到回合结束。
+	引用：LuaQianxi、LuaQianxiClear
+	状态：1217验证通过
 ]]--
+LuaQianxi = sgs.CreateTriggerSkill{
+	name = "LuaQianxi" ,
+	events = {sgs.EventPhaseStart,sgs.FinishJudge} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if (event == sgs.EventPhaseStart) and (player and player:isAlive() and player:hasSkill(self:objectName())) and (player:getPhase() == sgs.Player_Start) then
+			if room:askForSkillInvoke(player, self:objectName()) then
+			local judge = sgs.JudgeStruct()
+				judge.reason = self:objectName()
+				judge.play_animation = false
+				judge.who = player
+				room:judge(judge)
+			end
+		elseif event == sgs.FinishJudge then
+			local judge = data:toJudge()
+			if (judge.reason ~= self:objectName()) or (not player:isAlive()) then return false end
+			local color
+			if judge.card:isRed() then
+				color = "red"
+			else
+				color = "black"
+			end
+			player:setTag(self:objectName(), sgs.QVariant(color))
+			local to_choose = sgs.SPlayerList()
+			for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+				if player:distanceTo(p)  == 1 then
+					to_choose:append(p)
+				end
+			end
+			if to_choose:isEmpty() then return false end
+			local victim = room:askForPlayerChosen(player, to_choose, self:objectName())
+			local pattern = ".|" .. color .. "|.hand$0"
+			room:setPlayerFlag(victim, "LuaQianxiTarget")
+			room:addPlayerMark(victim, "@qianxi_" .. color)
+			room:setPlayerCardLimitation(victim, "use,response", pattern, false)
+		end
+		return false
+	end ,
+	can_trigger = function(self,target)
+		return target
+	end
+}
+LuaQianxiClear = sgs.CreateTriggerSkill{
+	name = "#LuaQianxi-clear" ,
+	events = {sgs.EventPhaseChanging, sgs.Death} ,
+	on_trigger = function(self, event, player, data)
+		if event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then return false end
+		elseif event == sgs.Death then
+			local death = data:toDeath()
+			if death.who:objectName() ~= player:objectName() then return false end
+		end
+		local color = player:getTag("LuaQianxi"):toString()
+		local room = player:getRoom()
+		for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+			if p:hasFlag("LuaQianxiTarget") then
+				room:removePlayerCardLimitation(p, "use,response", ".|" .. color .. ".|hand$0")
+				room:setPlayerMark(p, "@qianxi_" .. color, 0)
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return not (target:getTag("LuaQianxi"):toString() == "")
+	end
+}
 --[[
 	技能名：潜袭
 	相关武将：怀旧-一将2·马岱-旧
 	描述：每当你使用【杀】对距离为1的目标角色造成伤害时，你可以进行一次判定，若判定结果不为红桃，你防止此伤害，改为令其减1点体力上限。
-	引用：LuaQianxi
+	引用：LuaNosQianxi
 	状态：验证通过
 ]]--
-LuaQianxi = sgs.CreateTriggerSkill{
-	name = "LuaQianxi",
+LuaNosQianxi = sgs.CreateTriggerSkill{
+	name = "LuaNosQianxi",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.DamageCaused},
 	on_trigger = function(self, event, player, data)
@@ -246,7 +315,7 @@ LuaQianxi = sgs.CreateTriggerSkill{
 		if card then
 			if card:isKindOf("Slash") then
 				if player:distanceTo(victim) <= 1 then
-					if room:askForSkillInvoke(player, "LuaQianxi", data) then
+					if room:askForSkillInvoke(player,"LuaNosQianxi", data) then
 						local judge=sgs.JudgeStruct()
 						judge.pattern=sgs.QRegExp("(.*):(heart):(.*)")
 						judge.good=false
