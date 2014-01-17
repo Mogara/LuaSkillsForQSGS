@@ -925,43 +925,37 @@ LuaXZhulou = sgs.CreateTriggerSkill{
 	相关武将：二将成名·步练师
 	描述：你死亡时，可以令一名其他角色（杀死你的角色除外）摸三张牌并回复1点体力。
 	引用：LuaZhuiyi
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaZhuiyi = sgs.CreateTriggerSkill{
-	name = "LuaZhuiyi",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Death},
+	name = "LuaZhuiyi" ,
+	events = {sgs.Death} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local damage = data:toDamage()
-		local targets = nil
-		local killer = nil
-		if damage then
-			killer = damage.from
-			if killer then
-				targets = room:getOtherPlayers(killer)
-			end
-		end
-		if not killer then
+		local death = data:toDeath()
+		if death.who:objectName() ~= player:objectName() then return false end
+		local targets
+		if death.damage and death.damage.from then
+			targets = room:getOtherPlayers(death.damage.from)
+		else
 			targets = room:getAlivePlayers()
 		end
-		if targets:length() > 0 then
-			if player:askForSkillInvoke(self:objectName(), data) then
-				local target = room:askForPlayerChosen(player, targets, self:objectName())
-				target:drawCards(3)
-				local recover = sgs.RecoverStruct()
-				recover.who = target
-				recover.recover = 1
-				room:recover(target, recover, true)
-				return false
-			end
+		if targets:isEmpty() then return false end
+		local prompt = "zhuiyi-invoke"
+		if death.damage and death.damage.from and (death.damage.from:objectName() ~= player:objectName()) then
+			prompt = "zhuiyi-invokex:" .. death.damage.from:objectName()
 		end
+		local target = room:askForPlayerChosen(player,targets,self:objectName(), prompt, true, true)
+		if not target then return false end
+		target:drawCards(3)
+		local recover = sgs.RecoverStruct()
+		recover.who = player
+		recover.recover = 1
+		room:recover(target, recover, true)
+		return false
 	end,
 	can_trigger = function(self, target)
-		if target then
-			return target:hasSkill(self:objectName())
-		end
-		return false
+		return target and target:hasSkill(self:objectName())
 	end
 }
 --[[
@@ -1022,22 +1016,25 @@ LuaZili = sgs.CreateTriggerSkill{
 	相关武将：二将成名·刘表
 	描述：摸牌阶段，若你已受伤，你可以额外摸X张牌（X为你已损失的体力值），然后跳过你的出牌阶段。
 	引用：LuaZishou
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaZishou = sgs.CreateTriggerSkill{
-	name = "LuaZishou",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.DrawNCards},
+	name = "LuaZishou" ,
+	events = {sgs.DrawNCards} ,
 	on_trigger = function(self, event, player, data)
+		local n = data:toInt()
 		local room = player:getRoom()
 		if player:isWounded() then
 			if room:askForSkillInvoke(player, self:objectName()) then
 				local losthp = player:getLostHp()
-				local count = data:toInt() + losthp
 				player:clearHistory()
 				player:skip(sgs.Player_Play)
-				data:setValue(count)
+				data:setValue(n + losthp)
+			else
+				data:setValue(n)
 			end
+		else
+			data:setValue(n)
 		end
 	end
 }
@@ -1045,34 +1042,30 @@ LuaZishou = sgs.CreateTriggerSkill{
 	技能名：宗室（锁定技）
 	相关武将：二将成名·刘表
 	描述：你的手牌上限+X（X为现存势力数）。
-	引用：LuaZongsh
-	状态：验证通过
+	引用：LuaZongshi
+	状态：1217验证通过
 ]]--
-ZongshiGetKingdoms = function(targets, source)
-	local kingdoms = {}
-	table.insert(kingdoms, source:getKingdom())
-	for _,target in sgs.qlist(targets) do
-		local flag = true
-		local kingdom = target:getKingdom()
-		for _,k in pairs(kingdoms) do
-			if k == kingdom then
-				flag = false
-				break
-			end
-		end
-		if flag then
-			table.insert(kingdoms, kingdom)
-		end
-	end
-	return kingdoms
-end
 LuaZongshi = sgs.CreateMaxCardsSkill{
-	name = "LuaZongshi",
+	name = "LuaZongshi" ,
 	extra_func = function(self, target)
+		local extra = 0
+		local kingdom_set = {}
+		table.insert(kingdom_set, target:getKingdom())
+		for _, p in sgs.qlist(target:getSiblings()) do
+			local flag = true
+			for _, k in ipairs(kingdom_set) do
+				if p:getKingdom() == k then
+					flag = false
+					break
+				end
+			end
+			if flag then table.insert(kingdom_set, p:getKingdom()) end
+		end
+		extra = #kingdom_set
 		if target:hasSkill(self:objectName()) then
-			local targets = target:getSiblings()
-			local kingdoms = ZongshiGetKingdoms(targets, target)
-			return #kingdoms
+			return extra
+		else
+			return 0
 		end
 	end
 }
