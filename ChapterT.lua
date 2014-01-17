@@ -328,7 +328,7 @@ LuaTianyiTargetMod = sgs.CreateTargetModSkill{
 	相关武将：山·姜维，1V1姜维
 	描述：出牌阶段，你可以令一名你在其攻击范围内的其他角色选择一项：对你使用一张【杀】，或令你弃置其一张牌。每阶段限一次。
 	引用：LuaTiaoxin
-	状态：1227验证通过
+	状态：1217验证通过
 ]]--
 LuaTiaoxinCard = sgs.CreateSkillCard{
 	name = "LuaTiaoxinCard" ,
