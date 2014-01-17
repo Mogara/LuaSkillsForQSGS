@@ -219,115 +219,91 @@ LuaLeiji = sgs.CreateTriggerSkill{
 		return false
 	end
 }
-
 --[[
 	技能名：离魂
 	相关武将：☆SP·貂蝉
 	描述：出牌阶段限一次，你可以弃置一张牌将武将牌翻面，然后获得一名男性角色的所有手牌，且出牌阶段结束时，你交给该角色X张牌。（X为该角色的体力值）
 	引用：LuaLihun
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-LuaLihunDummyCard = sgs.CreateSkillCard{
-	name = "LuaLihunDummyCard",
-}
 LuaLihunCard = sgs.CreateSkillCard{
-	name = "LuaLihunCard",
-	target_fixed = false,
-	will_throw = true,
+	name = "LuaLihunCard" ,
 	filter = function(self, targets, to_select)
-		if to_select:isMale() then
-			return #targets == 0
-		end
-		return false
-	end,
+		return (#targets == 0) and to_select:isMale() and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
 	on_effect = function(self, effect)
-		local source = effect.from
-		local room = source:getRoom()
-		source:turnOver()
-		local card = LuaLihunDummyCard:clone()
-		local dest = effect.to
-		local list = dest:getHandcards()
-		for _,cd in sgs.qlist(list) do
-			card:addSubcard(cd)
+		local room = effect.from:getRoom()
+		effect.from:turnOver()
+		local dummy_card = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		for _, cd in sgs.qlist(effect.to:getHandcards()) do
+			dummy_card:addSubcard(cd)
 		end
-		if not dest:isKongcheng() then
-			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TRANSFER, source:objectName(), dest:objectName(), self:objectName(), "")
-			room:moveCardTo(card, dest, source, sgs.Player_PlaceHand, reason, false)
+		if not effect.to:isKongcheng() then
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TRANSFER, effect.from:objectName(),effect.to:objectName(), "LuaLihun", nil)
+			room:moveCardTo(dummy_card, effect.to, effect.from, sgs.Player_PlaceHand, reason, false)
 		end
-		dest:setFlags("LihunTarget")
+		effect.to:setFlags("LuaLihunTarget")
 	end
 }
-LuaLihunSelect = sgs.CreateViewAsSkill{
-	name = "LuaLihunSelect",
+LuaLihunVS = sgs.CreateViewAsSkill{
+	name = "LuaLihun" ,
 	n = 1,
-	view_filter = function(self, selected, to_select)
-		return true
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = LuaLihunCard:clone()
-			card:addSubcard(cards[1])
-			return card
+	view_filter = function(self, cards, to_select)
+		if #cards == 0 then
+			return not sgs.Self:isJilei(to_select)
+		else
+			return false
 		end
-	end,
+	end ,
+	view_as = function(self, cards)
+		if #cards ~= 1 then return nil end
+		local card = LuaLihunCard:clone()
+		card:addSubcard(cards[1])
+		return card
+	end ,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaLihunCard")
+		return player:canDiscard(player, "he") and (not player:hasUsed("#LuaLihunCard"))
 	end
 }
 LuaLihun = sgs.CreateTriggerSkill{
-	name = "#LuaLihun",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventPhaseEnd},
-	view_as_skill = LuaLihunSelect,
+	name = "LuaLihun" ,
+	events = {sgs.EventPhaseStart, sgs.EventPhaseEnd} ,
+	view_as_skill = LuaLihunVS ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Play then
-			local target = nil
-			local list = room:getOtherPlayers(player)
-			for _,other in sgs.qlist(list) do
-				if other:hasFlag("LihunTarget") then
-					other:setFlags("-LihunTarget")
+		if (event == sgs.EventPhaseEnd) and (player:getPhase() == sgs.Player_Play) then
+			local target
+			for _, other in sgs.qlist(room:getOtherPlayers(player)) do
+				if other:hasFlag("LuaLihunTarget") then
+					other:setFlags("-LuaLihunTarget")
 					target = other
 					break
 				end
 			end
-			if target then
-				local hp = target:getHp()
-				if hp > 0 then
-					if not player:isNude() then
-						local to_goback
-						local card_count = player:getCardCount(true)
-						if card_count <= hp then
-							if player:isKongcheng() then
-								to_goback = sgs.DummyCard()
-							else
-								to_goback = player:wholeHandcards()
-							end
-							for i = 0, 3, 1 do
-								local equip = player:getEquip(i)
-								if equip then
-									to_goback:addSubcard(equip:getEffectiveId())
-								end
-							end
-						else
-							to_goback = room:askForExchange(player, self:objectName(), hp, true, "LihunGoBack")
-						end
-						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GIVE, player:objectName(), target:objectName(), self:objectName(), "")
-						reason.m_playerId = target:objectName();
-						room:moveCardTo(to_goback, player, target, sgs.Player_PlaceHand, reason)
-					end
+			if (not target) or (target:getHp() < 1) or player:isNude() then return false end
+			local to_back = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			if player:getCardCount(true) <= target:getHp() then
+				if not player:isKongcheng() then to_goback = player:wholeHandCards() end
+				for i = 0, 3, 1 do
+					if player:getEquip(i) then to_goback:addSubcard(player:getEquip(i):getEffectiveId()) end
+				end
+			else
+				to_goback = room:askForExchange(player, self:objectName(), target:getHp(), true, "LuaLihunGoBack")
+			end
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GIVE, player:objectName(), target:objectName(), self:objectName(), nil)
+			room:moveCardTo(to_goback, player, target, sgs.Player_PlaceHand, reason)
+		elseif (event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_NotActive) then
+			for _, p in sgs.qlist(room:getAlivePlayers()) do
+				if p:hasFlag("LuaLihunTarget") then
+					p:setFlags("-LuaLihunTarget")
 				end
 			end
 		end
-		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			return target:hasUsed("#LuaLihunCard")
-		end
+		return target and target:hasUsed("#LuaLihunCard")
 	end
 }
-
 --[[
 	技能名：离间
 	相关武将：标准·貂蝉
