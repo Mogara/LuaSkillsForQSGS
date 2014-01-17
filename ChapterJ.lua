@@ -470,44 +470,43 @@ LuaXJianshou = sgs.CreateTriggerSkill{
 	技能名：将驰
 	相关武将：二将成名·曹彰
 	描述：摸牌阶段，你可以选择一项：1、额外摸一张牌，若如此做，你不能使用或打出【杀】，直到回合结束。2、少摸一张牌，若如此做，出牌阶段你使用【杀】时无距离限制且你可以额外使用一张【杀】，直到回合结束。
-	引用：LuaJiangchi、LuaJiangchiMod
-	状态：0224验证通过
+	引用：LuaJiangchi、LuaJiangchiTargetMod
+	状态：1217验证通过
 ]]--
 LuaJiangchi = sgs.CreateTriggerSkill{
-	name = "LuaJiangchi",
-	events = {sgs.DrawNCards},
+	name = "LuaJiangchi" ,
+	events = {sgs.DrawNCards} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local count = data:toInt()
 		local choice = room:askForChoice(player, self:objectName(), "jiang+chi+cancel")
+		if choice == "cancel" then return false end
 		if choice == "jiang" then
 			room:setPlayerCardLimitation(player, "use,response", "Slash", true)
-			count = count + 1
-			data:setValue(count)
-		elseif choice == "chi" then
-			room:setPlayerFlag(player, "jiangchi_invoke")
-			count = count - 1
-			data:setValue(count)
+			data:setValue(data:toInt() + 1)
+			return false
+		else
+			room:setPlayerFlag(player, "LuaJiangchiInvoke")
+			data:setValue(data:toInt() - 1)
+			return false
 		end
 	end
 }
-LuaJiangchiMod = sgs.CreateTargetModSkill{
-	name = "#LuaJiangchiMod",
-	frequency = sgs.Skill_NotFrequent,
-	residue_func = function(self, target)
-		if target:hasSkill("LuaJiangchi") then
-			if target:hasFlag("jiangchi_invoke") then
-				return 1
-			end
+LuaJiangchiTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaJiangchi-target" ,
+	residue_func = function(self, from)
+		if from:hasSkill("LuaJiangchi") and from:hasFlag("LuaJiangchiInvoke") then
+			return 1
+		else
+			return 0
 		end
-	end,
-	distance_limit_func = function(self, from, card)
-		if from:hasSkill("LuaJiangchi") then
-			if from:hasFlag("jiangchi_invoke") then
-				return 1000
-			end
+	end ,
+	distance_limit_func = function(self, from)
+		if from:hasSkill("LuaJiangchi") and from:hasFlag("LuaJiangchiInvoke") then
+			return 1000
+		else
+			return 0
 		end
-	end,
+	end
 }
 --[[
 	技能名：节命
@@ -629,61 +628,57 @@ LuaXJieyuan = sgs.CreateTriggerSkill{
 	技能名：解烦（限定技）
 	相关武将：二将成名·韩当
 	描述：出牌阶段，你可以指定一名角色，攻击范围内含有该角色的所有角色须依次选择一项：弃置一张武器牌；或令该角色摸一张牌。
-	引用：LuaXJiefan
-	状态：0224验证通过
+	引用：LuaJiefan
+	状态：1217验证通过
 ]]--
-LuaXJiefanCard = sgs.CreateSkillCard{
-	name = "LuaXJiefanCard",
-	mute = true,
-	filter = function(self, targets, to_select, player)
+LuaJiefanCard = sgs.CreateSkillCard{
+	name = "LuaJiefanCard" ,
+	filter = function(self, targets, to_select)
 		return #targets == 0
-	end,
+	end  ,
 	on_use = function(self, room, source, targets)
-		source:loseMark("@rescue")
+		room:removePlayerMark(source, "@rescue")
 		local target = targets[1]
-		local data = sgs.QVariant()
-		data:setValue(target)
-		room:setTag("Jiefantarget",data)
-		room:getThread():delay(500)
-		for _, p in sgs.qlist(room:getAllPlayers()) do
-			if p:inMyAttackRange(target) then
-				if p:isAlive() then
-					room:cardEffect(self, source, p)
-				end
+		local _targetdata = sgs.QVariant()
+		_targetdata:setValue(target)
+		source:setTag("LuaJiefanTarget", _targetdata)
+		for _, player in sgs.qlist(room:getAllPlayers()) do
+			if player:isAlive() and player:inMyAttackRange(target) then
+				room:cardEffect(self, source, player)
 			end
 		end
-		room:removeTag("Jiefantarget")
-	end,
+		source:removeTag("LuaJiefanTarget")
+	end ,
 	on_effect = function(self, effect)
 		local room = effect.to:getRoom()
-		local tar = room:getTag("Jiefantarget"):toPlayer()
-		local data = sgs.QVariant()
-		data:setValue(tar)
-		if tar then
-			if not room:askForCard(effect.to, ".Weapon", "@jiefan-discard", data) then
-				tar:drawCards(1)
+		local target = effect.from:getTag("LuaJiefanTarget"):toPlayer()
+		local data = effect.from:getTag("LuaJiefanTarget")
+		if target then
+			if not room:askForCard(effect.to, ".Weapon", "@jiefan-discard::" .. target:objectName(), data) then
+				target:drawCards(1)
 			end
 		end
 	end
 }
-LuaXJiefanVS = sgs.CreateViewAsSkill{
-	name = "LuaXJiefan",
+LuaJiefanVS = sgs.CreateViewAsSkill{
+	name = "LuaJiefan" ,
 	n = 0,
-	view_as = function(self, cards)
-		return LuaXJiefanCard:clone()
-	end,
+	view_as = function()
+		return LuaJiefanCard:clone()
+	end ,
 	enabled_at_play = function(self, player)
-		return player:getMark("@rescue") > 0
+		return player:getMark("@rescue") >= 1
 	end
 }
-LuaXJiefan = sgs.CreateTriggerSkill{
-	name = "LuaXJiefan",
+LuaJiefan = sgs.CreateTriggerSkill{
+	name = "LuaJiefan" ,
 	frequency = sgs.Skill_Limited,
-	events = sgs.GameStart,
-	view_as_skill = LuaXJiefanVS,
-	on_trigger = function(self,event,player,data)
-		player:gainMark("@rescue")
-		return
+	limit_mark = "@rescue",
+	events = {},
+	view_as_skill = LuaJiefanVS ,
+
+	on_trigger = function()
+		return false
 	end
 }
 --[[
