@@ -55,58 +55,51 @@ LuaAnxian = sgs.CreateTriggerSkill{
 	相关武将：二将成名·步练师
 	描述：出牌阶段限一次，你可以选择两名手牌数不相等的其他角色，令其中手牌少的角色获得手牌多的角色的一张手牌并展示之，若此牌不为♠，你摸一张牌。
 	引用：LuaAnxu
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-AnxuCard = sgs.CreateSkillCard{
-	name = "AnxuCard",
-	target_fixed = false,
-	will_throw = true,
+LuaAnxuCard = sgs.CreateSkillCard{
+	name = "LuaAnxuCard" ,
 	filter = function(self, targets, to_select)
-		if to_select == sgs.Self then
-			return false
-		elseif #targets == 0 then
+		if to_select:objectName() == sgs.Self:objectName() then return false end
+		if #targets == 0 then
 			return true
 		elseif #targets == 1 then
-			local first = targets[1]
-			return to_select:getHandcardNum() ~= first:getHandcardNum()
+			return (to_select:getHandcardNum() ~= targets[1]:getHandcardNum())
+		else
+			return false
 		end
-		return false
-	end,
+	end ,
 	feasible = function(self, targets)
 		return #targets == 2
-	end,
+	end ,
 	on_use = function(self, room, source, targets)
-		local playerA = targets[1]
-		local playerB = targets[2]
 		local from
 		local to
-		if playerA:getHandcardNum() > playerB:getHandcardNum() then
-			from = playerB
-			to = playerA
+		if targets[1]:getHandcardNum() < targets[2]:getHandcardNum() then
+			from = targets[1]
+			to = targets[2]
 		else
-			from = playerA
-			to = playerB
+			from = targets[2]
+			to = targets[1]
 		end
-		local id = room:askForCardChosen(from, to, "h", self:objectName())
-		local card = sgs.Sanguosha:getCard(id)
-		room:obtainCard(from, card)
+		local id = room:askForCardChosen(from,to,"h", "LuaAnxu")
+		local cd = sgs.Sanguosha:getCard(id)
+		room:obtainCard(from, cd)
 		room:showCard(from, id)
-		if card:getSuit() ~= sgs.Card_Spade then
+		if cd:getSuit() ~= sgs.Card_Spade then
 			source:drawCards(1)
 		end
-	end
+	end ,
 }
 LuaAnxu = sgs.CreateViewAsSkill{
-	name = "LuaAnxu",
+	name = "LuaAnxu" ,
 	n = 0,
-	view_as = function(self, cards)
-		local card = AnxuCard:clone()
-		card:setSkillName(self:objectName())
-		return card
-	end,
+	view_as = function()
+		return LuaAnxuCard:clone()
+	end ,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#AnxuCard")
-	end,
+		return not player:hasUsed("#LuaAnxuCard")
+	end
 }
 --[[
 	技能名：暗箭（锁定技）
