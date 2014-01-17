@@ -544,57 +544,50 @@ LuaXFengyin = sgs.CreateTriggerSkill{
 	技能名：伏枥（限定技）
 	相关武将：二将成名·廖化
 	描述：当你处于濒死状态时，你可以将体力回复至X点（X为现存势力数），然后将你的武将牌翻面。
-	引用：LuaFuli
-	状态：验证通过
+	引用：LuaFuli、LuaLaoji1
+	状态：1217待验证
 ]]--
-KingdomCount = function(targets)
+getKingdomsFuli = function(yuanshu)
 	local kingdoms = {}
-	for _,target in sgs.qlist(targets) do
+	local room = yuanshu:getRoom()
+	for _, p in sgs.qlist(room:getAlivePlayers()) do
 		local flag = true
-		local kingdom = target:getKingdom()
-		for _,k in pairs(kingdoms) do
-			if k == kingdom then
+		for _, k in ipairs(kingdoms) do
+			if p:getKingdom() == k then
 				flag = false
 				break
 			end
 		end
-		if flag then
-			table.insert(kingdoms, kingdom)
-		end
+		if flag then table.insert(kingdoms, p:getKingdom()) end
 	end
-	return kingdoms
+	return #kingdoms
 end
 LuaFuli = sgs.CreateTriggerSkill{
-	name = "LuaFuli",
-	frequency = sgs.Skill_Limited,
-	events = {sgs.AskForPeaches},
+	name = "LuaFuli" ,
+	frequency = sgs.Skill_Limited ,
+	events = {sgs.AskForPeaches} ,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local dying_data = data:toDying()
-		local dest = dying_data.who
-		if dest:objectName() == player:objectName() then
-			if player:askForSkillInvoke(self:objectName(), data) then
-				player:loseMark("@laoji")
-				local room = player:getRoom()
-				local players = room:getAlivePlayers()
-				local kingdoms = KingdomCount(players)
-				local hp = player:getHp()
-				local recover = sgs.RecoverStruct()
-				recover.recover = #kingdoms - hp
-				room:recover(player, recover)
-				player:turnOver()
-			end
+		if dying_data.who:objectName() ~= player:objectName() then return false end
+		if player:askForSkillInvoke(self:objectName(), data) then
+			room:removePlayerMark(player, "@laoji")
+			local recover = sgs.RecoverStruct()
+			recover.recover = math.min(getKingdomsFuli(player), player:getMaxHp()) - player:getHp()
+			room:recover(player, recover)
+			player:turnOver()
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() then
-				if target:hasSkill(self:objectName()) then
-					return target:getMark("@laoji") > 0
-				end
-			end
-		end
-		return false
+		return (target and target:isAlive() and target:hasSkill(self:objectName())) and (target:getMark("@laoji") > 0)
+	end
+}
+LuaLaoji1 = sgs.CreateTriggerSkill{
+	name = "#@laoji-Lua-1" ,
+	events = {sgs.GameStart} ,
+	on_trigger = function(self, event, player, data)
+		player:gainMark("@laoji", 1)
 	end
 }
 --[[
@@ -710,16 +703,64 @@ LuaXFuzuo = sgs.CreateTriggerSkill{
 	技能名：父魂
 	相关武将：一将成名2012·关兴&张苞
 	描述：你可以将两张手牌当普通【杀】使用或打出。每当你于出牌阶段内以此法使用【杀】造成伤害后，你获得技能“武圣”、“咆哮”，直到回合结束。
+	引用：LuaFuhun
+	状态：1217验证通过
 ]]--
+LuaFuhunVS = sgs.CreateViewAsSkill{
+	name = "LuaFuhun" ,
+	n = 2,
+	view_filter = function(self, selected, to_select)
+		return (#selected < 2) and (not to_select:isEquipped())
+	end ,
+	view_as = function(self, cards)
+		if #cards ~= 2 then return nil end
+		local slash = sgs.Sanguosha:cloneCard("Slash", sgs.Card_SuitToBeDecided, 0)
+		slash:setSkillName(self:objectName())
+		slash:addSubcard(cards[1])
+		slash:addSubcard(cards[2])
+		return slash
+	end ,
+	enabled_at_play = function(self, player)
+		return (player:getHandcardNum() >= 2) and sgs.Slash_IsAvailable(player)
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		return (player:getHandcardNum() >= 2) and (pattern == "slash")
+	end
+}
+LuaFuhun = sgs.CreateTriggerSkill{
+	name = "LuaFuhun" ,
+	events = {sgs.Damage, sgs.EventPhaseChanging} ,
+	view_as_skill = LuaFuhunVS ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if (event == sgs.Damage) and (player and player:isAlive() and player:hasSkill(self:objectName())) then
+			local damage = data:toDamage()
+			if damage.card and damage.card:isKindOf("Slash") and (damage.card:getSkillName() == self:objectName())
+					and (player:getPhase() == sgs.Player_Play) then
+				room:handleAcquireDetachSkills(player, "wusheng|paoxiao")
+				player:setFlags(self:objectName())
+			end
+		elseif event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if (change.to == sgs.Player_NotActive) and player:hasFlag(self:objectName()) then
+				room:handleAcquireDetachSkills(player, "-wusheng|-paoxiao")
+			end
+		end
+		return false
+	end,
+	can_trigger = function(self, target)
+		return target
+	end
+}
 --[[
 	技能名：父魂
 	相关武将：怀旧-一将2·关&张-旧
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为从牌堆顶亮出两张牌并获得之，若亮出的牌颜色不同，你获得技能“武圣”、“咆哮”，直到回合结束。
-	引用：LuaFuhun
+	引用：LuaNosFuhun
 	状态：0224验证通过
 ]]--
-LuaFuhun = sgs.CreateTriggerSkill{
-	name = "LuaFuhun",
+LuaNosFuhun = sgs.CreateTriggerSkill{
+	name = "LuaNosFuhun",
 	events = {sgs.EventPhaseStart, sgs.EventPhaseChanging},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
