@@ -359,44 +359,36 @@ LuaXChizhong = sgs.CreateTriggerSkill{
 	相关武将：☆SP·赵云
 	描述：每当你发动“龙胆”使用或打出一张手牌时，你可以立即获得对方的一张手牌。
 	引用：LuaChongzhen
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaChongzhen = sgs.CreateTriggerSkill{
-	name = "LuaChongzhen",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.CardResponsed, sgs.TargetConfirmed},
+	name = "LuaChongzhen" ,
+	events = {sgs.CardResponded, sgs.TargetConfirmed} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if event == sgs.CardResponsed then
-			local resp = data:toResponsed()
-			local dest = resp.m_who
-			local card = resp.m_card
-			if card:getSkillName() == "longdan" then
-				if dest and not dest:isKongcheng() then
-					local ai_data = sgs.QVariant()
-					ai_data:setValue(dest)
-					if player:askForSkillInvoke(self:objectName(), ai_data) then
-						card_id = room:askForCardChosen(player, dest, "h", self:objectName())
-						local destcard = sgs.Sanguosha:getCard(card_id)
-						room:obtainCard(player, destcard)
-					end
+		if event == sgs.CardResponded then
+			local resp = data:toCardResponse()
+			if (resp.m_card:getSkillName() == "longdan") and resp.m_who and (not resp.m_who:isKongcheng()) then
+				local _data = sgs.QVariant()
+				_data:setValue(resp.m_who)
+				if player:askForSkillInvoke(self:objectName(), _data) then
+					local card_id = room:askForCardChosen(player, resp.m_who, "h", self:objectName())
+					room:obtainCard(player, sgs.Sanguosha:getCard(card_id), false)
 				end
 			end
-		elseif event == sgs.TargetConfirmed then
+		else
 			local use = data:toCardUse()
-			if use.from:objectName() == player:objectName() then
-				if use.card:getSkillName() == "longdan" then
-					local targets = use.to
-					for _,dest in sgs.qlist(targets) do
-						if not dest:isKongcheng() then
-							local ai_data = sgs.QVariant()
-							ai_data:setValue(dest)
-							if player:askForSkillInvoke(self:objectName(), ai_data) then
-								local card_id = room:askForCardChosen(player, dest, "h", self:objectName())
-								local destcard = sgs.Sanguosha:getCard(card_id)
-								room:obtainCard(player, destcard)
-							end
-						end
+			if (use.from:objectName() == player:objectName()) and (use.card:getSkillName() == "longdan") then
+				for _, p in sgs.qlist(use.to) do
+					if p:isKongcheng() then continue end
+					local _data = sgs.QVariant()
+					_data:setValue(p)
+					p:setFlags("LuaChongzhenTarget")
+					local invoke = player:askForSkillInvoke(self:objectName(), _data)
+					p:setFlags("-LuaChongzhenTarget")
+					if invoke then
+						local card_id = room:askForCardChosen(player,p,"h",self:objectName())
+						room:obtainCard(player,sgs.Sanguosha:getCard(card_id), false)
 					end
 				end
 			end
@@ -445,87 +437,96 @@ LuaXChouliang = sgs.CreateTriggerSkill{
 	技能名：醇醪
 	相关武将：二将成名·程普
 	描述：结束阶段开始时，若你的武将牌上没有牌，你可以将任意数量的【杀】置于你的武将牌上，称为“醇”；当一名角色处于濒死状态时，你可以将一张“醇”置入弃牌堆，令该角色视为使用一张【酒】。
-	引用：LuaChunlao
-	状态：验证通过
+	引用：LuaChunlao、LuaChunlaoClear
+	状态：1217验证通过
 ]]--
 LuaChunlaoCard = sgs.CreateSkillCard{
-	name = "LuaChunlaoCard",
-	target_fixed = true,
-	will_throw = false,
+	name = "LuaChunlaoCard" ,
+	will_throw = false ,
+	target_fixed = true ,
+	handling_method = sgs.Card_MethodNone,
 	on_use = function(self, room, source, targets)
-		local ids = self:getSubcards()
-		for _,id in sgs.qlist(ids) do
-			source:addToPile("wine", id, true)
+		source:addToPile("wine", self)
+	end
+}
+LuaChunlaoWineCard = sgs.CreateSkillCard{
+	name = "LuaChunlaoWine" ,
+	target_fixed = true ,
+	on_use = function(self, room, source, targets)
+		if source:getPile("wine"):isEmpty() then return end
+		local who = room:getCurrentDyingPlayer()
+		if not who then return end
+		local cards = source:getPile("wine")
+		room:fillAG(cards, source)
+		local card_id = room:askForAG(source, cards, false, "LuaChunlao")
+		room:clearAG()
+		if card_id ~= -1 then
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, nil, "LuaChunlao", nil)
+			room:throwCard(sgs.Sanguosha:getCard(card_id), reason, nil)
+			local analeptic = sgs.Sanguosha:cloneCard("Analeptic", sgs.Card_NoSuit, 0)
+			analeptic:setSkillName("_LuaChunlao")
+			room:useCard(sgs.CardUseStruct(analeptic, who, who, false))
 		end
 	end
 }
 LuaChunlaoVS = sgs.CreateViewAsSkill{
-	name = "LuaChunlao",
+	name = "LuaChunlao" ,
 	n = 999,
-	view_filter = function(self, selected, to_select)
-		return to_select:isKindOf("Slash")
-	end,
+	view_filter = function(self, cards, to_select)
+		local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
+		if pattern == "@@LuaChunlao" then
+			return to_select:isKindOf("Slash")
+		else
+			return false
+		end
+	end ,
 	view_as = function(self, cards)
-		if #cards > 0 then
+		local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
+		if pattern == "@@LuaChunlao" then
+			if #cards == 0 then return nil end
 			local acard = LuaChunlaoCard:clone()
-			for _,card in pairs(cards) do
-				acard:addSubcard(card)
+			for _, c in ipairs(cards) do
+				acard:addSubcard(c)
 			end
 			acard:setSkillName(self:objectName())
 			return acard
+		else
+			if #cards ~= 0 then return nil end
+			return LuaChunlaoWineCard:clone()
 		end
-	end,
-	enabled_at_play = function(self, player)
+	end ,
+	enabled_at_play = function()
 		return false
-	end,
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaChunlao"
+		return (pattern == "@@LuaChunlao") or (string.find(pattern, "peach") and (not player:getPile("wine"):isEmpty()))
 	end
 }
 LuaChunlao = sgs.CreateTriggerSkill{
-	name = "LuaChunlao",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart, sgs.AskForPeaches},
-	view_as_skill = LuaChunlaoVS,
+	name = "LuaChunlao" ,
+	events = {sgs.EventPhaseStart} ,
+	view_as_skill = LuaChunlaoVS ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.EventPhaseStart then
-			if player:getPhase() == sgs.Player_Finish then
-				if not player:isKongcheng() then
-					if player:getPile("wine"):length() == 0 then
-						room:askForUseCard(player, "@@LuaChunlao", "@LuaChunlao")
-					end
-				end
-			end
-		elseif event == sgs.AskForPeaches then
-			local wines = player:getPile("wine")
-			if wines:length() > 0 then
-				local dying = data:toDying()
-				local dest = dying.who
-				while (dest:getHp() < 1) do
-					if player:askForSkillInvoke(self:objectName(), data) then
-						room:fillAG(wines, player)
-						local card_id = room:askForAG(player, wines, true, self:objectName())
-						room:broadcastInvoke("clearAG")
-						if card_id ~= -1 then
-							local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(), "")
-							local card = sgs.Sanguosha:getCard(card_id)
-							room:throwCard(card, reason, nil)
-							local analeptic = sgs.Sanguosha:cloneCard("analeptic", sgs.Card_NoSuit, 0)
-							analeptic:setSkillName(self:objectName())
-							local use = sgs.CardUseStruct()
-							use.card = analeptic
-							use.from = dest
-							use.to:append(dest)
-							room:useCard(use)
-						end
-					else
-						break
-					end
-				end
-			end
+		if (event == sgs.EventPhaseStart)
+				and (player:getPhase() == sgs.Player_Finish)
+				and (not player:isKongcheng())
+				and player:getPile("wine"):isEmpty() then
+			player:getRoom():askForUseCard(player, "@@LuaChunlao", "@chunlao", -1, sgs.Card_MethodNone)
 		end
 		return false
+	end
+}
+LuaChunlaoClear = sgs.CreateTriggerSkill{
+	name = "#LuaChunlao-clear" ,
+	events = {sgs.EventLoseSkill} ,
+	on_trigger = function(self, event, player, data)
+		if data:toString() == "LuaChunlao" then
+			player:clearOnePrivatePile("wine")
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
