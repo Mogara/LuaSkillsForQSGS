@@ -632,22 +632,17 @@ LuaXShicai = sgs.CreateTriggerSkill{
 	相关武将：二将成名·华雄
 	描述：每当你受到一次红色的【杀】或因【酒】生效而伤害+1的【杀】造成的伤害后，你减1点体力上限。
 	引用：LuaShiyong
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaShiyong = sgs.CreateTriggerSkill{
-	name = "LuaShiyong",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.Damaged},
+	name = "LuaShiyong" ,
+	events = {sgs.Damaged} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
-		local slash = damage.card
-		if slash then
-			if slash:isKindOf("Slash") then
-				if slash:isRed() or slash:hasFlag("drank") then
-					local room = player:getRoom()
-					room:loseMaxHp(player)
-				end
-			end
+		if damage.card and damage.card:isKindOf("Slash")
+				and (damage.card:isRed() or damage.card:hasFlag("drank")) then
+			player:getRoom():loseMaxHp(player)
 		end
 		return false
 	end
