@@ -257,20 +257,24 @@ LuaDanalao = sgs.CreateTriggerSkill{
 	相关武将：二将成名·廖化
 	描述：回合开始时，你执行一个额外的出牌阶段。
 	引用：LuaDangxian
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaDangxian = sgs.CreateTriggerSkill{
-	name = "LuaDangxian",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.EventPhaseChanging},
+	name = "LuaDangxian" ,
+	events = {sgs.EventPhaseStart} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
-		local change = data:toPhaseChange()
-		if change.to == sgs.Player_Start then
-			if change.from ~= sgs.Player_Play then
-				change.to = sgs.Player_Play
-				data:setValue(change)
-				player:insertPhase(sgs.Player_Play)
+		if player:getPhase() == sgs.Player_RoundStart then
+			local room = player:getRoom()
+			local thread = room:getThread()
+			player:setPhase(sgs.Player_Play)
+			room:broadcastProperty(player, "phase")
+			if not thread:trigger(sgs.EventPhaseStart, room, player) then
+				thread:trigger(sgs.EventPhaseProceeding, room, player)
 			end
+			thread:trigger(sgs.EventPhaseEnd, room, player)
+			player:setPhase(sgs.Player_RoundStart)
+			room:broadcastProperty(player, "phase")
 		end
 	end
 }
