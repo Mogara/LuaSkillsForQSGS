@@ -54,46 +54,29 @@ LuaXYaliang = sgs.CreateTriggerSkill{
 	相关武将：☆SP·曹仁
 	描述：若你的手牌数大于你的体力值，你可以将你装备区内的牌当【无懈可击】使用。
 	引用：LuaYanzheng
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaYanzheng = sgs.CreateViewAsSkill{
-	name = "LuaYanzheng",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return to_select:isEquipped()
-	end,
+	name = "LuaYanzheng" ,
+	n = 1 ,
+	view_filter = function(self, cards, to_select)
+		return (#cards == 0) and to_select:isEquipped()
+	end ,
 	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local ncard = sgs.Sanguosha:cloneCard("nullification", suit, point)
-			ncard:addSubcard(card)
-			ncard:setSkillName(self:objectName())
-			return ncard
-		end
-	end,
-	enabled_at_play = function(self, player)
+		if #cards ~= 1 then return nil end
+		local ncard = sgs.Sanguosha:cloneCard("nullification", cards[1]:getSuit(), cards[1]:getNumber())
+		ncard:addSubcard(cards[1])
+		ncard:setSkillName(self:objectName())
+		return ncard
+	end ,
+	enabled_at_play = function()
 		return false
-	end,
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		if player:getHandcardNum() > player:getHp() then
-			return pattern == "nullification"
-		end
-		return false
-	end,
+		return (pattern == "nullification") and (player:getHandcardNum() > player:getHp())
+	end ,
 	enabled_at_nullification = function(self, player)
-		local cards = player:getHandcards()
-		for _,card in sgs.qlist(cards) do
-			if card:objectName() == "nullification" then
-				return true
-			end
-		end
-		if player:getHandcardNum() > player:getHp() then
-			local equips = player:getEquips()
-			return not equips:isEmpty()
-		end
-		return false
+		return (player:getHandcardNum() > player:getHp()) and (not player:getEquips():isEmpty())
 	end
 }
 --[[
