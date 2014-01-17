@@ -328,65 +328,40 @@ LuaKuanggu = sgs.CreateTriggerSkill{
 	相关武将：☆SP·曹仁
 	描述：结束阶段开始时，你可以摸X+2张牌，然后将你的武将牌翻面，且你的下个摸牌阶段开始时，你弃置X张牌。（X为当前场上武器牌的数量）
 	引用：LuaKuiwei
-	状态：验证通过
+	状态：1217验证通过
 ]]--
+getWeaponCountKuiwei = function(caoren)
+	local n = 0
+	for _, p in sgs.qlist(caoren:getRoom():getAlivePlayers()) do
+		if p:getWeapon() then n = n + 1 end
+	end
+	return n
+end
 LuaKuiwei = sgs.CreateTriggerSkill{
-	name = "LuaKuiwei",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
+	name = "LuaKuiwei" ,
+	events = {sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
-		local phase = player:getPhase()
-		local weaponCount = 0
-		local room = player:getRoom()
-		if phase == sgs.Player_Finish then
-			weaponCount = 0
-			if player:hasSkill(self:objectName()) then
-				if player:askForSkillInvoke(self:objectName()) then
-					local list = room:getAlivePlayers()
-					for _,p in sgs.qlist(list) do
-						if p:getWeapon() then
-							weaponCount = weaponCount + 1
-						end
-					end
-					player:drawCards(weaponCount+2)
-					player:turnOver()
-					if player:getMark("@kuiwei") == 0 then
-						player:gainMark("@kuiwei")
-					end
-				end
+		if player:getPhase() == sgs.Player_Finish then
+			if not player:hasSkill(self:objectName()) then return false end
+			if not player:askForSkillInvoke(self:objectName()) then return false end
+			local n = getWeaponCountKuiwei(player)
+			player:drawCards(n + 2)
+			player:turnOver()
+			if player:getMark("@kuiwei") == 0 then
+				player:getRoom():addPlayerMark(player, "@kuiwei")
 			end
-		elseif phase == sgs.Player_Draw then
-			weaponCount = 0
-			if player:getMark("@kuiwei") > 0 then
-				local list = room:getAlivePlayers()
-				for _,p in sgs.qlist(list) do
-					if p:getWeapon() then
-						weaponCount = weaponCount + 1
-					end
-				end
-				if weaponCount > 0 then
-					local cards = player:getCards("he")
-					if cards:length() <= weaponCount then
-						player:throwAllHandCardsAndEquips()
-					else
-						room:askForDiscard(player, self:objectName(), weaponCount, weaponCount, false, true);
-					end
-					player:loseMark("@kuiwei")
-				end
+		elseif player:getPhase() == sgs.Player_Draw then
+			if player:getMark("@kuiwei") == 0 then return false end
+			local room = player:getRoom()
+			room:removePlayerMark(player, "@kuiwei")
+			local n = getWeaponCountKuiwei(player)
+			if n > 0 then
+				room:askForDiscard(player, self:objectName(), n, n, false, true)
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() then
-				if target:hasSkill(self:objectName()) then
-					return true
-				elseif target:getMark("@kuiwei") > 0 then
-					return true
-				end
-			end
-		end
-	end,
-	priority = 3
+		return target and target:isAlive() and (target:hasSkill(self:objectName()) or (target:getMark("@kuiwei") > 0))
+	end
 }
