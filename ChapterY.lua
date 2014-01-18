@@ -313,59 +313,71 @@ LuaYicong = sgs.CreateDistanceSkill{
 	技能名：义从
 	相关武将：贴纸·公孙瓒
 	描述：弃牌阶段结束时，你可以将任意数量的牌置于武将牌上，称为“扈”。每有一张“扈”，其他角色计算与你的距离+1。
-	引用：LuaXYicong、LuaXYicongDist
-	状态：验证通过
+	引用：LuaDIYYicong、LuaDIYYicongDistance、LuaDIYYicongClear
+	状态：1217验证通过
 ]]--
-LuaXYicongCard = sgs.CreateSkillCard{
-	name = "LuaXYicongCard",
-	target_fixed = true,
+LuaDIYYicongCard = sgs.CreateSkillCard{
+	name = "LuaDIYYicongCard" ,
+	target_fixed = true ,
 	will_throw = false,
+	handling_method = sgs.Card_MethodNone,
 	on_use = function(self, room, source, targets)
-		source:addToPile("retinue", self, true)
-	end,
+		source:addToPile("retinue", self)
+	end
 }
-LuaXYicongVS = sgs.CreateViewAsSkill{
-	name = "LuaXYicong",
+LuaDIYYicongVS = sgs.CreateViewAsSkill{
+	name = "LuaDIYYicong" ,
 	n = 999,
-	view_filter = function(self, selected, to_select)
+	view_filter = function()
 		return true
-	end,
+	end ,
 	view_as = function(self, cards)
-		if #cards == 0 then return end
-		local YCcard = LuaXYicongCard:clone()
-		for _,card in ipairs(cards) do
-			YCcard:addSubcard(card)
+		if #cards == 0 then return nil end
+		local acard = LuaDIYYicongCard:clone()
+		for _, c in ipairs(cards) do
+			acard:addSubcard(c)
 		end
-		return YCcard
-	end,
-	enabled_at_play = function(self, player)
+		return acard
+	end ,
+	enabled_at_play = function()
 		return false
-	end,
-	enabled_at_response = function(self,player,pattern)
-		return pattern == "@@LuaXYicong"
-	end,
+	end ,
+	enabled_at_response = function(self, player , pattern)
+		return pattern == "@@LuaDIYYicong"
+	end ,
 }
-LuaXYicong = sgs.CreateTriggerSkill{
-	name = "LuaXYicong",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseEnd},
-	view_as_skill = LuaYicongVS,
+LuaDIYYicong = sgs.CreateTriggerSkill{
+	name = "LuaDIYYicong" ,
+	events = {sgs.EventPhaseEnd} ,
+	view_as_skill = LuaDIYYicongVS ,
 	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_Discard then
-			if not player:isNude() then
-				local room = player:getRoom()
-				room:askForUseCard(player, "@@LuaXYicong", "@LuaXYicong")
-			end
+		if (player:getPhase() == sgs.Player_Discard) and (not player:isNude()) then
+			player:getRoom():askForUseCard(player, "@@LuaDIYYicong", "@diyyicong", -1, sgs.Card_MethodNone)
 		end
-	end,
+		return false
+	end
 }
-LuaXYicongDist = sgs.CreateDistanceSkill{
-	name = "#LuaXYicong",
+LuaDIYYicongDistance = sgs.CreateDistanceSkill{
+	name = "#LuaDIYYicong-dist" ,
 	correct_func = function(self, from, to)
-		if to:hasSkill(self:objectName()) then
+		if to:hasSkill("LuaDIYYicong") then
 			return to:getPile("retinue"):length()
+		else
+			return 0
 		end
-	end,
+	end
+}
+LuaDIYYicongClear = sgs.CreateTriggerSkill{
+	name = "#LuaDIYYicong-clear" ,
+	events = {sgs.EventLoseSkill} ,
+	on_trigger = function(self, event, player, data)
+		if data:toString() == "LuaDIYYicong" then
+			player:clearOnePrivatePile("retinue")
+		end
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end
 }
 --[[
 	技能名：义舍
@@ -585,58 +597,44 @@ LuaYizhong = sgs.CreateTriggerSkill{
 	相关武将：☆SP·甘宁
 	描述：出牌阶段，你可以弃置一张黑色牌并指定一名其他角色。若如此做，你获得其一张牌并置于你的武将牌上，称为“锦”。（数量最多为四）
 	引用：LuaYinling、LuaYinlingClear
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaYinlingCard = sgs.CreateSkillCard{
-	name = "LuaYinlingCard",
-	target_fixed = false,
-	will_throw = true,
+	name = "LuaYinlingCard" ,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
+		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName())
 	end,
 	on_effect = function(self, effect)
-		local target = effect.to
-		local source = effect.from
-		local room = target:getRoom()
-		if not target:isNude() then
-			local brocades = source:getPile("brocade")
-			if brocades:length() < 4 then
-				local id = room:askForCardChosen(source, target, "he", self:objectName())
-				source:addToPile("brocade", id)
-			end
-		end
+		local room = effect.to:getRoom()
+		if not effect.from:canDiscard(effect.to, "he") or (effect.from:getPile("brocade"):length() >= 4) then return end
+		local card_id = room:askForCardChosen(effect.from, effect.to, "he", "LuaYinling", false, sgs.Card_MethodDiscard)
+		effect.from:addToPile("brocade", card_id)
 	end
 }
 LuaYinling = sgs.CreateViewAsSkill{
-	name = "LuaYinling",
+	name = "LuaYinling" ,
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		return to_select:isBlack()
-	end,
+		return (#selected == 0) and to_select:isBlack() and (not sgs.Self:isJilei(to_select))
+	end ,
 	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = LuaYinlingCard:clone()
-			card:addSubcard(cards[1])
-			return card
-		end
-	end,
+		if #cards ~= 1 then return nil end
+		local card = LuaYinlingCard:clone()
+		card:addSubcard(cards[1])
+		return card
+	end ,
 	enabled_at_play = function(self, player)
 		return player:getPile("brocade"):length() < 4
 	end
 }
 LuaYinlingClear = sgs.CreateTriggerSkill{
-	name = "#LuaYinlingClear",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventLoseSkill},
+	name = "#LuaYinling-clear" ,
+	events = {sgs.EventLoseSkill} ,
 	on_trigger = function(self, event, player, data)
 		if data:toString() == "LuaYinling" then
-			player:removePileByName("brocade")
+			player:clearOnePrivatePile("brocade")
 		end
-		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
 	end
