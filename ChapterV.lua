@@ -1014,7 +1014,7 @@ LuaQiaoshuiUse = sgs.CreateTriggerSkill{
 	name = "#LuaQiaoshui-use" ,
 	events = {sgs.PreCardUsed} ,
 	on_trigger = function(self, event, jianyong, data)
-		if not jianyong:hasFlag("LuaQiaoshuiSccess") then return false end
+		if not jianyong:hasFlag("LuaQiaoshuiSuccess") then return false end
 		local use = data:toCardUse()
 		if (use.card:isNDTrick() or use.card:isKindOf("BasicCard")) then
 			local room = jianyong:getRoom()
@@ -1160,7 +1160,7 @@ LuaMieji = sgs.CreateTriggerSkill{
 				end
 				room:setPlayerProperty(jianyong, "extra_collateral", sgs.QVariant(use.card:toString()))
 				room:setPlayerProperty(jianyong, "extra_collateral_current_targets", sgs.QVariant(table.concat(tos, "+")))
-				local used = room:askForUseCard(jianyong, "@@LuaQiaoshui!", "@qiaoshui-add:::collateral")
+				local used = room:askForUseCard(jianyong, "@@LuaMieji", "@qiaoshui-add:::collateral")
 				room:setPlayerProperty(jiangyong, "extra_collateral", sgs.QVariant(""))
 				room:setPlayerProperty(jianyong, "extra_collateral_current_targets", sgs.QVariant("+"))
 				if not used then return false end
