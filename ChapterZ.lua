@@ -261,35 +261,59 @@ LuaZhaolieAct = sgs.CreateTriggerSkill{
 	技能名：昭心
 	相关武将：贴纸·司马昭
 	描述：摸牌阶段结束时，你可以展示所有手牌，若如此做，视为你使用一张【杀】，每阶段限一次。
-	引用：LuaZhaoXin
-	状态：验证通过
+	引用：LuaZhaoxin
+	状态：1217验证通过
 ]]--
-LuaZhaoXin = sgs.CreateTriggerSkill{
-	name = "LuaZhaoXin",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseEnd},
+LuaZhaoxinCard = sgs.CreateSkillCard{
+	name = "LuaZhaoxinCard" ,
+	filter = function(self, targets, to_select)
+		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		local tarlist = sgs.PlayerList()
+		for i = 1, #targets, 1 do
+			tarlist:append(targets[i])
+		end
+		return slash:targetFilter(tarlist, to_select, sgs.Self)
+	end ,
+	on_use = function(self, room, source, targets)
+		room:showAllCards(source)
+		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		slash:setSkillName("_LuaZhaoxin")
+		local tarlist = sgs.SPlayerList()
+		for i = 1, #targets, 1 do
+			tarlist:append(targets[i])
+		end
+		room:useCard(sgs.CardUseStruct(slash, source, tarlist))
+	end
+}
+LuaZhaoxinVS = sgs.CreateViewAsSkill{
+	name = "LuaZhaoxin" ,
+	n = 0 ,
+	view_as = function()
+		return LuaZhaoxinCard:clone()
+	end ,
+	enabled_at_play = function()
+		return false
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		return (pattern == "@@LuaZhaoxin") and sgs.Slash_IsAvailable(player)
+	end ,
+}
+LuaZhaoxin = sgs.CreateTriggerSkill{
+	name = "LuaZhaoxin" ,
+	events = {sgs.EventPhaseEnd} ,
+	view_as_skill = LuaZhaoxinVS ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Draw then
-			local splist = sgs.SPlayerList()
-			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-			slash:setSkillName(self:objectName())
-			for _,p in sgs.qlist(room:getOtherPlayers(player)) do
-				if player:canSlash(p, slash) then
-					splist:append(p)
-				end
-			end
-			if splist:isEmpty() then return false end
-			if room:askForSkillInvoke(player, self:objectName(), sgs.QVariant()) then
-				local target = room:askForPlayerChosen(player, splist, self:objectName())
-				room:showAllCards(player)
-				local use = sgs.CardUseStruct()
-				use.from = player
-				use.to:append(target)
-				use.card = slash
-				room:useCard(use, false)
+		if player:getPhase() ~= sgs.Player_Draw then return false end
+		if player:isKongcheng() or (not sgs.Slash_IsAvailable(player)) then return false end
+		local targets = sgs.SPlayerList()
+		for _, p in sgs.qlist(player:getRoom():getAllPlayers()) do
+			if player:canSlash(p) then
+				targets:append(p)
 			end
 		end
+		if targets:isEmpty() then return false end
+		player:getRoom():askForUseCard(player, "@@LuaZhaoxin", "@zhaoxin")
+		return false
 	end
 }
 --[[
