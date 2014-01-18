@@ -15,3 +15,5 @@ Special thanks to the following for aid of looking for BUGs.^_^
 
 十一月的小胖(Baidu ID)、魅惑菇投手（Baidu ID)、赤魂go(Baidu ID)、whj329203709(Baidu ID)、波希米亚不后悔 (Baidu ID)、haoshuang(GitHub ID)、array88(GitHub ID)、自由fr(Baidu ID)
 
+Note: The "sgs_ex.lua" in QSanguosha-1217 has some typos, I upload a new one which fixed the typos.
+Please copy the "sgs_ex.lua" to "QSanguosha-1217\lua" directory and use the lua skills to fix the bugs.
