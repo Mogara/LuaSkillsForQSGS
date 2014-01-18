@@ -1037,7 +1037,7 @@ LuaQiaoshuiUse = sgs.CreateTriggerSkill{
 				end
 				room:setPlayerFlag(jianyong, "-LuaQiaoshuiExtraTarget")
 			end
-			local choices;
+			local choices = {}
 			table.insert(choices, "cancel")
 			if (use.to:length() > 1) then table.insert(choices, 1, "remove") end
 			if (not available_targets:isEmpty()) then table.insert(choices, 1, "add") end
@@ -4455,7 +4455,7 @@ LuaHuangenCard = sgs.CreateSkillCard{
 }
 LuaHuangenVS = sgs.CreateViewAsSkill{
 	name = "LuaHuangen" ,
-	n = 0;
+	n = 0,
 	view_as = function()
 		return LuaHuangenCard:clone()
 	end ,
@@ -8665,7 +8665,7 @@ LuaShipo = sgs.CreateTriggerSkill{
 						local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 						dummy:addSubcards(player:getJudgingArea())
 						tianfeng:obtainCard(dummy)
-						break;
+						break
 					end
 				end
 			end
