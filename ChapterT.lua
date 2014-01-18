@@ -109,8 +109,67 @@ LuaXTanlan = sgs.CreateTriggerSkill{
 	技能名：探虎
 	相关武将：☆SP·吕蒙
 	描述：出牌阶段限一次，你可以与一名角色拼点：若你赢，你拥有以下锁定技：你无视与该角色的距离，你使用的非延时类锦囊牌对该角色结算时不能被【无懈可击】响应，直到回合结束。
-	状态：验证失败
+	引用：LuaTanhu
+	状态：1217验证通过
 ]]--
+LuaTanhuCard = sgs.CreateSkillCard{
+	name = "LuaTanhuCard" ,
+	filter = function(self, targets, to_select)
+		return (#targets == 0) and (not to_select:isKongcheng()) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
+	on_use = function(self, room, source, targets)
+		local success = source:pindian(targets[1], "LuaTanhu", nil)
+		if success then
+			local _playerdata = sgs.QVariant()
+			_playerdata:setValue(targets[1])
+			source:setTag("LuaTanhuInvoke", _playerdata)
+			targets[1]:setFlags("LuaTanhuTarget")
+			room:setFixedDistance(source, targets[1], 1)
+		end
+	end
+}
+LuaTanhuVS = sgs.CreateViewAsSkill{
+	name = "LuaTanhu" ,
+	n = 0,
+	view_as = function()
+		return LuaTanhuCard:clone()
+	end ,
+	enabled_at_play = function(self, target)
+		return (not target:hasUsed("#LuaTanhuCard")) and (not target:isKongcheng())
+	end
+}
+LuaTanhu = sgs.CreateTriggerSkill{
+	name = "LuaTanhu" ,
+	events = {sgs.EventPhaseChanging, sgs.Death, sgs.EventLoseSkill, sgs.TrickCardCanceling} ,
+	view_as_skill = LuaTanhuVS ,
+	on_trigger = function(self, event, player, data)
+		if event == sgs.TrickCardCanceling then
+			local effect = data:toCardEffect()
+			if effect.from and effect.from:hasSkill(self:objectName()) and effect.from:isAlive()
+					and effect.to and effect.to:hasFlag("LuaTanhuTarget") then
+				return true
+			end
+		elseif player:getTag("LuaTanhuInvoke"):toPlayer() then
+			if event == sgs.EventPhaseChanging then
+				local change = data:toPhaseChange()
+				if change.to ~= sgs.Player_NotActive then return false end
+			elseif event == sgs.Death then
+				local death = data:toDeath()
+				if death.who:objectName() ~= player:objectName() then return false end
+			elseif event == sgs.EventLoseSkill then
+				if data:toString() ~= "LuaTanhu" then return false end
+			end
+			local target = player:getTag("LuaTanhuInvoke"):toPlayer()
+			target:setFlags("-LuaTanhuTarget")
+			player:getRoom():setFixedDistance(player, target, -1)
+			player:removeTag("LuaTanhuInvoke")
+		end
+		return false
+	end,
+	can_trigger = function(self, target)
+		return target
+	end
+}
 --[[
 	技能名：探囊（锁定技）
 	相关武将：翼·张飞
@@ -131,7 +190,28 @@ LuaXTannang = sgs.CreateDistanceSkill{
 	技能名：躺枪（锁定技）
 	相关武将：胆创·夏侯杰
 	描述：杀死你的角色失去1点体力上限并获得技能“躺枪”。
+	引用：LuaTangqiang
+	状态：1217验证通过
 ]]--
+LuaTangqiang = sgs.CreateTriggerSkill{
+	name = "LuaTangqiang" ,
+	events = {sgs.Death} ,
+	frequency = sgs.Skill_Compulsory,
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local death = data:toDeath()
+        if player:objectName() == death.who:objectName() and death.damage and death.damage.from then
+            room:notifySkillInvoked(player,self:objectName())
+            room:loseMaxHp(death.damage.from,1)
+            room:acquireSkill(death.damage.from,self:objectName())
+        end
+        return false
+	end,
+	can_trigger = function(self, target)
+		return target ~= nil and target:hasSkill(self:objectName())
+	end
+}
 --[[
 	技能名：天妒
 	相关武将：标准·郭嘉、SP·台版郭嘉
