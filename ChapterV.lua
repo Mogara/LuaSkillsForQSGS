@@ -1425,8 +1425,8 @@ LuaXinzhanCard = sgs.CreateSkillCard{
 				room:clearAG(source)
 			until hearts:isEmpty()
 			if dummy:subcardsLength > 0 then
-				room:doBroadcastNotify(56, string.format("%d", room:getDrawPile():length() - dummy:subcardsLength()))
-				--room:doBroadcastNotify(56, tostring(room:getDrawPile():length() + dummy:subcardsLength()))  --@啦啦SLG 总感觉这个才是对的…………
+				--room:doBroadcastNotify(56, string.format("%d", room:getDrawPile():length() - dummy:subcardsLength()))
+				room:doBroadcastNotify(56, tostring(room:getDrawPile():length() + dummy:subcardsLength()))  --@啦啦SLG 总感觉这个才是对的…………
 				source:obtainCard(dummy)
 				for _, id in sgs.qlist(dummy:getSubcards()) do
 					room:showCard(source, id)
