@@ -594,69 +594,67 @@ LuaLaoji1 = sgs.CreateTriggerSkill{
 	技能名：扶乱
 	相关武将：贴纸·王元姬
 	描述：出牌阶段限一次，若你未于本阶段使用过【杀】，你可以弃置三张相同花色的牌，令你攻击范围内的一名其他角色将武将牌翻面，然后你不能使用【杀】直到回合结束。
-	引用：LuaXFuluan
-	状态：验证通过
+	引用：LuaFuluan、LuaFuluanForbid
+	状态：1217验证通过
 ]]--
-LuaXFuluanCard = sgs.CreateSkillCard{
-	name = "LuaXFuluanCard",
-	target_fixed = false,
-	will_throw = true,
+LuaFuluanCard = sgs.CreateSkillCard{
+	name = "LuaFuluanCard" ,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			if to_select:objectName() ~= sgs.Self:objectName() then
-				return sgs.Self:inMyAttackRange(to_select)
+		if #targets ~= 0 then return false end
+		if (not sgs.Self:inMyAttackRange(to_select)) or (sgs.Self:objectName() == to_select:objectName()) then return false end
+		if sgs.Self:getWeapon() and self:getSubcards():contains(sgs.Self:getWeapon():getId()) then
+			local weapon = sgs.Self:getWeapon():getRealCard():toWeapon()
+			local distance_fix = weapon:getRange() - 1
+			if sgs.Self:getOffensiveHorse() and self:getSubcards():contains(sgs.Self:getOffensiveHorse():getId()) then
+				distance_fix = distance_fix + 1
 			end
-		end
-	end,
-	on_use = function(self, room, source, targets)
-		local room = source:getRoom()
-		targets[1]:turnOver()
-		room:setPlayerCardLimitation(source, "use", "Slash", true)
-	end,
-}
-LuaXFuluanVS = sgs.CreateViewAsSkill{
-	name = "LuaXFuluan",
-	n = 3,
-	view_filter = function(self, selected, to_select)
-		if #selected >0 then
-			return to_select:getSuit() == selected[1]:getSuit()
+			return sgs.Self:distanceTo(to_select, distance_fix) <= sgs.Self:getAttackRange()
+		elseif sgs.Self:getOffensiveHorse() and self:getSubcards():contains(sgs.Self:getOffensiveHorse():getId()) then
+			return sgs.Self:distanceTo(to_select, 1) <= sgs.Self:getAttackRange()
 		else
 			return true
 		end
-	end,
-	view_as = function(self, cards)
-		if #cards == 3 then
-			local card = LuaXFuluanCard:clone()
-			card:addSubcard(cards[1])
-			card:addSubcard(cards[2])
-			card:addSubcard(cards[3])
-			card:setSkillName(self:objectName())
-			return card
-		end
-	end,
-	enabled_at_play = function(self, player)
-		if player:hasUsed("#LuaXFuluanCard") or player:hasFlag("cannotDoFuluan") then
-			return false
+	end ,
+	on_effect = function(self, effect)
+		local room = effect.to:getRoom()
+		effect.to:turnOver()
+		room:setPlayerCardLimitation(effect.from, "use", "Slash", true)
+	end ,
+}
+LuaFuluan = sgs.CreateViewAsSkill{
+	name = "LuaFuluan" ,
+	n = 3 ,
+	view_filter = function(self, selected, to_select)
+		if #selected >= 3 then return false end
+		if sgs.Self:isJilei(to_select) then return false end
+		if #selected ~= 0 then
+			local suit = selected[1]:getSuit()
+			return to_select:getSuit() == suit
 		end
 		return true
-	end,
+	end ,
+	view_as = function(self, cards)
+		if #cards ~= 3 then return nil end
+		local card = LuaFuluanCard:clone()
+		card:addSubcard(cards[1])
+		card:addSubcard(cards[2])
+		card:addSubcard(cards[3])
+		return card
+	end ,
+	enabled_at_play = function(self, player)
+		return (player:getCardCount(true) >= 3) and (not player:hasUsed("#LuaFuluanCard")) and (not player:hasFlag("ForbidLuaFuluan"))
+	end
 }
-LuaXFuluan = sgs.CreateTriggerSkill{
-	name = "LuaXFuluan",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.TargetConfirmed},
-	view_as_skill = LuaXFuluanVS,
+LuaFuluanForbid = sgs.CreateTriggerSkill{
+	name = "#LuaFuluan-forbid" ,
+	events = {sgs.CardUsed} ,
 	on_trigger = function(self, event, player, data)
 		local use = data:toCardUse()
-		local source = use.from
-		if source:objectName() == player:objectName() then
-			local card = use.card
-			if card:isKindOf("Slash") then
-				local room = player:getRoom()
-				room:setPlayerFlag(player, "cannotDoFuluan")
-			end
+		if use.card:isKindOf("Slash") and (player:getPhase() == sgs.Player_Play) and (not player:hasFlag("ForbidLuaFuluan")) then
+			player:getRoom():setPlayerFlag(player, "ForbidLuaFuluan")
 		end
-	end,
+		return false
+	end
 }
 --[[
 	技能名：辅佐
