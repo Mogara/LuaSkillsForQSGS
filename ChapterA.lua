@@ -8,48 +8,46 @@
 	相关武将：☆SP·大乔
 	描述：每当你使用【杀】对目标角色造成伤害时，你可以防止此次伤害，令其弃置一张手牌，然后你摸一张牌；当你成为【杀】的目标时，你可以弃置一张手牌使之无效，然后该【杀】的使用者摸一张牌。
 	引用：LuaAnxian
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaAnxian = sgs.CreateTriggerSkill{
-	name = "LuaAnxian",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.DamageCaused, sgs.TargetConfirming, sgs.SlashEffected},
+	name = "LuaAnxian" ,
+	events = {sgs.DamageCaused, sgs.TargetConfirming, sgs.SlashEffected} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.DamageCaused then
 			local damage = data:toDamage()
-			local card = damage.card
-			if card and card:isKindOf("Slash") then
-				if not damage.chain and not damage.transfer then
-					local dest = damage.to
-					if room:askForSkillInvoke(player, self:objectName(), data) then
-						if not dest:isKongcheng() then
-							room:askForDiscard(dest, self:objectName(), 1, 1)
-						end
-						player:drawCards(1)
-						return true
+			if damage.card and damage.card:isKindOf("Slash")
+					and damage.by_user and (not damage.chain) and (not damage.transfer) then
+				if player:askForSkillInvoke(self:objectName(), data) then
+					if damage.to:canDiscard(damage.to, "h") then
+						room:askForDiscard(damage.to, "LuaAnxian", 1, 1)
 					end
+					player:drawCards(1)
+					return true
 				end
 			end
 		elseif event == sgs.TargetConfirming then
 			local use = data:toCardUse()
-			local card = use.card
-			if card and card:isKindOf("Slash") then
-				if room:askForCard(player, ".", "@anxian-discard", sgs.QVariant(), sgs.CardDiscarded) then
-					player:addMark("anxian")
+			if (not use.to:contains(player)) or (not player:canDiscard(player, "h")) then return false end
+			if use.card and use.card:isKindOf("Slash") then
+				player:setMark("LuaAnxian", 0)
+				if room:askForCard(player, ".", "@anxian-discard", data, self:objectName()) then
+					player:addMark("LuaAnxian")
 					use.from:drawCards(1)
 				end
 			end
 		elseif event == sgs.SlashEffected then
-			if player:getMark("anxian") > 0 then
-				local count = player:getMark("anxian") - 1
-				player:setMark("anxian", count)
+			local effect = data:toSlashEffect()
+			if player:getMark("LuaAnxian") > 0 then
+				player:removeMark("LuaAnxian")
 				return true
 			end
-			return false
 		end
+		return false
 	end
 }
+
 --[[
 	技能名：安恤
 	相关武将：二将成名·步练师
