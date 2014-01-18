@@ -69,7 +69,26 @@ LuaXXiliang = sgs.CreateTriggerSkill{
 	技能名：吓尿（锁定技）
 	相关武将：胆创·夏侯杰
 	描述：当其他角色造成一次伤害时，若你在其攻击范围内，你须弃置所有手牌，然后摸等同于该角色体力值张数的牌。
+	引用：LuaXianiao
+	状态：1217验证通过
 ]]--
+LuaXianiao = sgs.CreateTriggerSkill{
+	name = "LuaXianiao" ,
+	events = {sgs.Damage} ,
+	frequency = sgs.Skill_Compulsory,
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local xiahoujie = room:findPlayerBySkillName(self:objectName())
+        if xiahoujie == nil or xiahoujie:isDead() or not player:inMyAttackRange(xiahoujie) then return false end
+			room:notifySkillInvoked(xiahoujie,self:objectName())
+			xiahoujie:throwAllHandCards()
+			xiahoujie:drawCards(player:getHp())
+	end,
+	can_trigger = function(self, target)
+		return target ~= nil and target:isAlive()
+	end
+}
 --[[
 	技能名：先登
 	相关武将：3D织梦·乐进
