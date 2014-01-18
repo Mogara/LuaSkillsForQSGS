@@ -1158,13 +1158,13 @@ LuaMieji = sgs.CreateTriggerSkill{
 				for _, t in sgs.qlist(use.to) do
 					table.insert(tos, t:objectName())
 				end
-				room:setPlayerProperty(jianyong, "extra_collateral", sgs.QVariant(use.card:toString()))
-				room:setPlayerProperty(jianyong, "extra_collateral_current_targets", sgs.QVariant(table.concat(tos, "+")))
-				local used = room:askForUseCard(jianyong, "@@LuaMieji", "@qiaoshui-add:::collateral")
-				room:setPlayerProperty(jiangyong, "extra_collateral", sgs.QVariant(""))
-				room:setPlayerProperty(jianyong, "extra_collateral_current_targets", sgs.QVariant("+"))
+				room:setPlayerProperty(player, "extra_collateral", sgs.QVariant(use.card:toString()))
+				room:setPlayerProperty(player, "extra_collateral_current_targets", sgs.QVariant(table.concat(tos, "+")))
+				local used = room:askForUseCard(player, "@@LuaMieji", "@qiaoshui-add:::collateral")
+				room:setPlayerProperty(player, "extra_collateral", sgs.QVariant(""))
+				room:setPlayerProperty(player, "extra_collateral_current_targets", sgs.QVariant("+"))
 				if not used then return false end
-				for _, p in sgs.qlist(room:getOtherPlayers(jianyong)) do
+				for _, p in sgs.qlist(room:getOtherPlayers(player)) do
 					if p:hasFlag("ExtraCollateralTarget") then
 						p:setFlags("-ExtraColllateralTarget")
 						extra = p
