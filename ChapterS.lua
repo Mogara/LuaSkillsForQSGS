@@ -805,20 +805,20 @@ LuaXShouye = sgs.CreateViewAsSkill{
 	技能名：淑德
 	相关武将：贴纸·王元姬
 	描述：结束阶段开始时，你可以将手牌数补至等于体力上限的张数。
-	引用：LuaXShude
-	状态：验证通过
+	引用：LuaShude
+	状态：1217验证通过
 ]]--
-LuaXShude = sgs.CreateTriggerSkill{
-	name = "LuaXShude",
+LuaShude = sgs.CreateTriggerSkill{
+	name = "LuaShude" ,
+	events = {sgs.EventPhaseStart} ,
 	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventPhaseStart},
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local x = player:getMaxHp() - player:getHandcardNum()
 		if player:getPhase() == sgs.Player_Finish then
-			if x > 0 then
-				if room:askForSkillInvoke(player, self:objectName()) then
-					player:drawCards(x)
+			local upper = player:getMaxHp()
+			local handcard = player:getHandcardNum()
+			if handcard < upper then
+				if player:getRoom():askForSkillInvoke(player, self:objectName()) then
+					player:drawCards(upper - handcard)
 				end
 			end
 		end
