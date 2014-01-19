@@ -5483,7 +5483,7 @@ LuaChengxiang = sgs.CreateTriggerSkill{
 		while true do
 			local num = 0
 			for _, id in sgs.qlist(to_get) do
-				sum += sgs.Sanguosha:getCard(id):getNumber()
+				sum = sum + sgs.Sanguosha:getCard(id):getNumber()
 			end
 			for _, id in sgs.qlist(card_ids) do
 				if sum + sgs.Sanguosha:getCard(id):getNumber() >= 13 then
@@ -7235,7 +7235,7 @@ LuaWuling = sgs.CreateTriggerSkill{
 			if not (current == "" or current == nil) then
 				player:loseMark("@" .. current)
 			end
-			player:getMark("@" + choice)
+			player:getMark("@" .. choice)
 			player:setTag("LuaWuling", sgs.QVariant(choice))
 		end
 		return false
