@@ -226,7 +226,63 @@ LuaXSuperGuanxing = sgs.CreateTriggerSkill{
 	技能名：称象
 	相关武将：一将成名2013·曹冲
 	描述： 每当你受到一次伤害后，你可以展示牌堆顶的四张牌，然后获得其中任意数量点数之和小于13的牌，并将其余的牌置入弃牌堆。
+	引用：LuaChengxiang
+	状态：1217验证通过
 ]]--
+LuaChengxiang = sgs.CreateTriggerSkill{
+	name = "LuaChengxiang" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.Damaged} ,
+	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
+		local room = player:getRoom()
+		if not player:askForSkillInvoke(self:objectName(), data) then return false end
+		local card_ids = room:getNCards(4)
+		room:fillAG(card_ids)
+		local to_get = sgs.IntList()
+		local to_throw = sgs.IntList()
+		while true do
+			local sum = 0
+			for _, id in sgs.qlist(to_get) do
+				sum = sum + sgs.Sanguosha:getCard(id):getNumber()
+			end
+			for _, id in sgs.qlist(card_ids) do
+				if sum + sgs.Sanguosha:getCard(id):getNumber() >= 13 then
+					room:takeAG(nil, id, false)
+					card_ids:removeOne(id)
+					to_throw:append(id)
+				end
+			end
+			if card_ids:isEmpty() then break end
+			local card_id = room:askForAG(player, card_ids, true, self:objectName())
+			if card_id == -1 then break end
+			card_ids:removeOne(card_id)
+			to_get:append(card_id)
+			room:takeAG(player, card_id, false)
+			if card_ids:isEmpty() then break end
+		end
+		local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		if not to_get:isEmpty() then
+			for _, id in sgs.qlist(to_get) do
+				dummy:addSubcard(id)
+			end
+			player:obtainCard(dummy)
+		end
+		dummy:clearSubcards()
+		if (not to_throw:isEmpty()) or (not card_ids:isEmpty()) then
+			for _, id in sgs.qlist(to_throw) do
+				dummy:addSubcard(id)
+			end
+			for _, id in sgs.qlist(card_ids) do
+				dummy:addSubcard(id)
+			end
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NATURAL_ENTER, player:objectName(), self:objectName(), nil)
+			room:throwCard(dummy, reason, nil)
+		end
+		room:clearAG()
+		return false
+	end
+}
 --[[
 	技能名：称象
 	相关武将：倚天·曹冲
