@@ -836,13 +836,11 @@ LuaMouduanClear = sgs.CreateTriggerSkill{
 		if data:toString() == "LuaMouduan" then
 			local room = player:getRoom()
 			if player:getMark("@wu") > 0 then
-				player:loseMark("@wu")
 				room:detachSkillFromPlayer(player, "jiang")
 				room:detachSkillFromPlayer(player, "qianxun")
 			elseif player:getMark("@wen") > 0 then
-				player:loseMark("@wen")
 				room:detachSkillFromPlayer(player, "yingzi")
-				room:detachSkillFormPlayer(player, "keji")
+				room:detachSkillFromPlayer(player, "keji")
 			end
 		end
 		return false
