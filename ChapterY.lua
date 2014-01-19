@@ -922,7 +922,37 @@ LuaXYuwen = sgs.CreateTriggerSkill{
 	技能名：御策
 	相关武将：一将成名2013·满宠
 	描述：每当你受到一次伤害后，你可以展示一张手牌，若此伤害有来源，伤害来源须弃置一张与该牌类型不同的手牌，否则你回复1点体力。
+	引用：LuaYuce
+	状态：1217验证通过
 ]]--
+LuaYuce = sgs.CreateTriggerSkill{
+	name = "LuaYuce" ,
+	events = {sgs.Damaged} ,
+	on_trigger = function(self, event, player, data)
+		if player:isKongcheng() then return false end
+		local room = player:getRoom()
+		local card = room:askForCard(player, ".", "@yuce-show", data, sgs.Card_MethodNone)
+		if card then
+			room:showCard(player, card:getEffectiveId())
+			local damage = data:toDamage()
+			if (not damage.from) or (damage.from:isDead()) then return false end
+			local type_name = {"BasicCard", "TrickCard", "EquipCard"}
+			local types = {"BasicCard", "TrickCard", "EquipCard"}
+			table.removeOne(types,type_name[card:getTypeId()])
+			if not damage.from:canDiscard(damage.from, "h") then
+				local recover = sgs.RecoverStruct()
+				recover.who = player
+				room:recover(player, recover)
+			elseif not room:askForCard(damage.from, table.concat(types, ",") .. "|.|.hand",
+					"@yuce-discard:" .. player:objectName() .. "::" .. types[1] .. ":" .. types[2], data) then
+				local recover = sgs.RecoverStruct()
+				recover.who = player
+				room:recover(player, recover)
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：援护
 	相关武将：SP·曹洪
