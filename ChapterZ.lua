@@ -541,34 +541,34 @@ LuaZhijian = sgs.CreateViewAsSkill{
 	相关武将：一将成名2013·虞翻
 	描述：结束阶段开始时，你可以令一名角色摸一张牌并展示之。若此牌为装备牌，该角色回复1点体力，然后使用之。
 	引用：LuaZhiyan
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaZhiyan = sgs.CreateTriggerSkill{
-	name = "LuaZhiyan",
-	events = {sgs.EventPhaseStart},
-
+	name = "LuaZhiyan" ,
+	events = {sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		if player:getPhase() ~= sgs.Player_Finish then return false end
-		local to = room:askForPlayerChosen(player,room:getAlivePlayers(),self:objectName(),"zhiyan-invoke",true,true)
+		local room = player:getRoom()
+		local to = room:askForPlayerChosen(player, room:getAlivePlayers(), self:objectName(), "LuaZhiyan-invoke", true, true)
 		if to then
-		local ids = room:getNCards(1, false)
-		local card = sgs.Sanguosha:getCard(ids:first())
-			room:obtainCard(to,card, false)
-		if not to:isAlive() then return false end
-			room:showCard(to,ids:first())
-		if card:isKindOf("EquipCard") then
-		if to:isWounded() then
-		local recover = sgs.RecoverStruct()
-			recover.who = player
-			room:recover(to,recover)
-	end
-		if to:isAlive() and not to:isCardLimited(card,sgs.Card_MethodUse) then
-			room:useCard(sgs.CardUseStruct(card,to,to))
+			local ids = room:getNCards(1, false)
+			local card = sgs.Sanguosha:getCard(ids:first())
+			room:obtainCard(to, card, false)
+			if not to:isAlive() then return false end
+			room:showCard(to, ids:first())
+			if card:isKindOf("EquipCard") then
+				if (to:isWounded()) then
+					local recover = sgs.RecoverStruct()
+					recover.who = player
+					room:recover(to, recover)
+				end
+				if to:isAlive() and (not to:isCardLimited(card, sgs.Card_MethodUse)) then
+					room:useCard(sgs.CardUseStruct(card, to, to))
+				end
 			end
 		end
+		return false
 	end
-end
 }
 --[[
 	技能名：志继（觉醒技）
@@ -1117,7 +1117,44 @@ LuaXZonghuo = sgs.CreateTriggerSkill{
 	技能名：纵适
 	相关武将：一将成名2013·简雍
 	描述：每当你拼点赢，你可以获得对方的拼点牌。每当你拼点没赢，你可以获得你的拼点牌。
+	引用：LuaZongshih
+	状态：1217验证通过
 ]]--
+LuaZongshih = sgs.CreateTriggerSkill{
+	name = "LuaZongshih" ,
+	events = {sgs.Pindian} ,
+	frequency = sgs.Skill_Frequent ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local pindian = data:toPindian()
+		local to_obtain = nil
+		local jianyong = nil
+		if (pindian.from and pindian.from:isAlive() and pindian.from:hasSkill(self:objectName())) then
+			jianyong = pindian.from
+			if pindian.from_number > pindian.to_number then
+				to_obtain = pindian.to_card
+			else
+				to_obtain = pindian.from_card
+			end
+		elseif (pindian.to and pindian.to:isAlive() and pindian.to:hasSkill(self:objectName())) then
+			jianyong = pindian.to
+			if pindian.from_number < pindian.to_number then
+				to_obtain = pindian.from_card
+			else
+				to_obtain = pindian.to_card
+			end
+		end
+		if jianyong and to_obtain and (room:getCardPlace(to_obtain:getEffectiveId()) == sgs.Player_PlaceTable) then
+			if room:askForSkillInvoke(jianyong, self:objectName(), data) then
+				jianyong:obtainCard(to_obtain)
+			end
+		end
+		return false
+	end,
+	can_trigger = function(self, target)
+		return target
+	end
+}
 --[[
 	技能名：纵玄
 	相关武将：一将成名2013·虞翻
