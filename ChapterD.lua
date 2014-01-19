@@ -778,7 +778,7 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 	相关武将：一将成名2013·潘璋&马忠
 	描述：每当你受到一次【杀】造成的伤害后，你可以弃置一张牌，获得伤害来源装备区的武器牌。
 	引用：LuaDuodao
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaDuodao = sgs.CreateTriggerSkill{
 	name = "LuaDuodao" ,
