@@ -7040,39 +7040,27 @@ LuaTongxin = sgs.CreateTriggerSkill{
 	引用：LuaJueji
 	状态：0610待验证
 ]]--
+
 LuaJuejiCard = sgs.CreateSkillCard{
 	name = "LuaJuejiCard" ,
-	will_throw = false ,
-	handling_method = sgs.Card_MethodPindian ,
-	target_filter = function(self, targets, to_select)
+	filter = function(self, targets, to_select)
 		return (#targets == 0) and (not to_select:isKongcheng()) and (to_select:objectName() ~= sgs.Self:objectName())
 	end ,
 	on_effect = function(self, effect)
-		local success = effect.from:pindian(effect.to, "LuaJueji", self)
 		local to = effect.to
 		local _data = sgs.QVariant()
 		_data:setValue(to)
-		while success and (not effect.to:isKongcheng()) do
-			if effect.from:isKongcheng() then
-				break
-			elseif not effect.from:askForSkillInvoke("LuaJueji", _data) then
+		while (effect.from:pindian(effect.to), "LuaJueji", nil) do
+			if (effect.from:isKongcheng() or effect.to:isKongcheng() or (not effect.from:askForSkillInvoke("LuaJueji", data))) then
 				break
 			end
-			success = effect.from:pindian(effect.to, "LuaJueji")
 		end
 	end
 }
-LuaJuejiVS = sgs.CreateViewAsSkill{
+LuaJuejiVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaJueji" ,
-	n = 1 ,
-	view_filter = function(self, selected, to_select)
-		return (#selected == 0) and (not to_select:isEquipped())
-	end ,
-	view_as = function(self, cards)
-		if #cards ~= 1 then return nil end
-		local juejicard = LuaJuejiCard:clone()
-		juejicard:addSubcard(cards[1])
-		return juejicard
+	view_as = function()
+		return LuaJuejiCard:clone()
 	end ,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaJuejiCard")
@@ -7403,8 +7391,8 @@ LuaShaoying = sgs.CreateTriggerSkill{
 					end
 				end
 				if targets:isEmpty() then return false end
-				if damage.from:askForSkillInvoke(self:objectName(), data) then
-					local target = room:askForPlayerChosen(damage.from, targets, self:objectName())
+				local target = room:askForPlayerChosen(damage.from, targets, self:objectName(), "@shaoying", true, true)
+				if target then
 					local _data = sgs.QVariant()
 					_data:setValue(target)
 					damage.from:setTag("LuaShaoyingTarget", _data)
@@ -7481,16 +7469,16 @@ LuaGongmou = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Finish then
-			if player:askForSkillInvoke(self:objectName()) then
-				local players = room:getOtherPlayers(player)
-				local target = room:askForPlayerChosen(player, players, "LuaGongmou")
-				player:gainMark("@conspiracy")
+			local players = room:getOtherPlayers(player)
+			local target = room:askForPlayerChosen(player, players, "LuaGongmou", "@gongmou", true, true)
+			if target then
+				target:gainMark("@conspiracy")
 			end
 		elseif player:getPhase() == sgs.Player_Start then
 			local players = room:getOtherPlayers(player)
 			for _, p in sgs.qlist(players) do
-				if player:getMark("@conspiracy") > 0 then
-					player:loseMark("@conspiracy")
+				if p:getMark("@conspiracy") > 0 then
+					p:loseMark("@conspiracy")
 				end
 			end
 		end
@@ -7637,47 +7625,42 @@ LuaZhenggong = sgs.CreateTriggerSkill{
 	技能名：偷渡
 	相关武将：倚天·邓士载
 	描述：当你的武将牌背面向上时若受到伤害，你可以弃置一张手牌并将你的武将牌翻面，视为对一名其他角色使用了一张【杀】
-	引用：LuaToudu、LuaTouduNDL
-	状态：0610待验证
+	引用：LuaToudu
+	状态：1217待验证
 ]]--
+LuaTouduCard = sgs.CreateSkillCard{
+	name = "LuaToudu" ,
+	filter = function(self, targets, to_select)
+		return #targets == 0 and sgs.Self:canSlash(to_select, nil, false)
+	end ,
+	on_effect = function(self, effect)
+		effect.from:turnOver()
+		local slash = sgs.Sanguosha:cloneCard("Slash", sgs.Card_NoSuit, 0)
+		slash:setSkillName("LuaToudu")
+		
+		effect.from:getRoom():useCard(sgs.CardUseStruct(slash, effect.from, effect.to))
+	end
+}
+LuaTouduVS = sgs.CreateOneCardViewAsSkill{
+	name = "LuaTouduVS" ,
+	response_pattern = "@@LuaToudu" ,
+	filter_pattern = ".|.|.|hand!" , --请用最新的sgs_ex.lua来测试此技能
+	view_as = function(self, card)
+		local toudu = LuaTouduCard:clone()
+		toudu:addSubcard(card)
+		return toudu
+	end
+}
 LuaToudu = sgs.CreateMasochismSkill{
 	name = "LuaToudu" ,
+	view_as_skill = LuaTouduVS ,
 	on_damaged = function(self, player)
 		if player:faceUp() then return end
 		if player:isKongcheng() then return end
-		local room = player:getRoom()
-		if not room:askForCard(player, ".", "@LuaToudu", sgs.QVariant(), self:objectName()) then return end
-		player:turnOver()
-		local players = room:getOtherPlayers()
-		local targets = sgs.SPlayerList()
-		for _, _player in sgs.qlist(players) do
-			if player:canSlash(_player, nil, false) then
-				targets:append(_player)
-			end
-		end
-		if not targets:isEmpty() then
-			local target = room:askForPlayerChosen(player, targets, "LuaToudu")
-			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-			slash:setSkillName("LuaToudu")
-			local use = sgs.CardUseStruct()
-			use.card = slash
-			use.from = player
-			use.to:append(target)
-			room:useCard(use)
-		end
+		player:getRoom():askForUseCard(player, "@@LuaToudu", "@toudu", -1, sgs.Card_MethodDiscard, false)
 	end ,
 }
-LuaTouduNDL = sgs.CreateTargetModSkill{
-	name = "#LuaToudu-slash-ndl" ,
-	pattern = "Slash" ,
-	distance_limit_func = function(self, player, card)
-		if player:hasSkill("LuaToudu") and (card:getSkillName() == "LuaToudu") then
-			return 1000
-		else
-			return 0
-		end
-	end
-}
+
 
 --[[
 	技能名：义舍
@@ -8103,7 +8086,7 @@ LuaBeifa = sgs.CreateTriggerSkill{
 
 			local target = nil
 			if not players:isEmpty() then
-				target = room:askForPlayerChosen(player, players, self:objectName()) --没有处理TarMod
+				target = room:askForPlayerChosen(player, players, self:objectName())
 			end
 			if (not target) and (not player:isProhibited(player, slash)) then
 				target = player
@@ -8264,6 +8247,69 @@ LuaBawang = sgs.CreateTriggerSkill{
 	end
 }
 
+--危殆
+
+LuaWeidaiCard = sgs.CreateSkillCard{
+	name = "LuaWeidaiCard" ,
+	target_fixed = true ,
+	on_validate = function(self, cardUse)
+		cardUse.m_isOwnerUse = false
+		local sunce = cardUse.from
+		local room = sunce:getRoom()
+		for _, liege in sgs.qlist(room:getLieges("wu", sunce)) do
+			local tohelp = sgs.QVariant()
+			tohelp:setValue(sunce)
+			local prompt = string.format("@weidai-analeptic:%s", sunce:objectName())
+			local card = room:askForCard(liege, ".|spade|2~9|hand", prompt, tohelp, sgs.Card_MethodDiscard)
+			if card then
+				local ana = sgs.Sanguosha:cloneCard(sgs.Card_SuitToBeDecided, -1)
+				ana:setSkillName("_LuaWeidai")
+				ana:addSubcard(card)
+				return ana
+			end
+		end
+		room:setPlayerFlag(sunce, "Global_LuaWeidaiFailed")
+		return nil
+	end ,
+	on_validate_in_response = function(self, user)
+		local room = user:getRoom()
+		for _, liege in sgs.qlist(room:getLieges("wu", user)) do
+			local tohelp = sgs.QVariant()
+			tohelp:setValue(user)
+			local prompt = string.format("@weidai-analeptic:%s", user:objectName())
+			local card = room:askForCard(liege, ".|spade|2~9|hand", prompt, tohelp, sgs.Card_MethodDiscard, user)
+			if card then
+				local ana = sgs.Sanguosha:cloneCard(sgs.Card_SuitToBeDecided, -1)
+				ana:setSkillName("_LuaWeidai")
+				ana:addSubcard(card)
+				return ana
+			end
+		end
+		room:setPlayerFlag(user, "Global_LuaWeidaiFailed")
+		return nil
+	end ,
+}
+hasWuGenerals = function(player)
+	for _, p in sgs.qlist(player:getAliveSiblings()) do
+		if p:getKingdom() == "wu" then
+			return true
+		end
+	end
+	return false
+end
+LuaWeidai = sgs.CreateZeroCardViewAsSkill{
+	name = "LuaWeidai" ,
+	enabled_at_play = function(self, player)
+		return hasWuGenerals(player) and player:hasLordSkill("weidai") and (not player:hasFlag("Global_LuaWeidaiFailed")) and sgs.Analeptic_IsAvailable(player)
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		return hasWuGenerals(player) and (pattern == "peach+analeptic") and (not player:hasFlag("Global_LuaWeidaiFailed"))
+	end ,
+	view_as = function()
+		return LuaWeidaiCard:clone()
+	end
+}
+
 --[[
 	技能名：笼络
 	相关武将：智·张昭
@@ -8280,8 +8326,8 @@ LuaLongluo = sgs.CreateTriggerSkill{
 			if player:getPhase() == sgs.Player_Finish then
 				local drawnum = player:getMark(self:objectName())
 				if drawnum > 0 then
-					if player:askForSkillInvoke(self:objectName(), data) then
-						local target = room:askForPlayerChosen(player, room:getOhterPlayers(player), self:objectName())
+					local target = room:askForPlayerChosen(player, room:getOhterPlayers(player), self:objectName(), "@longluo", true, true)
+					if target then
 						target:drawCards(drawnum)
 					end
 				end
@@ -8385,8 +8431,8 @@ LuaJincui = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local targets = room:getAlivePlayers()
 		if targets:isEmpty() then return false end
-		if not player:askForSkillInvoke(self:objectName()) then return false end
-		local target = room:askForPlayerChosen(player, targets, self:objectName())
+		local target = room:askForPlayerChosen(player, targets, self:objectName(), "@jincui", true, true)
+		if target == nil then return false end
 		local t_data = sgs.QVariant()
 		t_data:setValue(target)
 		if room:askForChoice(player, self:objectName(), "draw+throw", t_data) == "draw" then
@@ -8425,36 +8471,38 @@ LuaBadao = sgs.CreateTriggerSkill{
 	相关武将：智·华雄
 	描述：你使用黑色的【杀】造成的伤害+1，你无法闪避红色的【杀】
 	引用：LuaWenjiu
-	状态：0610待验证
+	状态：1217待验证
 ]]--
+Table2IntList = function(theTable)
+	local result = sgs.IntList()
+	for i = 1, #theTable, 1 do
+		result:append(theTable[i])
+	end
+	return result
+end
 LuaWenjiu = sgs.CreateTriggerSkill{
 	name = "LuaWenjiu" ,
-	events = {sgs.ConfirmDamage, sgs.SlashProceed} ,
+	events = {sgs.ConfirmDamage, sgs.TargetConfirmed} ,
 	frequency = sgs.Skill_Compulsory ,
-	priority = 3 ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local hua = room:findPlayerBySkillName(self:objectName())
-		if not hua then return false end
-		if event == sgs.SlashProceed then
-			local effect = data:toSlashEffect()
-			if (effect.to:objectName() == hua:objectName()) and effect.slash:isRed() then
-				room:slashResult(effect, nil)
-				return true
-			end
-		elseif event == sgs.ConfirmDamage then
+		if event == sgs.ConfirmDamage then
 			local damage = data:toDamage()
-			local reason = damage.card
-			if (not reason) or (damage.from:objectName() ~= hua:objectName()) then return false end
-			if reason:isKinkOf("Slash") and reason:isBlack() then
+			if (damage.card and damage.card:isKindOf("Slash") and damage.card:isBlack()) then
 				damage.damage = damage.damage + 1
 				data:setValue(damage)
 			end
+		elseif event == sgs.TargetConfirmed then
+			local use = data:toCardUse()
+			if (use.card and use.card:isKindOf("Slash") and use.card:isRed() and use.to:contains(player)) then
+				local jink_list = sgs.QList2Table(use.from:getTag("Jink_" .. use.card:toString()):toIntList())
+				local index = use.to:indexOf(player) + 1
+				jink_list[index] = 0
+				local _data = sgs.QVariant()
+				_data:setValue(Table2IntList(jink_list))
+				use.from:setTag("Jink_" .. use.card:toString(), _data)
+			end
 		end
 		return false
-	end ,
-	can_trigger = function(self, target)
-		return target
 	end ,
 }
 
