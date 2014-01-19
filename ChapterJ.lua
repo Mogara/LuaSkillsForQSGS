@@ -880,7 +880,40 @@ LuaJinjiu = sgs.CreateFilterSkill{
 	技能名：精策
 	相关武将：一将成名2013·郭淮
 	描述：出牌阶段结束时，若你本回合已使用的牌数大于或等于你当前的体力值，你可以摸两张牌。
+	引用：LuaJingce
+	状态：1217验证通过
 ]]--
+LuaJingce = sgs.CreateTriggerSkill{
+	name = "LuaJingce" ,
+	events = {sgs.PreCardUsed, sgs.CardResponded, sgs.EventPhaseStart, sgs.EventPhaseEnd} ,
+	frequency = sgs.Skill_Frequent ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if ((event == sgs.PreCardUsed) or (event == sgs.CardResponded)) and (player:getPhase() <= sgs.Player_Play) then
+			local card = nil
+			if event == sgs.PreCardUsed then
+				card = data:toCardUse().card
+			else
+				local response = data:toCardResponse()
+				if response.m_isUse then
+					card = response.m_card
+				end
+			end
+			if card and (card:getHandlingMethod() == sgs.Card_MethodUse) then
+				player:addMark(self:objectName())
+			end
+		elseif (event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_RoundStart) then
+			player:setMark(self:objectName(), 0)
+		elseif event == sgs.EventPhaseEnd then
+			if (player:getPhase() == sgs.Player_Play) and (player:getMark(self:objectName()) >= player:getHp()) then
+				if room:askForSkillInvoke(player, self:objectName()) then
+					player:drawCards(2)
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：精锐
 	相关武将：3D织梦·陈到
@@ -1338,29 +1371,19 @@ LuaXNeoJushou = sgs.CreateTriggerSkill{
 	相关武将：一将成名2013·李儒
 	描述：你的回合内，一名体力值大于0的角色失去最后的手牌后，你可以对其造成1点伤害。
 	引用：LuaJuece
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaJuece = sgs.CreateTriggerSkill{
 	name = "LuaJuece" ,
-	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
+	events = {sgs.CardsMoveOneTime},
 
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local move = data:toMoveOneTime()
-		if player:getPhase() ~= sgs.Player_NotActive and move.from and move.from_places:contains(sgs.Player_PlaceHand)then
+		if player:getPhase() ~= sgs.Player_NotActive and move.from and move.from_places:contains(sgs.Player_PlaceHand)and move.is_last_handcard then
 		local from = room:findPlayer(move.from:getGeneralName())
-		if event == sgs.BeforeCardsMove then
-		if from:isKongcheng() or from:getHp() < 1 then return false end
-		for _, id in sgs.qlist(from:handCards()) do
-		if not move.card_ids:contains(id) then return false end
-end
-			player:addMark(self:objectName())
-	else
-		if player:getMark(self:objectName()) == 0 then return false end
-			player:removeMark(self:objectName())
-		if room:askForSkillInvoke(player, self:objectName(),data) then
+		if from:getHp() > 0 and room:askForSkillInvoke(player, self:objectName(), data) then
 			room:damage(sgs.DamageStruct(self:objectName(),player,from))
-			end
 		end
 	end
 end
@@ -1614,4 +1637,49 @@ LuaJunwei = sgs.CreateTriggerSkill{
 	技能名：峻刑
 	相关武将：一将成名2013·满宠
 	描述：出牌阶段限一次，你可以弃置至少一张手牌并选择一名其他角色，该角色须弃置一张与你弃置的牌类型均不同的手牌，否则将其武将牌翻面并摸X张牌。（X为你弃置的牌的数量）
+	引用：LuaJunxing
+	状态：1217验证通过
 ]]--
+LuaJunxingCard = sgs.CreateSkillCard{
+	name = "LuaJunxing" ,
+	filter = function(self, targets, to_select)
+		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
+	on_use = function(self, room, source, targets)
+		local target = targets[1]
+		if not target:isAlive() then return end
+		local type_name = {"BasicCard", "TrickCard", "EquipCard"}
+		local types = {"BasicCard", "TrickCard", "EquipCard"}
+		for _, id in sgs.qlist(self:getSubcards()) do
+			local c = sgs.Sanguosha:getCard(id)
+			table.removeOne(types,type_name[c:getTypeId()])
+			if #types == 0 then break end
+		end
+		if (not target:canDiscard(target, "h")) or #types == 0 then
+			target:turnOver()
+			target:drawCards(self:getSubcards():length(), "LuaJunxing")
+		elseif not room:askForCard(target, table.concat(types, ",") .. "|.|.|hand", "@junxing-discard") then
+			target:turnOver()
+			target:drawCards(self:getSubcards():length(), "LuaJunxing")
+		end
+	end
+}
+LuaJunxing = sgs.CreateViewAsSkill{
+	name = "LuaJunxing" ,
+	n = 999 ,
+	view_filter = function(self, selected, to_select)
+		return (not to_select:isEquipped()) and (not sgs.Self:isJilei(to_select))
+	end ,
+	view_as = function(self, cards)
+		if #cards == 0 then return nil end
+		local card = LuaJunxingCard:clone()
+		for _, c in ipairs(cards) do
+			card:addSubcard(c)
+		end
+		card:setSkillName(self:objectName())
+		return card
+	end ,
+	enabled_at_play = function(self, player)
+		return player:canDiscard(player, "h") and (not player:hasUsed("#LuaJunxingCard"))
+	end
+}
