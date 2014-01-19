@@ -3649,7 +3649,7 @@ LuaZhaolieAct = sgs.CreateTriggerSkill{
 			dummy:addSubcard(c)
 		end
 		if no_basic == 0 then
-			if room:askForSkillInvoke(victim, "zhaolie_obtain", sgs.QVariant("obtain:" .. + player:objectName())) then
+			if room:askForSkillInvoke(victim, "zhaolie_obtain", sgs.QVariant("obtain:" .. player:objectName())) then
 				player:obtainCard(dummy)
 			else
 				victim:obtainCard(dummy)
@@ -5587,7 +5587,7 @@ LuaJunxingCard = sgs.CreateSkillCard{
 		if (not target:canDiscard(target, "h")) or types:isEmpty() then
 			target:turnOver()
 			target:drawCards(self:getSubcards():length(), "LuaJunxing")
-		elseif not room:askForCard(target, table.concat(types, ",") + "|.|.|hand", "@junxing-discard") then
+		elseif not room:askForCard(target, table.concat(types, ",") .. "|.|.|hand", "@junxing-discard") then
 			target:turnOver()
 			target:drawCards(self:getSubcards():length(), "LuaJunxing")
 		end
