@@ -982,7 +982,49 @@ end,
 	技能名：求援
 	相关武将：一将成名2013·伏皇后
 	描述：每当你成为【杀】的目标时，你可以令一名除此【杀】使用者外的有手牌的其他角色正面朝上交给你一张手牌。若此牌不为【闪】，该角色也成为此【杀】的目标。
+	引用：LuaQiuyuan
+	状态：1217验证通过
 ]]--
+LuaQiuyuan = sgs.CreateTriggerSkill{
+	name = "LuaQiuyuan" ,
+	events = {sgs.TargetConfirming} ,
+	on_trigger = function(self, event, player, data)
+		local use = data:toCardUse()
+		if use.card:isKindOf("Slash") then
+			local room = player:getRoom()
+			local targets = sgs.SPlayerList()
+			for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+				if (not p:isKongcheng()) and (p:objectName() ~= use.from:objectName()) then
+					targets:append(p)
+				end
+			end
+			if targets:isEmpty() then return false end
+			local target = room:askForPlayerChosen(player, targets, self:objectName(), "qiuyuan-invoke", true, true)
+			if target then
+				local card = nil
+				if target:getHandcardNum() > 1 then
+					card = room:askForCard(target, ".!", "@qiuyuan-give:" .. player:objectName(), data, sgs.Card_MethodNone)
+					if not card then
+						card = target:getHandcards():at(math.random(0, target:getHandcardNum() - 1))
+					end
+				else
+					card = target:getHandcards():first()
+				end
+				player:obtainCard(card)
+				room:showCard(player, card:getEffectiveId())
+				if not card:isKindOf("Jink") then
+					if use.from:canSlash(target, use.card, false) then
+						use.to:append(target)
+						room:sortByActionOrder(use.to)
+						data:setValue(use)
+						room:getThread():trigger(sgs.TargetConfirming, room, target, data)
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：驱虎
 	相关武将：火·荀彧
