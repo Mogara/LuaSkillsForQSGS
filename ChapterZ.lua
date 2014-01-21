@@ -103,20 +103,17 @@ LuaZaoxian = sgs.CreateTriggerSkill{
 	技能名：早夭（锁定技）
 	相关武将：倚天·曹冲
 	描述：回合结束阶段开始时，若你的手牌大于13张，则你必须弃置所有手牌并流失1点体力
-	引用：LuaXZaoyao
-	状态：验证通过
+	引用：LuaZaoyao
+	状态：1217验证通过
 ]]--
-LuaXZaoyao = sgs.CreateTriggerSkill{
-	name = "LuaXZaoyao",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.EventPhaseStart},
+LuaZaoyao = sgs.CreateTriggerSkill{
+	name = "LuaZaoyao" ,
+	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_Finish then
-			if player:getHandcardNum() > 13 then
-				local room = player:getRoom()
-				player:throwAllHandCards()
-				room:loseHp(player)
-			end
+		if (player:getPhase() == sgs.Player_Finish) and (player:getHandcardNum() > 13) then
+			player:throwAllHandCards()
+			player:getRoom():loseHp(player)
 		end
 		return false
 	end
@@ -401,22 +398,17 @@ LuaNosZhenlie = sgs.CreateTriggerSkill{
 	技能名：镇威
 	相关武将：倚天·倚天剑
 	描述：你的【杀】被手牌中的【闪】抵消时，可立即获得该【闪】。
-	引用：LuaXZhenwei
-	状态：验证通过
+	引用：LuaYTZhenwei
+	状态：1217验证通过
 ]]--
-LuaXZhenwei = sgs.CreateTriggerSkill{
-	name = "LuaXZhenwei",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.SlashMissed},
+LuaYTZhenwei = sgs.CreateTriggerSkill{
+	name = "LuaYTZhenwei" ,
+	events = {sgs.SlashMissed} ,
 	on_trigger = function(self, event, player, data)
 		local effect = data:toSlashEffect()
-		local room = player:getRoom()
-		local jink = effect.jink
-		local id = jink:getEffectiveId()
-		local place = room:getCardPlace(id)
-		if place == sgs.Player_DiscardPile then
+		if effect.jink and (player:getRoom():getCardPlace(effect.jink:getEffectiveId()) == sgs.Player_DiscardPile) then
 			if player:askForSkillInvoke(self:objectName(), data) then
-				player:obtainCard(jink)
+				player:obtainCard(effect.jink)
 			end
 		end
 		return false
@@ -481,6 +473,32 @@ LuaXZhenggong = sgs.CreateTriggerSkill{
 			return not target:hasSkill(self:objectName())
 		end
 		return false
+	end
+}
+--[[
+	技能名：争功(0610版)
+	相关武将：倚天·邓士载
+	描述：其他角色的回合开始前，若你的武将牌正面朝上，你可以进行一个额外的回合，然后将武将牌翻面。
+	引用：LuaZhenggong610
+	状态：1217验证通过
+]]--
+LuaZhenggong610 = sgs.CreateTriggerSkill{
+	name = "LuaZhenggong610" ,
+	events = {sgs.TurnStart} ,
+	on_trigger = function(self, event, player, data)
+		if not player then return false end
+		local room = player:getRoom()
+		local dengshizai = room:findPlayerBySkillName(self:objectName())
+		if dengshizai and dengshizai:faceUp() then
+			if dengshizai:askForSkillInvoke(self:objectName()) then
+				dengshizai:gainAnExtraTurn()
+				dengshizai:turnOver()
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target and not target:hasSkill(self:objectName())
 	end
 }
 --[[
@@ -1095,18 +1113,27 @@ LuaZongshi = sgs.CreateMaxCardsSkill{
 	技能名：纵火（锁定技）
 	相关武将：倚天·陆伯言
 	描述：你的杀始终带有火焰属性
-	引用：LuaXZonghuo
-	状态：验证通过
+	引用：LuaZonghuo
+	状态：1217验证通过
 ]]--
-LuaXZonghuo = sgs.CreateTriggerSkill{
-	name = "LuaXZonghuo",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.SlashEffect},
-	on_trigger = function(self, event, player, data)
-		local effect = data:toSlashEffect()
-		if effect.nature ~= sgs.DamageStruct_Fire then
-			effect.nature = sgs.DamageStruct_Fire
-			data:setValue(effect)
+LuaZonghuo = sgs.CreateTriggerSkill{
+	name = "LuaZonghuo" ,
+	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.CardUsed} ,
+	on_trigger = function(self, room, player, data)
+		local use = data:toCardUse()
+		if use.card:isKindOf("Slash") and (not use.card:isKindOf("FireSlash")) then
+			local fire_slash = sgs.Sanguosha:cloneCard("fire_slash", sgs.Card_SuitToBeDecided, 0)
+			if not use.card:isVirtualCard() then
+				fire_slash:addSubcard(use.card)
+			elseif use.card:subcardsLength() > 0 then
+				for _, id in sgs.qlist(use.card:getSubcards()) do
+					fire_slash:addSubcard(id)
+				end
+			end
+			fire_slash:setSkillName(self:objectName())
+			use.card = fire_slash
+			data:setValue(use)
 		end
 		return false
 	end
