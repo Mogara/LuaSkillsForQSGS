@@ -374,22 +374,20 @@ LuaZhenlie = sgs.CreateTriggerSkill{
 	相关武将：怀旧-一将2·王异-旧
 	描述：在你的判定牌生效前，你可以从牌堆顶亮出一张牌代替之。
 	引用：LuaNosZhenlie
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaNosZhenlie = sgs.CreateTriggerSkill{
-	name = "LuaNosZhenlie",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.AskForRetrial},
+	name = "LuaNosZhenlie" ,
+	events = {sgs.AskForRetrial} ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		local judge = data:toJudge()
-		if judge.who:objectName() == player:objectName() then
-			if player:askForSkillInvoke(self:objectName(), data) then
-				local card_id = room:drawCard()
-				room:getThread():delay()
-				local card = sgs.Sanguosha:getCard(card_id)
-				room:retrial(card, player, judge, self:objectName())
-			end
+		if judge.who:objectName() ~= player:objectName() then return false end
+		if player:askForSkillInvoke(self:objectName(), data) then
+			local room = player:getRoom()
+			local card_id = room:drawCard()
+			room:getThread():delay()
+			local card = sgs.Sanguosha:getCard(card_id)
+			room:retrial(card, player, judge, self:objectName())
 		end
 		return false
 	end
