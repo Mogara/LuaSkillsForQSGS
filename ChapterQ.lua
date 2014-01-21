@@ -161,17 +161,19 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 	技能名：奇才（锁定技）
 	相关武将：怀旧-标准·黄月英-旧、SP·台版黄月英
 	描述：你使用锦囊牌时无距离限制。
-	引用：LuaQicai
-	状态：验证通过
+	引用：LuaNosQicai
+	状态：1217验证通过
 ]]--
-LuaQicai = sgs.CreateTargetModSkill{
-	name = "LuaQicai",
-	pattern = "TrickCard",
-	distance_limit_func = function(self, player)
-		if player:hasSkill(self:objectName()) then
+LuaNosQicai = sgs.CreateTargetModSkill{
+	name = "LuaNosQicai" ,
+	pattern = "TrickCard" ,
+	distance_limit_func = function(self, from, card)
+		if from:hasSkill(self:objectName()) then
 			return 1000
+		else
+			return 0
 		end
-	end,
+	end
 }
 --[[
 	技能名：奇策
@@ -301,35 +303,30 @@ LuaQianxiClear = sgs.CreateTriggerSkill{
 	相关武将：怀旧-一将2·马岱-旧
 	描述：每当你使用【杀】对距离为1的目标角色造成伤害时，你可以进行一次判定，若判定结果不为红桃，你防止此伤害，改为令其减1点体力上限。
 	引用：LuaNosQianxi
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaNosQianxi = sgs.CreateTriggerSkill{
-	name = "LuaNosQianxi",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.DamageCaused},
+	name = "LuaNosQianxi" ,
+	events = {sgs.DamageCaused} ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		local damage = data:toDamage()
-		local victim = damage.to
-		local card = damage.card
-		if card then
-			if card:isKindOf("Slash") then
-				if player:distanceTo(victim) <= 1 then
-					if room:askForSkillInvoke(player,"LuaNosQianxi", data) then
-						local judge=sgs.JudgeStruct()
-						judge.pattern=sgs.QRegExp("(.*):(heart):(.*)")
-						judge.good=false
-						judge.reason=self:objectName()
-						judge.who=player
-						room:judge(judge)
-						if judge:isGood() then
-							room:loseMaxHp(victim)
-							return true
-						end
-					end
+		if (player:distanceTo(damage.to) == 1) and damage.card and damage.card:isKindOf("Slash")
+				and damage.by_user and (not damage.chain) and (not damage.transfer) then
+			if player:askForSkillInvoke(self:objectName(), data) then
+				local room = player:getRoom()
+				local judge = sgs.JudgeStruct()
+				judge.pattern = ".|heart"
+				judge.good = false
+				judge.who = player
+				judge.reason = self:objectName()
+				room:judge(judge)
+				if judge:isGood() then
+					room:loseMaxHp(damage.to)
+					return true
 				end
 			end
 		end
+		return false
 	end
 }
 --[[
