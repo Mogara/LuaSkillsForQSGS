@@ -73,36 +73,31 @@ LuaEnyuan = sgs.CreateTriggerSkill{
 	相关武将：怀旧·法正
 	描述：其他角色每令你回复1点体力，该角色摸一张牌；其他角色每对你造成一次伤害后，需交给你一张红桃手牌，否则该角色失去1点体力。
 	引用：LuaNosEnyuan
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaNosEnyuan = sgs.CreateTriggerSkill{
-	name = "LuaNosEnyuan",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.HpRecover, sgs.Damaged},
+	name = "LuaNosWuyan" ,
+	events = {sgs.HpRecover, sgs.Damaged} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		if event == sgs.HpRecover then
 			local recover = data:toRecover()
-			local source = recover.who
-			local count = recover.recover
-			if source then
-				if source:objectName() ~= player:objectName() then
-					source:drawCards(count)
-				end
+			if recover.who and (recover.who:objectName() ~= player:objectName()) then
+				recover.who:drawCards(recover.recover)
 			end
-		elseif event == sgs.Damaged then
+		else
 			local damage = data:toDamage()
 			local source = damage.from
-			if source then
-				if source:objectName() ~= player:objectName() then
-					local card = room:askForCard(source, ".enyuan", "@enyuanheart", sgs.QVariant(), sgs.NonTrigger)
-					if card then
-						player:obtainCard(card)
-					else
-						room:loseHp(source)
-					end
+			if source and (source:objectName() ~= player:objectName()) then
+				local room = player:getRoom()
+				local card = room:askForCard(source, ".|heart|.|hand", "@enyuanheart", data, sgs.Card_MethodNone)
+				if card then
+					player:obtainCard(card)
+				else
+					room:loseHp(source)
 				end
 			end
 		end
+		return false
 	end
 }
