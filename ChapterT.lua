@@ -7,63 +7,58 @@
 	技能名：抬榇
 	相关武将：倚天·庞令明
 	描述：出牌阶段，你可以自减1点体力或弃置一张武器牌，弃置你攻击范围内的一名角色区域的两张牌。每回合中，你可以多次使用抬榇
-	引用：LuaXTaichen
-	状态：验证通过
+	引用：LuaTaichen
+	状态：1217验证通过
 ]]--
-LuaXTaichenCard = sgs.CreateSkillCard{
-	name = "LuaXTaichenCard",
-	target_fixed = false,
-	will_throw = false,
+LuaTaichenCard = sgs.CreateSkillCard{
+	name = "LuaTaichenCard" ,
+	will_throw = false ,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			if not to_select:isAllNude() then
-				local cards = self:getSubcards()
-				if not cards:isEmpty() then
-					local weapon = sgs.Self:getWeapon()
-					if weapon and cards:first() == weapon:getId() then
-						if not sgs.Self:hasSkill("zhengfeng") then
-							return sgs.Self:distanceTo(to_select) == 1
-						end
-					end
-				end
-				return sgs.Self:inMyAttackRange(to_select)
+		if (#targets ~= 0) or (not sgs.Self:canDiscard(to_select, "hej")) then return false end
+		if self:subcardsLength() > 0 then
+			local card_id = self:getSubcards():first()
+			local range_fix = 0
+			if sgs.Self:getWeapon() and (sgs.Self:getWeapon():getId() == card_id) then
+				local weapon = sgs.Self:getWeapon():getRealCard():toWeapon()
+				range_fix = range_fix + weapon:getRange() - 1
+			elseif sgs.Self:getOffensiveHorse() and (self:getOffensiveHorse():getId() == card_id) then
+				range_fix = range_fix + 1
 			end
-		end
-		return false
-	end,
-	on_effect = function(self, effect)
-		local source = effect.from
-		local target = effect.to
-		local room = source:getRoom()
-		local cards = self:getSubcards()
-		if cards:isEmpty() then
-			room:loseHp(source)
+			return sgs.Self:distanceTo(to_select, range_fix) <= sgs.Self:getAttackRange()
 		else
-			room:throwCard(self, source)
+			return sgs.Self:inMyAttackRange(to_select)
 		end
-		for i=1, 2, 1 do
-			if not target:isAllNude() then
-				local card = room:askForCardChosen(source, target, "hej", "LuaXTaichen")
-				room:throwCard(card, target)
+	end ,
+	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
+		if self:getSubcards():isEmpty() then
+			room:loseHp(effect.from)
+		else
+			room:throwCard(self, effect.from)
+		end
+		for i = 1, 2, 1 do
+			if effect.from:canDiscard(effect.to, "hej") then
+				room:throwCard(room:askForCardChosen(effect.from, effect.to, "hej", "LuaTaichen"), effect.to, effect.from)
 			end
 		end
 	end
 }
-LuaXTaichen = sgs.CreateViewAsSkill{
-	name = "LuaXTaichen",
+LuaTaichen = sgs.CreateViewAsSkill{
+	name = "LuaTaichen" ,
 	n = 1,
 	view_filter = function(self, selected, to_select)
-		if #selected == 0 then
-			return to_select:isKindOf("Weapon")
-		end
-		return false
-	end,
+		return (#selected == 0) and to_select:isKindOf("Weapon")
+	end ,
 	view_as = function(self, cards)
-		local taichen_card = LuaXTaichenCard:clone()
-		if #cards == 1 then
-			taichen_card:addSubcard(cards[1])
+		if #cards <= 1 then
+			local taichen_card = LuaTaichenCard:clone()
+			if #cards == 1 then
+				taichen_card:addSubcard(cards[1])
+			end
+			return taichen_card
+		else
+			return nil
 		end
-		return taichen_card
 	end
 }
 --[[
@@ -494,85 +489,95 @@ LuaTieji = sgs.CreateTriggerSkill{
 	技能名：同心
 	相关武将：倚天·夏侯涓
 	描述：处于连理状态的两名角色，每受到一点伤害，你可以令你们两人各摸一张牌
-	引用：LuaXTongxin
-	状态：验证通过
+	引用：LuaTongxin
+	状态：1217验证通过
 ]]--
-LuaXTongxin = sgs.CreateTriggerSkill{
-	name = "LuaXTongxin",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
+LuaTongxin = sgs.CreateTriggerSkill{
+	name = "LuaTongxin" ,
+	events = {sgs.Damaged} ,
 	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
 		local room = player:getRoom()
-		local source = room:findPlayerBySkillName(self:objectName())
-		if source then
-			if source:askForSkillInvoke(self:objectName(), data) then
-				local target = nil
-				if player:objectName() == source:objectName() then
-					local players = room:getOtherPlayers(source)
-					for _,p in sgs.qlist(players) do
-						if p:getMark("@tied") > 0 then
-							target = p
+		local xiahoujuan = room:findPlayerBySkillName(self:objectName())
+		if xiahoujuan then
+			if xiahoujuan:askForSkillInvoke(self:objectName(), data) then
+				local zhangfei = nil
+				if player:objectName() == xiahoujuan:objectName() then
+					local players = room:getOtherPlayers(xiahoujuan)
+					for _, _player in sgs.qlist(players) do
+						if _player:getMark("@tied") > 0 then
+							zhangfei = _player
 							break
 						end
 					end
 				else
-					target = player
+					zhangfei = player
 				end
-				local damage = data:toDamage()
-				local count = damage.damage
-				source:drawCards(count)
-				if target then
-					target:drawCards(count)
+				xiahoujuan:drawCards(damage.damage)
+				if zhangfei then
+					zhangfei:drawCards(damage.damage)
 				end
 			end
 		end
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return target:getMark("@tied") > 0
-		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return target and (target:getMark("@tied") > 0)
 	end
 }
 --[[
 	技能名：偷渡
 	相关武将：倚天·邓士载
 	描述：当你的武将牌背面向上时若受到伤害，你可以弃置一张手牌并将你的武将牌翻面，视为对一名其他角色使用了一张【杀】
-	引用：LuaXToudu
-	状态：验证通过
+	引用：LuaToudu、LuaTouduNDL
+	状态：1217验证通过
 ]]--
-LuaXToudu = sgs.CreateTriggerSkill{
-	name = "LuaXToudu",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
-	on_trigger = function(self, event, player, data)
-		if not player:faceUp() then
-			if not player:isKongcheng() then
-				if player:askForSkillInvoke("LuaXToudu") then
-					local room = player:getRoom()
-					if room:askForDiscard(player, "LuaXtoudu", 1, 1, false, false) then
-						player:turnOver()
-						local players = room:getOtherPlayers(player)
-						local targets = sgs.SPlayerList()
-						for _,p in sgs.qlist(players) do
-							if player:canSlash(p, nil, false) then
-								targets:append(p)
-							end
-						end
-						if not targets:isEmpty() then
-							local target = room:askForPlayerChosen(player, targets, "LuaXToudu")
-							local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-							slash:setSkillName("LuaXToudu")
-							local use = sgs.CardUseStruct()
-							use.card = slash
-							use.from = player
-							use.to:append(target)
-							room:useCard(use)
-						end
-					end
-				end
-			end
+LuaTouduCard = sgs.CreateSkillCard{
+	name = "LuaTouduCard" ,
+
+	filter = function(self, targets, to_select)
+		return #targets == 0 and sgs.Self:canSlash(to_select,nil,false)
+	end,
+
+	on_effect = function(self, effect)
+		effect.from:turnOver()
+		local slash = sgs.Sanguosha:cloneCard("slash",sgs.Card_NoSuit,0)
+			slash:setSkillName("LuaToudu")
+		local use = sgs.CardUseStruct()
+			use.card = slash
+			use.from = effect.from
+			use.to:append(effect.to)
+			effect.from:getRoom():useCard(use)
 		end
+}
+LuaTouduVS = sgs.CreateOneCardViewAsSkill{
+	name = "LuaToudu",
+	
+	view_filter = function(self,to_select)
+		return not to_select:isEquipped()
+	end,
+	
+	view_as = function(self, cards)
+		local toudu = LuaTouduCard:clone()
+			toudu:addSubcard(cards)
+        return toudu
+	end,
+
+	enabled_at_play = function()
+		return false
+	end,
+	
+	enabled_at_response=function(self, player, pattern)
+		return pattern == "@@LuaToudu"
+	end
+}
+LuaToudu = sgs.CreateMasochismSkill{
+	name = "LuaToudu",
+	view_as_skill = LuaTouduVS,
+	
+	on_damaged = function(self, player)
+		if player:faceUp() or player:isKongcheng() then return false end
+			player:getRoom():askForUseCard(player, "@@LuaToudu","@toudu", -1,sgs.Card_MethodDiscard,false)
 	end
 }
 --[[
