@@ -271,18 +271,18 @@ LuaYiji = sgs.CreateTriggerSkill{
 	技能名：倚天（联动技）
 	相关武将：倚天·倚天剑
 	描述：当你对曹操造成伤害时，可令该伤害-1
-	引用：LuaXYitian
-	状态：验证通过
+	引用：LuaYitian
+	状态：1217验证通过
 ]]--
-LuaXYitian = sgs.CreateTriggerSkill{
-	name = "LuaXYitian",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.DamageCaused},
+LuaYitian = sgs.CreateTriggerSkill{
+	name = "LuaYitian" ,
+	events = {sgs.DamageCaused} ,
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
-		if damage.to:isCaoCao() then
+		if string.find(damage.to:getGeneralName(), "caocao") then
 			if player:askForSkillInvoke(self:objectName(), data) then
 				damage.damage = damage.damage - 1
+				if damage.damage <= 0 then return true end
 				data:setValue(damage)
 			end
 		end
