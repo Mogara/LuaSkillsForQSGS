@@ -7,62 +7,42 @@
 	技能名：惜粮
 	相关武将：倚天·张公祺
 	描述：你可将其他角色弃牌阶段弃置的红牌收为“米”或加入手牌
-	引用：LuaXXiliang
-	状态：验证通过
+	引用：LuaXiliang
+	状态：1217验证通过
 ]]--
-LuaXXiliang = sgs.CreateTriggerSkill{
-	name = "LuaXXiliang",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardDiscarded},
+LuaXiliang = sgs.CreateTriggerSkill{
+	name = "LuaXiliang" ,
+	events = {sgs.CardsMoveOneTime} ,
 	on_trigger = function(self, event, player, data)
-		if player then
-			if player:getPhase() == sgs.Player_Discard then
-				local room = player:getRoom()
-				local zhanglu = room:findPlayerBySkillName(self:objectName())
-				if zhanglu then
-					local card = data:toCard()
-					local red_cards = {}
-					local subs = card:getSubcards()
-					for _,card_id in sgs.qlist(subs) do
-						local c = sgs.Sanguosha:getCard(card_id)
-						if c:isRed() then
-							table.insert(red_cards, c)
-						end
-					end
-					local count = #red_cards
-					if count > 0 then
-						if zhanglu:askForSkillInvoke(self:objectName(), data) then
-							local rices = zhanglu:getPile("rice")
-							local space = 5 - rices:length()
-							local can_put = (space >= count)
-							local choice = ""
-							if can_put then
-								choice = room:askForChoice(zhanglu, self:objectName(), "put+obtain")
-							else
-								choice = "obtain"
-							end
-							if choice == "put" then
-								for _,cd in pairs(red_cards) do
-									local id = cd:getEffectiveId()
-									zhanglu:addToPile("rice", id)
-								end
-							else
-								for _,cd in pairs(red_cards) do
-									zhanglu:obtainCard(cd)
-								end
-							end
-						end
-					end
-				end
+		local room = player:getRoom()
+		if player:getPhase() ~= sgs.Player_Discard then return false end
+		local zhanglu = room:findPlayerBySkillName(self:objectName())
+		if not zhanglu then return false end
+		local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		local move = data:toMoveOneTime()
+		if move.from and move.from:objectName() == player:objectName()
+				and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
+			for _, id in sgs.qlist(move.card_ids) do
+				local c = sgs.Sanguosha:getCard(id)
+				if (room:getCardPlace(id) == sgs.Player_DiscardPile) and c:isRed() then dummy:addSubcard(id) end
 			end
 		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return not target:hasSkill(self:objectName())
+		if dummy:subcardsLength() == 0 then return false end
+		if not zhanglu:askForSkillInvoke(self:objectName(), data) then return false end
+		local canput = (5 - zhanglu:getPile("rice"):length() >= dummy:subcardsLength())
+		if canput then
+			if room:askForChoice(zhanglu, self:objectName(), "put+obtain") == "put" then
+				zhanglu:addToPile("rice", dummy)
+			else
+				zhanglu:obtainCard(dummy)
+			end
+		else
+			zhanglu:obtainCard(dummy)
 		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return target and (not target:hasSkill(self:objectName()))
 	end
 }
 --[[
@@ -278,9 +258,32 @@ LuaXiaoji = sgs.CreateTriggerSkill{
 ]]--
 --[[
 	技能名：骁果
-	相关武将：SP·乐进
-	描述： 其他角色的结束阶段开始时，你可以弃置一张基本牌，令该角色选择一项：弃置一张装备牌并令你摸一张牌，或受到你对其造成的1点伤害。
+	相关武将：国战·乐进
+	描述： 其他角色的结束阶段开始时，你可以弃置一张基本牌，令该角色选择一项：弃置一张装备牌，或受到你对其造成的1点伤害。
+	引用：LuaXiaoguo
+	状态：1217验证通过
 ]]--
+LuaXiaoguo = sgs.CreateTriggerSkill{
+	name = "LuaXiaoguo" ,
+	events = {sgs.EventPhaseStart} ,
+	on_trigger = function(self, event, player, data)
+		if player:getPhase() ~= sgs.Player_Finish then return false end
+		local room = player:getRoom()
+		local yuejin = room:findPlayerBySkillName(self:objectName())
+		if (not yuejin) or (yuejin:objectName() == player:objectName()) then return false end
+		if yuejin:canDiscard(yuejin, "h") then
+			if room:askForCard(yuejin, ".Basic", "@xiaoguo", sgs.QVariant(), self:objectName()) then
+				if not room:askForCard(player, ".Equip", "@xiaoguo-discard", sgs.QVariant()) then
+					room:damage(sgs.DamageStruct(self:objectName(), yuejin, player))
+				end
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end
+}
 --[[
 	技能名：骁果
 	相关武将：3D织梦·乐进
