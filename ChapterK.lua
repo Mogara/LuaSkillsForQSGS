@@ -47,45 +47,33 @@ LuaKanpo = sgs.CreateViewAsSkill{
 	技能名：克构（觉醒技）
 	相关武将：倚天·陆抗
 	描述：回合开始阶段开始时，若你是除主公外唯一的吴势力角色，你须减少1点体力上限并获得技能“连营”
-	引用：LuaXKegou
-	状态：验证通过
+	引用：LuaKegou
+	状态：1217验证通过
 ]]--
-LuaXKegou = sgs.CreateTriggerSkill{
-	name = "LuaXKegou",
-	frequency = sgs.Skill_Wake,
-	events = {sgs.EventPhaseStart},
+LuaKegou = sgs.CreateTriggerSkill{
+	name = "LuaKegou" ,
+	events = {sgs.EventPhaseStart} ,
+	frequency = sgs.Skill_Wake ,
 	on_trigger = function(self, event, player, data)
-		local siblings = player:getSiblings()
-		for _,p in sgs.qlist(siblings) do
-			if p:isAlive() then
-				if p:getKingdom() == "wu" then
-					if not p:isLord() then
-						if p:objectName() ~= player:objectName() then
-							return false
-						end
-					end
-				end
+		for _, _player in sgs.qlist(player:getSiblings()) do
+			if _player:isAlive() and (_player:getKingdom() == "wu")
+					and (not _player:isLord()) and (_player:objectName() ~= player:objectName()) then
+				return false
 			end
 		end
-		player:setMark("kegou", 1)
+		player:setMark("LuaKegou", 1)
 		local room = player:getRoom()
+		player:gainMark("@waked")
 		room:loseMaxHp(player)
 		room:acquireSkill(player, "lianying")
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if target:getPhase() == sgs.Player_Start then
-					if target:getMark("kegou") == 0 then
-						if target:getKingdom() == "wu" then
-							return not target:isLord()
-						end
-					end
-				end
-			end
-		end
-		return false
+		return target and target:isAlive() and target:hasSkill(self:objectName())
+				and (target:getPhase() == sgs.Player_Start)
+				and (target:getMark("LuaKegou") == 0)
+				and (target:getKingdom() == "wu")
+				and (not target:isLord())
 	end
 }
 --[[
