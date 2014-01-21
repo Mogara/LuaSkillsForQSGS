@@ -1289,36 +1289,31 @@ end,
 	技能名：笼络
 	相关武将：智·张昭
 	描述：回合结束阶段开始时，你可以选择一名其他角色摸取与你弃牌阶段弃牌数量相同的牌
-	引用：LuaXLongluo
-	状态：验证通过
+	引用：LuaLongluo
+	状态：1217验证通过
 ]]--
-LuaXLongluo = sgs.CreateTriggerSkill{
-	name = "LuaXLongluo",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardsMoveOneTime, sgs.EventPhaseStart},
+LuaLongluo = sgs.CreateTriggerSkill{
+	name = "LuaLongluo" ,
+	events = {sgs.CardsMoveOneTime, sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		if event == sgs.EventPhaseStart then
 			if player:getPhase() == sgs.Player_Finish then
-				local drawnum = player:getMark("longluo")
-				if drawnum > 0 and player:askForSkillInvoke(self:objectName(), data) then
-					local room = player:getRoom()
-					local others = room:getOtherPlayers(player)
-					local target = room:askForPlayerChosen(player, others, self:objectName())
-					target:drawCards(drawnum)
-				end
-			elseif player:getPhase() == sgs.Player_RoundStart then
-				player:setMark("longluo", 0)
-			end
-			return false
-		elseif player:getPhase() == sgs.Player_Discard then
-			local move = data:toMoveOneTime()
-			local source = move.from
-			if source and source:objectName() == player:objectName() then
-				if move.to_place == sgs.Player_DiscardPile then
-					for _,id in sgs.qlist(move.card_ids) do
-						player:addMark("longluo")
+				local drawnum = player:getMark(self:objectName())
+				if drawnum > 0 then
+					if player:askForSkillInvoke(self:objectName(), data) then
+						local target = room:askForPlayerChosen(player, room:getOtherPlayers(player), self:objectName())
+						target:drawCards(drawnum)
 					end
 				end
+			elseif player:getPhase() == sgs.Player_NotActive then
+				room:setPlayerMark(player, self:objectName(), 0)
+			end
+		elseif player:getPhase() == sgs.Player_Discard then
+			local move = data:toMoveOneTime()
+			if move.from:objectName() == player:objectName() and
+					(bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
+				room:setPlayerMark(player, self:objectName(), player:getMark(self:objectName()) + move.card_ids:length())
 			end
 		end
 		return false
