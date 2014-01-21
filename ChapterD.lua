@@ -420,37 +420,28 @@ LuaXDuji = sgs.CreateTriggerSkill{
 	技能名：毒士（锁定技）
 	相关武将：倚天·贾文和
 	描述：杀死你的角色获得崩坏技能直到游戏结束
-	引用：LuaXDushi
-	状态：验证通过
+	引用：LuaDushi
+	状态：1217验证通过
 ]]--
-LuaXDushi = sgs.CreateTriggerSkill{
-	name = "LuaXDushi",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.Death},
+LuaDushi = sgs.CreateTriggerSkill{
+	name = "LuaDushi" ,
+	events = {sgs.Death} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
 		local death = data:toDeath()
-		if death.who:objectName() == player:objectName() then
-			local damage = data:toDamageStar()
-			if damage then
-				local killer = damage.from
-				if killer then
-					local room = player:getRoom()
-					if killer:objectName() ~= player:objectName() then
-						if not player:hasSkill("benghuai") then
-							killer:gainMark("@collapse")
-							room:acquireSkill(killer, "benghuai")
-						end
-					end
-				end
+		local killer = nil
+		if death.damage then killer = death.damage.from end
+		if (death.who:objectName() == player:objectName()) and killer then
+			local room = killer:getRoom()
+			if (killer:objectName() ~= player:objectName()) and (not killer:hasSkill("benghuai")) then
+				killer:gainMark("@collapse")
+				room:acquireSkill(killer, "benghuai")
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			return target:hasSkill(self:objectName())
-		end
-		return false
+		return target and target:hasSkill(self:objectName())
 	end
 }
 --[[
