@@ -338,91 +338,62 @@ LuaXFenxinStart = sgs.CreateTriggerSkill{
 	技能名：奋迅
 	相关武将：国战·丁奉
 	描述：出牌阶段限一次，你可以弃置一张牌并选择一名其他角色，你获得以下锁定技：本回合你无视与该角色的距离。
-	引用：LuaXFenxun
-	状态：0224验证通过
+	引用：LuaFenxun
+	状态：1217验证通过
 ]]--
-LuaXFenxunCard = sgs.CreateSkillCard{
-	name = "LuaXFenxunCard",
-	target_fixed = false,
-	will_throw = true,
+LuaFenxunCard = sgs.CreateSkillCard{
+	name = "LuaFenxunCard" ,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
-	end,
+		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
 	on_effect = function(self, effect)
 		local room = effect.from:getRoom()
-		local tag = sgs.QVariant()
-		tag:setValue(effect.to)
-		effect.from:setTag("FenxunTarget", tag)
+		local _data = sgs.QVariant()
+		_data:setValue(effect.to)
+		effect.from:setTag("LuaFenxunTarget", _data)
 		room:setFixedDistance(effect.from, effect.to, 1)
 	end
 }
-LuaXFenxunVS = sgs.CreateViewAsSkill{
-	name = "LuaXFenxunVS",
-	n = 1,
+LuaFenxunVS = sgs.CreateViewAsSkill{
+	name = "LuaFenxun" ,
+	n = 1 ,
 	view_filter = function(self, selected, to_select)
-		return not sgs.Self:isJilei(to_select)
-	end,
+		return (#selected == 0) and (not sgs.Self:isJilei(to_select))
+	end ,
 	view_as = function(self, cards)
-		if #cards == 1 then
-			local first = LuaXFenxunCard:clone()
-			first:addSubcard(cards[1])
-			first:setSkillName(self:objectName())
-			return first
-		end
-	end,
+		if #cards ~= 1 then return nil end
+		local first = LuaFenxunCard:clone()
+		first:addSubcard(cards[1])
+		first:setSkillName(self:objectName())
+		return first
+	end ,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaXFenxunCard")
-	end,
-	enabled_at_response = function(self, player, pattern)
-		return false
+		return player:canDiscard(player, "he") and (not player:hasUsed("#LuaFenxunCard"))
 	end
 }
-LuaXFenxun = sgs.CreateTriggerSkill{
-	name = "#LuaXFenxun",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseChanging, sgs.Death, sgs.EventLoseSkill},
-	view_as_skill = LuaXFenxunVS,
+LuaFenxun = sgs.CreateTriggerSkill{
+	name = "LuaFenxun" ,
+	events = {sgs.EventPhaseChanging, sgs.Death, sgs.EventLoseSkill} ,
+	view_as_skill = LuaFenxunVS ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		if event == sgs.EventPhaseChanging then
 			local change = data:toPhaseChange()
-			if change.to ~= sgs.Player_NotActive then
-				return false
-			end
-		end
-		if event == sgs.Death then
+			if change.to ~= sgs.Player_NotActive then return false end
+		elseif event == sgs.Death then
 			local death = data:toDeath()
-			local victim = death.who
-			if not victim or victim:objectName() ~= player:objectName() then
-				return false
-			end
+			if death.who:objectName() ~= player:objectName() then return false end
+		elseif event == sgs.EventLoseSkill then
+			if data:toString() ~= self:objectName() then return false end
 		end
-		if event == sgs.EventLoseSkill then
-			if data:toString() ~= "LuaXFenxunVS" then
-				return false
-			end
-		end
-		local tag = player:getTag("FenxunTarget")
-		if tag then
-			local target = tag:toPlayer()
-			if target then
-				room:setFixedDistance(player, target, -1)
-				player:removeTag("FenxunTarget")
-			end
-		end
-		return false
-	end,
-	can_trigger = function(self, target)
+		local target = player:getTag("LuaFenxunTarget"):toPlayer()
 		if target then
-			local tag = target:getTag("FenxunTarget")
-			if tag then
-				return tag:toPlayer()
-			end
+			player:getRoom():setFixedDistance(player, target, -1)
+			player:removeTag("LuaFenxunTarget")
 		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return target and target:getTag("LuaFenxunTarget"):toPlayer()
 	end
 }
 --[[
@@ -657,39 +628,67 @@ LuaFuluanForbid = sgs.CreateTriggerSkill{
 	技能名：辅佐
 	相关武将：智·张昭
 	描述：当有角色拼点时，你可以打出一张点数小于8的手牌，让其中一名角色的拼点牌加上这张牌点数的二分之一（向下取整）
-	引用：LuaXFuzuo
-	状态：0224验证通过
+	引用：LuaFuzuo
+	状态：1217验证通过
 ]]--
-LuaXFuzuo = sgs.CreateTriggerSkill{
-	name = "LuaXFuzuo",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.PindianVerifying},
+LuaFuzuoCard = sgs.CreateSkillCard{
+	name = "LuaFuzuoCard" ,
+	filter = function(self, targets, to_select)
+		return (#targets == 0) and to_select:hasFlag("LuaFuzuo_target")
+	end ,
+	on_effect = function(self, effect)
+		effect.to:getRoom():setPlayerMark(effect.to, "LuaFuzuo", self:getNumber())
+	end
+}
+LuaFuzuoVS = sgs.CreateViewAsSkill{
+	name = "LuaFuzuo" ,
+	n = 1 ,
+	view_filter = function(self, selected, to_select)
+		return (#selected == 0) and (not to_select:isEquipped()) and (to_select:getNumber() < 8)
+	end ,
+	view_as = function(self, cards)
+		if #cards ~= 1 then return nil end
+		local card = LuaFuzuoCard:clone()
+		card:addSubcard(cards[1])
+		return card
+	end ,
+	enabled_at_play = function()
+		return false
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@@LuaFuzuo"
+	end
+}
+LuaFuzuo = sgs.CreateTriggerSkill{
+	name = "LuaFuzuo" ,
+	events = {sgs.PindianVerifying} ,
+	view_as_skill = LuaFuzuoVS ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local zhangzhao = room:findPlayerBySkillName(self:objectName())
-		if zhangzhao then
-			local pindian = data:toPindian()
-			local source = pindian.from
-			local target = pindian.to
-			local choices = string.format("%s+%s+%s", source:getGeneralName(), target:getGeneralName(), "cancel")
-			local choice = room:askForChoice(zhangzhao, self:objectName(), choices)
-			if choice ~= "cancel" then
-				local intervention = room:askForCard(zhangzhao, ".|.|~7|hand", "@fuzuo_card")
-				local extra = intervention:getNumber()
-				if intervention then
-					if choice == source:getGeneralName() then
-						local num = math.min((pindian.from_card:getNumber() + extra/2), 13)
-						pindian.from_number = num
-					else
-						local num = math.min((pindian.to_card:getNumber() + extra/2), 13)
-						pindian.to_number = num
-					end
-					data:setValue(pindian)
-				end
+		if not zhangzhao then return false end
+		local pindian = data:toPindian()
+		room:setPlayerFlag(pindian.from, "LuaFuzuo_target")
+		room:setPlayerFlag(pindian.to, "LuaFuzuo_target")
+		room:setTag("LuaFuzuoPindianData", data)
+		if room:askForUseCard(zhangzhao, "@@LuaFuzuo", "@fuzuo-pindian", -1, sgs.Card_MethodDiscard) then
+			local isFrom = (pindian.from:getMark(self:objectName()) > 0)
+			if isFrom then
+				local to_add = pindian.from:getMark(self:objectName()) / 2
+				room:setPlayerMark(pindian.from, self:objectName(), 0)
+				pindian.from_number = pindian.from_number + to_add
+			else
+				local to_add = pindian.to:getMark(self:objectName()) / 2
+				room:setPlayerMark(pindian.to, self:objectName(), 0)
+				pindian.to_number = pindian.to_number + to_add
 			end
+			data:setValue(pindian)
 		end
+		room:setPlayerFlag(pindian.from, "-LuaFuzuo_target")
+		room:setPlayerFlag(pindian.to, "-LuaFuzuo_target")
+		room:removeTag("LuaFuzuoPindianData")
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
 	end
