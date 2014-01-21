@@ -450,31 +450,24 @@ LuaWuyan = sgs.CreateTriggerSkill{
 	相关武将：怀旧·徐庶
 	描述：你使用的非延时类锦囊牌对其他角色无效；其他角色使用的非延时类锦囊牌对你无效。
 	引用：LuaNosWuyan
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaNosWuyan = sgs.CreateTriggerSkill{
-	name = "LuaNosWuyan",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.CardEffect, sgs.CardEffected},
+	name = "LuaNosWuyan" ,
+	events = {sgs.CardEffected} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
 		local effect = data:toCardEffect()
-		local source = effect.from
-		local target = effect.to
-		local card = effect.card
-		if target and source then
-			if target:objectName() ~= source:objectName() then
-				if card:getTypeId() == sgs.Card_Trick then
-					if source:hasSkill(self:objectName()) then
-						return true
-					end
-					if target:hasSkill(self:objectName()) then
-						return true
-					end
-				end
+		if effect.to:objectName() == effect.from:objectName() then return false end
+		if effect.card:isNDTrick() then
+			if effect.from and effect.from:hasSkill(self:objectName()) then
+				return true
+			elseif effect.to:hasSkill(self:objectName()) and effect.from then
+				return true
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
 	end
