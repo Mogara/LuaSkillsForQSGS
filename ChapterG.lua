@@ -451,29 +451,26 @@ LuaXGongmouExchange = sgs.CreateTriggerSkill{
 	相关武将：智·田丰
 	描述：回合外，当你使用或打出一张基本牌时，可以摸一张牌
 	引用：LuaXGushou
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-LuaXGushou = sgs.CreateTriggerSkill{
-	name = "LuaXGushou",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardUsed, sgs.CardResponsed},
+LuaGushou = sgs.CreateTriggerSkill{
+	name = "LuaGushou" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.CardUsed, sgs.CardResponded} ,
+
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local current = room:getCurrent()
-		if current and current:objectName() ~= player:objectName() then
-			local card = nil
-			if event == sgs.CardUsed then
-				local use = data:toCardUse()
-				card = use.card
-			elseif event == sgs.CardResponsed then
-				card = data:toResponsed().m_card
-			end
-			if card:isKindOf("BasicCard") then
-				if not card:isVirtualCard() then
-					if room:askForSkillInvoke(player, self:objectName(), data) then
-						player:drawCards(1)
-					end
-				end
+		if room:getCurrent():objectName() == player:objectName() then return false end
+		local card = nil
+		if event == sgs.CardUsed then
+			local use = data:toCardUse()
+			card = use.card
+		else
+			card = data:toCardResponse().m_card
+		end
+		if card and card:isKindOf("BasicCard") then
+			if room:askForSkillInvoke(player, self:objectName(), data) then
+				player:drawCards(1)
 			end
 		end
 		return false
@@ -664,45 +661,42 @@ LuaGuanxing = sgs.CreateTriggerSkill{
 	技能名：归汉
 	相关武将：倚天·蔡昭姬
 	描述：出牌阶段，你可以主动弃置两张相同花色的红色手牌，和你指定的一名其他存活角色互换位置。每阶段限一次
-	引用：LuaXGuihan
-	状态：验证通过
+	引用：LuaGuihan
+	状态：1217验证通过
 ]]--
-LuaXGuihanCard = sgs.CreateSkillCard{
-	name = "LuaXGuihanCard",
-	target_fixed = false,
-	will_throw = true,
+LuaGuihanCard = sgs.CreateSkillCard{
+	name = "LuaGuihan" ,
+	filter = function(self, selected, to_select)
+		return (#selected == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
 	on_effect = function(self, effect)
-		local source = effect.from
-		local target = effect.to
-		local room = source:getRoom()
-		room:swapSeat(source, target)
+		effect.from:getRoom():swapSeat(effect.from, effect.to)
 	end
 }
-LuaXGuihan = sgs.CreateViewAsSkill{
-	name = "LuaXGuihan",
-	n = 2,
+LuaGuihan = sgs.CreateViewAsSkill{
+	name = "LuaGuihan" ,
+	n = 2 ,
 	view_filter = function(self, selected, to_select)
-		if not to_select:isEquipped() then
-			if #selected == 0 then
-				return to_select:isRed()
-			elseif #selected == 1 then
-				local suit = selected[1]:getSuit()
-				return to_select:getSuit() == suit
-			end
+		if to_select:isEquipped() then return false end
+		if #selected == 0 then
+			return to_select:isRed()
+		elseif (#selected == 1) then
+			local suit = selected[1]:getSuit()
+			return to_select:getSuit() == suit
+		else
+			return false
 		end
-		return false
-	end,
+	end ,
 	view_as = function(self, cards)
-		if #cards == 2 then
-			local card = LuaXGuihanCard:clone()
-			for _,cd in pairs(cards) do
-				card:addSubcard(cd)
-			end
-			return card
+		if #cards ~= 2 then return nil end
+		local card = LuaGuihanCard:clone()
+		for _, c in ipairs(cards) do
+			card:addSubcard(c)
 		end
-	end,
+		return card
+	end ,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaXGuihanCard")
+		return not player:hasUsed("#LuaGuihanCard")
 	end
 }
 --[[
