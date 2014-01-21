@@ -370,25 +370,17 @@ LuaJixi = sgs.CreateViewAsSkill{
 	技能名：集智
 	相关武将：怀旧-标准·黄月英-旧、1v1·黄月英1v1、SP·台版黄月英
 	描述：每当你使用非延时类锦囊牌选择目标后，你可以摸一张牌。
-	引用：LuaJizhi
-	状态：验证通过
+	引用：LuaNosJizhi
+	状态：1217验证通过
 ]]--
-LuaJizhi = sgs.CreateTriggerSkill{
-	name = "LuaJizhi",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardUsed, sgs.CardResponsed},
+LuaNosJizhi = sgs.CreateTriggerSkill{
+	name = "LuaNosJizhi" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.CardUsed} ,
 	on_trigger = function(self, event, player, data)
-		local card = nil
-		if event == sgs.CardUsed then
-			use = data:toCardUse()
-			card = use.card
-		elseif event == sgs.CardResponsed then
-			local response = data:toResponsed()
-			card = response.m_card
-		end
-		local room = player:getRoom()
-		if card:isNDTrick() then
-			if room:askForSkillInvoke(player, self:objectName()) then
+		local use = data:toCardUse()
+		if use.card:isNDTrick() then
+			if player:askForSkillInvoke(self:objectName()) then
 				player:drawCards(1)
 			end
 		end
@@ -1118,63 +1110,49 @@ LuaJujian = sgs.CreateTriggerSkill{
 	相关武将：怀旧·徐庶
 	描述：出牌阶段，你可以弃置至多三张牌，然后令一名其他角色摸等量的牌。若你以此法弃置三张同一类别的牌，你回复1点体力。每阶段限一次。
 	引用：LuaNosJujian
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaNosJujianCard = sgs.CreateSkillCard{
-	name = "LuaNosJujianCard",
-	target_fixed = false,
-	will_throw = true,
-	filter = function(self, targets, to_select)
-		return to_select:objectName() ~= sgs.Self:objectName()
-	end,
+	name = "LuaNosJujianCard" ,
+	filter = function(self, selected, to_select)
+		return (#selected == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
 	on_effect = function(self, effect)
 		local n = self:subcardsLength()
 		effect.to:drawCards(n)
-		local source = effect.from
-		local room = source:getRoom()
+		local room = effect.from:getRoom()
 		if n == 3 then
-			local types = {}
-			local ids = effect.card:getSubcards()
-			for _,id in sgs.qlist(ids) do
-				local flag = true
-				local card = sgs.Sanguosha:getCard(id)
-				local card_type = card:getTypeId()
-				for _,t in pairs(types) do
-					if t == card_type then
-						flag = false
-						break
-					end
-				end
-				if flag then
-					table.insert(types, card_type)
+			local thetype = nil
+			for _, card_id in sgs.qlist(effect.card:getSubcards()) do
+				if thetype == nil then
+					thetype = sgs.Sanguosha:getCard(card_id):getTypeId()
+				elseif sgs.Sanguosha:getCard(card_id):getTypeId() ~= thetype then
+					return false
 				end
 			end
-			if #types == 1 then
-				local recover = sgs.RecoverStruct()
-				recover.card = self
-				recover.who = source
-				room:recover(source, recover)
-			end
+			local recover = sgs.RecoverStruct()
+			recover.card = self
+			recover.who = effect.from
+			room:recover(effect.from, recover)
 		end
 	end
 }
 LuaNosJujian = sgs.CreateViewAsSkill{
-	name = "LuaNosJujian",
-	n = 3,
+	name = "LuaNosJujian" ,
+	n = 3 ,
 	view_filter = function(self, selected, to_select)
-		return #selected < 3
-	end,
+		return (#selected < 3) and (not sgs.Self:isJilei(to_select))
+	end ,
 	view_as = function(self, cards)
-		if #cards > 0 then
-			local card = LuaNosJujianCard:clone()
-			for _,cd in pairs(cards) do
-				card:addSubcard(cd)
-			end
-			return card
+		if #cards == 0 then return nil end
+		local card = LuaNosJujianCard:clone()
+		for _, c in ipairs(cards) do
+			card:addSubcard(c)
 		end
-	end,
+		return card
+	end ,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaNosJujianCard")
+		return player:canDiscard(player, "he") and (not player:hasUsed("#LuaNosJujianCard"))
 	end
 }
 --[[
