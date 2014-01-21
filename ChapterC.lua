@@ -286,93 +286,77 @@ LuaChengxiang = sgs.CreateTriggerSkill{
 --[[
 	技能名：称象
 	相关武将：倚天·曹冲
-	描述：每当你受到1次伤害，你可打出X张牌（X小于等于3），它们的点数之和与造成伤害的牌的点数相等，你可令X名角色各恢复1点体力（若其满体力则摸2张牌）
-	引用：LuaXChengxiang
-	状态：验证通过
+	描述：每当你受到一次伤害后，你可以弃置X张点数之和与造成伤害的牌的点数相等的牌，你可以选择至多X名角色，若其已受伤则回复1点体力，否则摸两张牌。
+	引用：LuaYTChengxiang
+	状态：1217验证通过
 ]]--
-LuaXChengxiangCard = sgs.CreateSkillCard{
-	name = "LuaXChengxiangCard",
-	target_fixed = false,
-	will_throw = true,
+LuaYTChengxiangCard = sgs.CreateSkillCard{
+	name = "LuaYTChengxiang" ,
 	filter = function(self, targets, to_select)
-		local count = self:subcardsLength()
-		if #targets < count then
-			return to_select:isWounded()
-		end
-		return false
-	end,
-	feasible = function(self, targets)
-		local count = self:subcardsLength()
-		return #targets <= count
-	end,
+		return #targets < self:subcardsLength()
+	end ,
 	on_effect = function(self, effect)
-		local target = effect.to
-		local room = target:getRoom()
-		if target:isWounded() then
+		local room = effect.to:getRoom()
+		if effect.to:isWounded() then
 			local recover = sgs.RecoverStruct()
 			recover.card = self
 			recover.who = effect.from
-			room:recover(target, recover)
+			room:recover(effect.to, recover)
 		else
-			target:drawCards(2)
+			effect.to:drawCards(2)
 		end
 	end
 }
-LuaXChengxiangVS = sgs.CreateViewAsSkill{
-	name = "LuaXChengxiang",
-	n = 3,
+LuaYTChengxiangVS = sgs.CreateViewAsSkill{
+	name = "LuaYTChengxiang" ,
+	n = 3 ,
 	view_filter = function(self, selected, to_select)
-		if #selected < 3 then
-			local sum = 0
-			for _,card in pairs(selected) do
-				sum = sum + card:getNumber()
-			end
-			sum = sum + to_select:getNumber()
-			local target = sgs.Self:getMark("LuaXChengxiang")
-			return sum <= target
-		end
-		return false
-	end,
-	view_as = function(self, cards)
+		if #selected >= 3 then return false end
 		local sum = 0
-		for _,card in pairs(cards) do
+		for _, card in ipairs(selected) do
 			sum = sum + card:getNumber()
 		end
-		local target = sgs.Self:getMark("LuaXChengxiang")
-		if sum == target then
-			local vs_card = LuaXChengxiangCard:clone()
-			for _,card in pairs(cards) do
-				vs_card:addSubcard(card)
-			end
-			return vs_card
+		sum = sum + to_select:getNumber()
+		return sum <= sgs.Self:getMark("LuaYTChengxiang")
+	end ,
+	view_as = function(self, cards)
+		local sum = 0
+		for _, c in ipairs(cards) do
+			sum = sum + c:getNumber()
 		end
-	end,
-	enabled_at_play = function(self, player)
+		if sum == sgs.Self:getMark("LuaYTChengxiang") then
+			local card = LuaYTChengxiangCard:clone()
+			for _, c in ipairs(cards) do
+				card:addSubcard(c)
+			end
+			return card
+		else
+			return nil
+		end
+	end ,
+	enabled_at_play = function()
 		return false
-	end,
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaXChengxiang"
+		return pattern == "@@LuaYTChengxiang"
 	end
 }
-LuaXChengxiang = sgs.CreateTriggerSkill{
-	name = "LuaXChengxiang",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
-	view_as_skill = LuaXChengxiangVS,
+LuaYTChengxiang = sgs.CreateTriggerSkill{
+	name = "LuaYTChengxiang" ,
+	events = {sgs.Damaged} ,
+	view_as_skill = LuaYTChengxiangVS ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		local damage = data:toDamage()
 		local card = damage.card
-		if card then
-			local point = card:getNumber()
-			if point > 0 then
-				if not player:isNude() then
-					room:setPlayerMark(player, self:objectName(), point)
-					local prompt = string.format("@chengxiang-card:::%d", point)
-					room:askForUseCard(player, "@@LuaXChengxiang", prompt)
-				end
-			end
-		end
+		if card == nil then return false end
+		local point = card:getNumber()
+		if (point < 1) or (point > 13) then return false end
+		if player:isNude() then return false end
+		local room = player:getRoom()
+		room:setPlayerMark(player, "LuaYTChengxiang", point)
+		local prompt = "@chengxiang-card:::" .. tostring(point)
+		room:askForUseCard(player, "@@LuaYTChengxiang", prompt)
+		return false
 	end
 }
 --[[
@@ -589,20 +573,16 @@ LuaChunlaoClear = sgs.CreateTriggerSkill{
 	技能名：聪慧（锁定技）
 	相关武将：倚天·曹冲
 	描述：你将永远跳过你的弃牌阶段
-	引用：LuaXConghui
-	状态：验证通过
+	引用：LuaConghui
+	状态：1217验证通过
 ]]--
-LuaXConghui = sgs.CreateTriggerSkill{
-	name = "LuaXConghui",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.EventPhaseChanging},
+LuaConghui = sgs.CreateTriggerSkill{
+	name = "LuaConghui" ,
+	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.EventPhaseChanging} ,
 	on_trigger = function(self, event, player, data)
 		local change = data:toPhaseChange()
-		if change.to == sgs.Player_Discard then
-			if not player:isSkipped(sgs.Player_Discard) then
-				player:skip(sgs.Player_Discard)
-			end
-		end
+		if change.to == sgs.Player_Discard then player:skip(change.to) end
 		return false
 	end
 }
