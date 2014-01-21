@@ -94,56 +94,55 @@ LuaNosShangshi = sgs.CreateTriggerSkill {
 	技能名：烧营
 	相关武将：倚天·陆伯言
 	描述：当你对一名不处于连环状态的角色造成一次火焰伤害时，你可选择一名其距离为1的另外一名角色并进行一次判定：若判定结果为红色，则你对选择的角色造成一点火焰伤害
-	引用：LuaXShaoying
-	状态：验证通过
+	引用：LuaShaoying
+	状态：1217验证通过
 ]]--
-LuaXShaoying = sgs.CreateTriggerSkill{
-	name = "LuaXShaoying",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.DamageComplete},
+LuaShaoying = sgs.CreateTriggerSkill{
+	name = "LuaShaoying" ,
+	events = {sgs.PreDamageDone, sgs.DamageComplete} ,
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
-		local source = damage.from
-		local target = damage.to
-		if player and source then
-			if source:hasSkill(self:objectName()) then
-				if not target:isChained() then
-					if damage.nature == sgs.DamageStruct_Fire then
-						local room = player:getRoom()
-						local targets = sgs.SPlayerList()
-						local tag = sgs.QVariant(target:objectName())
-						room:setTag("Shaoying", tag)
-						local allplayers = room:getAlivePlayers()
-						for _,p in sgs.qlist(allplayers) do
-							if target:distanceTo(p) == 1 then
-								targets:append(p)
-							end
-						end
-						if not targets:isEmpty() then
-							if source:askForSkillInvoke(self:objectName(), data) then
-								local victim = room:askForPlayerChosen(source, targets, self:objectName())
-								room:setTag("Shaoying", sgs.QVariant())
-								local judge = sgs.JudgeStruct()
-								judge.pattern = sgs.QRegExp("(.*):(heart|diamond):(.*)")
-								judge.good = true
-								judge.reason = self:objectName()
-								judge.who = source
-								room:judge(judge)
-								if judge:isGood() then
-									local shaoying_damage = sgs.DamageStruct()
-									shaoying_damage.nature = sgs.DamageStruct_Fire
-									shaoying_damage.from = source
-									shaoying_damage.to = victim
-									room:damage(shaoying_damage)
-								end
-							end
-						end
+		local room = player:getRoom()
+		if event == sgs.PreDamageDone then
+			if (not player:isChained()) and damage.from and (damage.nature == sgs.DamageStruct_Fire) and
+					(damage.from:isAlive() and damage.from:hasSkill(self:objectName())) then
+				local targets = sgs.SPlayerList()
+				for _, p in sgs.qlist(room:getAlivePlayers()) do
+					if (player:distanceTo(p) == 1) then
+						targets:append(p)
 					end
 				end
+				if targets:isEmpty() then return false end
+				if damage.from:askForSkillInvoke(self:objectName(), data) then
+					local target = room:askForPlayerChosen(damage.from, targets, self:objectName())
+					local _data = sgs.QVariant()
+					_data:setValue(target)
+					damage.from:setTag("LuaShaoyingTarget", _data)
+				end
 			end
+			return false
+		elseif event == sgs.DamageComplete then
+			if damage.from == nil then return false end
+			local target = damage.from:getTag("LuaShaoyingTarget"):toPlayer()
+			damage.from:removeTag("LuaShaoyingTarget")
+			if (not target) or (not damage.from) or (damage.from:isDead()) then return false end
+			local judge = sgs.JudgeStruct()
+			judge.pattern = ".|red"
+			judge.good = true
+			judge.reason = self:objectName()
+			judge.who = damage.from
+			room:judge(judge)
+			if judge:isGood() then
+				local shaoying_damage = sgs.DamageStruct()
+				shaoying_damage.nature = sgs.DamageStruct_Fire
+				shaoying_damage.from = damage.from
+				shaoying_damage.to = target
+				room:damage(shaoying_damage)
+			end
+			return false
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
 	end
@@ -255,13 +254,13 @@ LuaShenji = sgs.CreateTargetModSkill{
 	技能名：神君（锁定技）
 	相关武将：倚天·陆伯言
 	描述：游戏开始时，你必须选择自己的性别。回合开始阶段开始时，你必须倒转性别，异性角色对你造成的非雷电属性伤害无效
-	引用：LuaXShenjun
-	状态：验证通过
+	引用：LuaShenjun
+	状态：1217验证通过
 ]]--
-LuaXShenjun = sgs.CreateTriggerSkill{
-	name = "LuaXShenjun",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.GameStart, sgs.EventPhaseStart, sgs.DamageInflicted},
+LuaShenjun = sgs.CreateTriggerSkill{
+	name = "LuaShenjun" ,
+	events = {sgs.GameStart, sgs.EventPhaseStart, sgs.DamageInflicted} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.GameStart then
@@ -286,11 +285,9 @@ LuaXShenjun = sgs.CreateTriggerSkill{
 			end
 		elseif event == sgs.DamageInflicted then
 			local damage = data:toDamage()
-			if damage.nature ~= sgs.DamageStruct_Thunder then
-				local source = damage.from
-				if source and source:isMale() ~= player:isMale() then
-					return true
-				end
+			if (damage.nature ~= sgs.DamageStruct_Thunder) and damage.from and
+					(damage.from:isMale() ~= player:isMale()) then
+				return true
 			end
 		end
 		return false
@@ -300,27 +297,22 @@ LuaXShenjun = sgs.CreateTriggerSkill{
 	技能名：神力（锁定技）
 	相关武将：倚天·古之恶来
 	描述：出牌阶段，你使用【杀】造成的第一次伤害+X，X为当前死战标记数且最大为3
-	引用：LuaXShenli
-	状态：验证通过
+	引用：LuaShenli
+	状态：1217验证通过
 ]]--
-LuaXShenli = sgs.CreateTriggerSkill{
-	name = "LuaXShenli",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.ConfirmDamage},
+LuaShenli = sgs.CreateTriggerSkill{
+	name = "LuaShenli" ,
+	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.ConfirmDamage} ,
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
-		local slash = damage.card
-		if slash and slash:isKindOf("Slash") then
-			if player:getPhase() == sgs.Player_Play then
-				if not player:hasFlag("shenli") then
-					player:setFlags("shenli")
-					local x = player:getMark("@struggle")
-					if x > 0 then
-						x = math.min(3, x)
-						damage.damage = damage.damage + x
-						data:setValue(damage)
-					end
-				end
+		if damage.card and damage.card:isKindOf("Slash") and (player:getPhase() == sgs.Player_Play) and (not player:hasFlag("shenli")) then
+			player:setFlags("shenli")
+			local x = player:getMark("@struggle")
+			if x > 0 then
+				x = math.min(3, x)
+				damage.damage = damage.damage + x
+				data:setValue(damage)
 			end
 		end
 		return false
@@ -487,85 +479,71 @@ LuaShenzhi = sgs.CreateTriggerSkill{
 	技能名：师恩
 	相关武将：智·司马徽
 	描述：其他角色使用非延时锦囊时，可以让你摸一张牌
-	引用：LuaXShien
-	状态：验证通过
+	引用：LuaShien
+	状态：1217验证通过
+
+	注：智水镜的三个技能均有联系，为了方便起见统一使用本LUA版本的技能，并非原版
 ]]--
-LuaXShien = sgs.CreateTriggerSkill{
-	name = "LuaXShien",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.CardUsed, sgs.CardResponsed},
+LuaShien = sgs.CreateTriggerSkill{
+	name = "LuaShien" ,
+	events = {sgs.CardUsed} ,
 	on_trigger = function(self, event, player, data)
-		if player and player:getMark("forbid_shien") == 0 then
-			local card = nil
-			if event == sgs.CardUsed then
-				local use = data:toCardUse()
-				card = use.card
-			elseif event == sgs.CardResponsed then
-				card = data:toResponsed().m_card
-			end
-			if card:isNDTrick() then
-				local room = player:getRoom()
-				local teacher = room:findPlayerBySkillName(self:objectName())
-				if teacher:isAlive() then
-					local ai_data = sgs.QVariant()
-					ai_data:setValue(teacher)
-					if room:askForSkillInvoke(player, self:objectName(), ai_data) then
-						teacher:drawCards(1)
-					else
-						local dontaskmeneither = room:askForChoice(player, "forbid_shien", "yes+no")
-						if dontaskmeneither == "yes" then
-							player:setMark("forbid_shien", 1)
-						end
-					end
+		if not player then return false end
+		if (player:getMark("forbid_LuaShien") > 0) or (player:hasFlag("forbid_LuaShien")) then return false end
+		local card = data:toCardUse().card
+		if card and card:isNDTrick() then
+			local room = player:getRoom()
+			local shuijing = room:findPlayerBySkillName(self:objectName())
+			if not shuijing then return false end
+			local _data = sgs.QVariant()
+			_data:setValue(shuijing)
+			if room:askForSkillInvoke(player, self:objectName(), _data) then
+				shuijing:drawCards(1)
+			else
+				local choice = room:askForChoice(player, "forbid_LuaShien", "yes+no+maybe")
+				if choice == "yes" then
+					room:setPlayerMark(player, "forbid_LuaShien", 1)
+				elseif choice == "maybe" then
+					room:setPlayerFlag(player, "forbid_LuaShien")
 				end
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			return not target:hasSkill(self:objectName())
-		end
-		return false
+		return target and (not target:hasSkill(self:objectName()))
 	end
 }
 --[[
 	技能名：识破
 	相关武将：智·田丰
 	描述：任意角色判定阶段判定前，你可以弃置两张牌，获得该角色判定区里的所有牌
-	引用：LuaXShipo
-	状态：验证通过
+	引用：LuaShipo
+	状态：1217验证通过
 ]]--
-LuaXShipo = sgs.CreateTriggerSkill{
-	name = "LuaXShipo",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
+LuaShipo = sgs.CreateTriggerSkill{
+	name = "LuaShipo" ,
+	events = {sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_Judge then
-			local judges = player:getJudgingArea()
-			if judges:length() > 0 then
-				local room = player:getRoom()
-				local list = room:getAlivePlayers()
-				for _,source in sgs.qlist(list) do
-					if source:hasSkill(self:objectName()) then
-						if source:getCardCount(true) >= 2 then
-							local ai_data = sgs.QVariant()
-							ai_data:setValue(player)
-							if room:askForSkillInvoke(source, self:objectName(), ai_data) then
-								if room:askForDiscard(source, self:objectName(), 2, 2, false, true) then
-									for _,jcd in sgs.qlist(judges) do
-										source:obtainCard(jcd)
-									end
-									break
-								end
-							end
-						end
+		if (player:getPhase() ~= sgs.Player_Judge) or (player:getJudgingArea():length() == 0) then return false end
+		local room = player:getRoom()
+		local tians = room:findPlayersBySkillName(self:objectName())
+		for _, tianfeng in sgs.qlist(tians) do
+			if tianfeng:getCardCount(true) >= 2 then
+				local _data = sgs.QVariant()
+				_data:setValue(player)
+				if room:askForSkillInvoke(tianfeng, self:objectName(), _data) then
+					if room:askForDiscard(tianfeng, self:objectName(), 2, 2, false, true) then
+						local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+						dummy:addSubcards(player:getJudgingArea())
+						tianfeng:obtainCard(dummy)
+						break
 					end
 				end
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
 	end
@@ -585,40 +563,33 @@ Lua3dShipo = sgs.CreateProhibitSkill{
 	技能名：恃才（锁定技）
 	相关武将：智·许攸
 	描述：当你拼点成功时，摸一张牌
-	引用：LuaXShicai
-	状态：验证通过
+	引用：LuaShicai
+	状态：1217验证通过
 ]]--
-LuaXShicai = sgs.CreateTriggerSkill{
-	name = "LuaXShicai",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.Pindian},
+LuaShicai = sgs.CreateTriggerSkill{
+	name = "LuaShicai" ,
+	events = {sgs.Pindian} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
-		if player then
-			local room = player:getRoom()
-			local xuyou = room:findPlayerBySkillName(self:objectName())
-			if xuyou then
-				local pindian = data:toPindian()
-				local source = pindian.from
-				local target = pindian.to
-				if source:objectName() == xuyou:objectName() or target:objectName() == xuyou:objectName() then
-					local winner
-					if pindian.from_card:getNumber() > pindian.to_card:getNumber() then
-						winner = source
-					else
-						winner = target
-					end
-					if winner:objectName() == xuyou:objectName() then
-						xuyou:drawCards(1)
-					end
-				end
-			end
+		local room = player:getRoom()
+		local xuyou = room:findPlayerBySkillName(self:objectName())
+		if not xuyou then return false end
+		local pindian = data:toPindian()
+		if (pindian.from:objectName() ~= xuyou:objectName()) and (pindian.to:objectName() ~= xuyou:objectName()) then return false end
+		local winner = nil
+		if pindian.from_number > pindian.to_number then
+			winner = pindian.from
+		else
+			winner = pindian.to
+		end
+		if winner:objectName() == xuyou:objectName() then
+			xuyou:drawCards(1)
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
-	end,
-	priority = -1
+	end
 }
 --[[
 	技能名：恃勇（锁定技）
@@ -750,48 +721,39 @@ LuaShichou = sgs.CreateTriggerSkill{
 	技能名：授业
 	相关武将：智·司马徽
 	描述：出牌阶段，你可以弃置一张红色手牌，指定最多两名其他角色各摸一张牌
-	引用：LuaXShouye
-	状态：验证通过
+	引用：LuaShouye
+	状态：1217验证通过
+
+	注：智水镜的三个技能均有联系，为了方便起见统一使用本LUA版本的技能，并非原版
 ]]--
-LuaXShouyeCard = sgs.CreateSkillCard{
-	name = "LuaXShouyeCard",
-	target_fixed = false,
-	will_throw = true,
+LuaShouyeCard = sgs.CreateSkillCard{
+	name = "LuaShouyeCard" ,
 	filter = function(self, targets, to_select)
-		if #targets < 2 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
-	end,
+		if #targets >= 2 then return false end
+		if to_select:objectName() == sgs.Self:objectName() then return false end
+		return true
+	end ,
 	on_effect = function(self, effect)
-		local source = effect.from
 		effect.to:drawCards(1)
-		if source:getMark("jiehuo") == 0 then
-			source:gainMark("@shouye")
+		if effect.from:getMark("LuaJiehuo") == 0 then
+			effect.from:gainMark("@shouye")
 		end
 	end
 }
-LuaXShouye = sgs.CreateViewAsSkill{
-	name = "LuaXShouye",
-	n = 1,
+LuaShouye = sgs.CreateViewAsSkill{
+	name = "LuaShouye" ,
+	n = 1 ,
 	view_filter = function(self, selected, to_select)
-		if not to_select:isEquipped() then
-			return to_select:isRed()
-		end
-		return false
-	end,
+		return (#selected == 0) and (not to_select:isEquipped()) and (to_select:isRed())
+	end ,
 	view_as = function(self, cards)
-		if #cards > 0 then
-			local shouye_card = LuaXShouyeCard:clone()
-			shouye_card:addSubcard(cards[1]:getId())
-			return shouye_card
-		end
-	end,
+		if #cards ~= 1 then return nil end
+		local card = LuaShouyeCard:clone()
+		card:addSubcard(cards[1])
+		return card
+	end ,
 	enabled_at_play = function(self, player)
-		if player:getMark("shouyeonce") > 0 then
-			return not player:hasUsed("#LuaXShouyeCard")
-		end
-		return true
+		return (player:getMark("LuaJiehuo") == 0) or (not player:hasUsed("#LuaShouyeCard"))
 	end
 }
 --[[
@@ -1090,28 +1052,24 @@ LuaSijian = sgs.CreateTriggerSkill{
 	技能名：死战（锁定技）
 	相关武将：倚天·古之恶来
 	描述：当你受到伤害时，防止该伤害并获得与伤害点数等量的死战标记；你的回合结束阶段开始时，你须弃掉所有的X个死战标记并流失X点体力
-	引用：LuaXSizhan
-	状态：验证通过
+	引用：LuaSizhan
+	状态：1217验证通过
 ]]--
-LuaXSizhan = sgs.CreateTriggerSkill{
-	name = "LuaXSizhan",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.DamageInflicted, sgs.EventPhaseStart},
+LuaSizhan = sgs.CreateTriggerSkill{
+	name = "LuaSizhan" ,
+	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.DamageInflicted, sgs.EventPhaseStart} ,
 	on_trigger = function(self, event, player, data)
 		if event == sgs.DamageInflicted then
 			local damage = data:toDamage()
 			player:gainMark("@struggle", damage.damage)
 			return true
-		elseif event == sgs.EventPhaseStart then
-			if player:getPhase() == sgs.Player_Finish then
-				local x = player:getMark("@struggle")
-				if x > 0 then
-					local room = player:getRoom()
-					player:loseMark("@struggle", x)
-					room:loseHp(player, x)
-				end
-				player:setFlags("-shenli")
+		elseif (event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_Finish) then
+			local x = player:getMark("@struggle")
+			if x > 0 then
+				player:getRoom():loseHp(player, x)
 			end
+			player:setFlags("-shenli")
 		end
 		return false
 	end
