@@ -291,50 +291,44 @@ LuaGongqi = sgs.CreateViewAsSkill{
 	相关武将：怀旧·韩当
 	描述：你可以将一张装备牌当【杀】使用或打出；你以此法使用【杀】时无距离限制。
 	引用：LuaNosGongqi、LuaNosGongqiTargetMod
-	状态：0224验证通过
+	状态：1217验证通过
 ]]--
 LuaNosGongqi = sgs.CreateViewAsSkill{
-	name = "LuaNosGongqi",
-	n = 1,
+	name = "LuaNosGongqi" ,
+	n = 1 ,
 	view_filter = function(self, selected, to_select)
-		local weapon = sgs.Self:getWeapon()
-		if weapon then
-			if to_select:objectName() == weapon:objectName() then
-				if to_select:objectName() == "Crossbow" then
-					return sgs.Self:canSlashWithoutCrossbow()
-				end
-			end
+		if to_select:getTypeId() ~= sgs.Card_TypeEquip then return false end
+		if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
+		local slash = sgs.Sanguosha:cloneCard("slash",sgs.Card_SuitToBeDecided,-1)
+            slash:addSubcard(to_select:getEffectiveId())
+            slash:deleteLater()
+            return slash:isAvailable(sgs.Self)
 		end
-		return to_select:getTypeId() == sgs.Card_Equip
-	end,
+	end ,
 	view_as = function(self, cards)
 		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local id = card:getId()
-			local slash = sgs.Sanguosha:cloneCard("slash", suit, point)
-			slash:addSubcard(id)
-			slash:setSkillName(self:objectName())
-			return slash
+		local slash = sgs.Sanguosha:cloneCard("slash", cards[1]:getSuit(), cards[1]:getNumber())
+		slash:addSubcard(cards[1])
+		slash:setSkillName(self:objectName())
+		return slash
 		end
-	end,
+	end ,
 	enabled_at_play = function(self, player)
 		return sgs.Slash_IsAvailable(player)
-	end,
+	end ,
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "slash"
 	end
 }
 LuaNosGongqiTargetMod = sgs.CreateTargetModSkill{
-	name = "#LuaNosGongqiTargetMod",
-	distance_limit_func = function(self, from, card)
-		if from:hasSkill("LuaNosGongqi") then
-			if card:getSkillName() == "LuaNosGongqi" then
-				return 1000
-			end
+	name = "#LuaNosGongqi-target" ,
+
+	distance_limit_func = function(self, player, card)
+		if card:getSkillName() == "LuaNosGongqi" then
+			return 1000
+		else
+			return 0
 		end
-		return 0
 	end
 }
 --[[
