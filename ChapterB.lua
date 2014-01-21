@@ -54,21 +54,17 @@ LuaBazhen = sgs.CreateTriggerSkill{
 	技能名：霸刀
 	相关武将：智·华雄
 	描述：当你成为黑色的【杀】目标时，你可以对你攻击范围内的一名其他角色使用一张【杀】
-	引用：LuaXBadao
-	状态：验证通过
+	引用：LuaBadao
+	状态：1217验证通过
 ]]--
-LuaXBadao = sgs.CreateTriggerSkill{
-	name = "LuaXBadao",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.CardEffected},
+LuaBadao = sgs.CreateTriggerSkill{
+	name = "LuaBadao" ,
+	events = {sgs.TargetConfirmed} ,
 	on_trigger = function(self, event, player, data)
-		local effect = data:toCardEffect()
-		local slash = effect.card
-		if slash:isKindOf("Slash") and slash:isBlack() then
-			local room = player:getRoom()
-			if room:askForSkillInvoke(player, self:objectName(), data) then
-				room:askForUseCard(player, "slash", "@askforslash")
-			end
+		local room = player:getRoom()
+		local use = data:toCardUse()
+		if use.card:isKindOf("Slash") and use.card:isBlack() and use.to:contains(player) then
+			room:askForUseCard(player, "slash", "@askforslash")
 		end
 		return false
 	end
@@ -77,77 +73,59 @@ LuaXBadao = sgs.CreateTriggerSkill{
 	技能名：霸王
 	相关武将：智·孙策
 	描述：当你使用的【杀】被【闪】响应时，你可以和对方拼点：若你赢，可以选择最多两个目标角色，视为对其分别使用了一张【杀】
-	引用：LuaXBawang
-	状态：验证通过
+	引用：LuaBawang
+	状态：1217验证通过
 ]]--
-LuaXBawangCard = sgs.CreateSkillCard{
-	name = "LuaXBawangCard",
-	target_fixed = false,
-	will_throw = true,
+LuaBawangCard = sgs.CreateSkillCard{
+	name = "LuaBawangCard" ,
 	filter = function(self, targets, to_select)
-		if #targets < 2 then
-			if to_select:objectName() ~= sgs.Self:objectName() then
-				if not (to_select:isKongcheng() and to_select:hasSkill("kongcheng")) then
-					return true
-				end
-			end
-		end
-	end,
+		if #targets >= 2 then return false end
+		return sgs.Self:canSlash(to_select, false)
+	end ,
 	on_effect = function(self, effect)
-		local source = effect.from
-		local target = effect.to
-		local room = source:getRoom()
-		local effect2 = sgs.CardEffectStruct()
+		local room = effect.to:getRoom()
+		local use = sgs.CardUseStruct()
 		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-		slash:setSkillName("LuaXBawang")
-		effect2.card = slash
-		effect2.from = source
-		effect2.to = target
-		room:cardEffect(effect2)
-		room:setEmotion(target, "bad")
-		room:setEmotion(source, "good")
+		slash:setSkillName("LuaBawang")
+		use.card = slash
+		use.from = effect.from
+		use.to:append(effect.to)
+		room:useCard(use, false)
 	end
 }
-LuaXBawangVS = sgs.CreateViewAsSkill{
-	name = "LuaXBawangVS",
+LuaBawangVS = sgs.CreateViewAsSkill{
+	name = "LuaBawang" ,
 	n = 0,
-	view_as = function(self, cards)
-		return LuaXBawangCard:clone()
-	end,
-	enabled_at_play = function(self, player)
+	view_as = function()
+		return LuaBawangCard:clone()
+	end ,
+	enabled_at_play = function()
 		return false
-	end,
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaXBawang"
+		return pattern == "@@LuaBawang"
 	end
 }
-LuaXBawang = sgs.CreateTriggerSkill{
-	name = "LuaXBawang",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.SlashMissed},
-	view_as_skill = LuaXBawangVS,
+LuaBawang = sgs.CreateTriggerSkill{
+	name = "LuaBawang" ,
+	events = {sgs.SlashMissed} ,
+	view_as_skill = LuaBawangVS ,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local effect = data:toSlashEffect()
-		local target = effect.to
-		if not target:isNude() then
-			if not player:isKongcheng() then
-				if not target:isKongcheng() then
-					local room = player:getRoom()
-					if room:askForSkillInvoke(player, self:objectName(), data) then
-						local success = player:pindian(target, self:objectName(), nil)
-						if success then
-							if player:hasFlag("drank") then
-								room:setPlayerFlag(player, "-drank")
-							end
-							room:askForUseCard(player, "@@LuaXBawang", "@LuaXBawang")
-						end
+		if (not effect.to:isNude()) and (not player:isKongcheng()) and (not effect.to:isKongcheng()) then
+			if room:askForSkillInvoke(player, self:objectName(), data) then
+				local success = player:pindian(effect.to, self:objectName(), nil)
+				if success then
+					if player:hasFlag("drank") then
+						room:setPlayerFlag(player, "-drank")
 					end
+					room:askForUseCard(player, "@@bawang", "@bawang")
 				end
 			end
 		end
 		return false
-	end,
-	priority = 2
+	end
 }
 --[[
 	技能名：拜将（觉醒技）
@@ -383,41 +361,38 @@ LuaBeige = sgs.CreateTriggerSkill{
 	技能名：北伐（锁定技）
 	相关武将：智·姜维
 	描述：当你失去最后一张手牌时，视为对攻击范围内的一名角色使用了一张【杀】
-	引用：LuaXBeifa
-	状态：验证通过
+	引用：LuaBeifa
+	状态：1217验证通过
 ]]--
-LuaXBeifa = sgs.CreateTriggerSkill{
-	name = "LuaXBeifa",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.CardsMoveOneTime},
+LuaBeifa = sgs.CreateTriggerSkill{
+	name = "LuaBeifa" ,
+	events = {sgs.CardsMoveOneTime} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
-		if player:isKongcheng() then
-			local move = data:toMoveOneTime()
-			if move.from and move.from:objectName() == player:objectName() then
-				if move.from_places:contains(sgs.Player_PlaceHand) then
-					local room = player:getRoom()
-					local players = sgs.SPlayerList()
-					local others = room:getOtherPlayers(player)
-					for _,p in sgs.qlist(others) do
-						if not (p:hasSkill("kongcheng") and p:isKongcheng()) then
-							if player:inMyAttackRange(p) then
-								players:append(p)
-							end
-						end
-					end
-					local target = player
-					if not players:isEmpty() then
-						target = room:askForPlayerChosen(player, players, self:objectName())
-					end
-					local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-					slash:setSkillName(self:objectName())
-					local use = sgs.CardUseStruct()
-					use.card = slash
-					use.from = player
-					use.to:append(target)
-					room:useCard(use)
+		local move = data:toMoveOneTime()
+		local room = player:getRoom()
+		if move.from and move.from:objectName() == player:objectName() and move.from_places:contains(sgs.Player_PlaceHand) and player:isKongcheng() then
+			local players = sgs.SPlayerList()
+			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			slash:setSkillName(self:objectName())
+			for _, _player in sgs.qlist(room:getOtherPlayers(player)) do
+				if player:canSlash(_player, slash) then
+					players:append(_player)
 				end
 			end
+
+			local target = nil
+			if not players:isEmpty() then
+				target = room:askForPlayerChosen(player, players, self:objectName()) --没有处理TarMod
+			end
+			if (not target) and (not player:isProhibited(player, slash)) then
+				target = player
+			end
+			local use = sgs.CardUseStruct()
+			use.card = slash
+			use.from = player
+			use.to:append(target)
+			room:useCard(use)
 		end
 		return false
 	end
