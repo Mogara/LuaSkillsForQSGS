@@ -780,31 +780,26 @@ LuaNosJiefan = sgs.CreateTriggerSkill{
 	技能名：解惑（觉醒技）
 	相关武将：智·司马徽
 	描述：当你发动“授业”目标累计超过6个时，须减去一点体力上限，将技能“授业”改为每阶段限一次，并获得技能“师恩”
-	引用：LuaXJiehuo
-	状态：验证通过
+	引用：LuaJiehuo
+	状态：1217验证通过
+
+	注：智水镜的三个技能均有联系，为了方便起见统一使用本LUA版本的技能，并非原版
 ]]--
-LuaXJiehuo = sgs.CreateTriggerSkill{
-	name = "LuaXJiehuo",
-	frequency = sgs.Skill_Wake,
-	events = {sgs.CardFinished},
+LuaJiehuo = sgs.CreateTriggerSkill{
+	name = "LuaJiehuo" ,
+	events = {sgs.CardFinished} ,
+	frequency = sgs.Skill_Wake ,
 	on_trigger = function(self, event, player, data)
-		if player then
-			local room = player:getRoom()
-			room:setPlayerMark(player, "jiehuo", 1)
-			player:loseAllMarks("@shouye")
-			room:setPlayerMark(player, "shouyeonce", 1)
-			room:acquireSkill(player, "shien")
-			room:loseMaxHp(player)
+		local room = player:getRoom()
+		room:setPlayerMark(player, "LuaJiehuo", 1)
+		player:loseAllMarks("@shouye")
+		if room:changeMaxHpForAwakenSkill(player) then
+			room:acquireSkill(player, "LuaShien")
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			if target:getMark("jiehuo") == 0 then
-				return target:getMark("@shouye") > 6
-			end
-		end
-		return false
+		return target and (target:getMark("LuaJiehuo") == 0) and (target:getMark("@shouye") >= 7)
 	end
 }
 --[[
@@ -1206,87 +1201,65 @@ LuaJuxiang = sgs.CreateTriggerSkill{
 		return target
 	end
 }
-
 --[[
 	技能名：倨傲
 	相关武将：智·许攸
 	描述：出牌阶段，你可以选择两张手牌背面向上移出游戏，指定一名角色，被指定的角色到下个回合开始阶段时，跳过摸牌阶段，得到你所移出游戏的两张牌。每阶段限一次
-	引用：LuaXJuao
-	状态：验证通过
+	引用：LuaJuao
+	状态：1217验证通过
 ]]--
-LuaXJuaoCard = sgs.CreateSkillCard{
-	name = "LuaXJuaoCard",
-	target_fixed = false,
-	will_throw = false,
+LuaJuaoCard = sgs.CreateSkillCard{
+	name = "LuaJuaoCard" ,
+	will_throw = false ,
+	handling_method = sgs.Card_MethodNone ,
 	filter = function(self, targets, to_select)
-		return #targets == 0
-	end,
+		return (#targets == 0) and (to_select:getMark("LuaJuao") == 0)
+	end ,
 	on_effect = function(self, effect)
-		local subcards = self:getSubcards()
-		local target = effect.to
-		for _,cardid in sgs.qlist(subcards) do
-			target:addToPile("hautain", cardid, false)
-		end
-		target:addMark("juao")
+		effect.to:addToPile("hautain", self, false)
+		effect.to:addMark("LuaJuao")
 	end
 }
-LuaXJuaoVS = sgs.CreateViewAsSkill{
-	name = "LuaXJuao",
-	n = 2,
+LuaJuaoVS = sgs.CreateViewAsSkill{
+	name = "LuaJuao" ,
+	n = 2 ,
 	view_filter = function(self, selected, to_select)
-		if #selected <= 2 then
-			return not to_select:isEquipped()
-		end
-		return false
-	end,
+		if (#selected >= 2) then return false end
+		return not to_select:isEquipped()
+	end ,
 	view_as = function(self, cards)
-		if #cards == 2 then
-			local card = LuaXJuaoCard:clone()
-			for _,cd in pairs(cards) do
-				card:addSubcard(cd)
-			end
-			return card
+		if #cards ~= 2 then return nil end
+		local card = LuaJuaoCard:clone()
+		for _, c in ipairs(cards) do
+			card:addSubcard(c)
 		end
-	end,
+		return card
+	end ,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaXJuaoCard")
+		return not player:hasUsed("#LuaJuaoCard")
 	end
 }
-LuaXJuao = sgs.CreateTriggerSkill{
-	name = "LuaXJuao",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
-	view_as_skill = LuaXJuaoVS,
+LuaJuao = sgs.CreateTriggerSkill{
+	name = "LuaJuao" ,
+	events = {sgs.EventPhaseStart} ,
+	view_as_skill = LuaJuaoVS ,
 	on_trigger = function(self, event, player, data)
 		if player:getPhase() == sgs.Player_Start then
 			local room = player:getRoom()
-			player:setMark("juao", 0)
-			local xuyou = room:findPlayerBySkillName(self:objectName())
-			local hautains = player:getPile("hautain")
-			for _,card_id in sgs.qlist(hautains) do
-				if not xuyou then
-					local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", "hautain", "")
-					local card = sgs.Sanguosha:getCard(card_id)
-					room:throwCard(card, reason, nil)
-				else
-					room:obtainCard(player, card_id)
-				end
+			player:setMark("LuaJuao", 0)
+			local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			for _, card_id in sgs.qlist(player:getPile("hautain")) do
+				dummy:addSubcard(card_id)
 			end
-			if not xuyou then
-				return false
-			end
+			player:obtainCard(dummy, false)
 			player:skip(sgs.Player_Draw)
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			return target:getMark("juao") > 0
-		end
-		return false
+		return target and (target:getMark("LuaJuao") > 0)
 	end
 }
-
 --[[
 	技能名：据守
 	相关武将：风·曹仁
