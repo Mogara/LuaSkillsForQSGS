@@ -12,79 +12,61 @@
 	技能名：仁德
 	相关武将：怀旧-标准·刘备-旧
 	描述：出牌阶段，你可以将任意数量的手牌交给一名其他角色，然后当你于此阶段内以此法交给其他角色的手牌首次达到两张或更多时，你回复1点体力。
-	引用：LuaRende
-	状态：验证通过
+	引用：LuaNosRende
+	状态：1217验证通过
 ]]--
-LuaRendeCard = sgs.CreateSkillCard{
-	name = "LuaRendeCard",
-	target_fixed = false,
-	will_throw = false,
+LuaNosRendeCard = sgs.CreateSkillCard{
+	name = "LuaNosRendeCard" ,
+	will_throw = false ,
+	handling_method = sgs.Card_MethodNone ,
+	filter = function(self, selected, to_select)
+		return (#selected == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
 	on_use = function(self, room, source, targets)
-		local target
-		if #targets == 0 then
-			local list = room:getAlivePlayers()
-			for _,player in sgs.qlist(list) do
-				if player:objectName() ~= source:objectName() then
-					target = player
-					break
-				end
-			end
-		else
-			target = targets[1]
-		end
+		local target = targets[1]
 		room:obtainCard(target, self, false)
-		local subcards = self:getSubcards()
-		local old_value = source:getMark("rende")
-		local new_value = old_value + subcards:length()
-		room:setPlayerMark(source, "rende", new_value)
-		if old_value < 2 then
-			if new_value >= 2 then
-				local recover = sgs.RecoverStruct()
-				recover.card = self
-				recover.who = source
-				room:recover(source, recover)
-			end
+		local old_value = source:getMark("LuaNosRende")
+		local new_value = old_value + self:getSubcards():length()
+		room:setPlayerMark(source, "LuaNosRende", new_value)
+		if (old_value < 2) and (new_value >= 2) then
+			local recover = sgs.RecoverStruct()
+			recover.card = self
+			recover.who = source
+			room:recover(source, recover)
 		end
 	end
 }
-LuaRendeVS = sgs.CreateViewAsSkill{
-	name = "LuaRende",
-	n = 999,
+LuaNosRendeVS = sgs.CreateViewAsSkill{
+	name = "LuaNosRende" ,
+	n = 999 ,
 	view_filter = function(self, selected, to_select)
 		return not to_select:isEquipped()
-	end,
+	end ,
 	view_as = function(self, cards)
-		if #cards > 0 then
-			local rende_card = LuaRendeCard:clone()
-			for i=1, #cards, 1 do
-				local id = cards[i]:getId()
-				rende_card:addSubcard(id)
-			end
-			return rende_card
+		if #cards == 0 then return nil end
+		local rende_card = LuaNosRendeCard:clone()
+		for _, c in ipairs(cards) do
+			rende_card:addSubcard(c)
 		end
+		return rende_card
+	end ,
+	enabled_at_play = function(self, player)
+		return not player:isKongcheng()
 	end
 }
-LuaRende = sgs.CreateTriggerSkill{
-	name = "LuaRende",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
-	view_as_skill = LuaRendeVS,
+LuaNosRende = sgs.CreateTriggerSkill{
+	name = "LuaNosRende" ,
+	events = {sgs.EventPhaseChanging} ,
+	view_as_skill = LuaNosRendeVS ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		room:setPlayerMark(player, "rende", 0)
+		local change = data:toPhaseChange()
+		if change.to ~= sgs.Player_NotActive then return false end
+		room:setPlayerMark(player,"LuaNosRende", 0)
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() then
-				if target:hasSkill(self:objectName()) then
-					if target:getPhase() == sgs.Player_NotActive then
-						return target:hasUsed("#LuaRendeCard")
-					end
-				end
-			end
-		end
-		return false
+		return target and (target:getMark("LuaNosRende") > 0)
 	end
 }
 --[[
