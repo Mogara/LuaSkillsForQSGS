@@ -164,30 +164,30 @@ LuaXWeidai = sgs.CreateTriggerSkill{
 	技能名：围堰
 	相关武将：倚天·陆抗
 	描述：你可以将你的摸牌阶段当作出牌阶段，出牌阶段当作摸牌阶段执行
-	引用：LuaXLukangWeiyan
-	状态：验证通过
+	引用：LuaLukangWeiyan
+	状态：1217验证通过
 ]]--
-LuaXLukangWeiyan = sgs.CreateTriggerSkill{
-	name = "LuaXLukangWeiyan",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseChanging},
+LuaLukangWeiyan = sgs.CreateTriggerSkill{
+	name = "LuaLukangWeiyan" ,
+	events = {sgs.EventPhaseChanging} ,
 	on_trigger = function(self, event, player, data)
 		local change = data:toPhaseChange()
-		local nextphase = change.to
-		if nextphase == sgs.Player_Draw then
+		if change.to == sgs.Player_Draw then
 			if not player:isSkipped(sgs.Player_Draw) then
-				if player:askForSkillInvoke("LuaXLukangWeiyan", sgs.QVariant("draw2play")) then
+				if player:askForSkillInvoke(self:objectName(), sgs.QVariant("draw2play")) then
 					change.to = sgs.Player_Play
 					data:setValue(change)
 				end
 			end
-		elseif nextphase == sgs.Player_Play then
+		elseif change.to == sgs.Player_Play then
 			if not player:isSkipped(sgs.Player_Play) then
-				if player:askForSkillInvoke("LuaXLukangWeiyan", sgs.QVariant("play2draw")) then
+				if player:askForSkillInvoke(self:objectName(), sgs.QVariant("play2draw")) then
 					change.to = sgs.Player_Draw
 					data:setValue(change)
 				end
 			end
+		else
+			return false
 		end
 		return false
 	end
@@ -216,40 +216,31 @@ LuaWeimu = sgs.CreateProhibitSkill{
 	技能名：温酒（锁定技）
 	相关武将：智·华雄
 	描述：你使用黑色的【杀】造成的伤害+1，你无法闪避红色的【杀】
-	引用：LuaXWenjiu
-	状态：验证通过
+	引用：LuaWenjiu
+	状态：1217验证通过
 ]]--
-LuaXWenjiu = sgs.CreateTriggerSkill{
-	name = "LuaXWenjiu",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.DamageCaused, sgs.SlashProceed},
+LuaWenjiu = sgs.CreateTriggerSkill{
+	name = "LuaWenjiu" ,
+	events = {sgs.ConfirmDamage, sgs.SlashProceed} ,
+	frequency = sgs.Skill_Compulsory ,
+	priority = 3 ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local hua = room:findPlayerBySkillName(self:objectName())
-		if hua then
-			if event == sgs.SlashProceed then
-				local effect = data:toSlashEffect()
-				if effect.to:objectName() == hua:objectName() then
-					if effect.slash:isRed() then
-						room:slashResult(effect, nil)
-						return true
-					end
-				end
-			elseif event == sgs.DamageCaused then
-				local damage = data:toDamage()
-				local reason = damage.card
-				local source = damage.from
-				if reason and source then
-					if source:objectName() == hua:objectName() then
-						if reason:isKindOf("Slash") then
-							if reason:isBlack() then
-								local count = damage.damage
-								damage.damage = count + 1
-								data:setValue(damage)
-							end
-						end
-					end
-				end
+		if not hua then return false end
+		if event == sgs.SlashProceed then
+			local effect = data:toSlashEffect()
+			if (effect.to:objectName() == hua:objectName()) and effect.slash:isRed() then
+				room:slashResult(effect, nil)
+				return true
+			end
+		elseif event == sgs.ConfirmDamage then
+			local damage = data:toDamage()
+			local reason = damage.card
+			if (not reason) or (damage.from:objectName() ~= hua:objectName()) then return false end
+			if reason:isKindOf("Slash") and reason:isBlack() then
+				damage.damage = damage.damage + 1
+				data:setValue(damage)
 			end
 		end
 		return false
@@ -482,118 +473,87 @@ LuaNosWuyan = sgs.CreateTriggerSkill{
 		[水]场上所有角色使用桃时额外回复1点体力
 		[火]场上所有角色受到的伤害均视为火焰伤害
 		[土]场上所有角色每次受到的属性伤害至多为1
-	引用：LuaXWulingExEffect、LuaXWulingEffect、LuaXWuling
-	状态：验证通过
+	引用：LuaWulingExEffect、LuaWulingEffect、LuaWuling
+	状态：1217验证通过
 ]]--
-LuaXWulingExEffect = sgs.CreateTriggerSkill{
-	name = "#LuaXWulingExEffect",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardEffected, sgs.DamageInflicted},
+LuaWulingExEffect = sgs.CreateTriggerSkill{
+	name = "#LuaWuling-ex-effect" ,
+	events = {sgs.PreHpRecover, sgs.DamageInflicted} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local tag = room:getTag("wuling")
-		if tag then
-			local wuling = tag:toString()
-			if event == sgs.CardEffected then
-				if wuling == "water" then
-					local effect = data:toCardEffect()
-					local peach = effect.card
-					if peach and peach:isKindOf("Peach") then
-						local recover = sgs.RecoverStruct()
-						recover.card = peach
-						recover.who = effect.from
-						room:recover(player, recover)
-					end
-				end
-			elseif event == sgs.DamageInflicted then
-				if wuling == "earth" then
-					local damage = data:toDamage()
-					if damage.nature ~= sgs.DamageStruct_Normal then
-						if damage.damage > 1 then
-							damage.damage = 1
-							data:setValue(damage)
-						end
-					end
-				end
+		local xuandi = room:findPlayerBySkillName(self:objectName())
+		if not xuandi then return false end
+		local wuling = xuandi:getTag("LuaWuling"):toString()
+		if (event == sgs.PreHpRecover) and (wuling == "water") then
+			local rec = data:toRecover()
+			if rec.card and (rec.card:isKindOf("Peach")) then
+				rec.recover = rec.recover + 1
+				data:setValue(rec)
 			end
-		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		return target
-	end,
-	priority = -1
-}
-LuaXWulingEffect = sgs.CreateTriggerSkill{
-	name = "#LuaXWulingEffect",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.DamageInflicted},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local tag = room:getTag("wuling")
-		if tag then
-			local wuling = tag:toString()
+		elseif (event == sgs.DamageInflicted) and (wuling == "earth") then
 			local damage = data:toDamage()
-			local nature = damage.nature
-			local count = damage.damage
-			local flag = not damage.chain and not damage.transfer
-			if wuling == "wind" then
-				if nature == sgs.DamageStruct_Fire then
-					if flag then
-						damage.damage = count + 1
-						data:setValue(damage)
-					end
-				end
-			elseif wuling == "thunder" then
-				if nature == sgs.DamageStruct_Thunder then
-					if flag then
-						damage.damage = count + 1
-						data:setValue(damage)
-					end
-				end
-			elseif wuling == "fire" then
-				if nature ~= sgs.DamageStruct_Fire then
-					damage.nature = sgs.DamageStruct_Fire
-					data:setValue(damage)
-				end
+			if (damage.nature ~= sgs.DamageStruct_Normal) and (damage.damage > 1) then
+				damage.damage = 1
+				data:setValue(damage)
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
-	end,
-	priority = 2
+	end
 }
-LuaXWuling = sgs.CreateTriggerSkill{
-	name = "LuaXWuling",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
+LuaWulingEffect = sgs.CreateTriggerSkill{
+	name = "#LuaWuling-effect" ,
+	events = {sgs.DamageInflicted} ,
 	on_trigger = function(self, event, player, data)
-		local effects = {"wind", "thunder", "water", "fire", "earth"}
-		if player:getPhase() == sgs.Player_Start then
-			local room = player:getRoom()
-			local current = nil
-			local tag = room:getTag("wuling")
-			if tag then
-				current = tag:toString()
+		local room = player:getRoom()
+		local xuandi = room:findPlayerBySkillName(self:objectName())
+		if not xuandi then return false end
+		local wuling = xuandi:getTag("LuaWuling"):toString()
+		local damage = data:toDamage()
+		if wuling == "wind" then
+			if damage.nature == sgs.DamageStruct_Fire then
+				damage.damage = damage.damage + 1
+				data:setValue(damage)
 			end
-			local choices = ""
-			for _,effect in pairs(effects) do
+		elseif wuling == "thunder" then
+			if damage.nature == sgs.DamageStruct_Thunder then
+				damage.damage = damage.damage + 1
+				data:setValue(damage)
+			end
+		elseif wuling == "fire" then
+			if damage.nature ~= sgs.DamageStruct_Fire then
+				damage.nature = sgs.DamageStruct_Fire
+				data:setValue(damage)
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end ,
+}
+LuaWuling = sgs.CreateTriggerSkill{
+	name = "LuaWuling" ,
+	events = {sgs.EventPhaseStart} ,
+	on_trigger = function(self, event, player, data)
+		local LuaWulingEffects = {"wind", "thunder", "water", "fire", "earth"}
+		if player:getPhase() == sgs.Player_Start then
+			local current = player:getTag("LuaWuling"):toString()
+			local choices = {}
+			for _, effect in ipairs(LuaWulingEffects) do
 				if effect ~= current then
-					choices = string.format("%s+%s", choices, effect)
+					table.insert(choices, effect)
 				end
 			end
-			choices = string.sub(choices, 2)
-			local choice = room:askForChoice(player, self:objectName(), choices)
-			local mark = nil
-			if current then
-				mark = string.format("@%s", current)
-				player:loseMark(mark)
+			local room = player:getRoom()
+			local choice = room:askForChoice(player, self:objectName(), table.concat(choices, "+"))
+			if not (current == "" or current == nil) then
+				player:loseMark("@" .. current)
 			end
-			mark = string.format("@%s", choice)
-			player:gainMark(mark)
-			room:setTag("wuling", sgs.QVariant(choice))
+			player:gainMark("@" .. choice)
+			player:setTag("LuaWuling", sgs.QVariant(choice))
 		end
 		return false
 	end
