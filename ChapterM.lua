@@ -575,9 +575,25 @@ LuaXMingshi = sgs.CreateTriggerSkill{
 	技能名：名士（锁定技）（0610版）
 	相关武将：国战·孔融
 	描述：每当你受到伤害时，若伤害来源装备区的牌数不大于你的装备区的牌数，此伤害-1。
-	引用：
-	状态：
+	引用：LuaMingshi610
+	状态：1217验证通过
 ]]--
+LuaMingshi610 = sgs.CreateTriggerSkill{
+	name = "LuaMingshi610" ,
+	events = {sgs.DamageInflicted} ,
+	frequency = sgs.Skill_Compulsory ,
+	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
+		if damage.from then
+			if damage.from:getEquips():length() <= player:getEquips():length() then
+				damage.damage = damage.damage - 1
+				if damage.damage < 1 then return true end
+				data:setValue(damage)
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：明策
 	相关武将：一将成名·陈宫
