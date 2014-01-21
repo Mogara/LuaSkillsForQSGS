@@ -453,93 +453,69 @@ LuaHongyan = sgs.CreateFilterSkill{
 		return new_card
 	end
 }
-
 --[[
 	技能名：后援
 	相关武将：智·蒋琬
 	描述：出牌阶段，你可以弃置两张手牌，指定一名其他角色摸两张牌，每阶段限一次
-	引用：LuaXHouyuan
-	状态：验证通过
+	引用：LuaHouyuan
+	状态：1217验证通过
 ]]--
-LuaXHouyuanCard = sgs.CreateSkillCard{
-	name = "LuaXHouyuanCard",
-	target_fixed = false,
-	will_throw = true,
-	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
-	end,
+LuaHouyuanCard = sgs.CreateSkillCard{
+	name = "LuaHouyuanCard" ,
 	on_effect = function(self, effect)
-		local n = self:subcardsLength()
-		effect.to:drawCards(n)
-	end
+		effect.to:drawCards(2)
+	end ,
 }
-LuaXHouyuan = sgs.CreateViewAsSkill{
-	name = "LuaXHouyuan",
+LuaHouyuan = sgs.CreateViewAsSkill{
+	name = "LuaHouyuan" ,
 	n = 2,
 	view_filter = function(self, selected, to_select)
-		if not to_select:isEquipped() then
-			return #selected < 2
-		end
-		return false
-	end,
+		return (not to_select:isEquipped()) and (#selected < 2)
+	end ,
 	view_as = function(self, cards)
-		if #cards == 2 then
-			local card = LuaXHouyuanCard:clone()
-			for _,cd in pairs(cards) do
-				card:addSubcard(cd)
-			end
-			return card
+		if #cards ~= 2 then return nil end
+		local card = LuaHouyuanCard:clone()
+		for _, c in ipairs(cards) do
+			card:addSubcard(c)
 		end
-	end,
+		return card
+	end ,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaXHouyuanCard")
+		return not player:hasUsed("#LuaHouyuanCard")
 	end
 }
 --[[
 	技能名：胡笳
 	相关武将：倚天·蔡昭姬
 	描述：回合结束阶段开始时，你可以进行判定：若为红色，立即获得此牌，如此往复，直到出现黑色为止，连续发动3次后武将翻面
-	引用：LuaXCaizhaojiHujia
-	状态：验证通过
+	引用：LuaCaizhaojiHujia
+	状态：1217验证通过
 ]]--
-LuaXCaizhaojiHujia = sgs.CreateTriggerSkill{
-	name = "LuaXCaizhaojiHujia",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart, sgs.FinishJudge},
+LuaCaizhaojiHujia = sgs.CreateTriggerSkill{
+	name = "LuaCaizhaojiHujia" ,
+	events = {sgs.EventPhaseStart, sgs.FinishJudge} ,
 	on_trigger = function(self, event, player, data)
-		if event == sgs.EventPhaseStart then
-			if player:getPhase() == sgs.Player_Finish then
-				local times = 0
-				local room = player:getRoom()
-				while (player:askForSkillInvoke(self:objectName())) do
-					player:setFlags("caizhaoji_hujia")
-					times = times + 1
-					if times == 3 then
-						player:turnOver()
-					end
-					local judge = sgs.JudgeStruct()
-					judge.pattern = sgs.QRegExp("(.*):(heart|diamond):(.*)")
-					judge.good = true
-					judge.reason = self:objectName()
-					judge.who = player
-					judge.time_consuming = true
-					room:judge(judge)
-					if judge:isBad() then
-						break
-					end
-				end
-				player:setFlags("-caizhaoji_hujia")
+		if (event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_Finish) then
+			local times = 0
+			local room = player:getRoom()
+			while player:askForSkillInvoke(self:objectName()) do
+				player:setFlags("LuaCaizhaojiHujia")
+				times = times + 1
+				if times == 3 then player:turnOver() end
+				local judge = sgs.JudgeStruct()
+				judge.pattern = ".|red"
+				judge.good = true
+				judge.reason = self:objectName()
+				judge.who = player
+				room:judge(judge)
+				if judge:isBad() then break end
 			end
+			player:setFlags("-LuaCaizhaojiHujia")
 		elseif event == sgs.FinishJudge then
-			if player:hasFlag("caizhaoji_hujia") then
+			if player:hasFlag("LuaCaizhaojiHujia") then
 				local judge = data:toJudge()
-				local card = judge.card
-				if card:isRed() then
-					player:obtainCard(card)
-					return true
+				if judge.card:isRed() then
+					player:obtainCard(judge.card)
 				end
 			end
 		end
