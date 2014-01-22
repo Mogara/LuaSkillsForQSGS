@@ -401,17 +401,16 @@ LuaFenxun = sgs.CreateTriggerSkill{
 	相关武将：☆SP·夏侯惇
 	描述：每当你受到一次伤害后，你可以竖置你的体力牌；当你的体力牌为竖置状态时，防止你受到的所有伤害。
 	引用：LuaFenyong、LuaFenyongClear
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaFenyong = sgs.CreateTriggerSkill{
-	name = "LuaFenyong",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged, sgs.DamageInflicted},
+	name = "LuaFenyong" ,
+	events = {sgs.Damaged, sgs.DamageInflicted} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.Damaged then
 			if player:getMark("@fenyong") == 0 then
-				if room:askForSkillInvoke(player, self:objectName()) then
+				if player:askForSkillInvoke(self:objectName()) then
 					player:gainMark("@fenyong")
 				end
 			end
@@ -421,99 +420,86 @@ LuaFenyong = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end,
+	end
 }
 LuaFenyongClear = sgs.CreateTriggerSkill{
-	name = "#LuaFenyongClear",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventLoseSkill},
+	name = "#LuaFenyong-clear" ,
+	events = {sgs.EventLoseSkill} ,
 	on_trigger = function(self, event, player, data)
-		player:loseAllMarks("@fenyong")
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			if not target:hasSkill("LuaFenyong") then
-				return target:getMark("@fenyong") > 0
-			end
+		if data:toString() == "LuaFenyong" then
+			player:loseAllMarks("@fenyong")
 		end
-		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
 	end
 }
 --[[
 	技能名：奉印
 	相关武将：铜雀台·伏完
 	描述：其他角色的回合开始时，若其当前的体力值不比你少，你可以交给其一张【杀】，令其跳过其出牌阶段和弃牌阶段。
-	引用：LuaXFengyin
-	状态：验证通过
+	引用：LuaFengyin
+	状态：1217验证通过
 ]]--
-LuaXFengyinCard = sgs.CreateSkillCard{
-	name = "LuaXFengyinCard",
-	target_fixed = true,
+LuaFengyinCard = sgs.CreateSkillCard{
+	name = "LuaFengyinCard" ,
+	target_fixed = true ,
 	will_throw = false,
+	handling_method = sgs.Card_MethodNone ,
 	on_use = function(self, room, source, targets)
 		local target = room:getCurrent()
 		target:obtainCard(self)
-		room:setPlayerFlag(target, "fengyin_target")
+		room:setPlayerFlag(target, "LuaFengyin_target")
 	end
 }
-LuaXFengyinVS = sgs.CreateViewAsSkill{
-	name = "LuaXFengyin",
-	n = 1,
+LuaFengyinVS = sgs.CreateViewAsSkill{
+	name = "LuaFengyin" ,
+	n = 1 ,
 	view_filter = function(self, selected, to_select)
-		return to_select:isKindOf("Slash")
-	end,
+		return (#selected == 0) and to_select:isKindOf("Slash")
+	end ,
 	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = LuaXFengyinCard:clone()
-			card:addSubcard(cards[1])
-			return card
-		end
-	end,
-	enabled_at_play = function(self, player)
+		if #cards ~= 1 then return nil end
+		local card = LuaFengyinCard:clone()
+		card:addSubcard(cards[1])
+		return card
+	end ,
+	enabled_at_play = function()
 		return false
-	end,
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaXFengyin"
+		return pattern == "@@LuaFengyin"
 	end
 }
-LuaXFengyin = sgs.CreateTriggerSkill{
-	name = "LuaXFengyin",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseChanging, sgs.EventPhaseStart},
-	view_as_skill = LuaXFengyinVS,
+LuaFengyin = sgs.CreateTriggerSkill{
+	name = "LuaFengyin" ,
+	events = {sgs.EventPhaseChanging, sgs.EventPhaseStart} ,
+	view_as_skill = LuaFengyinVS ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local splayer = room:findPlayerBySkillName(self:objectName())
-		if splayer then
-			if event == sgs.EventPhaseChanging then
-				local change = data:toPhaseChange()
-				if change.to == sgs.Player_Start then
-					if player:getHp() > splayer:getHp() then
-						room:askForUseCard(splayer, "@@LuaXFengyin", "@fengyin")
-						return false
-					end
-				end
-			end
-			if event == sgs.EventPhaseStart then
-				if player:hasFlag("fengyin_target") then
-					player:skip(sgs.Player_Play)
-					player:skip(sgs.Player_Discard)
-				end
+		if not splayer or splayer:objectName() == player:objectName() then return false end
+		if (event == sgs.EventPhaseChanging) and (data:toPhaseChange().to == sgs.Player_Start) then
+			if player:getHp() >= splayer:getHp() then
+				room:askForUseCard(splayer, "@@LuaFengyin", "@fengyin", -1, sgs.Card_MethodNone)
 			end
 		end
+		if (event == sgs.EventPhaseStart) and player:hasFlag("LuaFengyin_target") then
+			player:skip(sgs.Player_Play)
+			player:skip(sgs.Player_Discard)
+		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
-	end
+	end ,
 }
 --[[
 	技能名：伏枥（限定技）
 	相关武将：二将成名·廖化
 	描述：当你处于濒死状态时，你可以将体力回复至X点（X为现存势力数），然后将你的武将牌翻面。
 	引用：LuaFuli、LuaLaoji1
-	状态：1217待验证
+	状态：1217验证通过
 ]]--
 getKingdomsFuli = function(yuanshu)
 	local kingdoms = {}
