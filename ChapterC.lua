@@ -12,89 +12,69 @@
 	技能名：藏匿
 	相关武将：铜雀台·伏皇后
 	描述：弃牌阶段开始时，你可以回复1点体力或摸两张牌，然后将你的武将牌翻面；其他角色的回合内，当你获得（每回合限一次）/失去一次牌时，若你的武将牌背面朝上，你可以令该角色摸/弃置一张牌。
-	引用：LuaXCangni
-	状态：验证通过
+	引用：LuaCangni
+	状态：1217验证通过
 ]]--
-LuaXCangni = sgs.CreateTriggerSkill{
-	name = "LuaXCangni",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart, sgs.CardsMoveOneTime},
+LuaCangni = sgs.CreateTriggerSkill{
+	name = "LuaCangni" ,
+	events = {sgs.EventPhaseStart, sgs.CardsMoveOneTime} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if event == sgs.EventPhaseStart then
-			if player:getPhase() == sgs.Player_Discard then
-				if player:askForSkillInvoke(self:objectName()) then
-					local choices = "draw"
-					local size = 1
-					if player:isWounded() then
-						choices = "draw+recover"
-						size = 2
-					end
-					local choice
-					if size == 1 then
-						choice = choices
-					else
-						choice = room:askForChoice(player, self:objectName(), choices)
-					end
-					if choice == "recover" then
-						local recover = sgs.RecoverStruct()
-						recover.who = player
-						room:recover(player, recover)
-					else
-						player:drawCards(2)
-					end
-					player:turnOver()
-					return false
+		if (event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_Discard) then
+			if player:askForSkillInvoke(self:objectName()) then
+				local choices = {}
+				table.insert(choices, "draw")
+				if player:isWounded() then
+					table.insert(choices, recover)
 				end
+				local choice
+				if #choices == 1 then
+					choice = choices[1]
+				else
+					choice = room:askForChoice(player, self:objectName(), table.concat(choices, "+"))
+				end
+				if choice == "recover" then
+					local recover = sgs.RecoverStruct()
+					recover.who = player
+					room:recover(player, recover)
+				else
+					player:drawCards(2)
+				end
+				player:turnOver()
+				return false
 			end
-		end
-		if event == sgs.CardsMoveOneTime then
-			if not player:faceUp() then
-				if player:getPhase() == sgs.Player_NotActive then
-					local move = data:toMoveOneTime()
-					local target = room:getCurrent()
-					if not target:isDead() then
-						local source = move.from
-						local dest = move.to
-						if source and source:objectName() == player:objectName() then
-							if not dest or dest:objectName() ~= player:objectName() then
-								local invoke = false
-								local size = move.card_ids:length()
-								for i=0, size-1, 1 do
-									if move.from_places:at(i) == sgs.Player_PlaceHand then
-										invoke = true
-										break
-									end
-									if move.from_places:at(i) == sgs.Player_PlaceEquip then
-										invoke = true
-										break
-									end
-								end
-								room:setPlayerFlag(player, "cangnilose")
-								if invoke and not target:isNude() then
-									if player:askForSkillInvoke(self:objectName()) then
-										room:askForDiscard(target, self:objectName(), 1, 1, false, true)
-									end
-								end
-								room:setPlayerFlag(player, "-cangnilose")
-								return false
-							end
-						end
-						if dest and dest:objectName() == player:objectName() then
-							if not source or source:objectName() ~= player:objectName() then
-								if move.to_place == sgs.Player_PlaceHand or move.to_place == sgs.Player_PlaceEquip then
-									room:setPlayerFlag(player, "cangniget")
-									if not target:hasFlag("cangni_used") then
-										if player:askForSkillInvoke(self:objectName()) then
-											room:setPlayerFlag(target, "cangni_used")
-											target:drawCards(1)
-										end
-									end
-									room:setPlayerFlag(player, "-cangniget")
-								end
-							end
+		elseif (event == sgs.CardsMoveOneTime) and (not player:faceUp()) then
+			if (player:getPhase() ~= sgs.Player_NotActive) then return false end
+			local move = data:toMoveOneTime()
+			local target = room:getCurrent()
+			if target:isDead() then return false end
+			if (move.from and (move.from:objectName() == player:objectName())) and ((not move.to) or (move.to:objectName() ~= player:objectName())) then
+				local invoke = false
+				for i = 0, move.card_ids:length() - 1, 1 do
+					if (move.from_places:at(i) == sgs.Player_PlaceHand) or (move.from_places:at(i) == sgs.Player_PlaceEquip) then
+						invoke = true
+						break
+					end
+				end
+				room:setPlayerFlag(player, "LuaCangniLose")
+				if invoke and (not target:isNude()) then
+					if player:askForSkillInvoke(self:objectName()) then
+						room:askForDiscard(target, self:objectName(), 1, 1, false, true)
+					end
+				end
+				room:setPlayerFlag(player, "-LuaCangniLose")
+				return false
+			end
+			if (move.to and (move.to:objectName() == player:objectName())) and ((not move.from) or (move.from:objectName() ~= player:objectName())) then
+				if (move.to_place == sgs.Player_PlaceHand) or (move.to_place == sgs.Player_PlaceEquip) then
+					room:setPlayerFlag(player, "LuaCangniGet")
+					if (not target:hasFlag("LuaCangni_Used")) then
+						if player:askForSkillInvoke(self:objectName()) then
+							room:setPlayerFlag(target, "LuaCangni_Used")
+							target:drawCards(1)
 						end
 					end
+					room:setPlayerFlag(player, "-LuaCangniGet")
 				end
 			end
 		end
@@ -363,34 +343,29 @@ LuaYTChengxiang = sgs.CreateTriggerSkill{
 	技能名：持重（锁定技）
 	相关武将：铜雀台·伏完
 	描述：你的手牌上限等于你的体力上限；其他角色死亡时，你加1点体力上限。
-	引用：LuaXChizhongKeep、LuaXChizhong
-	状态：验证通过
+	引用：LuaChizhong、LuaChizhong2
+	状态：1217验证通过
 ]]--
-LuaXChizhongKeep = sgs.CreateMaxCardsSkill{
-	name = "LuaXChizhong",
+LuaChizhong = sgs.CreateMaxCardsSkill{
+	name = "LuaChizhong" ,
 	extra_func = function(self, target)
 		if target:hasSkill(self:objectName()) then
 			return target:getLostHp()
+		else
+			return 0
 		end
 	end
 }
-LuaXChizhong = sgs.CreateTriggerSkill{
-	name = "#LuaXChizhong",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.Death},
+LuaChizhong2 = sgs.CreateTriggerSkill{
+	name = "#LuaChizhong" ,
+	events = {sgs.Death} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
+		local splayer = room:findPlayerBySkillName(self:objectName())
+		if not splayer then return false end
 		local death = data:toDeath()
-		if death.who:objectName() ~= player:objectName() then
-			local maxhp = player:getMaxHp() + 1
-			room:setPlayerProperty(player, "maxhp", sgs.QVariant(maxhp))
-			return
-		end
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return target:hasSkill(self:objectName())
-		end
+		if death.who:objectName() == player:objectName() then return false end
+		room:setPlayerProperty(splayer, "maxhp", sgs.QVariant(splayer:getMaxHp() + 1))
 		return false
 	end
 }
