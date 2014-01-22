@@ -6,50 +6,37 @@
 --[[
 	技能名：反间
 	相关武将：标准·周瑜
-	描述：出牌阶段限一次，若你有手牌，你可以令一名其他角色选择一种花色，然后该角色获得你的一张手牌再展示之，若此牌的花色与其所选的不同，你对其造成1点伤害。
+	描述：出牌阶段，你可以令一名其他角色说出一种花色，然后获得你的一张手牌并展示之，若此牌不为其所述之花色，你对该角色造成1点伤害。每阶段限一次。
 	引用：LuaFanjian
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaFanjianCard = sgs.CreateSkillCard{
 	name = "LuaFanjianCard",
-	target_fixed = false,
-	will_throw = false,
-	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
-	end,
-	on_use = function(self, room, source, targets)
-		local dest = targets[1]
-		local id = source:getRandomHandCardId()
-		local card = sgs.Sanguosha:getCard(id)
-		local suit = room:askForSuit(dest, self:objectName())
+
+	on_effect = function(self, effect)
+		local zhouyu = effect.from
+		local target = effect.to
+		local room = zhouyu:getRoom()
+		local card_id = zhouyu:getRandomHandCardId()
+		local card = sgs.Sanguosha:getCard(card_id)
+		local suit = room:askForSuit(target, "LuaFanjian")
 		room:getThread():delay()
-		dest:obtainCard(card)
-		room:showCard(dest, id)
+		target:obtainCard(card)
+		room:showCard(target, card_id)
 		if card:getSuit() ~= suit then
-			local damage = sgs.DamageStruct()
-			damage.card = nil
-			damage.from = source
-			damage.to = dest
-			room:damage(damage)
+			room:damage(sgs.DamageStruct("LuaFanjian", zhouyu, target))
 		end
 	end
 }
-LuaFanjian = sgs.CreateViewAsSkill{
+LuaFanjian = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaFanjian",
-	n = 0,
-	view_as = function(self, cards)
-		local card = LuaFanjianCard:clone()
-		card:setSkillName(self:objectName())
-		return card
+	
+	view_as = function()
+		return LuaFanjianCard:clone()
 	end,
+
 	enabled_at_play = function(self, player)
-		if not player:isKongcheng() then
-			return not player:hasUsed("#LuaFanjianCard")
-		end
-		return false
+		return (not player:isKongcheng()) and (not player:hasUsed("#LuaFanjianCard"))
 	end
 }
 --[[
