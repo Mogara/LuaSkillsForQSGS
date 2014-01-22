@@ -863,100 +863,85 @@ LuaNosXuanhuo = sgs.CreateViewAsSkill{
 	技能名：雪恨（锁定技）
 	相关武将：☆SP·夏侯惇
 	描述：一名角色的结束阶段开始时，若你的体力牌处于竖置状态，你横置之，然后选择一项：1.弃置当前回合角色X张牌。 2.视为你使用一张无距离限制的【杀】。（X为你已损失的体力值）
-	引用：LuaXuehen、LuaXuehenAvoidTriggeringCardsMove
-	状态：验证通过
+	引用：LuaXuehen、LuaXuehenNDL、LuaXuehenFakeMove
+	状态：1217验证通过
 ]]--
-LuaXuehenDummyCard = sgs.CreateSkillCard{
-	name = "LuaXuehenDummyCard"
-}
 LuaXuehen = sgs.CreateTriggerSkill{
-	name = "LuaXuehen",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.EventPhaseStart},
+	name = "LuaXuehen" ,
+	events = {sgs.EventPhaseStart} ,
+	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local xiahou = room:findPlayerBySkillName(self:objectName())
-		if xiahou then
-			if player:getPhase() == sgs.Player_Finish then
-				if xiahou:getMark("@fenyong") > 0 then
-					xiahou:loseMark("@fenyong")
-					local targets = sgs.SPlayerList()
-					local list = room:getOtherPlayers(xiahou)
-					for _,p in sgs.qlist(list) do
-						if xiahou:canSlash(p, nil, false) then
-							targets:append(p)
-						end
-					end
-					targets:append(xiahou)
-					local choice
-					if targets:length() == 0 then
-						choice = "discard"
-					else
-						choice = room:askForChoice(xiahou, self:objectName(), "discard+slash")
-					end
-					if choice == "slash" then
-						local victim = room:askForPlayerChosen(xiahou, targets, self:objectName())
-						local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-						slash:setSkillName(self:objectName())
-						local card_use = sgs.CardUseStruct()
-						card_use.from = xiahou
-						card_use.to:append(victim)
-						card_use.card = slash
-						room:useCard(card_use, false)
-					else
-						room:setPlayerFlag(player, "XuehenTarget_InTempMoving")
-						local dummy = LuaXuehenDummyCard:clone()
-						local card_ids = {}
-						local original_places = {}
-						local losthp = xiahou:getLostHp()
-						local count = 0
-						for i=1, losthp, 1 do
-							if not player:isNude() then
-								local id = room:askForCardChosen(xiahou, player, "he", self:objectName())
-								table.insert(card_ids, id)
-								local place = room:getCardPlace(id)
-								table.insert(original_places, place)
-								dummy:addSubcard(id)
-								player:addToPile("#xuehen", id, false)
-								count = count + 1
-							end
-						end
-						for i=1, count, 1 do
-							local card = sgs.Sanguosha:getCard(card_ids[i])
-							room:moveCardTo(card, player, original_places[i], false)
-						end
-						room:setPlayerFlag(player, "-XuehenTarget_InTempMoving")
-						if count > 0 then
-							room:throwCard(dummy, player, xiahou)
-						end
-					end
+		if not xiahou then return false end
+		if (player:getPhase() == sgs.Player_Finish) and (xiahou:getMark("@fenyong") > 0) then
+			xiahou:loseMark("@fenyong")
+			local targets = sgs.SPlayerList()
+			for _, p in sgs.qlist(room:getOtherPlayers(xiahou)) do
+				if xiahou:canSlash(p, nil, false) then
+					targets:append(p)
+				end
+			end
+			local choice
+			if (not sgs.Slash_IsAvailable(xiahou)) or targets:isEmpty() then
+				choice = "discard"
+			else
+				choice = room:askForChoice(xiahou, self:objectName(), "discard+slash")
+			end
+			if choice == "slash" then
+				local victim = room:askForPlayerChosen(xiahou, targets, self:objectName(), "@dummy-slash")
+				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+				slash:setSkillName(self:objectName())
+				room:useCard(sgs.CardUseStruct(slash, xiahou, victim), false)
+			else
+				room:setPlayerFlag(player, "LuaXuehen_InTempMoving")
+				local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+				local card_ids = sgs.IntList()
+				local original_places = sgs.IntList()
+				for i = 0, xiahou:getLostHp() - 1, 1 do
+					if not xiahou:canDiscard(player, "he") then break end
+					card_ids:append(room:askForCardChosen(xiahou, player, "he", self:objectName(), false, sgs.Card_MethodDiscard))
+					original_places:append(room:getCardPlace(card_ids:at(i)))
+					dummy:addSubcard(card_ids:at(i))
+					player:addToPile("#xuehen", card_ids:at(i), false)
+				end
+				for i = 0, dummy:subcardsLength() - 1, 1 do
+					room:moveCardTo(sgs.Sanguosha:getCard(card_ids:at(i)), player, original_places:at(i), false)
+				end
+				room:setPlayerFlag(player, "-LuaXuehen_InTempMoving")
+				if dummy:subcardsLength() > 0 then
+					room:throwCard(dummy, player, xiahou)
 				end
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
 		return target
+	end ,
+}
+LuaXuehenNDL = sgs.CreateTargetModSkill{
+	name = "#LuaXuehen-slash-ndl" ,
+	pattern = "Slash" ,
+	distance_limit_func = function(self, player, card)
+		if player:hasSkill("LuaXuehen") and (card:getSkillName() == "LuaXuehen") then
+			return 1000
+		else
+			return 0
+		end
 	end
 }
-LuaXuehenAvoidTriggeringCardsMove = sgs.CreateTriggerSkill{
-	name = "#LuaXuehenAvoidTriggeringCardsMove",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.CardsMoveOneTime},
+LuaXuehenFakeMove = sgs.CreateTriggerSkill{
+	name = "#LuaXuehen-fake-move" ,
+	events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime} ,
+	priority = 10 ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local targets = room:getAllPlayers()
-		for _,p in sgs.qlist(targets) do
-			if p:hasFlag("XuehenTarget_InTempMoving") then
-				return true
-			end
+		for _, p in sgs.qlist(room:getAllPlayers()) do
+			if p:hasFlag("LuaXuehen_InTempMoving") then return true end
 		end
 		return false
-	end,
-	can_trigger = function(self, target)
-		return target
-	end,
-	priority = 10
+	end
 }
 --[[
 	技能名：血祭
