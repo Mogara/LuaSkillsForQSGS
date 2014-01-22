@@ -448,75 +448,59 @@ LuaDushi = sgs.CreateTriggerSkill{
 	技能名：毒医
 	相关武将：铜雀台·吉本
 	描述：出牌阶段限一次，你可以亮出牌堆顶的一张牌并交给一名角色，若此牌为黑色，该角色不能使用或打出其手牌，直到回合结束。
-	引用：LuaXDuyi
-	状态：验证通过
+	引用：LuaDuyi
+	状态：1217验证通过
 ]]--
-LuaXDuyiCard = sgs.CreateSkillCard{
-	name = "LuaXDuyiCard",
-	target_fixed = true,
-	will_throw = false,
+LuaDuyiCard = sgs.CreateSkillCard{
+	name = "LuaDuyiCard" ,
+	target_fixed = true ,
 	on_use = function(self, room, source, targets)
 		local card_ids = room:getNCards(1)
 		local id = card_ids:first()
 		room:fillAG(card_ids, nil)
-		room:getThread():delay()
-		local players = room:getAlivePlayers()
-		local target = room:askForPlayerChosen(source, players, "LuaXDuyi")
+		local target = room:askForPlayerChosen(source, room:getAlivePlayers(), "LuaDuyi")
 		local card = sgs.Sanguosha:getCard(id)
 		target:obtainCard(card)
 		if card:isBlack() then
-			target:jilei(".|.|.|hand")
-			target:invoke("jilei", ".|.|.|hand")
-			room:setPlayerFlag(target, "duyi_target")
+			room:setPlayerCardLimitation(target, "use,response", ".|.|.|hand", false)
+			room:setPlayerMark(target, "LuaDuyi_target", 1)
 		end
-		room:getThread():delay()
-		players = room:getPlayers()
-		for _,p in sgs.qlist(players) do
-			p:invoke("clearAG")
-		end
+		room:clearAG()
 	end
 }
-LuaXDuyiVS = sgs.CreateViewAsSkill{
-	name = "LuaXDuyi",
+LuaDuyiVS = sgs.CreateViewAsSkill{
+	name = "LuaDuyi" ,
 	n = 0,
-	view_as = function(self, cards)
-		return LuaXDuyiCard:clone()
-	end,
+	view_as = function()
+		return LuaDuyiCard:clone()
+	end ,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaXDuyiCard")
+		return not player:hasUsed("#LuaDuyiCard")
 	end
 }
-LuaXDuyi = sgs.CreateTriggerSkill{
-	name = "LuaXDuyi",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
-	view_as_skill = LuaXDuyiVS,
+LuaDuyi = sgs.CreateTriggerSkill{
+	name = "LuaDuyi" ,
+	events = {sgs.EventPhaseChanging, sgs.Death} ,
+	view_as_skill = LuaDuyiVS ,
 	on_trigger = function(self, event, player, data)
+		if event == sgs.Death then
+			local death = data:toDeath()
+			if death.who:objectName() ~= player:objectName() then return false end
+		else
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then return false end
+		end
 		local room = player:getRoom()
-		local splayer = room:findPlayerBySkillName(self:objectName())
-		if splayer then
-			if splayer:getPhase() == sgs.Player_Discard then
-				if splayer:hasFlag("duyi_target") then
-					splayer:jilei(".")
-					splayer:invoke("jilei", ".")
-					room:setPlayerFlag(splayer, "-duyi_target")
-				end
-			end
-			if splayer:getPhase() == sgs.Player_NotActive then
-				local alives = room:getAlivePlayers()
-				for _,p in sgs.qlist(alives) do
-					if p:hasFlag("duyi_target") then
-						p:jilei(".")
-						p:invoke("jilei", ".")
-						room:setPlayerFlag(p, "-duyi_target")
-					end
-				end
+		for _, p in sgs.qlist(room:getAlivePlayers()) do
+			if p:getMark("LuaDuyi_target") > 0 then
+				room:removePlayerCardLimitation(p, "use,response", ".|.|.|hand$0")
+				room:setPlayerMark(p, "LuaDuyi_target", 0)
 			end
 		end
 		return false
-	end,
+	end ,
 	can_trigger = function(self, target)
-		return target
+		return target and target:hasInnateSkill(self:objectName())
 	end
 }
 --[[
