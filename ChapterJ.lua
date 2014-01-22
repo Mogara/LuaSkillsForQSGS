@@ -571,45 +571,30 @@ LuaJieyin = sgs.CreateViewAsSkill{
 	技能名：竭缘
 	相关武将：铜雀台·灵雎、SP·灵雎
 	描述：当你对一名其他角色造成伤害时，若其体力值大于或等于你的体力值，你可弃置一张黑色手牌令此伤害+1；当你受到一名其他角色造成的伤害时，若其体力值大于或等于你的体力值，你可弃置一张红色手牌令此伤害-1
-	引用：LuaXJieyuan
-	状态：验证通过
+	引用：LuaJieyuan
+	状态：1217验证通过
 ]]--
-LuaXJieyuan = sgs.CreateTriggerSkill{
-	name = "LuaXJieyuan",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.DamageCaused, sgs.DamageInflicted},
+LuaJieyuan = sgs.CreateTriggerSkill{
+	name = "LuaJieyuan" ,
+	events = {sgs.DamageCaused, sgs.DamageInflicted} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
 		if event == sgs.DamageCaused then
-			local victim = damage.to
-			if victim and victim:isAlive() then
-				if victim:getHp() >= player:getHp() then
-					if victim:objectName() ~= player:objectName() then
-						if not player:isKongcheng() then
-							if room:askForCard(player, ".black", "@JieyuanIncrease", data, sgs.CardDiscarded) then
-								damage.damage = damage.damage + 1
-								data:setValue(damage)
-							end
-						end
-					end
+			if damage.to and damage.to:isAlive() and (damage.to:getHp() >= player:getHp())
+					and (damage.to:objectName() ~= player:objectName()) and player:canDiscard(player, "h") then
+				if room:askForCard(player, ".black", "@jieyuan-increase:" .. damage.to:objectName(), data, self:objectName()) then
+					damage.damage = damage.damage + 1
+					data:setValue(damage)
 				end
 			end
 		elseif event == sgs.DamageInflicted then
-			local source = damage.from
-			if source and source:isAlive() then
-				if source:getHp() >= player:getHp() then
-					if source:objectName() ~= player:objectName() then
-						if not player:isKongcheng() then
-							if room:askForCard(player, ".red", "@JieyuanDecrease", data, sgs.CardDiscarded) then
-								damage.damage = damage.damage - 1
-								if damage.damage < 1 then
-									return true
-								end
-								data:setValue(damage)
-							end
-						end
-					end
+			if damage.from and damage.from:isAlive() and (damage.from:getHp() >= player:getHp())
+					and (damage.from:objectName() ~= player:objectName()) and player:canDiscard(player, "h") then
+				if room:askForCard(player, ".red", "@jieyuan-decrease:" .. damage.from:objectName(), data, self:objectName()) then
+					damage.damage = damage.damage - 1
+					data:setValue(damage)
+					if damage.damage < 1 then return true end
 				end
 			end
 		end
