@@ -235,39 +235,43 @@ LuaKuangfeng = sgs.CreateTriggerSkill{
 	技能名：狂斧
 	相关武将：国战·潘凤
 	描述：每当你使用的【杀】对一名角色造成一次伤害后，你可以将其装备区里的一张牌弃置或置入你的装备区。
-	引用：LuaXKuangfu
-	状态：0224验证通过
+	引用：LuaKuangfu
+	状态：1217验证通过
 ]]--
-LuaXKuangfu = sgs.CreateTriggerSkill{
-	name = "LuaXKuangfu",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damage},
+LuaKuangfu = sgs.CreateTriggerSkill{
+	name = "LuaKuangfu" ,
+	events = {sgs.Damage} ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
 		local damage = data:toDamage()
 		local target = damage.to
-		local slash = damage.card
-		if slash and slash:isKindOf("Slash") then
-			if target:hasEquip() then
-				if not damage.chain and not damage.transfer then
-					if player:askForSkillInvoke(self:objectName(), data) then
-						local card_id = room:askForCardChosen(player, target , "e", "LuaXKuangfu")
-						local card = sgs.Sanguosha:getCard(card_id)
-						local equip_index = -1
-						local equip = card:getRealCard():toEquipCard()
-						equip_index = equip:location()
-						local choicelist = "throw"
-						if equip_index > -1 and not player:getEquip(equip_index) then
-							choicelist = choicelist.."+move"
-						end
-						local choice = room:askForChoice(player, "LuaXKuangfu", choicelist)
-						if choice == "move" then
-							room:moveCardTo(card, player, sgs.Player_PlaceEquip)
-						else
-							room:throwCard(card, target, player)
-						end
-					end
+		if damage.card and damage.card:isKindOf("Slash") and target:hasEquip() and (not damage.chain) and (not damage.transfer) then
+			local equiplist = {}
+			for i = 0, 3, 1 do
+				if not target:getEquip(i) then continue end
+				if player:canDiscard(target, target:getEquip(i):getEffectiveId()) or (player:getEquip(i) == nil) then
+					table.insert(equiplist,tostring(i))
 				end
+			end
+			if #equiplist == nil then return false end
+			if not player:askForSkillInvoke(self:objectName(), data) then return false end
+			local _data = sgs.QVariant()
+			_data:setValue(target)
+			local room = player:getRoom()
+			local equip_index = tonumber(room:askForChoice(player, "LuaKuangfu_equip", table.concat(equiplist, "+"), _data))
+			local card = target:getEquip(equip_index)
+			local card_id = card:getEffectiveId()
+			local choicelist = {}
+			if player:canDiscard(target, card_id) then
+				table.insert(choicelist, "throw")
+			end
+			if (equip_index > -1) and (player:getEquip(equip_index) == nil) then
+				table.insert(choicelist, "move")
+			end
+			local choice = room:askForChoice(player, "LuaKuangfu", table.concat(choicelist, "+"))
+			if choice == "move" then
+				room:moveCardTo(card, player, sgs.Player_PlaceEquip)
+			else
+				room:throwCard(card, target, player)
 			end
 		end
 		return false
