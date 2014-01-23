@@ -235,6 +235,47 @@ LuaShenfen = sgs.CreateViewAsSkill{
 	end
 }
 --[[
+	技能名：甚贤
+	相关武将：SP·星彩
+	描述：你的回合外，每当有其他角色因弃置而失去牌时，若其中有基本牌，你可以摸一张牌。
+	引用：LuaShenxian
+	状态：1217验证通过
+]]--
+LuaShenxian = sgs.CreateTriggerSkill{
+	name = "LuaShenxian" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.CardsMoveOneTime},
+	on_trigger = function(self, event, player, data)
+		local move = data:toMoveOneTime()
+		if move.from and (move.from:objectName() ~= player:objectName())
+				and (move.from_places:contains(sgs.Player_PlaceHand) or move.from_places:contains(sgs.Player_PlaceEquip))
+				and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD)
+				and (player:getPhase() == sgs.Player_NotActive) then
+			local can_draw = 0
+			for _, id in sgs.qlist(move.card_ids) do
+				if sgs.Sanguosha:getCard(id):isKindOf("BasicCard") then
+					can_draw = can_draw + 1
+				end
+			end
+			if can_draw > 0 then
+				if move.reason.m_reason == sgs.CardMoveReason_S_REASON_RULEDISCARD then
+					local n = 0
+					for n = 1, can_draw , 1 do
+						if player:askForSkillInvoke(self:objectName()) then
+							player:drawCards(1)
+						else
+							break
+						end
+					end
+				elseif player:askForSkillInvoke(self:objectName()) then
+					player:drawCards(1)
+				end
+			end
+		end
+		return false
+	end ,
+}
+--[[
 	技能名：神戟
 	相关武将：SP·暴怒战神、2013-3v3·吕布
 	描述：若你的装备区没有武器牌，当你使用【杀】时，你可以额外选择至多两个目标。
