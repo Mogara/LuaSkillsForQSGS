@@ -381,7 +381,7 @@ LuaQiangxi = sgs.CreateViewAsSkill{
 	技能名：枪舞
 	相关武将：SP·星彩
 	描述：出牌阶段限一次，你可以进行判定，直到回合结束，你使用点数比结果小的【杀】无距离限制，且你使用的点数比结果大的【杀】不计入限制的使用次数。
-	引用：LuaQiangwu
+	引用：LuaQiangwu、LuaQiangwutarmod
 	状态：1217验证通过
 ]]--
 LuaQiangwucard = sgs.CreateSkillCard{
