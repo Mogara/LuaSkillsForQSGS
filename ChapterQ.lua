@@ -329,70 +329,52 @@ LuaNosQianxi = sgs.CreateTriggerSkill{
 		return false
 	end
 }
-LuaQiangwucard = sgs.CreateSkillCard{
-	name = "LuaQiangwu" ,
-	target_fixed = true ,
-	on_use = function(self, room, source)
-		if source:getMark("LuaQiangwu") > 0 then
-			room:askForUseCard(source, "Slash|.|"..(source:getMark("LuaQiangwu")+1).."~", "@LuaQiangwu", -1, sgs.Card_MethodUse, false)
-		else
-			local judge = sgs.JudgeStruct()
-			judge.who = source
-			judge.reason = "LuaQiangwu"
-			judge.play_animation = false
-			room:judge(judge)
+--[[
+	技能名：强袭
+	相关武将：火·典韦
+	描述：出牌阶段限一次，你可以失去1点体力或弃置一张武器牌，并选择你攻击范围内的一名角色，对其造成1点伤害。
+	引用：LuaQiangxi
+	状态：0610验证通过
+]]--
+LuaQiangxiCard = sgs.CreateSkillCard{
+	name = "LuaQiangxiCard", 
+	target_fixed = false, 
+	will_throw = true,
+	filter = function(self, targets, to_select) 
+		if #targets ~= 0 then return false end
+		local rangefix = 0
+		if (not self:getSubcards():isEmpty()) and sgs.Self:getWeapon() and (sgs.Self:getWeapon():getId() == self:getSubcards():first()) then
+			local card = sgs.Self:getWeapon():getRealCard():toWeapon()
+			rangefix = rangefix + card:getRange() - 1
 		end
+		return sgs.Self:distanceTo(to_select, rangefix) <= sgs.Self:getAttackRange()
+	end,
+	on_effect = function(self, effect)
+		local room = effect.to:getRoom()
+		if self:getSubcards():isEmpty() then room:loseHp(effect.from) end
+		room:damage(sgs.DamageStruct("LuaQiangxi", effect.from, effect.to))
 	end
 }
-LuaQiangwuvs = sgs.CreateZeroCardViewAsSkill{
-	name = "LuaQiangwu" ,
-	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaQiangwu") or player:getMark("LuaQiangwu") > 0
-	end ,
-	view_as = function()
-		return LuaQiangwucard:clone()
-	end
-}
-LuaQiangwu = sgs.CreateTriggerSkill{
-	name = "LuaQiangwu" ,
-	view_as_skill = LuaQiangwuvs ,
-	events = {sgs.FinishJudge, sgs.EventPhaseStart, sgs.PreCardUsed},
-	can_trigger = function(self, player)
-		return player
-	end ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.FinishJudge then
-			local judge = data:toJudge()
-			if judge.reason == "LuaQiangwu" then
-				room:setPlayerMark(player, "LuaQiangwu", judge.card:getNumber())
-			end
-		elseif event == sgs.EventPhaseStart then
-			if (player:getPhase() == sgs.Player_NotActive) and (player:getMark("LuaQiangwu") > 0) then
-				room:setPlayerMark(player, "LuaQiangwu", 0)
-			end
-		elseif event == sgs.PreCardUsed then
-			local use = data:toCardUse()
-			if use.card and use.card:isKindOf("Slash") and (player:getMark("LuaQiangwu") > 0) 
-					and (use.card:getNumber() > player:getMark("LuaQiangwu")) then
-				if (use.m_addHistory) then
-					room:addPlayerHistory(player, use.card:getClassName(), -1)
-					use.m_addHistory = false
-					data:setValue(use)
-				end
-			end
+LuaQiangxi = sgs.CreateViewAsSkill{
+	name = "LuaQiangxi", 
+	n = 1, 
+	view_filter = function(self, selected, to_select)
+		if #selected == 0 then
+			return to_select:isKindOf("Weapon")
 		end
 		return false
-	end ,
-}
-LuaQiangwutarmod = sgs.CreateTargetModSkill{
-	name = "#LuaQiangwu-tarmod" ,
-	distance_limit_func = function(self, player, card)
-		local n = player:getMark("LuaQiangwu")
-		if (n > 0) and (n > card:getNumber()) and (card:getNumber() ~= 0) then
-			return 998
+	end, 
+	view_as = function(self, cards) 
+		if #cards == 0 then
+			return LuaQiangxiCard:clone()
+		elseif #cards == 1 then
+			local card = LuaQiangxiCard:clone()
+			card:addSubcard(cards[1])
+			return card
 		end
-		return 0
+	end, 
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("#LuaQiangxiCard")
 	end
 }
 --[[
