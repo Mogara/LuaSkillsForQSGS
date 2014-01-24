@@ -311,10 +311,32 @@ LuaKuanggu = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：狂骨（锁定技）
+	技能名：狂骨·1V1
 	相关武将：1v1·魏延
-	描述：每当你造成伤害后，你可以进行判定：若结果为黑色，你回复1点体力。 
+	描述：每当你造成伤害后，你可以进行判定：若结果为黑色，你回复1点体力。
+	引用：LuaKOFKuanggu
+	状态：1217验证通过
 ]]--
+LuaKOFKuanggu = sgs.CreateTriggerSkill{
+	name = "LuaKOFKuanggu",
+	events = {sgs.Damage},
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if room:askForSkillInvoke(player,self:objectName(),data) then
+		local judge = sgs.JudgeStruct()
+			judge.pattern = ".|black"
+			judge.who = player
+			judge.reason = self:objectName()
+			room:judge(judge)
+		if judge:isGood() and player:isWounded() then
+			local recover = sgs.RecoverStruct()
+				recover.who = player
+				room:recover(player, recover)
+			end
+		end
+	end
+}
 --[[
 	技能名：溃围
 	相关武将：☆SP·曹仁
