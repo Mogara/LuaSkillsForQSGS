@@ -247,52 +247,49 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	技能名：暴虐（主公技）
 	相关武将：林·董卓
 	描述：每当其他群雄角色造成一次伤害后，该角色可以进行一次判定，若判定结果为黑桃，你回复1点体力。
-	引用：LuaBaonue
-	状态：验证通过
+	引用：LuaBaonve
+	状态：1217验证通过
 ]]--
-LuaBaonue = sgs.CreateTriggerSkill{
-	name = "LuaBaonue$",
+LuaBaonve = sgs.CreateTriggerSkill{
+	name = "LuaBaonve$",
 	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damage, sgs.PreHpReduced},
+	events = {sgs.Damage, sgs.PreDamageDone},
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
 		local room = player:getRoom()
-		if event == sgs.Damage then
-			local tag = room:getTag("InvokeBaonue")
-			local can_invoke = tag:toBool()
-			if can_invoke then
-				room:removeTag("InvokeBaonue")
-				local list = room:getOtherPlayers(player)
-				for _,lord in sgs.qlist(list) do
-					if lord:hasLordSkill(self:objectName()) then
-						if room:askForSkillInvoke(player, self:objectName(), data) then
-							local judge = sgs.JudgeStruct()
-							judge.pattern = sgs.QRegExp("(.*):(spade):(.*)")
-							judge.good = true
-							judge.reason = self:objectName()
-							judge.who = player
-							room:judge(judge)
-							if judge:isGood() then
-								local recover = sgs.RecoverStruct()
-								recover.who = player
-								room:recover(lord, recover)
-							end
-						end
-					end
+		if (event == sgs.PreDamageDone) and damage.from then
+			damage.from:setTag("InvokeLuaBaonve", sgs.QVariant(damage.from:getKingdom() == "qun"))
+		elseif (event == sgs.Damage) and player:getTag("InvokeLuaBaonve"):toBool() and player:isAlive() then
+			local dongzhuos = sgs.SPlayerList()
+			for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+				if p:hasLordSkill(self:objectName()) then
+					dongzhuos:append(p)
 				end
 			end
-		elseif event == sgs.PreHpReduced then
-			local source = damage.from
-			if source then
-				local kingdom = source:getKingdom()
-				if kingdom == "qun" then
-					room:setTag("InvokeBaonue", sgs.QVariant(true))
+			while not dongzhuos:isEmpty() do
+				local dongzhuo = room:askForPlayerChosen(player, dongzhuos, self:objectName(), "@baonve-to", true)
+				if dongzhuo then
+					dongzhuos:removeOne(dongzhuo)
+					local judge = sgs.JudgeStruct()
+					judge.pattern = ".|spade"
+					judge.good = true
+					judge.reason = self:objectName()
+					judge.who = player
+					room:judge(judge)
+					if judge:isGood() then
+						recover = sgs.RecoverStruct()
+						recover.who = player
+						room:recover(dongzhuo, recover)
+					end
+				else
+					break
 				end
 			end
 		end
+		return false
 	end,
 	can_trigger = function(self, target)
-		return target ~= nil
+		return target
 	end
 }
 --[[
