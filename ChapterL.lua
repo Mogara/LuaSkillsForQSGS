@@ -187,7 +187,37 @@ LuaXLexue = sgs.CreateViewAsSkill{
 	技能名：雷击
 	相关武将：风·张角
 	描述：每当你使用【闪】选择目标后或打出【闪】，你可以令一名角色进行一次判定：若判定结果为黑色，你对该角色造成1点雷电伤害，然后你回复1点体力。 
+	引用：LuaLeiji
+	状态：1217验证通过
 ]]--
+LuaLeiji = sgs.CreateTriggerSkill{
+	name = "LuaLeiji",
+	events = {sgs.CardResponded},
+
+	on_trigger = function(self, event, player, data)
+		local card_star = data:toCardResponse().m_card
+		local room = player:getRoom()
+		if card_star:isKindOf("Jink") then
+			local target = room:askForPlayerChosen(player, room:getAlivePlayers(), self:objectName(), "LuaLeiji-invoke", true, true)
+			if not target then return false end
+			local judge = sgs.JudgeStruct()
+				judge.pattern = ".|black"
+				judge.good = false
+				judge.negative = true
+				judge.reason = self:objectName()
+				judge.who = target
+				room:judge(judge)
+			if judge:isBad() then
+				room:damage(sgs.DamageStruct(self:objectName(), player, target, 1, sgs.DamageStruct_Thunder))
+			if player:isAlive() then
+				local recover = sgs.RecoverStruct()
+					recover.who = player
+					room:recover(player, recover)
+				end
+			end
+		end
+	end
+}
 --[[
 	技能名：雷击
 	相关武将：怀旧·张角
@@ -794,50 +824,40 @@ LuaLianyingForZeroMaxCards = sgs.CreateTriggerSkill{
 --[[
 	技能名：烈弓
 	相关武将：风·黄忠
-	描述：每当你于出牌阶段内指定【杀】的目标后，若目标角色的手牌数大于或等于你的体力值，或目标角色的手牌数小于或等于你的攻击范围，你可以令该角色不能使用【闪】响应此【杀】。
+	描述：当你在出牌阶段内使用【杀】指定一名角色为目标后，以下两种情况，你可以令其不可以使用【闪】对此【杀】进行响应：
+		1.目标角色的手牌数大于或等于你的体力值。2.目标角色的手牌数小于或等于你的攻击范围。
 	引用：LuaLiegong
-	状态：验证通过
+	状态：1217验证通过
 ]]--
+Table2IntList = function(theTable)
+	local result = sgs.IntList()
+	for i = 1, #theTable, 1 do
+		result:append(theTable[i])
+	end
+	return result
+end
 LuaLiegong = sgs.CreateTriggerSkill{
-	name = "LuaLiegong",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.TargetConfirmed, sgs.SlashProceed},
+	name = "LuaLiegong" ,
+	events = {sgs.TargetConfirmed} ,
 	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.TargetConfirmed then
-			local use = data:toCardUse()
-			local card = use.card
-			local source = use.from
-			local room = player:getRoom()
-			if card:isKindOf("Slash") then
-				if source:objectName() == player:objectName() then
-					local phase = player:getPhase()
-					if phase == sgs.Player_Play then
-						local hp = player:getHp()
-						local range = player:getAttackRange()
-						local targets = use.to
-						for _,target in sgs.qlist(targets) do
-							local count = target:getHandcardNum()
-							if count >= hp or count <= range then
-								local ai_data = sgs.QVariant()
-								ai_data:setValue(target)
-								if player:askForSkillInvoke(self:objectName(), ai_data) then
-									room:setPlayerFlag(target, "LiegongTarget")
-								end
-							end
-						end
-					end
+		local use = data:toCardUse()
+		if (player:objectName() ~= use.from:objectName()) or (player:getPhase() ~= sgs.Player_Play) or (not use.card:isKindOf("Slash")) then return false end
+		local jink_table = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
+		local index = 1
+		for _, p in sgs.qlist(use.to) do
+			local handcardnum = p:getHandcardNum()
+			if (player:getHp() <= handcardnum) or (player:getAttackRange() >= handcardnum) then
+				local _data = sgs.QVariant()
+				_data:setValue(p)
+				if player:askForSkillInvoke(self:objectName(), _data) then
+					jink_table[index] = 0
 				end
 			end
-		elseif event == sgs.SlashProceed then
-			local effect = data:toSlashEffect()
-			local dest = effect.to
-			if dest:hasFlag("LiegongTarget") then
-				room:setPlayerFlag(dest, "-LiegongTarget")
-				room:slashResult(effect, nil)
-				return true
-			end
+			index = index + 1
 		end
+		local jink_data = sgs.QVariant()
+		jink_data:setValue(Table2IntList(jink_table))
+		player:setTag("Jink_" .. use.card:toString(), jink_data)
 		return false
 	end
 }
