@@ -363,9 +363,68 @@ LuaJixi = sgs.CreateViewAsSkill{
 }
 --[[
 	技能名：集智
-	相关武将：标准-黄月英
+	相关武将：标准·黄月英
 	描述：每当你使用锦囊牌选择目标后，你可以展示牌堆顶的一张牌。若此牌为基本牌，你选择一项：1.将之置入弃牌堆；2.用一张手牌替换之。若此牌不为基本牌，你获得之。
+	引用：LuaJizhi
+	状态：1217验证通过
 ]]--
+LuaJizhi = sgs.CreateTriggerSkill{
+	name = "LuaJizhi" ,
+	frequency = sgs.Skill_Frequent ,
+	events = {sgs.CardUsed} ,
+	on_trigger = function(self, event, player, data)
+		local use = data:toCardUse()
+		local room = player:getRoom()
+		if (use.card:getTypeId() == sgs.Card_TypeTrick) then
+			if not (player:getMark("JilveEvent") > 0) then
+				if not room:askForSkillInvoke(player, self:objectName()) then return false end
+			end
+			local ids = room:getNCards(1, false)
+			local move = sgs.CardsMoveStruct()
+			move.card_ids = ids
+			move.to = player
+			move.to_place = sgs.Player_PlaceTable
+			move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TURNOVER, player:objectName(), self:objectName(), nil)
+			room:moveCardsAtomic(move, true)
+			local id = ids:first()
+			local card = sgs.Sanguosha:getCard(id)
+			if not card:isKindOf("BasicCard") then
+				player:obtainCard(card)
+			else
+				local card_ex
+				if not player:isKongcheng() then
+					local card_data = sgs.QVariant()
+					card_data:setValue(card)
+					card_ex = room:askForCard(player, ".", "@jizhi-exchange:::" .. card:objectName(), card_data, sgs.Card_MethodNone)
+				end
+				if card_ex then
+					local reason1 = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, player:objectName(), self:objectName(), nil)
+					local reason2 = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_OVERRIDE, player:objectName(), self:objectName(), nil)
+					local move1 = sgs.CardsMoveStruct()
+					move1.card_ids:append(card_ex:getEffectiveId())
+					move1.from = player
+					move1.to = nil
+					move1.to_place = sgs.Player_DrawPile
+					move1.reason = reason1
+					local move2 = sgs.CardsMoveStruct()
+					move2.card_ids = ids
+					move2.from = player
+					move2.to = player
+					move2.to_place = sgs.Player_PlaceHand
+					move2.reason = reason2
+					local moves = sgs.CardsMoveList()
+					moves:append(move1)
+					moves:append(move2)
+					room:moveCardsAtomic(moves, false)
+				else
+					local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NAUTRAL_ENTER, player:objectName(), self:objectName(), nil)
+					room:throwCard(card, reason, nil)
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：集智
 	相关武将：怀旧-标准·黄月英-旧、1v1·黄月英1v1、SP·台版黄月英
@@ -1250,30 +1309,41 @@ LuaJuao = sgs.CreateTriggerSkill{
 	相关武将：风·曹仁
 	描述：结束阶段开始时，你可以摸一张牌，然后将你的武将牌翻面。
 	引用：LuaJushou
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
+LuaJushou = sgs.CreatePhaseChangeSkill{
+	name = "LuaJushou",
+
+	on_phasechange = function(self,target)
+		local room = target:getRoom()
+		if target:getPhase() == sgs.Player_Finish then
+		if room:askForSkillInvoke(target,self:objectName()) then
+			target:drawCards(1)
+			target:turnOver()
+			end
+		end
+	end 
+}
 --[[
-	技能名：据守
+	技能名：据守·旧
 	相关武将：怀旧·曹仁
 	描述：结束阶段开始时，你可以摸三张牌，然后将你的武将牌翻面。
 	引用：LuaJushou
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
-LuaJushou = sgs.CreateTriggerSkill{
-	name = "LuaJushou",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
-	on_trigger = function(self, event, player, data)
-		if player:getPhase() == sgs.Player_Finish then
-			local room = player:getRoom()
-			if room:askForSkillInvoke(player, self:objectName()) then
-				player:drawCards(3)
-				player:turnOver()
+LuaNosJushou = sgs.CreatePhaseChangeSkill{
+	name = "LuaNosJushou",
+
+	on_phasechange = function(self,target)
+		local room = target:getRoom()
+		if target:getPhase() == sgs.Player_Finish then
+		if room:askForSkillInvoke(target,self:objectName()) then
+			target:drawCards(3)
+			target:turnOver()
 			end
 		end
-	end
+	end 
 }
-
 --[[
 	技能名：据守
 	相关武将：翼·曹仁
