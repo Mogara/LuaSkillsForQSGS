@@ -307,56 +307,61 @@ LuaXiaoguo = sgs.CreateTriggerSkill{
 --[[
 	技能名：心战
 	相关武将：一将成名·马谡
-	描述：出牌阶段限一次，若你的手牌数大于你的体力上限，你可以观看牌堆顶的三张牌，展示并获得其中任意数量的♥牌，然后将其余的牌以任意顺序置于牌堆顶。
+	描述：出牌阶段，若你的手牌数大于你的体力上限，你可以：观看牌堆顶的三张牌，然后亮出其中任意数量的红桃牌并获得之，其余以任意顺序置于牌堆顶。每阶段限一次。
 	引用：LuaXinzhan
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaXinzhanCard = sgs.CreateSkillCard{
-	name = "LuaXinzhanCard",
-	target_fixed = true,
-	will_throw = true,
+	name = "LuaXinzhanCard" ,
+	target_fixed = true ,
 	on_use = function(self, room, source, targets)
 		local cards = room:getNCards(3)
 		local left = cards
 		local hearts = sgs.IntList()
-		for _,card_id in sgs.qlist(cards) do
+		local non_hearts = sgs.IntList()
+		for _, card_id in sgs.qlist(cards) do
 			local card = sgs.Sanguosha:getCard(card_id)
 			if card:getSuit() == sgs.Card_Heart then
 				hearts:append(card_id)
+			else
+				non_hearts:append(card_id)
 			end
 		end
-		if hearts:length() > 0 then
-			room:fillAG(cards, source)
-			while hearts:length() > 0 do
-				local card_id = room:askForAG(source, hearts, true, self:objectName())
-				if card_id == -1 then
+		local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		if not hearts:isEmpty() then
+			repeat
+				room:fillAG(left, source, non_hearts)
+				local card_id = room:askForAG(source, hearts, true, "LuaXinzhan")
+				if (card_id == -1) then
+					room:clearAG(source)
 					break
 				end
-				if hearts:contains(card_id) then
-					hearts:removeOne(card_id)
-					left:removeOne(card_id)
-					local card = sgs.Sanguosha:getCard(card_id)
-					source:obtainCard(card)
+				hearts:removeOne(card_id)
+				left:removeOne(card_id)
+				dummy:addSubcard(card_id)
+				room:clearAG(source)
+			until hearts:isEmpty()
+			if dummy:subcardsLength() > 0 then
+				room:doBroadcastNotify(56, tostring(room:getDrawPile():length() + dummy:subcardsLength()))
+				source:obtainCard(dummy)
+				for _, id in sgs.qlist(dummy:getSubcards()) do
+					room:showCard(source, id)
 				end
 			end
-			source:invoke("clearAG")
 		end
-		if left:length() > 0 then
-			room:askForGuanxing(source, left, true)
+		if not left:isEmpty() then
+			room:askForGuanxing(source, left, sgs.Room_GuanxingUpOnly)
 		end
-	end
+	end ,
 }
 LuaXinzhan = sgs.CreateViewAsSkill{
-	name = "LuaXinzhan",
+	name = "LuaXinzhan" ,
 	n = 0,
-	view_as = function(self, cards)
+	view_as = function()
 		return LuaXinzhanCard:clone()
-	end,
+	end ,
 	enabled_at_play = function(self, player)
-		if not player:hasUsed("#LuaXinzhanCard") then
-			return player:getHandcardNum() > player:getMaxHp()
-		end
-		return false
+		return (not player:hasUsed("#LuaXinzhanCard")) and (player:getHandcardNum() > player:getMaxHp())
 	end
 }
 --[[
