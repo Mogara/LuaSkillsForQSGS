@@ -334,37 +334,48 @@ LuaNosGongqiTargetMod = sgs.CreateTargetModSkill{
 --[[
 	技能名：攻心
 	相关武将：神·吕蒙
-	描述：出牌阶段限一次，你可以观看一名其他角色的手牌，然后选择其中一张♥牌并选择一项：弃置之，或将之置于牌堆顶。
+	描述：出牌阶段，你可以观看任意一名角色的手牌，并可以展示其中一张红桃牌，然后将其弃置或置于牌堆顶。每阶段限一次。
 	引用：LuaGongxin
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaGongxinCard = sgs.CreateSkillCard{
-	name = "LuaGongxinCard",
-	target_fixed = false,
-	will_throw = true,
+	name = "LuaGongxinCard" ,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			return to_select:objectName() ~= sgs.Self:objectName()
-		end
-		return false
-	end,
-	on_use = function(self, room, source, targets)
-		local target = targets[1]
-		if not target:isKongcheng() then
-			room:doGongxin(source, target)
+		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
+	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
+		if not effect.to:isKongcheng() then
+			local ids = sgs.IntList()
+			for _, card in sgs.qlist(effect.to:getHandcards()) do
+				if card:getSuit() == sgs.Card_Heart then
+					ids:append(card:getEffectiveId())
+				end
+			end
+			local card_id = room:doGongxin(effect.from, effect.to, ids, "LuaGongxin")
+			if (card_id == -1) then return end
+			local result = room:askForChoice(effect.from, "LuaGongxin", "discard+put")
+			effect.from:removeTag("LuaGongxin")
+			if result == "discard" then
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_DISMANTLE, effect.from:objectName(), nil, "LuaGongxin", nil)
+				room:throwCard(sgs.Sanguosha:getCard(card_id), reason, effect.to, effect.from)
+			else
+				effect.from:setFlags("Global_GongxinOperator")
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, effect.from:objectName(), nil, "LuaGongxin", nil)
+				room:moveCardTo(sgs.Sanguosha:getCard(card_id), effect.to, nil, sgs.Player_DrawPile, reason, true)
+				effect.from:setFlags("-Global_GongxinOperator")
+			end
 		end
 	end
 }
 LuaGongxin = sgs.CreateViewAsSkill{
-	name = "LuaGongxin",
-	n = 0,
-	view_as = function(self, cards)
-		local card = LuaGongxinCard:clone()
-		card:setSkillName(self:objectName())
-		return card
-	end,
-	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaGongxinCard")
+	name = "LuaGongxin" ,
+	n = 0 ,
+	view_as = function()
+		return LuaGongxinCard:clone()
+	end ,
+	enabled_at_play = function(self, target)
+		return not target:hasUsed("#LuaGongxinCard")
 	end
 }
 --[[
@@ -637,7 +648,7 @@ LuaGuzhengGet = sgs.CreateTriggerSkill{
 	相关武将：标准·诸葛亮、山·姜维、SP·台版诸葛亮
 	描述：准备阶段开始时，你可以观看牌堆顶的X张牌，然后将任意数量的牌以任意顺序置于牌堆顶，将其余的牌以任意顺序置于牌堆底。（X为存活角色数且至多为5）。
 	引用：LuaGuanxing
-	状态：0610验证通过
+	状态：1217验证通过（仅在原来基础修改askForGuanxing）
 ]]--
 LuaGuanxing = sgs.CreateTriggerSkill{
 	name = "LuaGuanxing",
@@ -652,7 +663,7 @@ LuaGuanxing = sgs.CreateTriggerSkill{
 					count = 5
 				end
 				local cards = room:getNCards(count)
-				room:askForGuanxing(player, cards, false)
+				room:askForGuanxing(player,cards)
 			end
 		end
 	end
