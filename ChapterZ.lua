@@ -890,38 +890,29 @@ LuaZhichiClear = sgs.CreateTriggerSkill{
 	相关武将：二将成名·荀攸
 	描述：每当你受到一次伤害后，你可以摸一张牌，然后展示所有手牌，若颜色均相同，伤害来源弃置一张手牌。
 	引用：LuaZhiyu
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaZhiyu = sgs.CreateTriggerSkill{
-	name = "LuaZhiyu",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
+	name = "LuaZhiyu" ,
+	events = {sgs.Damaged} ,
 	on_trigger = function(self, event, player, data)
-		local damage = data:toDamage()
-		local source = damage.from
-		if source then
-			if source:isAlive() then
-				if player:askForSkillInvoke(self:objectName(), data) then
-					player:drawCards(1)
-					if not player:isKongcheng() then
-						local room = player:getRoom()
-						room:showAllCards(player)
-						local cards = player:getHandcards()
-						local color = cards:first():isBlack()
-						local same_color = true
-						for _,card in sgs.qlist(cards) do
-							if card:isBlack() ~= color then
-								same_color = false
-								break
-							end
-						end
-						if same_color then
-							if not source:isKongcheng() then
-								room:askForDiscard(source, self:objectName(), 1, 1)
-							end
-						end
-					end
+		if player:askForSkillInvoke(self:objectName(), data) then
+			player:drawCards(1)
+			local room = player:getRoom()
+			if player:isKongcheng() then return false end
+			room:showAllCards(player)
+			local cards = player:getHandcards()
+			local isred = cards:first():isRed()
+			local same_color = true
+			for _, card in sgs.qlist(cards) do
+				if card:isRed() ~= isred then
+					same_color = false
+					break
 				end
+			end
+			local damage = data:toDamage()
+			if same_color and damage.from and damage.from:canDiscard(damage.from, "h") then
+				room:askForDiscard(damage.from, self:objectName(), 1, 1)
 			end
 		end
 	end
