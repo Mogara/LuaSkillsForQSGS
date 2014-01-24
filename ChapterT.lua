@@ -309,12 +309,75 @@ LuaXTianming = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：天香
-	相关武将：风·小乔、SP·王战小乔
+	相关武将：风·小乔
 	描述：每当你受到伤害时，你可以弃置一张红桃手牌，将此伤害转移给一名其他角色，然后该角色摸X张牌（X为该角色当前已损失的体力值）。
-	引用：LuaTianxiang
-	状态：验证失败
+	引用：LuaTianxiang、LuaTianxiangDraw
+	状态：1217验证
 ]]--
-
+LuaTianxiangCard = sgs.CreateSkillCard{
+	name = "LuaTianxiangCard" ,
+	filter = function(self, selected, to_select)
+		return (#selected == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
+	on_effect = function(self, effect)
+		local room = effect.to:getRoom()
+		effect.to:addMark("LuaTianxiangTarget")
+		local damage = effect.from:getTag("LuaTianxiangDamage"):toDamage()
+		if damage.card and damage.card:isKindOf("Slash") then
+			effect.from:removeQinggangTag(damage.card)
+		end
+		damage.to = effect.to
+		damage.transfer = true
+		room:damage(damage)
+	end
+}
+LuaTianxiangVS = sgs.CreateViewAsSkill{
+	name = "LuaTianxiang" ,
+	n = 1 ,
+	view_filter = function(self, selected, to_select)
+		if #selected ~= 0 then return false end
+		return (not to_select:isEquipped()) and (to_select:getSuit() == sgs.Card_Heart) and (not sgs.Self:isJilei(to_select))
+	end ,
+	view_as = function(self, cards)
+		if #cards ~= 1 then return nil end
+		local tianxiangCard = LuaTianxiangCard:clone()
+		tianxiangCard:addSubcard(cards[1])
+		return tianxiangCard
+	end ,
+	enabled_at_play = function()
+		return false
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		return pattern == "@@LuaTianxiang"
+	end
+}
+LuaTianxiang = sgs.CreateTriggerSkill{
+	name = "LuaTianxiang" ,
+	events = {sgs.DamageInflicted} ,
+	view_as_skill = LuaTianxiangVS ,
+	on_trigger = function(self, event, player, data)
+		if player:canDiscard(player, "h") then
+			player:setTag("LuaTianxiangDamage", data)
+			return player:getRoom():askForUseCard(player, "@@LuaTianxiang", "@tianxiang-card", -1, sgs.Card_MethodDiscard)
+		end
+		return false
+	end
+}
+LuaTianxiangDraw = sgs.CreateTriggerSkill{
+	name = "#LuaTianxiang" ,
+	events = {sgs.DamageComplete} ,
+	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
+		if player:isAlive() and (player:getMark("LuaTianxiangTarget") > 0) and damage.transfer then
+			player:drawCards(player:getLostHp())
+			player:removeMark("LuaTianxiangTarget")
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end
+}
 --[[
 	技能名：天义
 	相关武将：火·太史慈
@@ -484,7 +547,34 @@ LuaTieji = sgs.CreateTriggerSkill{
 	技能名：同疾（锁定技）
 	相关武将：标准·袁术
 	描述：若你的手牌数大于你的体力值，且你在一名其他角色的攻击范围内，则其他角色不能被选择为该角色的【杀】的目标。
-]]--
+	引用：LuaTongji
+	状态：1217验证通过
+]]
+LuaTongji = sgs.CreateProhibitSkill{
+	name = "LuaTongji" ,
+	is_prohibited = function(self, from, to, card)
+		if card:isKindOf("Slash") then
+			local rangefix = 0
+			if card:isVirtualCard() then
+				local subcards = card:getSubcards()
+				if from:getWeapon() and subcards:contains(from:getWeapon():getId()) then
+					local weapon = from:getWeapon():getRealCard():toWeapon()
+					rangefix = rangefix + weapon:getRange() - 1
+				end 
+				if from:getOffensiveHorse() and subcards:contains(self:getOffensiveHorse():getId()) then
+					rangefix = rangefix + 1
+				end
+			end
+			for _, p in sgs.qlist(from:getAliveSiblings()) do
+				if p:hasSkill(self:objectName()) and (p:objectName() ~= to:objectName()) and (p:getHandcardNum() > p:getHp())
+						and (from:distanceTo(p, rangefix) <= from:getAttackRange()) then
+					return true
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：同心
 	相关武将：倚天·夏侯涓
