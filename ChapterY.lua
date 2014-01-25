@@ -834,8 +834,31 @@ LuaYingzi = sgs.CreateTriggerSkill{
 --[[
 	技能名：影兵
 	相关武将：SP·张宝
-	描述：每当一张“咒缚牌”成为判定牌后，你可以摸两张牌。 
+	描述：每当一张“咒缚牌”成为判定牌后，你可以摸两张牌。
+	引用：LuaYingbing
+	状态：1217验证通过
+	
+	注：此技能与咒缚有联系，有联系的地方请使用本手册当中的咒缚，并非原版
 ]]--
+LuaYingbing = sgs.CreateTriggerSkill{
+	name = "LuaYingbing",
+	events = {sgs.StartJudge},
+	frequency = sgs.Skill_Frequent,
+	priority = -1,
+	
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local judge = data:toJudge()
+		local id = judge.card:getEffectiveId()
+		local zhangbao = player:getTag("LuaZhoufuSource" .. tostring(id)):toPlayer()
+		if zhangbao and zhangbao:isAlive() and zhangbao:hasSkill(self:objectName()) and zhangbao:askForSkillInvoke(self:objectName(),data) then
+			zhangbao:drawCards(2)
+		end
+	end,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
 --[[
 	技能名：庸肆（锁定技）
 	相关武将：SP·袁术、SP·台版袁术
