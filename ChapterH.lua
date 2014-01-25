@@ -323,7 +323,75 @@ LuaHaoshi = sgs.CreateTriggerSkill{
 	技能名：横江
 	相关武将：势·臧霸
 	描述：每当你受到1点伤害后，你可以令当前回合角色本回合手牌上限-1，然后其回合结束时，若你于此回合发动过“横江”，且其未于弃牌阶段内弃置牌，你摸一张牌。 
+	引用：LuaWangxi
+	状态：1217验证通过
+	
+	DB:效果（处理方法）和源码一致，但我始终觉得有问题。描述写错了么，还是我脑子还没转过来·····
 ]]--
+LuaHengjiang = sgs.CreateMasochismSkill{
+	name = "LuaHengjiang",
+	
+	on_damaged = function(self,player,damage)
+		local room = player:getRoom()
+		for i = 1, damage.damage, 1 do 
+			local current = room:getCurrent()
+			if not current or current:isDead() or current:getPhase() == sgs.Player_NotActive then
+		break 
+	end		
+			local value = sgs.QVariant()
+				value:setValue(current)
+			if room:askForSkillInvoke(player,self:objectName(),value) then
+				room:addPlayerMark(current,"@hengjiang")
+			end
+		end
+	end
+
+}
+LuaHengjiangDraw = sgs.CreateTriggerSkill{
+	name = "#LuaHengjiangDraw",
+	events = {sgs.TurnStart,sgs.CardsMoveOneTime,sgs.EventPhaseChanging},
+	
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.TurnStart then
+			room:setPlayerMark(player,"@hengjiang",0)
+        elseif event == sgs.CardsMoveOneTime then
+			local move = data:toMoveOneTime()
+            if move.from and player:objectName() == move.from:objectName() and player:getPhase() == sgs.Player_Discard and bit32.band(move.reason.m_reason,sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
+				player:setFlags("LuaHengjiangDiscarded")
+		end
+		elseif event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then return false end
+			local zangba = room:findPlayerBySkillName("LuaHengjiang")
+			if not zangba then return false end
+			if player:getMark("@hengjiang") > 0 then
+			local invoke = false
+			if not player:hasFlag("LuaHengjiangDiscarded") then
+				invoke = true
+			end
+				player:setFlags("-LuaHengjiangDiscarded")
+				room:setPlayerMark(player,"@hengjiang",0)
+			if invoke then
+				zangba:drawCards(1)	
+				end
+			end
+		end
+	end,
+
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
+LuaHengjiangMaxCards = sgs.CreateMaxCardsSkill{
+	name = "#LuaHengjiangMaxCards",
+
+	extra_func = function(self, target)
+	if target:hasSkill("LuaHengjiang") then
+		return -target:getMark("@hengjiang")
+		end
+	end
+}
 --[[
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾
@@ -1079,37 +1147,30 @@ LuaHuilei = sgs.CreateTriggerSkill{
 		return target and target:hasSkill(self:objectName())
 	end
 }
-
 --[[
 	技能名：魂姿（觉醒技）
 	相关武将：山·孙策
-	描述：准备阶段开始时，若你当前的体力值为1，你减1点体力上限，然后获得技能“英姿”和“英魂”。
+	描述：回合开始阶段开始时，若你的体力为1，你须减1点体力上限，并获得技能“英姿”和“英魂”。
 	引用：LuaHunzi
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaHunzi = sgs.CreateTriggerSkill{
-	name = "LuaHunzi",
-	frequency = sgs.Skill_Wake,
-	events = {sgs.EventPhaseStart},
+	name = "LuaHunzi" ,
+	events = {sgs.EventPhaseStart} ,
+	frequency = sgs.Skill_Wake ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		player:gainMark("@waked")
-		room:loseMaxHp(player)
-		room:acquireSkill(player, "yinghun")
-		room:acquireSkill(player, "yingzi")
-		room:setPlayerMark(player, "hunzi", 1)
-	end,
-	can_trigger = function(self, target)
-		if target then
-			if target:isAlive() and target:hasSkill(self:objectName()) then
-				if target:getMark("hunzi") == 0 then
-					if target:getPhase() == sgs.Player_Start then
-						return target:getHp() == 1
-					end
-				end
-			end
+		room:addPlayerMark(player, "LuaHunzi")
+		if room:changeMaxHpForAwakenSkill(player) then
+			room:handleAcquireDetachSkills(player, "yingzi|yinghun")
 		end
 		return false
+	end ,
+	can_trigger = function(self, target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName()))
+				and (target:getMark("LuaHunzi") == 0)
+				and (target:getPhase() == sgs.Player_Start)
+				and (target:getHp() == 1)
 	end
 }
 --[[
