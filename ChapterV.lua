@@ -82,21 +82,12 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 	描述：出牌阶段，你可以选择一至三名角色，你分别对他们造成最多共3点火焰伤害（你可以任意分配），若你将对一名角色分配2点或更多的火焰伤害，你须先弃置四张不同花色的手牌并失去3点体力。
 	状态：0610未做
 ]]--
-
---[[
-	技能名：极略
-	相关武将：神·司马懿
-	描述：弃一枚“忍”标记发动下列一项技能——“鬼才”、“放逐”、“完杀”、“制衡”、“集智”。
-	状态：0610未完成（源码有一段修改card:onUse执行，LUA无此接口，只能替代运行）
-]]--
-
 --[[
 	技能名：伪帝（锁定技）
 	相关武将：SP·袁术、SP·台版袁术
 	描述：你拥有当前主公的主公技。
 	状态：验证失败
 ]]--
-
 --[[
 	技能名：奇策
 	相关武将：二将成名·荀攸
@@ -912,13 +903,12 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 		return target and target:hasSkill(self:objectName())
 	end ,
 }
-
 --[[
 	技能名：屯田
 	相关武将：山·邓艾
 	描述：你的回合外，当你失去牌时，你可以进行一次判定，将非红桃结果的判定牌置于你的武将牌上，称为“田”；每有一张“田”，你计算的与其他角色的距离便-1。
 	引用：LuaTuntian、LuaTuntianDistance
-	状态：1227待验证
+	状态：1217验证失败
 ]]--
 LuaTuntian = sgs.CreateTriggerSkill{
 	name = "LuaTuntian" ,
@@ -958,32 +948,6 @@ LuaTuntianDistance = sgs.CreateDistanceSkill{
 		else
 			return 0
 		end
-	end
-}
---[[
-	技能名：魂姿（觉醒技）
-	相关武将：山·孙策
-	描述：回合开始阶段开始时，若你的体力为1，你须减1点体力上限，并获得技能“英姿”和“英魂”。
-	引用：LuaHunzi
-	状态：1217待验证
-]]--
-LuaHunzi = sgs.CreateTriggerSkill{
-	name = "LuaHunzi" ,
-	events = {sgs.EventPhaseStart} ,
-	frequency = sgs.Skill_Wake ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		room:addPlayerMark(player, "LuaHunzi")
-		if room:changeMaxHpForAwakenSkill(player) then
-			room:handleAcquireDetachSkills(player, "yingzi|yinghun")
-		end
-		return false
-	end ,
-	can_trigger = function(self, target)
-		return (target and target:isAlive() and target:hasSkill(self:objectName()))
-				and (target:getMark("LuaHunzi") == 0)
-				and (target:getPhase() == sgs.Player_Start)
-				and (target:getHp() == 1)
 	end
 }
 --[[
@@ -1204,216 +1168,7 @@ LuaGuzhengGet = sgs.CreateTriggerSkill{
 		return target and (target:getPhase() == sgs.Player_Discard)
 	end
 }
---[[
-	技能名：七星
-	相关武将：神·诸葛亮
-	描述：分发起始手牌时，共发你十一张牌，你选四张作为手牌，其余的面朝下置于一旁，称为“星”；摸牌阶段结束时，你可以用任意数量的手牌等量替换这些“星”。
-	引用：LuaQixing、LuaQixingStart、LuaQixingAsk、LuaQixingClear、LuaQixingFakeMove
-	状态：0610待验证
 
-	Fs备注：由于“七星”“狂风”“大雾”三个技能相关度非常高，所以在LUA版的“七星”技能当中引用的为本次LUA版的“狂风”和“大雾”，并非原版技能。
-			如果想要改为引用原版技能的话，可以将LuaQixingAsk部分的askForUseCard的pattern修改为"@@kuangfeng"和"@@dawu"即可
-]]--
-exchangeQixing = function(shenzhuge)
-	local stars = shenzhuge:getPile("stars")
-	if stars:isEmpty() then return end
-	shenzhuge:exchangeFreelyFromPrivatePile("LuaQixing", "stars")
-end
-discardStarQixing = function(shenzhuge, n, skillName)
-	local room = shenzhuge:getRoom()
-	local stars = shenzhuge:getPile("stars")
-	for i = 0, n - 1, 1 do
-		room:fillAG(stars, shenzhuge)
-		local card_id = room:askForAG(shenzhuge, stars, false, "qixing-discard")
-		room:clearAG(shenzhuge)
-		stars:removeOne(card_id)
-		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, nil, skillName, nil)
-		room:throwCard(sgs.Sanguosha:getCard(card_id), reason, nil)
-	end
-end
-LuaQixing = sgs.CreateTriggerSkill{
-	name = "LuaQixing" ,
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.EventPhaseEnd} ,
-	on_trigger = function(self, event, player, data)
-		exchangeQixing(player)
-		return false
-	end ,
-	can_trigger = function(self, target)
-		return (target and target:isAlive() and target:hasSkill(self:objectName())) and (target:getPile("stars"):length() > 0)
-				and (target:getPhase() == sgs.Player_Draw)
-	end
-}
-LuaQixingFakeMove = sgs.CreateTriggerSkill{
-	name = "LuaQixing-fake-move" ,
-	events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime} ,
-	priority = 10 ,
-	on_trigger = function(self, event, player, data)
-		if player:hasFlag("LuaQixing_InTempMoving") then return true end
-		return false
-	end
-	can_trigger = function(self, target)
-		return target
-	end ,
-}
-LuaQixingStart = sgs.CreateTriggerSkill{
-	name = "#LuaQixing" ,
-	events = {sgs.GameStart} ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		room:setTag("FirstRound", sgs.QVariant(true))
-		player:drawCards(7)
-		room:setTag("FirstRound", sgs.QVariant(false))
-		local exchange_card = room:askForExchange(player, "LuaQixing", 7)
-		player:addToPile("stars", exchange_card:getSubcards(), false)
-	end
-}
-LuaQixingAsk = sgs.CreateTriggerSkill{
-	name = "#LuaQixing-ask" ,
-	events = {sgs.EventPhaseStart} ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Finish then
-			if (player:getPile("stars"):length() > 0) and player:hasSkill("LuaKuangfeng") then
-				room:askForUseCard(player, "@@LuaKuangfeng" ,"@kuangfeng-card", -1, sgs.Card_MethodNone)
-			end
-			if (player:getPlie("stars"):length() > 0) and player:hasSkill("LuaDawu") then
-				room:askForUseCard(player, "@@LuaDawu", "@dawu-card", -1, sgs.Card_MethodNone)
-			end
-		end
-		return false
-	end
-}
-LuaQixingClear = sgs.CreateTriggerSkill{
-	name = "#LuaQixing-clear" ,
-	events = {sgs.EventPhaseStart, sgs.Death, sgs.EventLoseSkill} ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if (event == sgs.EventPhaseStart) or (event == sgs.Death) then
-			if event == sgs.Death then
-				local death = data:toDeath()
-				if death.who:objectName() ~= player:objectName() then return false end
-			end
-			if not player:getTag("LuaQixing_user"):toBool() then return false end
-			local invoke = false
-			if ((event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_RoundStart)) or (event == sgs.Death) then
-				invoke = true
-			end
-			if not invoke then return false end
-			local players = room:getAllPlayers()
-			for _, _player in sgs.qlist(players) do
-				_player:loseAllMarks("@gale")
-				_player:loseAllMarks("@fog")
-			end
-			player:removeTag("LuaQixing_user")
-		elseif (event == sgs.EventLoseSkill) and (data:toString() == "LuaQixing") then
-			player:clearOnePrivatePile("stars")
-		end
-	end
-	can_trigger = function(self, target)
-		return target
-	end
-}
-
---[[
-	技能名：狂风
-	相关武将：神·诸葛亮
-	描述：回合结束阶段开始时，你可以将一张“星”置入弃牌堆并选择一名角色，若如此做，每当该角色受到的火焰伤害结算开始时，此伤害+1，直到你的下回合开始。
-	引用：LuaKuangfeng
-	状态：0610待验证
-
-	Fs备注：需要调用本次Lua手册里面“七星”技能的discardStarQixing函数
-]]--
-LuaKuangfengCard = sgs.CreateSkillCard{
-	name = "LuaKuangfengCard" ,
-	handling_method == sgs.Card_MethodNone ,
-	filter = function(self, targets, to_select)
-		return #targets == 0
-	end ,
-	on_effect = function(self, effect)
-		discardStarQixing(effect.from, 1, "LuaKuangfeng")
-		effect.from:setTag("LuaQixing_user", sgs.QVariant(true))
-		effect.to:gainMark("@gale")
-	end
-}
-LuaKuangfengVS = sgs.CreateViewAsSkill{
-	name = "LuaKuangfeng" ,
-	n = 0
-	view_as = function()
-		return LuaKuangfengCard:clone()
-	end ,
-	enabled_at_play = function()
-		return false
-	end ,
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaKuangfeng"
-	end
-}
-LuaKuangfeng = sgs.CreateTriggerSkill{
-	name = "LuaKuangfeng" ,
-	events = {sgs.DamageForseen} ,
-	view_as_skill = LuaKuangfengVS ,
-	on_trigger = function(self, event, player, data)
-		local damage = data:toDamage()
-		if damage.nature == sgs.DamageStruce_Fire then
-			damage.damage = damage.damage + 1
-			data:setValue(damage)
-		end
-	end ,
-	can_trigger = function(self, target)
-		return target and (target:getMark("@gale") > 0)
-	end
-}
-
---[[
-	技能名：大雾
-	相关武将：神·诸葛亮
-	描述：回合结束阶段开始时，你可以将X张“星”置入弃牌堆并选择X名角色，若如此做，每当这些角色受到的非雷电伤害结算开始时，防止此伤害，直到你的下回合开始。
-	引用：LuaDawu
-	状态：0610待验证
-
-	Fs备注：需要调用本次Lua手册里面“七星”技能的discardStarQixing函数
-]]--
-LuaDawuCard = sgs.CreateSkillCard{
-	name = "LuaDawuCard" ,
-	filter = function(self, targets, to_select)
-		return #targets < sgs.Self:getPile("stars"):length()
-	end ,
-	on_use = function(self, room, source, targets)
-		local n = #targets
-		discardStarQixing(source, n, "LuaDawu")
-		source:setTag("LuaQixing_user", sgs.QVariant(true))
-		for _, target in ipairs(target) do
-			target:gainMark("@fog")
-		end
-	end
-}
-LuaDawuVS = sgs.CreateViewAsSkill{
-	name = "LuaDawu" ,
-	n = 0 ,
-	view_as = function()
-		return LuaDawuCard:clone()
-	end ,
-	enabled_at_play = function()
-		return false
-	end ,
-	enabeld_at_response = function(self, player, pattern)
-		return pattern == "@@LuaDawu"
-	end
-}
-LuaDawu = sgs.CreateTriggerSkill{
-	name = "LuaDawu" ,
-	events == {sgs.DamageForseen} ,
-	view_as_skill = LuaDawuVS ,
-	on_trigger = function(self, event, player, data)
-		local damage = data:toDamage()
-		if damage.nature ~= sgs.DamageStruct_Thunder then
-			return true
-		else
-			return false
-		end
-	end
-}
 --[[
 	技能名：单骑（觉醒技）
 	相关武将：SP·关羽
@@ -2609,7 +2364,7 @@ LuaMizhaoNDL = sgs.CreateTargetModSkill{
 	相关武将：铜雀台·灵雎、SP·灵雎
 	描述：当你杀死一名非主公角色时，在其翻开身份牌之前，你可以与该角色交换身份牌。（你的身份为主公时不能发动此技能。）
 	引用：LuaFenxin、LuaBurnheart1
-	状态：1217验证通过
+	状态：1217验证失败
 ]]--
 isNormalGameMode = function(mode)
 	return (string.sub(mode, string.len(mode)) == "p")
