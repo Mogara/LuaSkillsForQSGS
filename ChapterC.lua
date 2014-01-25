@@ -564,7 +564,43 @@ LuaConghui = sgs.CreateTriggerSkill{
 	技能名：存嗣
 	相关武将：势·糜夫人
 	描述：限定技，出牌阶段，你可以失去“闺秀”和“存嗣”，然后令一名角色获得“勇决”（若一名角色于出牌阶段内使用的第一张牌为【杀】，此【杀】结算完毕后置入弃牌堆时，你可以令其获得之。）：若该角色不是你，该角色摸两张牌。 
+	引用：LuaCunsi、LuaCunsiStart
+	状态：1217验证通过
+	
+	注：此技能与闺秀有联系，有联系的地方请使用本手册当中的闺秀，并非原版
 ]]--
+LuaCunsiCard = sgs.CreateSkillCard{
+	name = "LuaCunsiCard",
+
+	filter = function(self, targets, to_select)
+		return #targets == 0 
+	end,
+	
+	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
+		room:handleAcquireDetachSkills(effect.from,"-LuaGuixiu|-LuaCunsi")
+		room:acquireSkill(effect.to,"yongjue")
+		if effect.to:objectName() ~= effect.from:objectName() then
+			effect.to:drawCards(2)
+		end
+	end
+}
+LuaCunsi = sgs.CreateZeroCardViewAsSkill{
+	name = "LuaCunsi",
+	frequency = sgs.Skill_Limited,
+
+	view_as = function()
+		return LuaCunsiCard:clone()
+	end
+}
+LuaCunsiStart = sgs.CreateTriggerSkill{
+	name = "#LuaCunsiStart",
+	events = {sgs.GameStart,sgs.EventAcquireSkill},
+	
+	on_trigger = function(self, event, player, data)
+		player:getRoom():getThread():addTriggerSkill(sgs.Sanguosha:getTriggerSkill("yongjue"))
+	end,
+}
 --[[
 	技能名：挫锐（锁定技）
 	相关武将：1v1·牛金
