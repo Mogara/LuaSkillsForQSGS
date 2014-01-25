@@ -926,7 +926,69 @@ LuaZhiyu = sgs.CreateTriggerSkill{
 	技能名：咒缚
 	相关武将：SP·张宝
 	描述：阶段技。你可以将一张手牌移出游戏并选择一名无“咒缚牌”的其他角色：若如此做，该角色进行判定时，以“咒缚牌”作为判定牌。一名角色的回合结束后，若该角色有“咒缚牌”，你获得该牌。 
+	引用：LuaZhoufu
+	状态：1217验证通过
 ]]--
+LuaZhoufuCard = sgs.CreateSkillCard{
+	name = "LuaZhoufuCard",
+	will_throw = false,
+	handling_method =sgs.Card_MethodNone,
+	
+	filter = function(self, targets, to_select)
+		return #targets == 0 and to_select:objectName() ~= sgs.Self:objectName() and to_select:getPile("incantation"):isEmpty()
+	end,
+	
+	on_use = function(self, room, source, targets)
+		local target = targets[1]
+		local value = sgs.QVariant()
+			value:setValue(source)
+			target:setTag("LuaZhoufuSource" .. tostring(self:getEffectiveId()),value)
+			target:addToPile("incantation",self)
+	end
+}
+LuaZhoufuVS = sgs.CreateOneCardViewAsSkill{
+	name = "LuaZhoufu",
+	filter_pattern = ".|.|.|hand",
+	
+	view_as = function(self, cards)
+		local card = LuaZhoufuCard:clone()
+			card:addSubcard(cards)
+        return card
+	end,
+
+	enabled_at_play = function(self,player)
+		return not player:hasUsed("#LuaZhoufuCard")
+	end
+}
+LuaZhoufu = sgs.CreateTriggerSkill{
+	name = "LuaZhoufu",
+	events = {sgs.StartJudge,sgs.EventPhaseChanging},
+	view_as_skill = LuaZhoufuVS,
+	
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.StartJudge then
+			local card_id = player:getPile("incantation"):first()
+			local judge = data:toJudge()
+				judge.card = sgs.Sanguosha:getCard(card_id)
+				room:moveCardTo(judge.card,nil,judge.who,sgs.Player_PlaceJudge,sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_JUDGE,judge.who:objectName(),self:objectName(),"",judge.reason),true)
+				judge:updateResult()
+				room:setTag("SkipGameRule",sgs.QVariant(true))
+		else
+			local change = data:toPhaseChange()
+			if change.to == sgs.Player_NotActive then
+			local id = player:getPile("incantation"):first()
+			local zhangbao = player:getTag("LuaZhoufuSource" .. tostring(id)):toPlayer()
+			if zhangbao and zhangbao:isAlive() then
+				zhangbao:obtainCard(sgs.Sanguosha:getCard(id))
+				end
+			end
+		end
+	end,
+	can_trigger = function(self, target)
+		return target ~= nil and target:getPile("incantation"):length() > 0
+	end
+}
 --[[
 	技能名：筑楼
 	相关武将：翼·公孙瓒
