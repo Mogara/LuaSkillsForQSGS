@@ -814,7 +814,60 @@ LuaXWeiwudiGuixin = sgs.CreateTriggerSkill{
 	技能名：闺秀
 	相关武将：势·糜夫人
 	描述：每当你失去“闺秀”后，你可以回复1点体力。限定技，准备阶段开始时或出牌阶段，你可以摸两张牌。 
+	引用：LuaGuixiu、LuaGuixiuDetach
+	状态：1217验证通过
 ]]--
+LuaGuixiuCard = sgs.CreateSkillCard{
+	name = "LuaGuixiuCard",
+	target_fixed = true,
+
+	on_use = function(self, room, source, targets)
+		room:removePlayerMark(source,"Luaguixiu")
+		source:drawCards(2,"LuaGuixiu")
+	end
+}
+LuaGuixiuVS = sgs.CreateZeroCardViewAsSkill{
+	name = "LuaGuixiu" ,
+
+	view_as = function()
+		return LuaGuixiuCard:clone()
+	end,
+	
+	enabled_at_play = function(self, player)
+		return player:getMark("Luaguixiu") >= 1
+	end
+}
+LuaGuixiu = sgs.CreateTriggerSkill{
+	name = "LuaGuixiu" ,
+	frequency = sgs.Skill_Limited,
+	limit_mark = "Luaguixiu",
+	events = {sgs.EventPhaseStart},
+	view_as_skill = LuaGuixiuVS ,
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getMark("Luaguixiu") >= 1 and player:getPhase() == sgs.Player_Start and room:askForSkillInvoke(player, self:objectName()) then
+			room:removePlayerMark(player,"Luaguixiu")
+			player:drawCards(2,self:objectName())
+		end
+	end
+}
+LuaGuixiuDetach = sgs.CreateTriggerSkill{
+	name = "#LuaGuixiuDetach" ,
+	events = {sgs.EventLoseSkill},
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if data:toString() == "LuaGuixiu" then
+		if player:isWounded() and room:askForSkillInvoke(player,"guixiu_rec",sgs.QVariant("recover")) then
+			room:notifySkillInvoked(player,"LuaGuixiu")
+		local recover = sgs.RecoverStruct()
+			recover.who = player
+			room:recover(player,recover)
+			end
+		end
+	end
+}
 --[[
 	技能名：鬼才
 	相关武将：标准·司马懿
