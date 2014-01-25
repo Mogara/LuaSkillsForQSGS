@@ -1030,7 +1030,39 @@ LuaXueyi = sgs.CreateMaxCardsSkill{
 	技能名：恂恂
 	相关武将：势·李典
 	描述：摸牌阶段开始时，你可以放弃摸牌并观看牌堆顶的四张牌，你获得其中的两张牌，然后将其余的牌以任意顺序置于牌堆底。
+	引用：LuaXunxun
+	状态：1217验证通过
 ]]--
+LuaXunxun = sgs.CreatePhaseChangeSkill{
+	name = "LuaXunxun",
+	frequency = sgs.Skill_Frequent,
+
+	on_phasechange = function(self,player)
+		if player:getPhase() == sgs.Player_Draw then
+			local room = player:getRoom()
+			if room:askForSkillInvoke(player,self:objectName()) then
+			local card_ids = room:getNCards(4)
+			local obtained = sgs.IntList()
+				room:fillAG(card_ids,player)
+			local id1 = room:askForAG(player,card_ids,false,self:objectName())
+                card_ids:removeOne(id1)
+                obtained:append(id1)
+                room:takeAG(player,id1,false)
+			local id2 = room:askForAG(player,card_ids,false,self:objectName())
+				card_ids:removeOne(id2)
+				obtained:append(id2)
+				room:clearAG(player)
+				room:askForGuanxing(player,card_ids,sgs.Room_GuanxingDownOnly)
+			local dummy = sgs.Sanguosha:cloneCard("jink",sgs.Card_NoSuit,0)
+			for _,id in sgs.qlist(obtained) do
+				dummy:addSubcard(id)
+			end
+				player:obtainCard(dummy,false)
+			return true
+			end
+		end
+	end 
+}
 --[[
 	技能名：循规
 	相关武将：3D织梦·蒋琬
