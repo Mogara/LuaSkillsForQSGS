@@ -40,8 +40,38 @@ LuaWansha = sgs.CreateTriggerSkill{
 --[[
 	技能名：忘隙
 	相关武将：势·李典
-	描述：每当一名其他角色对你造成1点伤害后，或你受到其他角色造成的1点伤害后，若该角色存活，你可以与其各摸一张牌。 
+	描述：每当你对一名其他角色造成1点伤害后，或你受到其他角色造成的1点伤害后，若该角色存活，你可以与其各摸一张牌。
+	引用：LuaWangxi
+	状态：1217验证通过
 ]]--
+LuaWangxi = sgs.CreateTriggerSkill{
+	name = "LuaWangxi" ,
+	events = {sgs.Damage,sgs.Damaged} ,
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local damage = data:toDamage()
+		local target = nil
+		if event == sgs.Damage then
+			target = damage.to
+		else
+			target = damage.from
+		end
+		if not target or target:objectName() == player:objectName() then return false end
+		local players = sgs.SPlayerList()
+			players:append(player)
+			players:append(target)
+			room:sortByActionOrder(players)
+		for i = 1, damage.damage, 1 do
+			if not target:isAlive() or not player:isAlive() then return false end
+			local value = sgs.QVariant()
+				value:setValue(target)
+			if room:askForSkillInvoke(player,self:objectName(),value) then
+				room:drawCards(players,1,self:objectName())
+			end
+		end
+	end
+}
 --[[
 	技能名：妄尊
 	相关武将：标准·袁术
