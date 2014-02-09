@@ -93,34 +93,6 @@ Fs在这里多说几句：大家可以对这部分技能尽情测试，要不然
 	相关武将：二将成名·荀攸
 	描述：出牌阶段限一次，你可以将你的所有手牌（至少一张）当任意一张非延时锦囊牌使用。
 ]]--
-
---[[
-	技能名：疠火
-	相关武将：二将成名·程普
-	描述：你可以将一张普通【杀】当火【杀】使用，若以此法使用的【杀】造成了伤害，在此【杀】结算后你失去1点体力；你使用火【杀】时，可以额外选择一个目标。
-	引用：LuaLihuo、LuaLihuoTarget
-	状态：0610验证失败（QVariantList没有接口）
-]]--
-
-LuaLihuoVS = sgs.CreateOneCardViewAsSkill{
-	name = "LuaLihuo" ,
-	filter_pattern = "%slash" ,
-	enabled_at_play = function(self, player)
-		return sgs.Slash_IsAvailable(player)
-	end ,
-	enabled_at_response = function(self, player, pattern)
-		return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE and pattern == "slash"
-	end ,
-	view_as = function(self, card)
-		local acard = sgs.Sanguosha:cloneCard("fire_slash", card:getSuit(), card:getNumber())
-		acard:addSubcard(card)
-		acard:setSkillName(self:objectName())
-		return acard
-	end ,
-}
---触发技没想好怎么变通
-
-
 --[[
 	技能名：言笑
 	相关武将：☆SP·大乔
@@ -585,6 +557,72 @@ end
 -------------------------------------------------------------------------------
 ---------------------------------[[就这么多了]]---------------------------------
 -------------------------------------------------------------------------------
+
+
+--[[
+	技能名：疠火
+	相关武将：二将成名·程普
+	描述：你可以将一张普通【杀】当火【杀】使用，若以此法使用的【杀】造成了伤害，在此【杀】结算后你失去1点体力；你使用火【杀】时，可以额外选择一个目标。
+	引用：LuaLihuo、LuaLihuoTarget
+	状态：1217待验证
+]]--
+LuaLihuoVS = sgs.CreateOneCardViewAsSkill{
+	name = "LuaLihuo" ,
+	filter_pattern = "%slash" ,
+	enabled_at_play = function(self, player)
+		return sgs.Slash_IsAvailable(player)
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE and pattern == "slash"
+	end ,
+	view_as = function(self, card)
+		local acard = sgs.Sanguosha:cloneCard("fire_slash", card:getSuit(), card:getNumber())
+		acard:addSubcard(card)
+		acard:setSkillName(self:objectName())
+		return acard
+	end ,
+}
+invokeLihuo = {}
+LuaLihuo = sgs.CreateTriggerSkill{
+	name = "LuaLihuo" ,
+	events = {sgs.PreDamageDone, sgs.CardFinished} ,
+	view_as_skill = LuaLihuoVS ,
+	can_trigger = function(self, target)
+		return target
+	end ,
+	on_trigger = function(self, event, player, data)
+		if event == sgs.PreDamageDone then
+			local damage = data:toDamage()
+			if damage.card and damage.card:isKindOf("Slash") and (damage.card:getSkillName() == self:objectName()) then
+				table.insert(invokeLihuo, damage.card)
+			end
+		elseif (player and player:isAlive() and player:hasSkill(self:objectName())) and (not player:hasFlag("Global_ProcessBroken")) then
+			local use = data:toCardUse()
+			if not use.card:isKindOf("Slash") then return false end
+			local can_invoke = false
+			for _, c in ipairs(invokeLihuo) do
+				if c:getEffectiveId() == use.card:getEffectiveId() then
+					can_invoke = true
+					table.removeOne(c)
+					break
+				end
+			end
+			if not can_invoke then return false end
+			player:getRoom():loseHp(player)
+		end
+		return false
+	end
+}
+LuaLihuoTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaLihuo-target" ,
+	extra_target_func = function(self, from, card)
+		if from:hasSkill("LuaLihuo") and card:isKindOf("FireSlash") then
+			return 1
+		end
+		return 0
+	end ,
+}
+
 --[[
 	技能名：落雁（锁定技）
 	相关武将：SP·大乔&小乔
