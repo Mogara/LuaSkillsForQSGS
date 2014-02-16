@@ -622,7 +622,57 @@ LuaYizhong = sgs.CreateTriggerSkill{
 	技能名：姻礼
 	相关武将：1v1·孙尚香1v1
 	描述： 对手的回合内，其拥有的装备牌以未经转化的方式置入弃牌堆时，你可以获得之。
+	引用：LuaYinli
+	状态：1217验证通过
 ]]--
+LuaYinli = sgs.CreateTriggerSkill{
+	name = "LuaYinli",
+	events = {sgs.BeforeCardsMove},
+	frequency = sgs.Skill_Frequent,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local move = data:toMoveOneTime()
+		if (move.from == nil) or (move.from:objectName() == player:objectName()) then return false end
+		if (move.from:getPhase() ~= sgs.Player_NotActive) and (move.to_place == sgs.Player_DiscardPile) then
+        		local card_ids = sgs.IntList()
+			local i = 0
+        		for _, card_id in sgs.qlist(move.card_ids) do
+                		if (sgs.Sanguosha:getCard(card_id):getTypeId() == sgs.Card_TypeEquip)  
+						and (room:getCardOwner(card_id):objectName() == move.from:objectName())
+						and ((move.from_places:at(i) == sgs.Player_PlaceHand) or (move.from_places:at(i) == sgs.Player_PlaceEquip)) then
+                			card_ids:append(card_id)
+                		end
+				i = i + 1
+			end
+			if card_ids:isEmpty() then
+				return false
+      			elseif player:askForSkillInvoke(self:objectName(), data) then
+        			while not card_ids:isEmpty() do
+        			room:fillAG(card_ids, player)
+       				local id = room:askForAG(player, card_ids, true, self:objectName())
+                		if id == -1 then
+					room:clearAG(player)
+					break
+				end
+                		card_ids:removeOne(id)
+				room:clearAG(player)
+                	end
+			if not card_ids:isEmpty() then
+                		for _, id in sgs.qlist(card_ids) do
+                        		if move.card_ids:contains(id) then
+                        			move.from_places:removeAt(move.card_ids:indexOf(id))
+                         			move.card_ids:removeOne(id)
+						data:setValue(move)
+                        		end
+					room:moveCardTo(sgs.Sanguosha:getCard(id), player, sgs.Player_PlaceHand, move.reason, true)
+                        		if not player:isAlive() then break end 
+                    			end
+                		end
+                	end
+        	end
+        	return false
+	end
+}
 --[[
 	技能名：银铃
 	相关武将：☆SP·甘宁
