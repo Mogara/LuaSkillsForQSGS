@@ -943,8 +943,72 @@ LuaJiehuo = sgs.CreateTriggerSkill{
 	技能名：解围
 	相关武将：风·曹仁
 	描述：每当你的武将牌翻面后，你可以摸一张牌，然后你可以使用一张锦囊牌或装备牌：若如此做，该牌结算后，你可以弃置场上一张同类型的牌。
-	状态：1217验证失敗(不能棄別角色牌)
+	状态：1217验证通过
 ]]--
+LuaJiewei = sgs.CreateTriggerSkill{
+	name = "LuaJiewei",
+	events = {sgs.TurnedOver} ,
+	frequency = sgs.Skill_NotFrequent,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if not room:askForSkillInvoke(player, self:objectName()) then return false end
+		player:drawCards(1)
+		local card = room:askForUseCard(player, "TrickCard+^Nullification,EquipCard|.|.|hand", "@Luajiewei")
+		if not card then return false end
+		local targets = sgs.SPlayerList()
+		if card:getTypeId() == sgs.Card_TypeTrick then
+			for _, p in sgs.qlist(room:getAlivePlayers()) do
+				local can_discard = false
+				for _, judge in sgs.qlist(p:getJudgingArea()) do
+					if (judge:getTypeId() == sgs.Card_TypeTrick) and (player:canDiscard(p, judge:getEffectiveId())) then
+						can_discard = true
+						break
+					elseif judge:getTypeId() == sgs.Card_TypeSkill then
+						local real_card = Sanguosha:getEngineCard(judge:getEffectiveId())
+						if (real_card:getTypeId() == sgs.Card_TypeTrick) and (player:canDiscard(p, real_card:getEffectiveId())) then
+							can_discard = true
+							break
+						end
+					end
+				end
+				if can_discard then targets:append(p) end
+			end
+		elseif (card:getTypeId() == sgs.Card_TypeEquip) then
+			for _, p in sgs.qlist(room:getAlivePlayers()) do
+                		if (not p:getEquips():isEmpty()) and (player:canDiscard(p, "e")) then
+                			targets:append(p)
+				else
+					for _, judge in sgs.qlist(p:getJudgingArea()) do
+                        			if judge:getTypeId() == sgs.Card_TypeSkill then
+						local real_card = Sanguosha:getEngineCard(judge:getEffectiveId())
+                         				if (real_card:getTypeId() == sgs.Card_TypeEquip) and (player:canDiscard(p, real_card:getEffectiveId())) then
+                                				targets:append(p)
+                               					break
+							end
+						end
+					end
+				end
+			end
+		end
+		if targets:isEmpty() then return false end
+		local to_discard = room:askForPlayerChosen(player, targets, self:objectName(), "@Luajiewei-discard", true)
+		if to_discard then
+			local disabled_ids = sgs.IntList()
+			for _, c in sgs.qlist(to_discard:getCards("ej")) do
+				local pcard = c 
+				if (pcard:getTypeId() == sgs.Card_TypeSkill) then
+					pcard = sgs.Sanguosha:getEngineCard(c:getEffectiveId())
+				end
+				if (pcard:getTypeId()~= card:getTypeId()) then
+					disabled_ids:append(pcard:getEffectiveId())
+				end
+			end
+			local id = room:askForCardChosen(player, to_discard, "ej", self:objectName(), false, sgs.Card_MethodDiscard, disabled_ids)
+			room:throwCard(id, to_discard, player)
+		end
+		return false
+	end	
+}
 --[[
 	技能名：尽瘁
 	相关武将：智·张昭
