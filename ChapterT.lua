@@ -65,40 +65,31 @@ LuaTaichen = sgs.CreateViewAsSkill{
 	技能名：贪婪
 	相关武将：智·许攸
 	描述：每当你受到一次伤害，可与伤害来源进行拼点：若你赢，你获得两张拼点牌
-	引用：LuaXTanlan
+	引用：LuaTanlan
 	状态：验证通过
 ]]--
-LuaXTanlan = sgs.CreateTriggerSkill{
-	name = "LuaXTanlan",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Pindian, sgs.Damaged},
+LuaTanlan = sgs.CreateTriggerSkill{
+	name = "LuaTanlan" ,
+	events = {sgs.Pindian, sgs.Damaged} ,
 	on_trigger = function(self, event, player, data)
 		if event == sgs.Damaged then
 			local damage = data:toDamage()
 			local from = damage.from
 			local room = player:getRoom()
-			if from then
-				if not from:isKongcheng() and not player:isKongcheng() then
-					if room:askForSkillInvoke(player, self:objectName(), data) then
-						player:pindian(from, "LuaXTanlan")
-					end
+			if from and (from:objectName() ~= player:objectName()) and (not from:isKongcheng()) and (not player:isKongcheng()) then
+				if room:askForSkillInvoke(player, self:objectName(), data) then
+					player:pindian(from, self:objectName())
 				end
 			end
-			return false
 		else
 			local pindian = data:toPindian()
-			if pindian.reason == "LuaXTanlan" then
-				local cardA = pindian.to_card
-				local cardB = pindian.from_card
-				if cardA:getNumber() < cardB:getNumber() then
-					player:obtainCard(cardA)
-					player:obtainCard(cardB)
-				end
+			if (pindian.reason == self:objectName() and pindian.success) then
+				player:obtainCard(pindian.to_card)
+				player:obtainCard(pindian.from_card)
 			end
 		end
 		return false
-	end,
-	priority = -1
+	end
 }
 --[[
 	技能名：探虎
