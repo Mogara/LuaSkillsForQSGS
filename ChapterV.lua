@@ -558,6 +558,53 @@ end
 ---------------------------------[[就这么多了]]---------------------------------
 -------------------------------------------------------------------------------
 
+--[[
+	技能名：慷忾
+	相关武将：SP026·曹昂
+	描述：每当一名角色成为【杀】的目标后，若你与其的距离不大于1，你可以摸一张牌，若如此做，你先将一张牌交给该角色再令其展示之，若此牌为装备牌，其可以使用之。
+	引用：LuaKangkai
+	状态：1217待验证（测试了一下，大概没啥问题） 
+]]--
+LuaKangkai = sgs.CreateTriggerSkill{
+	name = "LuaKangkai",
+	events = {sgs.TargetConfirmed},
+	on_trigger = function(self, event, player, data)
+		local use = data:toCardUse()
+		local room = player:getRoom()
+		if use.card:isKindOf("Slash") then
+			for _,to in sgs.qlist(use.to) do
+				if not player:isAlive() then break end
+				if player:distanceTo(to) <= 1 and room:askForSkillInvoke(player,self:objectName()) then
+					player:drawCards(1)
+					if (not player:isNude()) and (player:objectName() ~= to:objectName()) then
+						local card
+						if player:getCardCount() > 1 then
+							local prompt = string.format("@kangkai-give", to:objectName())
+							card = room:askForCard(player,"..",prompt,data,self:objectName())
+							if not card then
+								card = player:getCards("he"):at(math.random(0,player:getCardCount()))
+							end
+						else
+							if player:getCardCount() == 1 then
+								card = player:getCards("he"):first()
+							end
+						end
+						to:obtainCard(card)
+						if card:getTypeId() == sgs.Card_TypeEquip and room:getCardOwner(card:getEffectiveId()):objectName() == to:objectName() and (not to:isLocked(card)) then
+							to:setTag("kangkaiSlash",sgs.QVariant(data))
+							local bool = false
+							bool = room:askForSkillInvoke(to,"kangkai_use","use")
+							to:removeTag("kangkaiSlash")
+							if bool then
+								room:useCard(sgs.CardUseStruct(card,to,to))
+							end
+						end
+					end
+				end
+			end
+		end
+	end,
+}
 
 --[[
 	技能名：疠火
