@@ -431,7 +431,49 @@ LuaDimeng = sgs.CreateViewAsSkill{
 		return not target:hasUsed("#LuaDimengCard")
 	end
 }
+--[[
+	技能名：度势
+	相关武将：国战·陆逊
+	描述：出牌阶段限四次，你可以弃置一张红色手牌并选择任意数量的其他角色，你与这些角色各摸两张牌并弃置两张牌。
+	引用：LuaXDuoshi
+	状态：1217验证失败（usedTimes	BUG了）
+]]--
 
+LuaDuoshiCard = sgs.CreateSkillCard{
+	name = "LuaDuoshiCard" ,
+	filter = function()
+		return true
+	end ,
+	feasible = function()
+		return true
+	end ,
+	on_use = function(room, card_use)
+		local use = card_use
+		if not use.to.contains(use.from) then
+			use.to:append(use.from)
+		end
+	end ,
+	on_effect = function(effect)
+		local room = effect.from:getRoom()
+		effect.to:drawCards(2)
+		room:askForDiscard(effect.to, "duoshi", 2, 2, false, true)
+	end ,
+}
+LuaDuoshi = sgs.CreateViewAsSkill{
+	name = "LuaDuoshi" ,
+	n = 1,
+	view_filter = function(self, to_select)
+		return to_select:isRed() and to_select:isHandCard() and not sgs.Self:isJilei(to_select)
+	end ,
+	view_as = function(self, cards)
+		local await = LuaDuoshiCard:clone()
+		await:addSubcard(cards[1]:getId())
+		return await
+	end ,
+	enabled_at_play = function(player)
+		return player:usedTimes("LuaDuoshiCard") < 4
+	end ,
+}
 -------------------------------------------------------------------------------
 ---------------------------------[[就这么多了]]---------------------------------
 -------------------------------------------------------------------------------
