@@ -8,61 +8,52 @@
 	相关武将：一将成名·吴国太
 	描述：出牌阶段限一次，你可以令装备区的装备牌数量差不超过你已损失体力值的两名角色交换他们装备区的装备牌。
 	引用：LuaGanlu
-	状态：验证通过
+	状态：1217验证通过
 ]]--
+swapEquip = function(first, second)
+	local room = first:getRoom()
+	local equips1, equips2 = sgs.IntList(), sgs.IntList()
+	for _, equip in sgs.qlist(first:getEquips()) do
+		equips1:append(equip:getId())
+	end
+	for _, equip in sgs.qlist(second:getEquips()) do
+		equips2:append(equip:getId())
+	end
+	local exchangeMove = sgs.CardsMoveList()
+	local move1 = sgs.CardsMoveStruct(equips1, second, sgs.Player_PlaceEquip, 
+			sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, first:objectName(), second:objectName(), "LuaGanlu", ""))
+	local move2 = sgs.CardsMoveStruct(equips2, first, sgs.Player_PlaceEquip,
+			sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, first:objectName(), second:objectName(), "LuaGanlu", ""))
+	exchangeMove:append(move2)
+	exchangeMove:append(move1)
+	room:moveCards(exchangeMove, false)
+end
 LuaGanluCard = sgs.CreateSkillCard{
-	name = "LuaGanluCard",
-	target_fixed = false,
-	will_throw = true,
+	name = "LuaGanluCard" ,
 	filter = function(self, targets, to_select)
 		if #targets == 0 then
 			return true
 		elseif #targets == 1 then
 			local n1 = targets[1]:getEquips():length()
 			local n2 = to_select:getEquips():length()
-			local diff = math.abs(n1 - n2)
-			local lost = sgs.Self:getLostHp()
-			return diff <= lost
+			return math.abs(n1 - n2) <= sgs.Self:getLostHp()
+		else
+			return false
 		end
-		return false
-	end,
+	end ,
 	feasible = function(self, targets)
 		return #targets == 2
 	end,
 	on_use = function(self, room, source, targets)
-		local first = targets[1]
-		local second = targets[2]
-		local idlistA = sgs.IntList()
-		local idlistB = sgs.IntList()
-		local equipsA = first:getEquips()
-		local equipsB = second:getEquips()
-		for _,equip in sgs.qlist(equipsA) do
-			idlistA:append(equip:getId())
-		end
-		for _,equip in sgs.qlist(equipsB) do
-			idlistB:append(equip:getId())
-		end
-		local move = sgs.CardsMoveStruct()
-		move.card_ids = idlistA
-		move.to = second
-		move.to_place = sgs.Player_PlaceSpecial
-		room:moveCards(move, false)
-		move.card_ids = idlistB
-		move.to = first
-		move.to_place = sgs.Player_PlaceEquip
-		room:moveCards(move, false)
-		move.card_ids = idlistA
-		move.to = second
-		move.to_place = sgs.Player_PlaceEquip
-		room:moveCards(move, false)
+		swapEquip(targets[1], targets[2])
 	end
 }
 LuaGanlu = sgs.CreateViewAsSkill{
-	name = "LuaGanlu",
-	n = 0,
-	view_as = function(self, cards)
+	name = "LuaGanlu" ,
+	n = 0 ,
+	view_as = function()
 		return LuaGanluCard:clone()
-	end,
+	end ,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaGanluCard")
 	end
