@@ -94,7 +94,106 @@ LuaYanzheng = sgs.CreateViewAsSkill{
 	技能名：燕语
 	相关武将：SP·夏侯氏
 	描述：一名角色的出牌阶段开始时，你可以弃置一张牌：若如此做，本回合的出牌阶段内限三次，一张与该牌类型相同的牌置入弃牌堆时，你可以令一名角色获得之。 
+	引用：LuaYanyu
+	状态：1217验证通过
 ]]--
+LuaYanyu = sgs.CreateTriggerSkill{
+	name = "LuaYanyu" ,
+	events = {sgs.EventPhaseStart, sgs.BeforeCardsMove , sgs.EventPhaseChanging} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.EventPhaseStart then
+			local xiahou = room:findPlayerBySkillName(self:objectName())
+			if xiahou and player:getPhase() == sgs.Player_Play then
+				if not xiahou:canDiscard(xiahou, "he") then return false end
+				local card = room:askForCard(xiahou, "..", "@yanyu-discard", sgs.QVariant(), self:objectName())
+				if card then
+					xiahou:addMark("LuaYanyuDiscard" .. tostring(card:getTypeId()), 3)
+				end
+			end
+		elseif event == sgs.BeforeCardsMove and self:triggerable(player) then
+			local current = room:getCurrent()
+			if not current or current:getPhase() ~= sgs.Player_Play then return false end
+			local move = data:toMoveOneTime()
+			if move.to_place == sgs.Player_DiscardPile then
+				local ids, disabled = sgs.IntList(), sgs.IntList()
+				local all_ids = move.card_ids
+				for _, id in sgs.qlist(move.card_ids) do
+					local card = sgs.Sanguosha:getCard(id)
+					if player:getMark("LuaYanyuDiscard" .. tostring(card:getTypeId())) > 0 then
+						ids:append(id)
+					else
+						disabled:append(id)
+					end
+				end
+				if ids:isEmpty() then return false end
+                		while not ids:isEmpty() do
+					room:fillAG(all_ids, player, disabled)
+					local only = (all_ids:length() == 1)
+					local card_id = -1 
+					if only then
+                        			card_id = ids:first()
+                    			else
+                        			card_id = room:askForAG(player, ids, true, self:objectName())
+					end
+					room:clearAG(player)
+					if card_id == -1 then break end
+					if only then
+                        			player:setMark("YanyuOnlyId", card_id + 1)
+					end
+					local card = sgs.Sanguosha:getCard(card_id)
+					local target = room:askForPlayerChosen(player, room:getAlivePlayers(), self:objectName(),
+									string.format("@yanyu-give:::%s:%s\\%s", card:objectName()
+													       , card:getSuitString().."_char"
+													       , card:getNumberString()),
+                                                                	 only, true)
+					player:setMark("YanyuOnlyId", 0)
+					if target then
+						player:removeMark("LuaYanyuDiscard" .. tostring(card:getTypeId()))
+						local index = move.card_ids:indexOf(card_id)
+						local place = move.from_places:at(index)
+						move.from_places:removeAt(index)
+						move.card_ids:removeOne(card_id)
+						data:setValue(move)
+						ids:removeOne(card_id)
+						disabled:append(card_id)
+						for _, id in sgs.qlist(ids) do
+							local card = sgs.Sanguosha:getCard(id)
+							if player:getMark("LuaYanyuDiscard" .. tostring(card:getTypeId())) == 0 then
+                                				ids:removeOne(id)
+                                				disabled:append(id)
+							end
+						end
+						if move.from and move.from:objectName() == target:objectName() and place ~= sgs.Player_PlaceTable then                                                                                                                                                                                                                                                                                                                                                                                           
+							local log = sgs.LogMessage()
+							log.type = "$MoveCard"
+							log.from = target
+							log.to:append(target)
+							log.card_str = tostring(card_id)
+							room:sendLog(log)
+						end
+						target:obtainCard(card)
+					else
+						break
+					end
+				end
+			end
+		elseif event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to == sgs.Player_Discard then
+				for _, p in sgs.qlist(room:getAlivePlayers()) do
+                			p:setMark("LuaYanyuDiscard1", 0)
+                			p:setMark("LuaYanyuDiscard2", 0)
+                			p:setMark("LuaYanyuDiscard3", 0)
+                		end
+			end
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
 --[[
 	技能名：耀武（锁定技）
 	相关武将：标准·华雄
