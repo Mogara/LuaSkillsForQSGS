@@ -338,7 +338,72 @@ LuaXiaoguo = sgs.CreateTriggerSkill{
 	技能名：孝德
 	相关武将：SP·夏侯氏
 	描述：每当一名其他角色死亡结算后，你可以拥有该角色武将牌上的一项技能（除主公技与觉醒技），且“孝德”无效，直到你的回合结束时。每当你失去“孝德”后，你失去以此法获得的技能。 
+	引用：LuaXiaode, LuaXiaoEx
+	状态：1217验证通过
 ]]--
+function addSkillList(general)
+	if not general then return nil end
+	local skill_list = {}
+	for _, skill in sgs.qlist(general:getSkillList()) do
+		if skill:isVisible() and not skill:isLordSkill() and skill:getFrequency() ~= sgs.Skill_Wake then
+			table.insert(skill_list, skill:objectName())
+		end
+	end
+	return table.concat(skill_list, "+")
+end
+LuaXiaode = sgs.CreateTriggerSkill{
+	name = "LuaXiaode" ,
+	events = {sgs.BuryVictim} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local xiahoushi = room:findPlayerBySkillName(self:objectName())
+		if not xiahoushi or xiahoushi:getTag("LuaXiaodeSkill"):toString() ~= "" then return false end
+		local skill_list = xiahoushi:getTag("LuaXiaodeVictimSkills"):toString():split("+")
+		if #skill_list == 0 then return false end
+		if not room:askForSkillInvoke(xiahoushi, self:objectName()) then return false end
+		local skill_name = room:askForChoice(xiahoushi, self:objectName(), table.concat(skill_list, "+"))
+		xiahoushi:setTag("LuaXiaodeSkill", sgs.QVariant(skill_name))
+		room:acquireSkill(xiahoushi, skill_name)
+        	return false
+	end ,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end ,
+	priority = -2
+}
+LuaXiaodeEx = sgs.CreateTriggerSkill{
+	name = "#LuaXiaode" ,
+	events = {sgs.EventPhaseChanging, sgs.EventLoseSkill, sgs.Death} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to == sgs.Player_NotActive then
+				local skill_name = player:getTag("LuaXiaodeSkill"):toString()
+				if skill_name ~= "" then
+					room:detachSkillFromPlayer(player, skill_name, false, true)
+                			player:setTag("LuaXiaodeSkill", sgs.QVariant())
+				end
+			end
+		elseif event == sgs.EventLoseSkill and data:toString() == sef:objectName() then
+			local skill_name = player:getTag("LuaXiaodeSkill"):toString()
+			if skill_name ~= "" then
+				room:detachSkillFromPlayer(player, skill_name, false, true)
+                		player:setTag("LuaXiaodeSkill", sgs.QVariant())
+			end
+		elseif event == sgs.Death and self:triggerable(player) then
+			local death = data:toDeath()
+			local skill_list = {}
+			table.insert(skill_list, addSkillList(death.who:getGeneral()))
+			table.insert(skill_list, addSkillList(death.who:getGeneral2()))
+			player:setTag("LuaXiaodeVictimSkills", sgs.QVariant(table.concat(skill_list, "+")))
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
 --[[
 	技能名：挟缠（限定技）
 	相关武将：1v1·许褚1v1
