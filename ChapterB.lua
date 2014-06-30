@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（B区）
 	技能索引：
-		八阵、霸刀、霸王、拜将、拜印、豹变、暴虐、悲歌、北伐、备粮、崩坏、笔伐、闭月、补益、不屈
+		八阵、霸刀、霸王、拜将、拜印、豹变、暴虐、悲歌、北伐、备粮、崩坏、笔伐、闭月、补益、不屈、不屈
 ]]--
 --[[
 	技能名：八阵（锁定技）
@@ -629,7 +629,58 @@ LuaBuyi = sgs.CreateTriggerSkill{
 	技能名：不屈（锁定技）
 	相关武将：风·周泰
 	描述：每当你处于濒死状态时，你将牌堆顶的一张牌置于武将牌上：若无同点数的“不屈牌”，你回复至1点体力；否则你将该牌置入弃牌堆。若你有“不屈牌”，你的手牌上限等于“不屈牌”的数量。 
+	引用：LuaBuqu、LuaBuquRemove
+	状态：1217验证通过
 ]]--
+LuaBuqu = sgs.CreateTriggerSkill{
+	name = "LuaBuqu" ,
+	events = {sgs.AskForPeaches} ,
+	frequency = sgs.Skill_Compulsory ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+        	local dying_data = data:toDying()
+		if dying_data.who:objectName() ~= player:objectName() then
+        		return false
+		end
+        	if player:getHp() > 0 then return false end
+        	local log = sgs.LogMessage()
+        	log.type = "#TriggerSkill"
+        	log.from = player
+        	log.arg = self:objectName()
+        	room:sendLog(log)
+        	local id = room:drawCard()
+        	local num = sgs.Sanguosha:getCard(id):getNumber()
+        	local duplicate = false
+        	for _, card_id in sgs.qlist(player:getPile("buqu")) do
+        		if sgs.Sanguosha:getCard(card_id):getNumber() == num then
+        			duplicate = true
+                		break
+        		end
+        	end
+        	player:addToPile("buqu", id)
+        	if duplicate then
+            		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(), "")
+            		room:throwCard(sgs.Sanguosha:getCard(id), reason, nil)
+        	else
+        		local recover = sgs.RecoverStruct()
+        		recover.who = player
+        		recover.recover = 1 - player:getHp()
+        		room:recover(player, recover)
+        	end
+        	return false
+        end
+}
+LuaBuquMaxCards = sgs.CreateMaxCardsSkill{
+	name = "#LuaBuqu" ,
+	fixed_func = function(self, target)
+        	local len = target:getPile("buqu"):length()
+        	if len > 0 then
+            		return len
+        	else
+        		return -1
+		end
+	end
+}
 --[[
 	技能名：不屈
 	相关武将：怀旧·周泰
@@ -662,7 +713,7 @@ function Remove(SP)
 		end
 	end
 end
-LuaBuqu = sgs.CreateTriggerSkill{
+LuaNosBuqu = sgs.CreateTriggerSkill{
 	name = "LuaBuqu",
 	events = {sgs.PostHpReduced, sgs.AskForPeachesDone},
 	on_trigger = function(self, event, player, data)
@@ -724,7 +775,7 @@ LuaBuqu = sgs.CreateTriggerSkill{
 		end
 	end
 }
-LuaBuquRemove = sgs.CreateTriggerSkill{
+LuaNosBuquRemove = sgs.CreateTriggerSkill{
 	name = "#LuaBuquRemove",
 	events = {sgs.HpRecover, sgs.EventLoseSkill},
 	on_trigger = function(self, event, player, data)
@@ -748,4 +799,3 @@ LuaBuquRemove = sgs.CreateTriggerSkill{
 		return target
 	end
 }
-
