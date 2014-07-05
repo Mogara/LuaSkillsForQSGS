@@ -233,7 +233,75 @@ const Card *WeidaiCard::validateInResponse(ServerPlayer *user, bool &continuable
 -------------------------------------------------------------------------------
 -----------------------------[[下面是验证失败的技能]]---------------------------
 -------------------------------------------------------------------------------
+--[[
+	技能名：豹变（锁定技）
+	相关武将：SP·夏侯霸
+	描述：若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。
+	引用：LuaBaobian
+	状态：1217验证失败（服务器闪退）
 
+--]]
+function BaobianChange(room, player, hp, skill_name)
+	local baobian_skills = player:getTag("LuaBaobianSkills"):toString():split("+")
+	if player:getHp() <= hp then
+		if not table.contains(baobian_skills, skill_name) then
+			room:notifySkillInvoked(player, "baobian")
+			if player:getHp() == hp then
+				room:broadcastSkillInvoke("baobian", 4 - hp)
+			end
+			table.insert(acquired_skills, skill_name)
+			table.insert(baobian_skills, skill_name)
+		end
+	else
+        	if table.contains(baobian_skills, skill_name) then
+			table.insert(detached_skills, "-"..skill_name)
+			table.remove(baobian_skills, skill_name)
+		end
+	end
+	player:setTag("LuaBaobianSkills", sgs.QVariant(table.concat(baobian_skills, "+")))
+end
+LuaBaobian = sgs.CreateTriggerSkill{
+	name = "LuaBaobian" ,
+	events = {sgs.GameStart, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill} ,
+	frequency = sgs.Skill_Compulsory ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.EventLoseSkill then
+			if data:toString() == self:objectName() then
+				local baobian_skills = player:getTag("LuaBaobianSkills"):toString():split("+")
+				local detachList = {}
+				for _, skill_name in ipairs(baobian_skills) do
+					detachList:append("-"..skill_name)
+				end
+				room:handleAcquireDetachSkills(player, detachList)
+				player:setTag("LuaBaobianSkills", sgs.QVariant())
+			end
+			return false
+		elseif event == sgs.EventAcquireSkill then
+			if data:toString() ~= self:objectName() then return false end
+		end
+		if not player:isAlive() or not player:hasSkill(self:objectName(), true) then return false end
+		local acquired_skills = {}
+		local detached_skills = {}
+		BaobianChange(room, player, 1, "shensu")
+        	BaobianChange(room, player, 2, "paoxiao")
+        	BaobianChange(room, player, 3, "tiaoxin")
+		if not #acquired_skills == 0 or not #detached_skills == 0 then
+			local all_skills = {}
+			for _, skill in ipairs(acquired_skills) do
+				table.insert(all_skills, skill)
+			end
+			for _, skill in ipairs(detached_skills) do
+				table.insert(all_skills, skill)
+			end
+			room:handleAcquireDetachSkills(player, all_skills)
+		end
+		return false
+	end ,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
 --[[
 	技能名：祸首（锁定技）
 	相关武将：林·孟获
