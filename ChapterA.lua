@@ -104,7 +104,7 @@ LuaAnxu = sgs.CreateViewAsSkill{
 	相关武将：一将成名2013·潘璋&马忠
 	描述：每当你使用【杀】对目标角色造成伤害时，若你不在其攻击范围内，此伤害+1。
 	引用：LuaAnjian
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaAnjian = sgs.CreateTriggerSkill{
 	name = "LuaAnjian",
@@ -114,9 +114,10 @@ LuaAnjian = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local damage = data:toDamage()
 		if damage.chain or damage.transfer or not damage.by_user then return false end
+		if not (damage.card and damage.card:isKindOf("Slash")) then return false end
 		if damage.from and not damage.to:inMyAttackRange(damage.from) then
-		damage.damage = damage.damage + 1
-		data:setValue(damage)
+			damage.damage = damage.damage + 1
+			data:setValue(damage)
 		end
 	end
 }
@@ -124,7 +125,7 @@ LuaAnjian = sgs.CreateTriggerSkill{
 	技能名：傲才
 	相关武将：SP·诸葛恪
 	描述：你的回合外，每当你需要使用或打出一张基本牌时，你可以观看牌堆顶的两张牌，然后使用或打出其中一张该类别的基本牌。
-	状态：0610验证通过[与源码略有区别]
+	状态：1217验证通过[与源码略有区别]
 ]]--
 function view(room, player, ids, enabled, disabled)
 	local result = -1
