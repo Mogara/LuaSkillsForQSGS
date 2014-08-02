@@ -8,7 +8,7 @@
 	相关武将：火·诸葛亮
 	描述：若你的装备区没有防具牌，视为你装备着【八卦阵】。
 	引用：LuaBazhen
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaBazhen = sgs.CreateTriggerSkill{
 	name = "LuaBazhen",
@@ -16,16 +16,16 @@ LuaBazhen = sgs.CreateTriggerSkill{
 	events = {sgs.CardAsked},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local pattern = data:toString()
+		local pattern = data:toStringList()[1]
 		if pattern == "jink" then
-			if player:askForSkillInvoke(self:objectName()) then
+			if player:askForSkillInvoke("EightDiagram",data) then
 				local judge = sgs.JudgeStruct()
-				judge.pattern = sgs.QRegExp("(.*):(heart|diamond):(.*)")
+				judge.pattern = ".|red"
 				judge.good = true
 				judge.reason = self:objectName()
 				judge.who = player
 				judge.play_animation = true
-				room:setEmotion(player, "armor/eight_diagram");
+				room:setEmotion(player, "armor/EightDiagram");
 				room:judge(judge)
 				if judge:isGood() then
 					local jink = sgs.Sanguosha:cloneCard("jink", sgs.Card_NoSuit, 0)
@@ -41,8 +41,11 @@ LuaBazhen = sgs.CreateTriggerSkill{
 		if target then
 			if target:isAlive() and target:hasSkill(self:objectName()) then
 				if not target:getArmor() then
-					if not target:hasFlag("wuqian") then
-						return target:getMark("qinggang") == 0
+					if target:getMark("Armor_Nullified")==0 and not target:hasFlag("WuqianTarget") then
+						if target:getMark("Equips_Nullified_to_Yourself") == 0 then
+							local list = target:getTag("Qinggang"):toStringList()
+							return #list == 0
+						end
 					end
 				end
 			end
