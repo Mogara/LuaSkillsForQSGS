@@ -642,4 +642,41 @@ LuaCunsiStart = sgs.CreateTriggerSkill{
 	技能名：挫锐（锁定技）
 	相关武将：1v1·牛金
 	描述：你的起始手牌数为X+2（X为你备选区里武将牌的数量），你跳过登场后的第一个判定阶段。 
+	引用：LuaCuorui
+	状态：1217验证通过
 ]]--
+LuaCuorui = sgs.CreateTriggerSkill {
+	name = "LuaCuorui",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.DrawInitialCards,sgs.EventPhaseChanging},
+	on_trigger = function(self,event,player,data)
+		local room = player:getRoom()
+		if event == sgs.DrawInitialCards then
+			local n = 3 
+			if room:getMode() == "02_1v1" then
+				local list = player:getTag("1v1Arrange"):toStringList()
+				n = #list
+				player:speak(n)
+				if sgs.GetConfig("1v1/Rule","2013") == "2013" then
+					n = n + 3
+				end
+				local origin
+				if sgs.GetConfig("1v1/Rule","2013") =="Classical" then
+					origin = 4
+				else
+					origin = player:getMaxHp()
+				end
+				n = n + 2 - origin
+				player:speak(n)
+			end
+			data:setValue(data:toInt() + n)
+		elseif event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to == sgs.Player_Judge and player:getMark("CuoruiSkipJudge") == 0 then
+				player:skip(sgs.Player_Judge)
+				player:addMark("CuoruiSkipJudge")
+			end
+		end
+		return false
+	end
+}
