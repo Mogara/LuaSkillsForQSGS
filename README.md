@@ -21,8 +21,10 @@ Please copy the **sgs_ex.lua** to **QSanguosha-1217\lua** directory and use the 
 
 本手册分为A~Z共26个章节，分别以技能名第一个字的拼音首字母归类，其中**ChapterV**用于存放一些待完善的技能。 
 
-- [Chapter A](ChapterA.md)
-- [Chapter B](ChapterB.md)
+- [Chapter A](ChapterA.md)  
+ [安娴](ChapterA.md#安娴)、[安恤](ChapterA.md#安恤)、[暗箭](ChapterA.md#暗箭)、[傲才](ChapterA.md#傲才)
+- [Chapter B](ChapterB.md)  
+[八阵](ChapterB.md#八阵)、[霸刀](ChapterB.md#霸刀)、[霸王](ChapterB.md#霸王)、[拜印](ChapterB.md#拜印)、[豹变](ChapterB.md#豹变)、[暴虐](ChapterB.md#暴虐)、[悲歌](ChapterB.md#悲歌)、[北伐](ChapterB.md#北伐)、[崩坏](ChapterB.md#崩坏)、[笔伐](ChapterB.md#笔伐)、[闭月](ChapterB.md#闭月)、[补益](ChapterB.md#补益)、[不屈](ChapterB.md#不屈)、[不屈-旧风](ChapterB.md#不屈-旧风) 
 - [Chapter C](ChapterC.md)
 - [Chapter D](ChapterD.md)
 - [Chapter E](ChapterE.md)
