@@ -1,10 +1,10 @@
 代码速查手册（A区）
 ==================
-##技能索引
-[安娴](ChapterA.md#link1)、[安恤](ChapterA.md#link2)、[暗箭](ChapterA.md#link3)、[傲才](ChapterA.md#link4)
+<h1 id="link">技能索引</h1>  
+[安娴](#link1)、[安恤](#link2)、[暗箭](#link3)、[傲才](#link4)
 
 
-<h2 id="link1">安娴</h2>
+<h2 id="link1">安娴</h2>  
 **相关武将**：☆SP·大乔  
 **描述**：每当你使用【杀】对目标角色造成伤害时，你可以防止此次伤害，令其弃置一张手牌，然后你摸一张牌；当你成为【杀】的目标时，你可以弃置一张手牌使之无效，然后该【杀】的使用者摸一张牌。  
 **引用**：LuaAnxian  
@@ -47,8 +47,7 @@
 			return false  
 		end  
 	}  
-
-
+[返回索引](#link) 
 
 <h2 id="link2">安恤</h2>
 **相关武将**：二将成名·步练师  
@@ -100,8 +99,9 @@
 			return not player:hasUsed("#LuaAnxuCard")
 		end
 	}
+[返回索引](#link) 
 
-<h2 id="link3">暗箭</h2>
+<h2 id="link3">暗箭</h2> 
 **相关武将**：一将成名2013·潘璋&马忠  
 **描述**：每当你使用【杀】对目标角色造成伤害时，若你不在其攻击范围内，此伤害+1。  
 **引用**：LuaAnjian  
@@ -122,6 +122,7 @@
 			end
 		end
 	}
+[返回索引](#link) 
 
 <h2 id="link4">傲才</h2>
 **相关武将**：SP·诸葛恪  
@@ -288,3 +289,4 @@
 			return sgs.Sanguosha:getCard(id)
 		end
 	}
+[返回索引](#link) 
