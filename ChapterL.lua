@@ -539,51 +539,48 @@ LuaLijian0701 = sgs.CreateViewAsSkill{
 	相关武将：国战·孔融
 	描述：当你的牌因弃置而置入弃牌堆时，你可以将其中任意数量的牌以任意分配方式交给任意数量的其他角色。
 	引用：LuaXLirang
-	状态：0224验证通过
+	状态：1217验证通过
 ]]--
-require ("bit")
 LuaXLirang = sgs.CreateTriggerSkill{
 	name = "LuaXLirang",
 	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.CardsMoving},
+	events = {sgs.BeforeCardsMove},
 	on_trigger = function(self, event, player, data)
 		local move = data:toMoveOneTime()
 		local source = move.from
-		if not player:hasFlag("lirang_InTempMoving") then --防止不完全给出时二次触发
-			if source and source:objectName() == player:objectName() then
-				if move.to_place == sgs.Player_DiscardPile then
-					local reason = move.reason
-					local basic = bit:_and(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
-					if basic == sgs.CardMoveReason_S_REASON_DISCARD then
-						local room = player:getRoom()
-						local i = 0
-						local lirang_card = sgs.IntList()
-						for _,card_id in sgs.qlist(move.card_ids) do
-							if room:getCardPlace(card_id) == sgs.Player_DiscardPile then
-								local place = move.from_places:at(i)
-								if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
-									lirang_card:append(card_id)
-								end
+		if source and source:objectName() == player:objectName() then
+			if move.to_place == sgs.Player_DiscardPile then
+				local reason = move.reason
+				local basic = bit32.band(reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+				if basic == sgs.CardMoveReason_S_REASON_DISCARD then
+					local room = player:getRoom()
+					local i = 0
+					local lirang_card = sgs.IntList()
+					for _,card_id in sgs.qlist(move.card_ids) do
+						if room:getCardOwner(card_id):objectName() == move.from:objectName() then
+							local place = move.from_places:at(i)
+							if place == sgs.Player_PlaceHand or place == sgs.Player_PlaceEquip then
+								lirang_card:append(card_id)
 							end
-							i = i + 1
 						end
-						if not lirang_card:isEmpty() then
-							if player:askForSkillInvoke(self:objectName(), data) then
-								room:setPlayerFlag(player, "lirang_InTempMoving")
-								local move2 = sgs.CardsMoveStruct()
-								move2.card_ids = lirang_card
-								move2.to_place = sgs.Player_PlaceHand
-								move2.to = player
-								room:moveCardsAtomic(move2, true)
-								while room:askForYiji(player, lirang_card, false, true) do
-								end
-								local move3 = sgs.CardsMoveStruct()
-								move3.card_ids = lirang_card
-								move3.to_place = sgs.Player_DiscardPile
-								move3.reason = reason
-								room:moveCardsAtomic(move3, true)
-								room:setPlayerFlag(player, "-lirang_InTempMoving")
+						i = i + 1
+					end
+					if not lirang_card:isEmpty() then
+						if player:askForSkillInvoke(self:objectName(), data) then
+							local original_lirang = lirang_card
+							while room:askForYiji(player, lirang_card, self:objectName(), false, true, true, -1, sgs.SPlayerList(), move.reason, "@lirang-distribute", true) do
+								if player:isDead() then return false end
 							end
+							local ids = move.card_ids
+							i = 0
+							for _,card_id in sgs.qlist(ids) do
+								if (original_lirang.contains(card_id) and not lirang_card.contains(card_id)) then
+									move.card_ids.removeOne(card_id)
+									move.from_places.removeAt(i)
+								end
+								i = i+1
+							end
+							data = sgs.QVariant(move)
 						end
 					end
 				end
@@ -821,6 +818,7 @@ LuaLianyingForZeroMaxCards = sgs.CreateTriggerSkill{
 	技能名：烈斧
 	相关武将：3D织梦·潘凤
 	描述：当你使用的【杀】被目标角色的【闪】抵消时，你可以令此【杀】依然造成伤害，若如此做，你选择一项：弃置等同于目标角色已损失的体力值数量的牌，不足则全弃；令目标角色摸等同于其当前体力值数量的牌，最多为5张。
+	引用：LuaLiefu
 	狀態：1217验证通过
 ]]--
 LuaLiefu = sgs.CreateTriggerSkill{
@@ -893,7 +891,7 @@ LuaLiegong = sgs.CreateTriggerSkill{
 	相关武将：火·祝融、1v1·祝融1v1
 	描述：每当你使用【杀】对目标角色造成一次伤害后，你可以与其拼点，若你赢，你获得该角色的一张牌。
 	引用：LuaLieren
-	状态：0610验证通过（但是和源码稍微有点区别）
+	状态：1217验证通过（但是和源码稍微有点区别）
 ]]--
 LuaLieren = sgs.CreateTriggerSkill{
 	name = "LuaLieren",
@@ -922,7 +920,28 @@ LuaLieren = sgs.CreateTriggerSkill{
 	技能名：裂围
 	相关武将：1v1·牛金
 	描述：每当你杀死对手后，你可以摸三张牌。 
+	引用：LuaLiewei
+	状态：1217验证通过
 ]]--
+LuaLiewei = sgs.CreateTriggerSkill{
+	name = "LuaLiewei",
+	events = {sgs.BuryVictim},
+	frequency = sgs.Skill_Frequent,
+	priority = -2,
+	can_trigger = function(target)
+		return target ~= nil
+	end,
+	on_trigger = function(self, event, player, data)
+		local death = data:toDeath()
+		local room = player:getRoom()
+		if death.damage and death.damage.from and death.damage.from:hasSkill(self:objectName()) then
+			if room:askForSkillInvoke(death.damage.from, self:objectName(), data) then
+				death.damage.from:drawCards(3, self:objectName())
+			end
+		end
+		return false
+    end,
+}
 --[[
 	技能名：流离
 	相关武将：标准·大乔、SP·台版大乔、SP·王战大乔
@@ -1033,7 +1052,7 @@ LuaLiuli = sgs.CreateTriggerSkill{
 	相关武将：标准·赵云、☆SP·赵云、翼·赵云、2013-3v3·赵云、SP·台版赵云
 	描述：你可以将一张【杀】当【闪】，一张【闪】当【杀】使用或打出。
 	引用：LuaLongdan
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
 LuaLongdan = sgs.CreateViewAsSkill{
 	name = "LuaLongdan" ,
@@ -1174,97 +1193,82 @@ LuaLonghun = sgs.CreateViewAsSkill{
 	相关武将：测试·高达一号
 	描述：你可以将一张牌按以下规则使用或打出：♥当【桃】；♦当火【杀】；♠当【无懈可击】；♣当【闪】。回合开始阶段开始时，若其他角色的装备区内有【青釭剑】，你可以获得之。
 	引用：LuaXNosLonghun、LuaXDuojian
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-sgs.NosLonghunPattern = {"spade", "heart", "club", "diamond"}
-LuaXNosLonghun = sgs.CreateViewAsSkill{
-	name = "LuaXNosLonghun",
-	n = 1,
+LuaLonghun = sgs.CreateViewAsSkill{
+	name = "LuaLonghun" ,
+	n = 1 ,
 	view_filter = function(self, selected, to_select)
-		if #selected < 1 then
-			local suit = to_select:getSuit()
-			if sgs.NosLonghunPattern[1] == "true" and suit == sgs.Card_Spade then
+		if (#selected >= 1) or to_select:hasFlag("using") then return false end
+		if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
+			if sgs.Self:isWounded() and (to_select:getSuit() == sgs.Card_Heart) then
 				return true
-			elseif sgs.NosLonghunPattern[2] == "true" and suit == sgs.Card_Heart then
-				return true
-			elseif sgs.NosLonghunPattern[3] == "true" and suit == sgs.Card_Club then
-				return true
-			elseif sgs.NosLonghunPattern[4] == "true" and suit == sgs.Card_Diamond then
-				return true
+			elseif sgs.Slash_IsAvailable(sgs.Self) and (to_select:getSuit() == sgs.Card_Diamond) then
+				if sgs.Self:getWeapon() and (to_select:getEffectiveId() == sgs.Self:getWeapon():getId())
+						and to_select:isKindOf("Crossbow") then
+					return sgs.Self:canSlashWithoutCrossbow()
+				else
+					return true
+				end
+			else
+				return false
 			end
+		elseif (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE)
+				or (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE) then
+			local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
+			if pattern == "jink" then
+				return to_select:getSuit() == sgs.Card_Club
+			elseif pattern == "nullification" then
+				return to_select:getSuit() == sgs.Card_Spade
+			elseif string.find(pattern, "peach") then
+				return to_select:getSuit() == sgs.Card_Heart
+			elseif pattern == "slash" then
+				return to_select:getSuit() == sgs.Card_Diamond
+			end
+			return false
 		end
 		return false
-	end,
+	end ,
 	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = cards[1]
-			local new_card = nil
-			local suit = card:getSuit()
-			local number = card:getNumber()
-			if suit == sgs.Card_Spade then
-				new_card = sgs.Sanguosha:cloneCard("nullification", suit, number)
-			elseif suit == sgs.Card_Heart then
-				new_card = sgs.Sanguosha:cloneCard("peach", suit, number)
-			elseif suit == sgs.Card_Club then
-				new_card = sgs.Sanguosha:cloneCard("jink", suit, number)
-			elseif suit == sgs.Card_Diamond then
-				new_card = sgs.Sanguosha:cloneCard("fire_slash", suit, number)
-			end
-			if new_card then
-				new_card:setSkillName(self:objectName())
-				new_card:addSubcard(card)
-			end
-			return new_card
+		if #cards ~= 1 then return nil end
+		local card = cards[1]
+		local new_card = nil
+		if card:getSuit() == sgs.Card_Spade then
+			new_card = sgs.Sanguosha:cloneCard("nullification", sgs.Card_SuitToBeDecided, 0)
+		elseif card:getSuit() == sgs.Card_Heart then
+			new_card = sgs.Sanguosha:cloneCard("peach", sgs.Card_SuitToBeDecided, 0)
+		elseif card:getSuit() == sgs.Card_Club then
+			new_card = sgs.Sanguosha:cloneCard("jink", sgs.Card_SuitToBeDecided, 0)
+		elseif card:getSuit() == sgs.Card_Diamond then
+			new_card = sgs.Sanguosha:cloneCard("fire_slash", sgs.Card_SuitToBeDecided, 0)
 		end
-	end,
+		if new_card then
+			new_card:setSkillName(self:objectName())
+			for _, c in ipairs(cards) do
+				new_card:addSubcard(c)
+			end
+		end
+		return new_card
+	end ,
 	enabled_at_play = function(self, player)
-		sgs.NosLonghunPattern = {"false", "false", "false", "false"}
-		local flag = false
-		if player:isWounded() then
-			sgs.NosLonghunPattern[2] = "true"
-			flag = true
-		end
-		if sgs.Slash_IsAvailable(player) then
-			sgs.NosLonghunPattern[4] = "true"
-			flag = true
-		end
-		return flag
-	end,
+		return player:isWounded() or sgs.Slash_IsAvailable(player)
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		sgs.NosLonghunPattern = {"false", "false", "false", "false"}
-		if pattern == "slash" then
-			sgs.NosLonghunPattern[4] = "true"
-			return true
-		elseif pattern == "jink" then
-			sgs.NosLonghunPattern[3] = "true"
-			return true
-		elseif string.find(pattern, "peach") then
-			sgs.NosLonghunPattern[2] = "true"
-			return true
-		elseif pattern == "nullification" then
-			sgs.NosLonghunPattern[1] = "true"
-			return true
-		end
-		return false
-	end,
+		return (pattern == "slash")
+				or (pattern == "jink")
+				or (string.find(pattern, "peach") and (not player:hasFlag("Global_PreventPeach")))
+				or (pattern == "nullification")
+	end ,
 	enabled_at_nullification = function(self, player)
-		sgs.NosLonghunPattern = {"true", "false", "false", "false"}
-		local cards = player:getHandcards()
-		for _,card in sgs.qlist(cards) do
-			if card:objectName() == "nullification" then
-				return true
-			end
-			if card:getSuit() == sgs.Card_Spade then
-				return true
-			end
+		local count = 0
+		for _, card in sgs.qlist(player:getHandcards()) do
+			if card:getSuit() == sgs.Card_Spade then count = count + 1 end
+			if count >= 1 then return true end
 		end
-		cards = player:getEquips()
-		for _,card in sgs.qlist(cards) do
-			if card:getSuit() == sgs.Card_Spade then
-				return true
-			end
+		for _, card in sgs.qlist(player:getEquips()) do
+			if card:getSuit() == sgs.Card_Spade then count = count + 1 end
+			if count >= 1 then return true end
 		end
-		return false
 	end
 }
 LuaXDuojian = sgs.CreateTriggerSkill{
@@ -1297,7 +1301,7 @@ LuaXDuojian = sgs.CreateTriggerSkill{
 	相关武将：一将成名2013·关平
 	描述：每当一名角色于其出牌阶段内使用【杀】选择目标后，你可以弃置一张牌，令此【杀】不计入出牌阶段限制的使用次数，若此【杀】为红色，你摸一张牌。
 	引用：LuaLongyin
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaLongyin = sgs.CreateTriggerSkill{
 	name = "LuaLongyin",
@@ -1366,7 +1370,7 @@ LuaLongluo = sgs.CreateTriggerSkill{
 	相关武将：火·袁绍
 	描述：你可以将两张花色相同的手牌当【万箭齐发】使用。
 	引用：LuaLuanji
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaLuanji = sgs.CreateViewAsSkill{
 	name = "LuaLuanji",
@@ -1401,7 +1405,7 @@ LuaLuanji = sgs.CreateViewAsSkill{
 	相关武将：林·贾诩、SP·贾诩
 	描述：出牌阶段，你可以令所有其他角色各选择一项：对距离最近的另一名角色使用一张【杀】，或失去1点体力。
 	引用：LuaLuanwu、LuaChaos1
-	状态：0610验证通过
+	状态：1217验证通过
 
 	Fs备注：其实可以把#@chaos-Lua-1直接写入LuaLuanwu的触发技里……
 ]]--
@@ -1515,7 +1519,7 @@ LuaLuoyi = sgs.CreateTriggerSkill{
 	相关武将：翼·许褚
 	描述：出牌阶段，你可以弃置一张装备牌，若如此做，你使用的【杀】或【决斗】（你为伤害来源时）造成的伤害+1，直到回合结束。每阶段限一次。
 	引用：LuaXNeoLuoyi、LuaXNeoLuoyiBuff
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaXNeoLuoyiCard = sgs.CreateSkillCard{
 	name = "LuaXNeoLuoyiCard",
@@ -1574,7 +1578,7 @@ LuaXNeoLuoyiBuff = sgs.CreateTriggerSkill{
 	相关武将：标准·甄姬、1v1·甄姬1v1、SP·甄姬、SP·台版甄姬
 	描述：准备阶段开始时，你可以进行一次判定，若判定结果为黑色，你获得生效后的判定牌且你可以重复此流程。
 	引用：LuaLuoshen
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
 LuaLuoshen = sgs.CreateTriggerSkill{
 	name = "LuaLuoshen",
