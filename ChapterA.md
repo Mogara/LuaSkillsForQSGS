@@ -1,7 +1,7 @@
 代码速查手册（A区）
 ==================
 ##技能索引
-[安娴](#link1)、[安恤](#link2)、[暗箭](#link3)、[傲才](#link4)
+[安娴](ChapterA.md#link1)、[安恤](ChapterA.md#link2)、[暗箭](ChapterA.md#link3)、[傲才](ChapterA.md#link4)
 
 
 <h2 id="link1">安娴</h2>
