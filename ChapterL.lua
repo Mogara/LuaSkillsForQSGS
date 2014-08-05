@@ -8,7 +8,7 @@
 	相关武将：贴纸·司马昭
 	描述：每当你受到1点伤害后，你可以进行一次判定，然后你可以打出一张手牌代替此判定牌：若如此做，你观看伤害来源的所有手牌，并弃置其中任意数量的与判定牌花色相同的牌。
 	引用：LuaXLanggu
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaXLanggu = sgs.CreateTriggerSkill{
 	name = "LuaXLanggu",
@@ -28,7 +28,7 @@ LuaXLanggu = sgs.CreateTriggerSkill{
 					local room = player:getRoom()
 					local judge = sgs.JudgeStruct()
 					judge.reason = self:objectName()
-					judge.pattern = sgs.QRegExp("(.*):(.*):(.*)")
+					judge.pattern = "."
 					judge.who = player
 					room:judge(judge)
 					local ids = target:handCards()
@@ -73,7 +73,7 @@ LuaXLanggu = sgs.CreateTriggerSkill{
 	相关武将：倚天·姜伯约
 	描述：出牌阶段，可令一名有手牌的其他角色展示一张手牌，若为基本牌或非延时锦囊，则你可将与该牌同花色的牌当作该牌使用或打出直到回合结束；若为其他牌，则立刻被你获得。每阶段限一次
 	引用：LuaXLexue
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaXLexueCard = sgs.CreateSkillCard{
 	name = "LuaXLexueCard",
@@ -146,6 +146,7 @@ LuaXLexue = sgs.CreateViewAsSkill{
 				local card = sgs.Sanguosha:getCard(card_id)
 				return card:isAvailable(player)
 			end
+			return false
 		end
 		return true
 	end,
@@ -223,7 +224,7 @@ LuaLeiji = sgs.CreateTriggerSkill{
 	相关武将：怀旧·张角
 	描述：当你使用或打出一张【闪】（若为使用则在选择目标后），你可以令一名角色进行一次判定，若判定结果为黑桃，你对该角色造成2点雷电伤害。
 	引用：LuaLeiji
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
 LuaLeiji = sgs.CreateTriggerSkill{
 	name = "LuaLeiji" ,
@@ -596,7 +597,7 @@ LuaXLirang = sgs.CreateTriggerSkill{
 	相关武将：二将成名·程普
 	描述：你可以将一张普通【杀】当火【杀】使用，若以此法使用的【杀】造成了伤害，在此【杀】结算后你失去1点体力；你使用火【杀】时，可以额外选择一个目标。
 	引用：LuaLihuo、LuaLihuoTarget
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaLihuoVS = sgs.CreateViewAsSkill{
 	name = "LuaLihuo",
@@ -773,7 +774,7 @@ LuaLianpoDo = sgs.CreateTriggerSkill{
 	相关武将：标准·陆逊、SP·台版陆逊、倚天·陆抗
 	描述：当你失去最后的手牌时，你可以摸一张牌。
 	引用：LuaLianying、LuaLianyingForZeroMaxCards
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
 LuaLianying = sgs.CreateTriggerSkill{
 	name = "LuaLianying" ,
@@ -820,7 +821,28 @@ LuaLianyingForZeroMaxCards = sgs.CreateTriggerSkill{
 	技能名：烈斧
 	相关武将：3D织梦·潘凤
 	描述：当你使用的【杀】被目标角色的【闪】抵消时，你可以令此【杀】依然造成伤害，若如此做，你选择一项：弃置等同于目标角色已损失的体力值数量的牌，不足则全弃；令目标角色摸等同于其当前体力值数量的牌，最多为5张。
+	狀態：1217验证通过
 ]]--
+LuaLiefu = sgs.CreateTriggerSkill{
+	name = "LuaLiefu",
+	events = {sgs.SlashMissed},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local effect = data:toSlashEffect()
+		if not effect.to:isAlive() then return false end
+		if room:askForSkillInvoke(player, self:objectName(), data) then
+			local choice = room:askForChoice(player, self:objectName(), "LiefuDiscard+LiefuDraw")
+			if choice == "LiefuDiscard" then
+				if effect.to:getLostHp()~=0 then
+					room:askForDiscard(player, self:objectName(), effect.to:getLostHp(), effect.to:getLostHp(), false, true)
+				end
+			else
+				effect.to:drawCards(math.min(effect.to:getHp(), 5))
+			end
+            room:slashResult(effect, nil)
+		end
+	end,
+}
 --[[
 	技能名：烈弓
 	相关武将：风·黄忠
