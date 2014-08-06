@@ -15,11 +15,11 @@ LuaNiluanVS = sgs.CreateOneCardViewAsSkill {
 	filter_pattern = ".|black",
 	response_pattern = "@@niluan",
 	view_as = function(slef, card)
-        local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_SuitToBeDecided, -1)
-        slash:addSubcard(card)
-        slash:setSkillName("LuaNiluan")
-        return slash
-    end,
+		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_SuitToBeDecided, -1)
+		slash:addSubcard(card)
+		slash:setSkillName("LuaNiluan")
+		return slash
+	end,
 }
 LuaNiluan = sgs.CreateTriggerSkill{
 	name = "LuaNiluan",
@@ -114,7 +114,7 @@ LuaNiaoxiang = sgs.CreateTriggerSkill{
 			local jink_list = use.from:getTag("Jink_"..use.card:toString()):toIntList()
 			for i=0, use.to:length()-1, 1 do
 				local to = use.to:at(i)
-                if to:isAlive() and to:isAdjacentTo(player) and to:isAdjacentTo(use.from) then
+				if to:isAlive() and to:isAdjacentTo(player) and to:isAdjacentTo(use.from) then
 					local new_data = sgs.QVariant()
 					new_data:setValue(to)			--for AI
 					if room:askForSkillInvoke(player, self:objectName(), new_data) then
