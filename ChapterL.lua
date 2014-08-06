@@ -38,7 +38,7 @@ LuaXLanggu = sgs.CreateTriggerSkill{
 					while not target:isKongcheng() do
 						local card_id = room:askForAG(player, ids, true, "LuaXLanggu")
 						if card_id == -1 then
-							player:invoke("clearAG")
+							room:clearAG(player)
 							break
 						end
 						local card = sgs.Sanguosha:getCard(card_id)
@@ -580,7 +580,7 @@ LuaXLirang = sgs.CreateTriggerSkill{
 								end
 								i = i+1
 							end
-							data = sgs.QVariant(move)
+							data:setValue(move)
 						end
 					end
 				end
