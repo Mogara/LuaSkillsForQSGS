@@ -216,7 +216,55 @@ LuaCangni = sgs.CreateTriggerSkill{
 	技能名：缠怨（锁定技）
 	相关武将：风·于吉
 	描述：你不能质疑“蛊惑”。若你的体力值为1，你的其他武将技能无效。
+	引用：LuaChanyuan
+	状态：1217验证通过(需配合本手册的“蛊惑”一起使用)
 ]]--
+LuaChanyuan = sgs.CreateTriggerSkill {
+	name = "LuaChanyuan",
+	events = {sgs.GameStart, sgs.HpChanged, sgs.MaxHpChanged, sgs.EventAcquireSkill, sgs.EventLoseSkill},
+	frequency = sgs.Skill_Compulsory,
+	
+	can_trigger = function(self, target)
+		return target
+	end,
+	
+	on_trigger = function(self, triggerEvent, player, data)
+		local room = player:getRoom()
+		if triggerEvent == sgs.EventLoseSkill then
+			if data:toString() == self:objectName() then
+				local LuaChanyuan_skills = player:getTag("LuaChanyuanSkills"):toString():split("+")
+				for _, skill_name in ipairs(LuaChanyuan_skills) do
+					room:removePlayerMark(player, "Qingcheng"..skill_name)
+				end
+				player:setTag("LuaChanyuanSkills", sgs.QVariant())
+			end
+			return false
+		elseif triggerEvent == sgs.EventAcquireSkill then
+			if data:toString() ~= self:objectName() then return false end
+		end
+		
+		if not player:isAlive() or not player:hasSkill(self:objectName()) then return false end
+		
+		if player:getHp() == 1 then
+			local LuaChanyuan_skills = player:getTag("LuaChanyuanSkills"):toString():split("+")
+			local skills = player:getVisibleSkillList()
+			for _, skill in sgs.qlist(skills) do
+				if skill:objectName() ~= self:objectName() and skill:getLocation() == sgs.Skill_Right and not skill:inherits("SPConvertSkill") and not skill:isAttachedLordSkill() and not (Set(LuaChanyuan_skills))[skill:objectName()] then
+					room:addPlayerMark(player, "Qingcheng"..skill:objectName())
+					table.insert(LuaChanyuan_skills, skill:objectName())
+				end
+			end
+			player:setTag("LuaChanyuanSkills", sgs.QVariant(table.concat(LuaChanyuan_skills, "+")))
+		else
+			local LuaChanyuan_skills = player:getTag("LuaChanyuanSkills"):toString():split("+")
+			for _, skill_name in ipairs(LuaChanyuan_skills) do
+				room:removePlayerMark(player, "Qingcheng"..skill_name)
+			end
+			player:setTag("LuaChanyuanSkills", sgs.QVariant())
+		end
+		return false
+	end
+}
 --[[
 	技能名：超级观星
 	相关武将：测试·五星诸葛

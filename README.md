@@ -17,7 +17,8 @@ If you find BUG in reading, please [click here](https://github.com/DGAH/LuaSkill
 **Note**: The **sgs\_ex.lua** in QSanguosha-1217 has some typos, I upload a new one which fixed the typos.
 Please copy the **sgs_ex.lua** to **QSanguosha-1217\lua** directory and use the lua skills to fix the bugs.
 
-## 简介 ##
+ 简介 
+====
 
 本手册分为A~Z共26个章节，分别以技能名第一个字的拼音首字母归类，其中**ChapterV**用于存放一些待完善的技能。 
 
@@ -25,7 +26,8 @@ Please copy the **sgs_ex.lua** to **QSanguosha-1217\lua** directory and use the 
  [安娴](ChapterA.md#安娴)、[安恤](ChapterA.md#安恤)、[暗箭](ChapterA.md#暗箭)、[傲才](ChapterA.md#傲才)
 - [Chapter B](ChapterB.md)  
 [八阵](ChapterB.md#八阵)、[霸刀](ChapterB.md#霸刀)、[霸王](ChapterB.md#霸王)、[拜印](ChapterB.md#拜印)、[豹变](ChapterB.md#豹变)、[暴虐](ChapterB.md#暴虐)、[悲歌](ChapterB.md#悲歌)、[北伐](ChapterB.md#北伐)、[崩坏](ChapterB.md#崩坏)、[笔伐](ChapterB.md#笔伐)、[闭月](ChapterB.md#闭月)、[补益](ChapterB.md#补益)、[不屈](ChapterB.md#不屈)、[不屈-旧风](ChapterB.md#不屈-旧风) 
-- [Chapter C](ChapterC.md)
+- [Chapter C](ChapterC.md)  
+ [藏机](ChapterC.md#藏机)、[藏匿](ChapterC.md#藏匿)、[缠怨](ChapterC.md#缠怨)、[超级观星](ChapterC.md#超级观星)、[称象](ChapterC.md#称象)、[称象-倚天](ChapterC.md#称象-倚天)、[持重](ChapterC.md#持重)、[冲阵](ChapterC.md#冲阵)、[筹粮](ChapterC.md#筹粮)、[醇醪](ChapterC.md#醇醪)、[聪慧](ChapterC.md#聪慧)、[存嗣](ChapterC.md#存嗣)、[挫锐](ChapterC.md#挫锐)
 - [Chapter D](ChapterD.md)
 - [Chapter E](ChapterE.md)
 - [Chapter F](ChapterF.md) 

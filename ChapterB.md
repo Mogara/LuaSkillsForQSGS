@@ -10,7 +10,7 @@
 **描述**：**锁定技，**若你的装备区没有防具牌，视为你装备着【八卦阵】。  
 **引用**：LuaBazhen  
 **状态**：1217验证通过
-
+```lua
 	LuaBazhen = sgs.CreateTriggerSkill{
 		name = "LuaBazhen",
 		frequency = sgs.Skill_Compulsory,
@@ -54,6 +54,7 @@
 			return false
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##霸刀
@@ -61,7 +62,7 @@
 **描述**：当你成为黑色的【杀】目标后，你可以使用一张【杀】  
 **引用**：LuaBadao  
 **状态**：1217验证通过
-
+```lua
 	LuaBadao = sgs.CreateTriggerSkill{
 		name = "LuaBadao" ,
 		events = {sgs.TargetConfirmed} ,
@@ -74,6 +75,7 @@
 			return false
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##霸王
@@ -81,7 +83,7 @@
 **描述**：当你使用的【杀】被【闪】抵消时，你可以与目标角色拼点：若你赢，可以视为你对至多两名角色各使用了一张【杀】（此杀不计入每阶段的使用限制）  
 **引用**：LuaBawang  
 **状态**：1217验证通过
-
+```lua
 	LuaBawangCard = sgs.CreateSkillCard{
 		name = "LuaBawangCard" ,
 		filter = function(self, targets, to_select)
@@ -99,7 +101,6 @@
 			room:useCard(use, false)
 		end
 	}
-
 	LuaBawangVS = sgs.CreateViewAsSkill{
 		name = "LuaBawang" ,
 		n = 0,
@@ -113,7 +114,6 @@
 			return pattern == "@@LuaBawang"
 		end
 	}
-
 	LuaBawang = sgs.CreateTriggerSkill{
 		name = "LuaBawang" ,
 		events = {sgs.SlashMissed} ,
@@ -135,6 +135,7 @@
 			return false
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 
@@ -143,7 +144,7 @@
 **描述**：**觉醒技，**回合开始阶段开始时，若你拥有4枚或更多的“忍”标记，你须减1点体力上限，并获得技能“极略”。  
 **引用**：LuaBaiyin  
 **状态**：1217验证通过
-
+```lua
 	LuaBaiyin = sgs.CreateTriggerSkill{
 		name = "LuaBaiyin" ,
 		frequency = sgs.Skill_Wake ,
@@ -163,6 +164,7 @@
 					and (target:getMark("@bear") >= 4)
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##豹变
@@ -170,7 +172,7 @@
 **描述**：**锁定技，**若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。  
 **引用**：LuaBaobian  
 **状态**：1217验证通过
-
+```lua
 	function BaobianChange(room, player, hp, skill_name)
 		local baobian_skills = player:getTag("LuaBaobianSkills"):toString():split("+")	
 		if player:getHp() <= hp then		
@@ -227,6 +229,7 @@
 			return target ~= nil
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##暴虐
@@ -234,7 +237,7 @@
 **描述**：**主公技，**每当其他群雄角色造成一次伤害后，该角色可以进行一次判定，若判定结果为黑桃，你回复1点体力。  
 **引用**：LuaBaonve  
 **状态**：1217验证通过
-
+```lua
 	LuaBaonve = sgs.CreateTriggerSkill{
 		name = "LuaBaonve$",
 		frequency = sgs.Skill_NotFrequent,
@@ -277,6 +280,7 @@
 			return target
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##悲歌
@@ -284,7 +288,7 @@
 **描述**：每当一名角色受到【杀】造成的一次伤害后，你可以弃置一张牌，令其进行一次判定，判定结果为：红桃 该角色回复1点体力；方块 该角色摸两张牌；梅花 伤害来源弃置两张牌；黑桃 伤害来源将其武将牌翻面。  
 **引用**：LuaBeige  
 **状态**：1217验证通过
-
+```lua
 	LuaBeige = sgs.CreateTriggerSkill{
 		name = "LuaBeige",
 		frequency = sgs.Skill_NotFrequent,
@@ -340,6 +344,7 @@
 			return target ~= nil
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##北伐
@@ -347,7 +352,7 @@
 **描述**：**锁定技，**当你失去最后的手牌时，视为你对一名其他角色使用了一张【杀】，若不能如此做，则视为你对自己使用了一张【杀】  
 **引用**：LuaBeifa  
 **状态**：1217验证通过
-
+```lua
 	LuaBeifa = sgs.CreateTriggerSkill{
 		name = "LuaBeifa" ,
 		events = {sgs.CardsMoveOneTime} ,
@@ -363,8 +368,7 @@
 					if player:canSlash(_player, slash) then
 						players:append(_player)
 					end
-				end
-	
+				end	
 				local target = nil
 				if not players:isEmpty() then
 					target = room:askForPlayerChosen(player, players, self:objectName()) --没有处理TarMod
@@ -381,6 +385,7 @@
 			return false
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 
@@ -389,7 +394,7 @@
 **描述**：**锁定技，**回合结束阶段开始时，若你不是当前的体力值最少的角色之一，你须失去1点体力或减1点体力上限。  
 **引用**：LuaBenghuai  
 **状态**：1217验证通过
-
+```lua
 	LuaBenghuai = sgs.CreateTriggerSkill{
 		name = "LuaBenghuai",
 		frequency = sgs.Skill_Compulsory,
@@ -418,6 +423,7 @@
 			end
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##笔伐
@@ -425,7 +431,7 @@
 **描述**：结束阶段开始时，你可以将一张手牌移出游戏并选择一名其他角色，该角色的回合开始时，观看该牌，然后选择一项：交给你一张与该牌类型相同的牌并获得该牌，或将该牌置入弃牌堆并失去1点体力。  
 **引用**：LuaBifa  
 **状态**：1217验证通过
-
+```lua
 	LuaBifaCard = sgs.CreateSkillCard{
 		name = "LuaBifa",
 		target_fixed = false,
@@ -534,6 +540,7 @@
 			return target
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##闭月
@@ -541,7 +548,7 @@
 **描述**：结束阶段开始时，你可以摸一张牌。  
 **引用**：LuaBiyue  
 **状态**：1217验证通过
-
+```lua
 	LuaBiyue = sgs.CreateTriggerSkill{
 		name = "LuaBiyue",
 		frequency = sgs.Skill_Frequent,
@@ -555,6 +562,7 @@
 			end
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##补益
@@ -562,7 +570,7 @@
 **描述**：当一名角色进入濒死状态时，你可以展示该角色的一张手牌，若此牌不为基本牌，该角色弃置之，然后回复1点体力。  
 **引用**：LuaBuyi  
 **状态**：1217验证通过
-
+```lua
 	LuaBuyi = sgs.CreateTriggerSkill{
 		name = "LuaBuyi",
 		events = {sgs.Dying},
@@ -594,6 +602,7 @@
 			return false
 		end,
 	}
+```
 [返回索引](#技能索引) 
 
 ##不屈
@@ -601,7 +610,7 @@
 **描述**：**锁定技，**每当你处于濒死状态时，你将牌堆顶的一张牌置于武将牌上：若无同点数的“不屈牌”，你回复至1点体力；否则你将该牌置入弃牌堆。若你有“不屈牌”，你的手牌上限等于“不屈牌”的数量。   
 **引用**：LuaBuqu、LuaBuquRemove  
 **状态**：1217验证通过
-
+```lua
 	LuaBuqu = sgs.CreateTriggerSkill{
 		name = "LuaBuqu" ,
 		events = {sgs.AskForPeaches} ,
@@ -651,6 +660,7 @@
 			end
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##不屈-旧风
@@ -658,7 +668,7 @@
 **描述**：每当你扣减1点体力后，若你的体力值为0，你可以将牌堆顶的一张牌置于武将牌上，称为“创”，若所有“创”的点数均不同，你不会进入濒死状态。  
 **引用**：LuaBuqu、LuaBuquRemove  
 **状态**：1217验证通过
-
+```lua
 	function Remove(SP)
 		local room = SP:getRoom()
 		local card_ids = SP:getPile("nosbuqu")
@@ -770,4 +780,5 @@
 			return target
 		end
 	}
+```
 [返回索引](#技能索引) 

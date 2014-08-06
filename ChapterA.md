@@ -9,7 +9,7 @@
 **描述**：每当你使用【杀】对目标角色造成伤害时，你可以防止此次伤害，令其弃置一张手牌，然后你摸一张牌；当你成为【杀】的目标时，你可以弃置一张手牌使之无效，然后该【杀】的使用者摸一张牌。  
 **引用**：LuaAnxian  
 **状态**：1217验证通过  
-
+```lua
 	LuaAnxian = sgs.CreateTriggerSkill{      
 		name = "LuaAnxian" ,   
 		events = {sgs.DamageCaused, sgs.TargetConfirming,  sgs.SlashEffected} ,   
@@ -46,14 +46,15 @@
 			end  
 			return false  
 		end  
-	}  
+	} 
+``` 
 [返回索引](#技能索引) 
 ##安恤
 **相关武将**：二将成名·步练师  
 **描述**：出牌阶段限一次，你可以选择两名手牌数不相等的其他角色，令其中手牌少的角色获得手牌多的角色的一张手牌并展示之，若此牌不为♠，你摸一张牌。  
 **引用**：LuaAnxu  
 **状态**：1217验证通过
-
+```lua
 	LuaAnxuCard = sgs.CreateSkillCard{
 		name = "LuaAnxuCard" ,
 		filter = function(self, targets, to_select)
@@ -98,6 +99,7 @@
 			return not player:hasUsed("#LuaAnxuCard")
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##暗箭
@@ -105,7 +107,7 @@
 **描述**：每当你使用【杀】对目标角色造成伤害时，若你不在其攻击范围内，此伤害+1。  
 **引用**：LuaAnjian  
 **状态**：1217验证通过  
-
+```lua
 	LuaAnjian = sgs.CreateTriggerSkill{
 		name = "LuaAnjian",
 		frequency = sgs.Skill_Compulsory,
@@ -121,13 +123,14 @@
 			end
 		end
 	}
+```
 [返回索引](#技能索引) 
 
 ##傲才
 **相关武将**：SP·诸葛恪  
 **描述**：你的回合外，每当你需要使用或打出一张基本牌时，你可以观看牌堆顶的两张牌，然后使用或打出其中一张该类别的基本牌。  
 **状态**：1217验证通过[与源码略有区别]  
-
+```lua
 	function view(room, player, ids, enabled, disabled)
 		local result = -1
 		room:notifySkillInvoked(player, "LuaAocai")
@@ -158,8 +161,7 @@
 			room:setPlayerFlag(player, "Global_LuaAocaiFailed")
 		end
 		return result
-	end  
-
+	end
 	LuaAocaiVS = sgs.CreateViewAsSkill{
 		name = "LuaAocai",
 		n = 0,
@@ -187,7 +189,6 @@
 			return acard
 		end,
 	}
-
 	LuaAocai = sgs.CreateTriggerSkill{
 		name = "LuaAocai",
 		view_as_skill = LuaAocaiVS,
@@ -288,4 +289,5 @@
 			return sgs.Sanguosha:getCard(id)
 		end
 	}
+```
 [返回索引](#技能索引) 
