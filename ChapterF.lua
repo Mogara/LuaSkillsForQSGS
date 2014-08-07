@@ -44,7 +44,7 @@ LuaFanjian = sgs.CreateZeroCardViewAsSkill{
 	相关武将：翼·周瑜
 	描述：出牌阶段，你可以选择一张手牌，令一名其他角色说出一种花色后展示并获得之，若猜错则其受到你对其造成的1点伤害。每阶段限一次。
 	引用：LuaXNeoFanjian
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaXNeoFanjianCard = sgs.CreateSkillCard{
 	name = "LuaXNeoFanjianCard",
@@ -95,7 +95,7 @@ LuaXNeoFanjian = sgs.CreateViewAsSkill{
 	相关武将：标准·司马懿
 	描述：每当你受到一次伤害后，你可以获得伤害来源的一张牌。
 	引用：LuaFankui
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaFankui = sgs.CreateTriggerSkill{
 	name = "LuaFankui",
@@ -176,7 +176,7 @@ LuaFangquanGive = sgs.CreateTriggerSkill{
 	相关武将：林·曹丕、铜雀台·曹丕
 	描述：每当你受到一次伤害后，你可以令一名其他角色摸X张牌（X为你已损失的体力值），然后该角色将其武将牌翻面。
 	引用：LuaFangzhu
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaFangzhu = sgs.CreateTriggerSkill{
 	name = "LuaFangzhu",
@@ -200,7 +200,7 @@ LuaFangzhu = sgs.CreateTriggerSkill{
 	相关武将：神·曹操、倚天·魏武帝
 	描述：其他角色计算的与你的距离+1。
 	引用：LuaFeiying
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaFeiying = sgs.CreateDistanceSkill{
 	name = "LuaFeiying",
@@ -265,13 +265,14 @@ LuaFencheng = sgs.CreateTriggerSkill{
 	技能名：焚心（限定技）
 	相关武将：铜雀台·灵雎、SP·灵雎
 	描述：当你杀死一名非主公角色时，在其翻开身份牌之前，你可以与该角色交换身份牌。（你的身份为主公时不能发动此技能。）
-	引用：LuaXFenxin、LuaXFenxinStart
-	状态：验证通过
+	引用：LuaXFenxin
+	状态：1217验证通过
 ]]--
 LuaXFenxin = sgs.CreateTriggerSkill{
 	name = "LuaXFenxin",
 	frequency = sgs.Skill_Limited,
 	events = {sgs.AskForPeachesDone},
+	limit_mark = "@burnheart",
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local mode = room:getMode()
@@ -308,14 +309,6 @@ LuaXFenxin = sgs.CreateTriggerSkill{
 		return target
 	end
 }
-LuaXFenxinStart = sgs.CreateTriggerSkill{
-	name = "#LuaXFenxinStart",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.GameStart},
-	on_trigger = function(self, event, player, data)
-		player:gainMark("@burnheart", 1)
-	end
-}
 --[[
 	技能名：奋激
 	相关武将：风·周泰
@@ -333,13 +326,13 @@ LuaFenji = sgs.CreateTriggerSkill{
 		if not move.from then return false end
 		if player:getHp() > 0 and move.from:isAlive() and move.from_places:contains(sgs.Player_PlaceHand) 
 			and move.reason.m_reason == sgs.CardMoveReason_S_REASON_DISMANTLE
-				and move.reason.m_playerId ~= move.reason.m_targetId
-				or (move.to and move.to:objectName() ~= move.from:objectName() and move.to_place == sgs.Player_PlaceHand) then
-		if room:askForSkillInvoke(player, self:objectName(), data) then
-			room:loseHp(player)
-		if move.from:isAlive() then
-		local from = room:findPlayer(move.from:getGeneralName())
-			room:drawCards(from,2)
+			and move.reason.m_playerId ~= move.reason.m_targetId
+			or (move.to and move.to:objectName() ~= move.from:objectName() and move.to_place == sgs.Player_PlaceHand) then
+			if room:askForSkillInvoke(player, self:objectName(), data) then
+				room:loseHp(player)
+				if move.from:isAlive() then
+					local from = room:findPlayer(move.from:getGeneralName())
+					room:drawCards(from,2)
 				end
 			end
 		end
@@ -748,7 +741,7 @@ LuaFuhun = sgs.CreateTriggerSkill{
 	相关武将：怀旧-一将2·关&张-旧
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为从牌堆顶亮出两张牌并获得之，若亮出的牌颜色不同，你获得技能“武圣”、“咆哮”，直到回合结束。
 	引用：LuaNosFuhun
-	状态：0224验证通过
+	状态：1217验证通过
 ]]--
 LuaNosFuhun = sgs.CreateTriggerSkill{
 	name = "LuaNosFuhun",
@@ -767,6 +760,7 @@ LuaNosFuhun = sgs.CreateTriggerSkill{
 				local move2 = sgs.CardsMoveStruct()
 				move.card_ids:append(id1)
 				move.card_ids:append(id2)
+				move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TURNOVER, player:objectName(),self:objectName(), "")
 				move.to_place = sgs.Player_PlaceTable
 				room:moveCardsAtomic(move, true)
 				room:getThread():delay()
