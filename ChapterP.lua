@@ -8,7 +8,7 @@
 	相关武将：一将成名·钟会
 	描述：出牌阶段限一次，你可以将一张“权”置入弃牌堆并选择一名角色，该角色摸两张牌。然后若该角色手牌数大于你的手牌数，你对其造成1点伤害。
 	引用：LuaPaiyi
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaPaiyiCard = sgs.CreateSkillCard{
 	name = "LuaPaiyiCard",
@@ -68,7 +68,7 @@ LuaPaiyi = sgs.CreateViewAsSkill{
 	相关武将：标准·张飞、翼·张飞
 	描述：你在出牌阶段内使用【杀】时无次数限制。
 	引用：LuaPaoxiao
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaPaoxiao = sgs.CreateTargetModSkill{
 	name = "LuaPaoxiao",
@@ -83,7 +83,36 @@ LuaPaoxiao = sgs.CreateTargetModSkill{
 	技能名：捧日
 	相关武将：3D织梦·程昱
 	描述：出牌阶段，你可以获得一名其他角色的一张牌，视为该角色对你使用一张【杀】。每阶段限一次。
+	引用：LuaPengri
+	状态：1217验证成功
+	备注：此技能只能对 能对你使用【杀】的角色 使用
 ]]--
+LuaPengriCard = sgs.CreateSkillCard{
+	name = "LuaPengri",
+	filter = function(self, targets, to_select, player)
+		return #targets<1 and not to_select:isNude() and to_select:objectName()~=player:objectName() and to_select:canSlash(player, false)
+	end,
+	on_use = function(self, room, source, targets)
+		local card_id = room:askForCardChosen(source, targets[1] , "he", "LuaPengri")
+		room:obtainCard(source, card_id, room:getCardPlace(card_id) ~= sgs.Player_Hand)
+		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, -1)
+		slash:setSkillName(self:objectName())
+		local use = sgs.CardUseStruct()
+		use.card = slash
+		use.from = targets[1]
+		use.to:append(source)
+		room:useCard(use)
+	end,
+}
+LuaPengri = sgs.CreateZeroCardViewAsSkill{
+	name = "LuaPengri",
+	view_as = function(self)
+		return LuaPengriCard:clone()
+	end,
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("#LuaPengri")
+	end,
+}
 --[[
 	技能名：翩仪（锁定技）
 	相关武将：1v1·貂蝉1v1
@@ -94,7 +123,7 @@ LuaPaoxiao = sgs.CreateTargetModSkill{
 	相关武将：一将成名·徐盛
 	描述：每当你使用【杀】对目标角色造成一次伤害后，你可以令其摸X张牌（X为该角色当前的体力值且至多为5），然后该角色将其武将牌翻面。
 	引用：LuaPojun
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
 LuaPojun = sgs.CreateTriggerSkill{
 	name = "LuaPojun" ,
@@ -116,4 +145,35 @@ LuaPojun = sgs.CreateTriggerSkill{
 	技能名：普济
 	相关武将：1v1·华佗
 	描述：出牌阶段限一次，若对手有牌，你可以弃置一张牌：若如此做，你弃置其一张牌，然后以此法弃置♠牌的角色摸一张牌。 
+	引用：LuaPuji
+	状态：1217验证成功
 ]]--
+LuaPujiCard = sgs.CreateSkillCard{
+	name = "LuaPuji",
+	filter = function(self, targets, to_select, player)
+		return #targets<1 and player:canDiscard(to_select, "he") and to_select:objectName() ~= player:objectName()
+	end,
+	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
+		local id = room:askForCardChosen(effect.from, effect.to, "he", "LuaPuji")
+		room:throwCard(id, effect.to, effect.from)
+		if effect.from:isAlive() and self:getSuit() == sgs.Card_Spade then
+			effect.from:drawCards(1)
+		end
+		if effect.to:isAlive() and sgs.Sanguosha:getCard(id):getSuit() == sgs.Card_Spade then
+			effect.to:drawCards(1)
+		end
+	end,
+}
+LuaPuji = sgs.CreateOneCardViewAsSkill{
+	name = "LuaPuji",
+	filter_pattern = ".!",
+	enabled_at_play = function(self, player)
+		return player:canDiscard(player, "he") and not player:hasUsed("#LuaPuji")
+	end,
+	view_as = function(self, card)
+		local pujiCard = LuaPujiCard:clone()
+		pujiCard:addSubcard(card)
+		return pujiCard
+    end,
+}
