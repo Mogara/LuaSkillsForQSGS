@@ -126,7 +126,46 @@ LuaGanglie = sgs.CreateTriggerSkill{
 	技能名：刚烈
 	相关武将：2013-3v3·夏侯惇
 	描述： 每当你受到伤害后，你可以选择一名对方角色并进行一次判定，若判定结果不为♥，则该角色选择一项：弃置两张手牌，或受到你造成的1点伤害。
+	引用：LuaVsGanglie
+	状态：1217验证通过
 ]]--
+LuaVsGanglie = sgs.CreateMasochismSkill{
+	name = "LuaVsGanglie",
+	on_damaged = function(self,player)
+		local room = player:getRoom()
+		local mode = room:getMode()
+		local function isFriend (a,b)
+			return string.sub(a:getRole(),1,1) == string.sub(b:getRole(),1,1)
+		end
+		if mode:startsWith("06_") then
+			local enemies = sgs.SPlayerList()
+			for _,p in sgs.qlist(room:getAlivePlayers())do
+				if not isFriend(player,p) then
+					enemies:append(p)
+				end
+			end
+			local from = room:askForPlayerChosen(player,enemies,self:objectName(),"vsganglie-invoke", true, true)
+			if from then
+				local judge = sgs.JudgeStruct()
+				judge.pattern = ".|heart"
+				judge.good = false
+				judge.reason = self:objectName()
+				judge.who = player
+				room:judge(judge)
+				if judge:isGood() then
+					if from:getHandcardNum() < 2 then
+						room:damage(sgs.DamageStruct(self:objectName(), player, from))
+					else
+						if not room:askForDiscard(from, self:objectName(), 2, 2, true) then
+							room:damage(sgs.DamageStruct(self:objectName(), player, from))
+						end
+					end
+				end
+			end
+		end
+		return false
+	end
+}
 --[[
 	技能名：刚烈
 	相关武将：翼·夏侯惇
