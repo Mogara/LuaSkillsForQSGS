@@ -38,8 +38,9 @@ Please copy the **sgs_ex.lua** to **QSanguosha-1217\lua** directory and use the 
 - [Chapter G](ChapterG.md)  
 [甘露](ChapterG.md#甘露)、[感染](ChapterG.md#感染)、[刚烈](ChapterG.md#刚烈)、[刚烈-3v3](ChapterG.md#刚烈-3v3)、[刚烈-翼](ChapterG.md#刚烈-翼)、[弓骑](ChapterG.md#弓骑)、[弓骑-旧](ChapterG.md#弓骑-旧)、[攻心](ChapterG.md#攻心)、[共谋](ChapterG.md#共谋)、[蛊惑](ChapterG.md#蛊惑)、[蛊惑-旧](ChapterG.md#蛊惑-旧)、[固守](ChapterG.md#固守)、[固政](ChapterG.md#固政)、[观星](ChapterG.md#观星)、[归汉](ChapterG.md#归汉)、[归心](ChapterG.md#归心)、[归心-倚天](ChapterG.md#归心-倚天)、[闺秀](ChapterG.md#闺秀)、[鬼才](ChapterG.md#鬼才)、[鬼道](ChapterG.md#鬼道)、[国色](ChapterG.md#国色)
 - [Chapter H](ChapterH.md)
-- [Chapter I](ChapterI.md)
-- [Chapter J](ChapterJ.md)
+- Chapter I **无技能**
+- [Chapter J](ChapterJ.md)  
+[鸡肋](ChapterJ.md#鸡肋)、[激昂](ChapterJ.md#激昂)、[激将](ChapterJ.md#激将)、[极略](ChapterJ.md#极略)、[急救](ChapterJ.md#急救)、[急速](ChapterJ.md#急速)、[急袭](ChapterJ.md#急袭)、[集智](ChapterJ.md#集智)、[集智-旧](ChapterJ.md#集智-旧)、[嫉恶](ChapterJ.md#嫉恶)、[奸雄](ChapterJ.md#奸雄)、[坚守](ChapterJ.md#坚守)、[将驰](ChapterJ.md#将驰)、[节命](ChapterJ.md#节命)、[结姻](ChapterJ.md#结姻)、[竭缘](ChapterJ.md#竭缘)、[解烦](ChapterJ.md#解烦)、[解烦-旧](ChapterJ.md#解烦-旧)、[解惑](ChapterJ.md#解惑)、[解围](ChapterJ.md#解围)、[尽瘁](ChapterJ.md#尽瘁)、[禁酒](ChapterJ.md#禁酒)、[精策](ChapterJ.md#精策)、[精锐](ChapterJ.md#精锐)、[酒池](ChapterJ.md#酒池)、[酒诗](ChapterJ.md#酒诗)、[救援](ChapterJ.md#救援)、[救主](ChapterJ.md#救主)、[举荐](ChapterJ.md#举荐)、[举荐-旧](ChapterJ.md#举荐-旧)、[巨象](ChapterJ.md#巨象)、[倨傲](ChapterJ.md#倨傲)、[据守](ChapterJ.md#据守)、[据守-旧](ChapterJ.md#据守-旧)、[据守-翼](ChapterJ.md#据守-翼)、[聚武](ChapterJ.md#聚武)、[绝策](ChapterJ.md#绝策)、[绝汲](ChapterJ.md#绝汲)、[绝境](ChapterJ.md#绝境)、[绝境-旧](ChapterJ.md#绝境-旧)、[绝情](ChapterJ.md#绝情)、[军威](ChapterJ.md#军威)、[峻刑](ChapterJ.md#峻刑)
 - [Chapter K](ChapterK.md)
 - [Chapter L](ChapterL.md)
 - [Chapter M](ChapterM.md)
