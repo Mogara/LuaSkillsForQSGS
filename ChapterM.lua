@@ -22,7 +22,8 @@ LuaMashu = sgs.CreateDistanceSkill{
 	技能名：蛮裔
 	相关武将：1v1·孟获1v1、1v1·祝融1v1
 	描述：你登场时，你可以视为使用一张【南蛮入侵】。锁定技，【南蛮入侵】对你无效。
-	状态：验证通过（kof1v1模式下通过）
+	引用：LuaSavageAssaultAvoid,LuaManyi
+	状态：1217验证通过（kof1v1模式下通过）
 ]]--
 LuaSavageAssaultAvoid = sgs.CreateTriggerSkill{
 	name = "#LuaSavageAssaultAvoid",
@@ -527,7 +528,7 @@ LuaMieji = sgs.CreateTriggerSkill{
 	相关武将：国战·孔融
 	描述：每当你受到伤害时，若伤害来源有手牌，需展示所有手牌，否则此伤害-1。
 	引用：LuaXMingshi
-	状态：0224验证通过
+	状态：1217验证通过
 ]]--
 LuaXMingshi = sgs.CreateTriggerSkill{
 	name = "LuaXMingshi",
