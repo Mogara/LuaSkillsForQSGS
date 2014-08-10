@@ -340,7 +340,7 @@ LuaLihun = sgs.CreateTriggerSkill{
 	技能名：离间
 	相关武将：标准·貂蝉
 	描述：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】。
-	引用：LuaLijian0701 （需小幅修改）
+	引用：LuaLijian
 	状态：1217验证通过
 	注：仅需将旧版离间的 "duel:toTrick():setCancelable(false)" 那一行去掉即可
 ]]--
@@ -348,7 +348,7 @@ LuaLihun = sgs.CreateTriggerSkill{
 	技能名：离间
 	相关武将：怀旧-标准·貂蝉-旧、SP·貂蝉、SP·台版貂蝉
 	描述：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】（不能使用【无懈可击】对此【决斗】进行响应）。
-	引用：LuaLijian0701
+	引用：LuaLijian
 	状态：1217验证通过
 ]]--
 newDuel = function()
@@ -402,7 +402,7 @@ LuaLijianCard = sgs.CreateSkillCard{
 		end
 	end
 }
-LuaLijian0701 = sgs.CreateViewAsSkill{
+LuaLijian = sgs.CreateViewAsSkill{
 	name = "LuaLijian" ,
 	n = 1 ,
 	view_filter = function(self, cards, to_select)
