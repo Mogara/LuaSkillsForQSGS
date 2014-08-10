@@ -748,6 +748,7 @@ LuaHujia = sgs.CreateTriggerSkill{
 	相关武将：阵·曹洪
 	描述：结束阶段开始时，你可以将一张装备牌置于一名角色装备区内，然后你弃置该角色距离1的一名角色区域内的一张牌。 
 	状态：1217验证通过
+	注备：Xusine1131(数字君)：我真应该扇自己两巴掌……
 ]]--
 LuaHuyuanCard = sgs.CreateSkillCard{
 	name = "LuaHuyuanCard",
@@ -765,7 +766,7 @@ LuaHuyuanCard = sgs.CreateSkillCard{
 	on_effect = function(self, effect)
 		local caohong = effect.from
 		local room = caohong:getRoom()
-		room:moveCardTo(self, caohong, effect.to, sgs.Player_PlaceEquip,sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, source:objectName(), "LuaYuanhu", ""))
+		room:moveCardTo(self, caohong, effect.to, sgs.Player_PlaceEquip,sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, caohong:objectName(), "LuaYuanhu", ""))
 		local card = sgs.Sanguosha:getCard(self:getEffectiveId())
 		local targets = sgs.SPlayerList()
 		for _,p in sgs.qlist(room:getAllPlayers()) do
@@ -775,7 +776,7 @@ LuaHuyuanCard = sgs.CreateSkillCard{
 		end
 		if not targets:isEmpty() then
 		local to_dismantle = room:askForPlayerChosen(caohong, targets, "LuaHuyuan", "@huyuan-discard:" .. effect.to:objectName())
-		local card_id = room->askForCardChosen(caohong, to_dismantle, "he", "LuaHuyuan", false,sgs.Card_MethodDiscard)
+		local card_id = room:askForCardChosen(caohong, to_dismantle, "he", "LuaHuyuan", false,sgs.Card_MethodDiscard)
 			room:throwCard(sgs.Sanguosha:getCard(card_id), to_dismantle, caohong)
 		end
 	end
@@ -798,7 +799,7 @@ LuaHuyuan = sgs.CreatePhaseChangeSkill{
 	on_phasechange = function(self,target)
 		local room = target:getRoom()
 		if target:getPhase() == sgs.Player_Finish and not target:isNude() then
-			room:askForUseCard(target, "@@huyuan", "@huyuan-equip", -1, sgs.Card_MethodNone)
+			room:askForUseCard(target, "@@LuaHuyuan", "@huyuan-equip", -1, sgs.Card_MethodNone)
 		end
 	end
 }
