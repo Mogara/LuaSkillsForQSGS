@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（P区）
 	技能索引：
-		排异、排异、咆哮、捧日、翩仪、破军、普济
+		排异、咆哮、翩仪、破军、普济
 ]]--
 --[[
 	技能名：排异
@@ -59,11 +59,6 @@ LuaPaiyi = sgs.CreateViewAsSkill{
 	end
 }
 --[[
-	技能名：排异
-	相关武将：胆创·钟会
-	描述：回合结束阶段，将一张“权”移动到任何合理的区域，若不是你的区域，你可以摸一张牌。
-]]--
---[[
 	技能名：咆哮（锁定技）
 	相关武将：标准·张飞、翼·张飞
 	描述：你在出牌阶段内使用【杀】时无次数限制。
@@ -79,44 +74,12 @@ LuaPaoxiao = sgs.CreateTargetModSkill{
 		end
 	end,
 }
---[[
-	技能名：捧日
-	相关武将：3D织梦·程昱
-	描述：出牌阶段，你可以获得一名其他角色的一张牌，视为该角色对你使用一张【杀】。每阶段限一次。
-	引用：LuaPengri
-	状态：1217验证成功
-	备注：此技能只能对 能对你使用【杀】的角色 使用
-]]--
-LuaPengriCard = sgs.CreateSkillCard{
-	name = "LuaPengri",
-	filter = function(self, targets, to_select, player)
-		return #targets<1 and not to_select:isNude() and to_select:objectName()~=player:objectName() and to_select:canSlash(player, false)
-	end,
-	on_use = function(self, room, source, targets)
-		local card_id = room:askForCardChosen(source, targets[1] , "he", "LuaPengri")
-		room:obtainCard(source, card_id, room:getCardPlace(card_id) ~= sgs.Player_Hand)
-		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, -1)
-		slash:setSkillName(self:objectName())
-		local use = sgs.CardUseStruct()
-		use.card = slash
-		use.from = targets[1]
-		use.to:append(source)
-		room:useCard(use)
-	end,
-}
-LuaPengri = sgs.CreateZeroCardViewAsSkill{
-	name = "LuaPengri",
-	view_as = function(self)
-		return LuaPengriCard:clone()
-	end,
-	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaPengri")
-	end,
-}
+
 --[[
 	技能名：翩仪（锁定技）
 	相关武将：1v1·貂蝉1v1
 	描述：你登场时，若处于对手的回合，当前回合结束。
+	状态：等谋神杀版本支持throwEvent的时候我会考虑这个技能……
 ]]--
 --[[
 	技能名：破军
