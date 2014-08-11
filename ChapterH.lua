@@ -365,9 +365,8 @@ LuaHeyi = sgs.CreateTriggerSkill{
 	技能名：横江
 	相关武将：势·臧霸
 	描述：每当你受到1点伤害后，你可以令当前回合角色本回合手牌上限-1，然后其回合结束时，若你于此回合发动过“横江”，且其未于弃牌阶段内弃置牌，你摸一张牌。 
-	引用：LuaWangxi
-	状态：1217验证通过
-	
+	引用：LuaHengjiang,LuaHengjiangDraw,LuaHengjiangMaxcards
+	状态：1217验证通过	
 	DB:效果（处理方法）和源码一致，但我始终觉得有问题。描述写错了么，还是我脑子还没转过来·····
 ]]--
 LuaHengjiang = sgs.CreateMasochismSkill{
