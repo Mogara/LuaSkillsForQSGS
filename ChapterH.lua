@@ -770,7 +770,7 @@ LuaHuyuanCard = sgs.CreateSkillCard{
 		local card = sgs.Sanguosha:getCard(self:getEffectiveId())
 		local targets = sgs.SPlayerList()
 		for _,p in sgs.qlist(room:getAllPlayers()) do
-			if effect.to:distanceTo(p) == 1 and caohong:canDiscard(p, "hej") then
+			if effect.to:distanceTo(p) == 1 and caohong:canDiscard(p, "he") then
 				targets:append(p)
 			end
 		end
