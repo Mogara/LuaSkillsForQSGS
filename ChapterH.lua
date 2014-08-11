@@ -7,7 +7,7 @@
 	技能名：汉统
 	相关武将：贴纸·刘协
 	描述：弃牌阶段，你可以将你弃置的手牌置于武将牌上，称为“诏”。你可以将一张“诏”置入弃牌堆，然后你拥有并发动以下技能之一：“护驾”、“激将”、“救援”、“血裔”，直到当前回合结束。
-	引用：LuaXHantong、LuaXHantongKeep
+	引用：LuaXHantong、LuaXHantongDetach
 	状态：1217验证通过
 ]]--
 function hasShuGenerals(player)
