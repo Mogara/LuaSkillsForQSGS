@@ -402,24 +402,15 @@ LuaQianhuan = sgs.CreateTriggerSkill{
 	引用：LuaQixi
 	状态：1217验证通过
 ]]--
-LuaQixi = sgs.CreateViewAsSkill{
-	name = "LuaQixi",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return to_select:isBlack()
-	end,
-	view_as = function(self, cards)
-		if #cards == 0 then
-			return nil
-		end
-		if #cards == 1 then
-			local card = cards[1]
-			local acard = sgs.Sanguosha:cloneCard("dismantlement", card:getSuit(), card:getNumber())
-			acard:addSubcard(card:getId())
-			acard:setSkillName(self:objectName())
-			return acard
-		end
-	end
+LuaQixi = sgs.CreateOneCardViewAsSkill{
+	name = "LuaQixi", 
+	filter_pattern = ".|black",
+	view_as = function(self, card) 
+		local acard = sgs.Sanguosha:cloneCard("dismantlement", card:getSuit(), card:getNumber())
+		acard:addSubcard(card:getId())
+		acard:setSkillName(self:objectName())
+		return acard
+	end, 
 }
 --[[
 	技能名：谦逊（锁定技）
