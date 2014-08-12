@@ -654,7 +654,7 @@ LuaDuanliangTargetMod = sgs.CreateTargetModSkill{
 	技能名：断指
 	相关武将：铜雀台·吉本
 	描述：当你成为其他角色使用的牌的目标后，你可以弃置其至多两张牌（也可以不弃置），然后失去1点体力。
-	引用：LuaXDuanzhi、LuaXDuanzhiAvoidTriggeringCardsMove
+	引用：LuaXDuanzhi、LuaXDuanzhiFakeMove
 	状态：1217验证通过
 	备注:原版遇到香香会有bug,新版选择手牌可能会有多次选择的情况，两次随机选卡为相同id,以后再修正(我会乱说下面就是原版？)
 ]]--
@@ -669,7 +669,7 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
             return false
 		end
         if player:askForSkillInvoke(self:objectName(), data) then
-            room:setPlayerFlag(player, "duanzhi_InTempMoving");
+            room:setPlayerFlag(player, "LuaXDuanzhi_InTempMoving");
             local target = use.from
             local dummy = sgs.Sanguosha:cloneCard("slash") --没办法了，暂时用你代替DummyCard吧……
             local card_ids = sgs.IntList()
@@ -687,7 +687,7 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
                     room:moveCardTo(sgs.Sanguosha:getCard(card_ids:ai(i-1)), target, original_places:at(i-1), false)
 				end
 			end
-            room:setPlayerFlag(player, "-duanzhi_InTempMoving")
+            room:setPlayerFlag(player, "-LuaXDuanzhi_InTempMoving")
             if dummy:subcardsLength() > 0 then
                 room:throwCard(dummy, target, player)
 			end
@@ -696,6 +696,19 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
         return false
 	end,
 }
+LuaXDuanzhiFakeMove = sgs.CreateTriggerSkill{
+	name = "#LuaXDuanzhi-fake-move",
+	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
+	priority = 10,
+	on_trigger = function(self, event, player, data)
+		if player:hasFlag("LuaXDuanzhi_InTempMoving") then
+			return true
+		end
+	end,
+	can_trigger = function(self, target)
+		return target
+	end,
+end
 --[[
 	技能名：夺刀
 	相关武将：一将成名2013·潘璋&马忠

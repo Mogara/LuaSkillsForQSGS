@@ -970,8 +970,8 @@ LuaLieren = sgs.CreateTriggerSkill{
 				if not success then return false end
 				if not target:isNude() then
 					local card_id = room:askForCardChosen(player, target, "he", self:objectName())
-					--local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
-					room:obtainCard(player, sgs.Sanguosha:getCard(card_id), --[[reason,]] room:getCardPlace(card_id) ~= sgs.Player_PlaceHand)
+					local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+					room:moveCardTo(sgs.Sanguosha:getCard(card_id),player,sgs.Player_PlaceHand,reason)
 				end
 			end
 		end
@@ -1456,7 +1456,7 @@ LuaLuanji = sgs.CreateViewAsSkill{
 	技能名：乱武（限定技）
 	相关武将：林·贾诩、SP·贾诩
 	描述：出牌阶段，你可以令所有其他角色各选择一项：对距离最近的另一名角色使用一张【杀】，或失去1点体力。
-	引用：LuaLuanwu、LuaChaos1
+	引用：LuaLuanwu
 	状态：1217验证通过	
 ]]--
 LuaLuanwuCard = sgs.CreateSkillCard{

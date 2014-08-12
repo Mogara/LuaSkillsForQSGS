@@ -126,6 +126,7 @@ LuaAnjian = sgs.CreateTriggerSkill{
 	相关武将：SP·诸葛恪
 	描述：你的回合外，每当你需要使用或打出一张基本牌时，你可以观看牌堆顶的两张牌，然后使用或打出其中一张该类别的基本牌。
 	状态：1217验证通过[与源码略有区别]
+	引用：LuaAocai、LuaAocaiFakeMove
 	备注：此技能需要Json库，请将json.lua放置于神杀目录下或者lua\lib中。
 ]]--
 local json = require ("json")
@@ -165,8 +166,10 @@ function view(room, player, ids, enabled, disabled)
 		for _, id in sgs.qlist(ids) do table.insert(moves, id) end
 		local unmoves = sgs.reverse(moves)
 		for _, id in ipairs(unmoves) do dummy:addSubcard(id) end
+		room:setPlayerFlag(player,"LuaAocai_InTempMoving")
 		player:addToPile("#LuaAocai", dummy, false) --只能强制移到特殊区域再移动到摸牌堆
 		room:moveCardTo(dummy, nil, sgs.Player_DrawPile, false)
+		room:setPlayerFlag(player,"-LuaAocai_InTempMoving")
 	end
     if result == -1 then
         room:setPlayerFlag(player, "Global_LuaAocaiFailed")
@@ -228,6 +231,19 @@ LuaAocai = sgs.CreateTriggerSkill{
 		end
 	end,
 }
+LuaAocaiFakeMove = sgs.CreateTriggerSkill{
+	name = "#LuaAocai-fake-move",
+	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
+	priority = 10,
+	on_trigger = function(self, event, player, data)
+		if player:hasFlag("LuaAocai_InTempMoving") then
+			return true
+		end
+	end,
+	can_trigger = function(self, target)
+		return target
+	end,
+end
 LuaAocaiCard=sgs.CreateSkillCard{
 	name="LuaAocaiCard",
 	will_throw = false,
