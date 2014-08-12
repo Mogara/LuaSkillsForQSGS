@@ -1,12 +1,12 @@
 --[[
 	代码速查手册（S区）
 	技能索引：
-		伤逝、伤逝、尚义、烧营、涉猎、神愤、甚贤、神戟、神君、神力、神速、神威、神智、生息、师恩、识破、3D识破、恃才、恃勇、弑神、誓仇、慎拒、守成、授业、淑德、淑慎、双刃、双雄、水箭、水泳、死谏、死节、死战、颂词、颂威、肃资、随势
+		伤逝、伤逝、尚义、烧营、涉猎、神愤、甚贤、神戟、神君、神力、神速、神威、神智、生息、师恩、识破、恃才、恃勇、弑神、誓仇、慎拒、守成、授业、淑德、淑慎、双刃、双雄、水箭、水泳、死谏、死节、死战、颂词、颂威、肃资、随势
 ]]--
 --[[
-	技能名：伤逝（锁定技）
+	技能名：伤逝
 	相关武将：一将成名·张春华
-	描述：弃牌阶段外，当你的手牌数小于X时，你将手牌补至X张（X为你已损失的体力值且最多为2）。
+	描述：弃牌阶段外，当你的手牌数小于X时，你可以将手牌补至X张（X为你已损失的体力值且最多为2）。
 	引用：LuaShangshi
 	状态：1217验证通过
 ]]--
@@ -396,6 +396,7 @@ LuaShenxian = sgs.CreateTriggerSkill{
 	技能名：神戟
 	相关武将：SP·暴怒战神、2013-3v3·吕布
 	描述：若你的装备区没有武器牌，当你使用【杀】时，你可以额外选择至多两个目标。
+	引用：LuaShenji
 	状态：1217验证通过
 ]]--
 LuaShenji = sgs.CreateTargetModSkill{
@@ -665,7 +666,6 @@ LuaShengxi = sgs.CreateTriggerSkill{
 	描述：其他角色使用非延时锦囊时，可以让你摸一张牌
 	引用：LuaShien
 	状态：1217验证通过
-
 	注：智水镜的三个技能均有联系，为了方便起见统一使用本LUA版本的技能，并非原版
 ]]--
 LuaShien = sgs.CreateTriggerSkill{
@@ -877,6 +877,7 @@ LuaShichou = sgs.CreateTriggerSkill{
 	相关武将：1v1·吕蒙
 	描述：你的手牌上限+X。（X为弃牌阶段开始时其他角色最大的体力值）
 	引用：LuaShenju LuaShenjuMark
+	状态：1217验证通过
 ]]--
 LuaShenju = sgs.CreateMaxCardsSkill{
 	name = "Luashenju",
@@ -888,7 +889,6 @@ LuaShenju = sgs.CreateMaxCardsSkill{
 		end
 	end
 }
-
 LuaShenjuMark = sgs.CreateTriggerSkill{
 	name = "#LuaShenjuMark",
 	events = {sgs.EventPhaseStart},
@@ -944,7 +944,6 @@ LuaShoucheng = sgs.CreateTriggerSkill{
 	描述：出牌阶段，你可以弃置一张红色手牌，指定最多两名其他角色各摸一张牌
 	引用：LuaShouye
 	状态：1217验证通过
-
 	注：智水镜的三个技能均有联系，为了方便起见统一使用本LUA版本的技能，并非原版
 ]]--
 LuaShouyeCard = sgs.CreateSkillCard{
@@ -1078,7 +1077,6 @@ LuaXShuangrenVS = sgs.CreateZeroCardViewAsSkill{
 		return LuaXShuangrenCard:clone()
 	end, 
 }
-
 LuaXShuangren = sgs.CreateTriggerSkill{
 	name = "LuaXShuangren",
 	frequency = sgs.Skill_NotFrequent,
