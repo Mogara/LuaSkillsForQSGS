@@ -153,57 +153,6 @@ LuaZaoyao = sgs.CreateTriggerSkill{
 	相关武将：2013-3v3·吕布
 	描述：准备阶段开始时，若你已受伤且有己方角色已死亡，你减1点体力上限，弃置装备区的武器牌，然后获得技能“马术”和“神戟”。
 	引用：LuaZhanshen
-	状态：
-]]--
-LuaZhanshen = sgs.CreateTriggerSkill{
-	name = "LuaZhanshen",
-	events = {sgs.Death, sgs.EventPhaseStart},
-	frequency = sgs.Skill_Wake,
-	can_trigger = function(self, target)
-		return target ~= nil
-	end
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.Death then
-			local death = data:toDeath()
-			if death.who:objectName() ~= player:objectName() then
-				return false
-			end
-			local lvbu = room:findPlayerBySkillName(self:objectName())
-			if string.sub(room:getMode(), 1, 3) == "06_" then
-				if lvbu:getMark(self:objectName()) == 0 and lvbu:getMark("zhanshen_fight") == 0
-						and string.sub(lvbu:getRole(), 1, 1) == string.sub(player:getRole(), 1, 1) then
-					lvbu:addMark("zhanshen_fight")
-				end
-			else
-				if lvbu:getMark(self:objectName()) == 0 and lvbu:getMark("@fight") == 0		--身份局
-						and room:askForSkillInvoke(player, self:objectName(), sgs.QVariant("mark:"..lvbu:objectName())) then
-					room:addPlayerMark(lvbu, "@fight")
-				end
-			end
-		else
-			if player:getPhase() == sgs.Player_Start and player:getMark(self:objectName()) == 0 and player:isWounded()
-					and player:getMark("zhanshen_fight") > 0 or player:getMark("@fight") > 0 then
-				if player:getMark("@fight") > 0 then
-					room:setPlayerMark(player, "@fight", 0)
-				end
-				player:setMark("zhanshen_fight", 0)
-				room:addPlayerMark(player, self:objectName())
-				if room:changeMaxHpForAwakenSkill(player) then
-					if player:getWeapon() then
-						room:throwCard(player:getWeapon(), player)
-					end
-					room:handleAcquireDetachSkills(player, "mashu|shenji")
-				end
-			end
-		end
-		return false
-	end,
-}--[[
-	技能名：战神（觉醒技）
-	相关武将：2013-3v3·吕布
-	描述：准备阶段开始时，若你已受伤且有己方角色已死亡，你减1点体力上限，弃置装备区的武器牌，然后获得技能“马术”和“神戟”。
-	引用：LuaZhanshen
 	状态：1217验证通过
 ]]--
 LuaZhanshen = sgs.CreateTriggerSkill{
