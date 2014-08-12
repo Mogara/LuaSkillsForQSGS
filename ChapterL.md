@@ -981,8 +981,8 @@
 					if not success then return false end
 					if not target:isNude() then
 						local card_id = room:askForCardChosen(player, target, "he", self:objectName())
-						--local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
-						room:obtainCard(player, sgs.Sanguosha:getCard(card_id), --[[reason,]] room:getCardPlace(card_id) ~= sgs.Player_PlaceHand)
+						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+						room:moveCardTo(sgs.Sanguosha:getCard(card_id),player,sgs.Player_PlaceHand,reason)
 					end
 				end
 			end

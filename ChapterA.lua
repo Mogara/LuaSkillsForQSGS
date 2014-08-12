@@ -243,7 +243,7 @@ LuaAocaiFakeMove = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		return target
 	end,
-end
+}
 LuaAocaiCard=sgs.CreateSkillCard{
 	name="LuaAocaiCard",
 	will_throw = false,

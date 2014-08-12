@@ -27,7 +27,7 @@
 				else
 					room:fillAG(powers, source)
 					id = room:askForAG(source, powers, false, self:objectName())
-					source:invoke("clearAG")
+					room:clearAG(source)
 				end
 				if id ~= -1 then
 					local card = sgs.Sanguosha:getCard(id)

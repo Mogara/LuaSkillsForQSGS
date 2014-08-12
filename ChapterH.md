@@ -489,7 +489,7 @@
 			return false
 		end,
 		on_effect = function(self, effect)
-			effect.to:drawCards(1)
+			effect.to:setFlags("LuaHongyan_Target")
 		end
 	}
 	LuaXHongyuanVS = sgs.CreateViewAsSkill{
@@ -514,8 +514,11 @@
 			local room = player:getRoom()
 			if room:askForSkillInvoke(player, self:objectName()) then
 				room:setPlayerFlag(player, self:objectName())
-				local count = data:toInt() - 1
-				data:setValue(count)
+				if not room:askForUseCard(player, "@@LuaXHongyuan", "@hongyuan") then
+					local count = data:toInt() - 1
+					data:setValue(count)
+					player:setFlags("LuaHongyan")
+				end
 			end
 		end
 	}
@@ -526,11 +529,16 @@
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			if player:getPhase() == sgs.Player_Draw then
-				if player:hasFlag("LuaXHongyuan") then
-					room:setPlayerFlag(player, "-LuaXHongyuan")
-					if not room:askForUseCard(player, "@@LuaXHongyuan", "@hongyuan") then
-						player:drawCards(1)
+				if player:hasFlag("LuaHongyan") then
+					player:setFlags("-LuaHongyan")
+					local targets = sgs.SPlayerList()
+					for _,p in sgs.qlist(room:getAlivePlayers())do
+						if p:hasFlag("LuaHongyan_Target") then
+							p:setFlags("-LuaHongyan_Target")
+							targets:append(p)
+						end
 					end
+					room:drawCards(targets,1,"LuaHongyan")
 				end
 			end
 			return false

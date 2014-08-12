@@ -1,27 +1,16 @@
 --[[
 	代码速查手册（Q区）
 	技能索引：
-		七星、戚乱、奇才、奇才、奇策、奇袭、千幻、谦逊、潜袭、潜袭、枪舞、强袭、巧变、巧说、琴音、青釭、青囊、倾城、倾国、倾国1V1、求援、驱虎、权计、
+		七星、戚乱、奇才、奇才、奇策、奇袭、千幻、谦逊、潜袭、潜袭、枪舞、强袭、巧变、巧说、琴音、青囊、倾城、倾国、倾国1V1、求援、驱虎、权计、
 ]]--
 --[[
 	技能名：七星
 	相关武将：神·诸葛亮
 	描述：分发起始手牌时，共发你十一张牌，你选四张作为手牌，其余的面朝下置于一旁，称为“星”；摸牌阶段结束时，你可以用任意数量的手牌等量替换这些“星”。
-	引用：LuaQixing、LuaQixingStart、LuaQixingAsk、LuaQixingClear
+	引用：LuaQixing、LuaQixingStart
 	状态：1217验证通过
+	备注：医治永恒：把源码里耦合的“狂风”和“大雾”解耦了
 ]]--
-DiscardStar = function(shenzhuge, n, skillName)
-	local room = shenzhuge:getRoom();
-	local stars = shenzhuge:getPile("stars")
-	for i = 1, n, 1 do
-		room:fillAG(stars, shenzhuge)
-		local card_id = room:askForAG(shenzhuge, stars, false, "qixing-discard")
-		shenzhuge:invoke("clearAG")
-		stars:removeOne(card_id)
-		local card = sgs.Sanguosha:getCard(card_id)
-		room:throwCard(card, nil, nil)
-	end
-end
 LuaQixing = sgs.CreateTriggerSkill{
 	name = "LuaQixing",
 	frequency = sgs.Skill_Frequent,
@@ -58,67 +47,12 @@ LuaQixingStart = sgs.CreateTriggerSkill{
 	end,
 	priority = -1
 }
-LuaQixingAsk = sgs.CreatePhaseChangeSkill{
-	name = "#LuaQixingAsk",
-	frequency = sgs.Skill_Frequent,
-	on_phasechange = function(self, player)
-		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Finish then
-			local stars = player:getPile("stars")
-			if stars:length() > 0 then
-				if player:hasSkill("kuangfeng") then
-					room:askForUseCard(player, "@@kuangfeng", "@kuangfeng-card")
-				end
-			end
-			stars = player:getPile("stars")
-			if stars:length() > 0 then
-				if player:hasSkill("dawu") then
-					room:askForUseCard(player, "@@dawu", "@dawu-card")
-				end
-			end
-		end
-		return false
-	end
-}
-LuaQixingClear = sgs.CreateTriggerSkill{
-	name = "#LuaQixingClear",
-	frequency = sgs.Skill_Frequent,
-	events = {sgs.Death, sgs.EventPhaseStart},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.Death then
-			local players = room:getAllPlayers()
-			for _,dest in sgs.qlist(players) do
-				dest:loseAllMarks("@gale")
-				dest:loseAllMarks("@fog")
-			end
-		elseif event == sgs.EventPhaseStart then
-			if player:getPhase() == sgs.Player_RoundStart then
-				local players = room:getAllPlayers()
-				for _,dest in sgs.qlist(players) do
-					if dest:getMark("@gale") > 0 then
-						dest:loseMark("@gale")
-					end
-					if dest:getMark("@fog") > 0 then
-						dest:loseMark("@fog")
-					end
-				end
-			end
-		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return target:getMark("qixingOwner") > 0
-		end
-		return false
-	end,
-	priority = 3
-}
+
 --[[
 	技能名：戚乱
 	相关武将：阵·何太后
-	描述：每当一名角色的回合结束后，若你于本回合杀死至少一名角色，你可以摸三张牌。 
+	描述：每当一名角色的回合结束后，若你于本回合杀死至少一名角色，你可以摸三张牌。
+	引用：LuaQiluan 
 	状态：1217验证通过
 ]]--
 LuaQiluan = sgs.CreateTriggerSkill{
@@ -191,11 +125,6 @@ LuaNosQicai = sgs.CreateTargetModSkill{
 	引用：LuaQice
 	状态：1217验证通过
 ]]--
-function Set(list)
-	local set = {}
-	for _, l in ipairs(list) do set[l] = true end
-	return set
-end
 local patterns = {"snatch", "dismantlement", "collateral", "ex_nihilo", "duel", "fire_attack", "amazing_grace", "savage_assault", "archery_attack", "god_salvation", "iron_chain"}
 function getPos(table, value)
 	for i, v in ipairs(table) do
@@ -337,6 +266,7 @@ LuaQice = sgs.CreateViewAsSkill {
 	技能名：千幻
 	相关武将：阵·于吉
 	描述：每当一名角色受到伤害后，该角色可以将牌堆顶的一张牌置于你的武将牌上。每当一名角色被指定为基本牌或锦囊牌的唯一目标时，若该角色同意，你可以将一张“千幻牌”置入弃牌堆：若如此做，取消该目标。
+	引用：LuaQianhuan
 	状态：1217验证通过
 ]]--
 LuaQianhuan = sgs.CreateTriggerSkill{
@@ -1083,6 +1013,7 @@ LuaQingnang = sgs.CreateOneCardViewAsSkill{
 	技能名：倾城
 	相关武将：国战·邹氏
 	描述：出牌阶段，你可以弃置一张装备牌，令一名其他角色的一项武将技能无效，直到其下回合开始。
+	引用：LuaQingcheng
 	状态：1217验证通过
 ]]--
 local json = require ("json")

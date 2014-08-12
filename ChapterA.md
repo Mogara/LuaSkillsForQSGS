@@ -168,8 +168,10 @@
 			for _, id in sgs.qlist(ids) do table.insert(moves, id) end
 			local unmoves = sgs.reverse(moves)
 			for _, id in ipairs(unmoves) do dummy:addSubcard(id) end
+			room:setPlayerFlag(player,"LuaAocai_InTempMoving")
 			player:addToPile("#LuaAocai", dummy, false) --只能强制移到特殊区域再移动到摸牌堆
 			room:moveCardTo(dummy, nil, sgs.Player_DrawPile, false)
+			room:setPlayerFlag(player,"-LuaAocai_InTempMoving")
 		end
 	    if result == -1 then
 	        room:setPlayerFlag(player, "Global_LuaAocaiFailed")
@@ -183,16 +185,16 @@
 			return false
 		end,
 		enabled_at_response=function(self, player, pattern)
-			if (player:getPhase() ~= sgs.Player_NotActive or player:hasFlag("Global_LuaAocaiFailed")) then return end
-			if pattern == "slash" then
-				 return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE
-			elseif (pattern == "peach") then
+			 if (player:getPhase() ~= sgs.Player_NotActive or player:hasFlag("Global_LuaAocaiFailed")) then return end
+			 if pattern == "slash" then
+				 	return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE
+				elseif (pattern == "peach") then
 					 return not player:hasFlag("Global_PreventPeach")
-			elseif string.find(pattern, "analeptic") then
+				elseif string.find(pattern, "analeptic") then
 				return true
 			end
-			return false
-		end,
+				return false
+			end,
 		view_as = function(self, cards)
 			local acard = LuaAocaiCard:clone()
 			local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
@@ -200,8 +202,8 @@
 				pattern = "analeptic"
 			end
 			acard:setUserString(pattern)
-			return acard
-		end,
+				return acard
+			end,
 	}
 	LuaAocai = sgs.CreateTriggerSkill{
 		name = "LuaAocai",
@@ -229,6 +231,19 @@
 					return true
 				end
 			end
+		end,
+	}
+	LuaAocaiFakeMove = sgs.CreateTriggerSkill{
+		name = "#LuaAocai-fake-move",
+		events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
+		priority = 10,
+		on_trigger = function(self, event, player, data)
+			if player:hasFlag("LuaAocai_InTempMoving") then
+				return true
+			end
+		end,
+		can_trigger = function(self, target)
+			return target
 		end,
 	}
 	LuaAocaiCard=sgs.CreateSkillCard{

@@ -42,7 +42,8 @@ Please copy the **sgs_ex.lua** to **QSanguosha-1217\lua** directory and use the 
 - Chapter I **暂无技能**
 - [Chapter J](ChapterJ.md)  
 [鸡肋](ChapterJ.md#鸡肋)、[激昂](ChapterJ.md#激昂)、[激将](ChapterJ.md#激将)、[极略](ChapterJ.md#极略)、[急救](ChapterJ.md#急救)、[急速](ChapterJ.md#急速)、[急袭](ChapterJ.md#急袭)、[集智](ChapterJ.md#集智)、[集智-旧](ChapterJ.md#集智-旧)、[嫉恶](ChapterJ.md#嫉恶)、[奸雄](ChapterJ.md#奸雄)、[坚守](ChapterJ.md#坚守)、[将驰](ChapterJ.md#将驰)、[节命](ChapterJ.md#节命)、[结姻](ChapterJ.md#结姻)、[竭缘](ChapterJ.md#竭缘)、[解烦](ChapterJ.md#解烦)、[解烦-旧](ChapterJ.md#解烦-旧)、[解惑](ChapterJ.md#解惑)、[解围](ChapterJ.md#解围)、[尽瘁](ChapterJ.md#尽瘁)、[禁酒](ChapterJ.md#禁酒)、[精策](ChapterJ.md#精策)、[精锐](ChapterJ.md#精锐)、[酒池](ChapterJ.md#酒池)、[酒诗](ChapterJ.md#酒诗)、[救援](ChapterJ.md#救援)、[救主](ChapterJ.md#救主)、[举荐](ChapterJ.md#举荐)、[举荐-旧](ChapterJ.md#举荐-旧)、[巨象](ChapterJ.md#巨象)、[倨傲](ChapterJ.md#倨傲)、[据守](ChapterJ.md#据守)、[据守-旧](ChapterJ.md#据守-旧)、[据守-翼](ChapterJ.md#据守-翼)、[聚武](ChapterJ.md#聚武)、[绝策](ChapterJ.md#绝策)、[绝汲](ChapterJ.md#绝汲)、[绝境](ChapterJ.md#绝境)、[绝境-旧](ChapterJ.md#绝境-旧)、[绝情](ChapterJ.md#绝情)、[军威](ChapterJ.md#军威)、[峻刑](ChapterJ.md#峻刑)
-- [Chapter K](ChapterK.md)
+- [Chapter K](ChapterK.md)  
+[看破](ChapterK.md#看破)、[慷忾](ChapterK.md#慷忾)、[克构](ChapterK.md#克构)、[克己](ChapterK.md#克己)、[空城](ChapterK.md#空城)、[苦肉](ChapterK.md#苦肉)、[狂暴](ChapterK.md#狂暴)、[狂风](ChapterK.md#狂风)、[狂斧](ChapterK.md#狂斧)、[狂骨](ChapterK.md#狂骨)、[狂骨-1v1](ChapterK.md#狂骨-1v1)、[溃围](ChapterK.md#溃围)
 - [Chapter L](ChapterL.md)  
 [狼顾](ChapterL.md#狼顾)、[乐学](ChapterL.md#乐学)、[雷击](ChapterL.md#雷击)、[雷击-旧](ChapterL.md#雷击-旧)、[离魂](ChapterL.md#离魂)、[离间](ChapterL.md#离间)、[离间-旧](ChapterL.md#离间-旧)、[离迁](ChapterL.md#离迁)、[礼让](ChapterL.md#礼让)、[疠火](ChapterL.md#疠火)、[连环](ChapterL.md#连环)、[连理](ChapterL.md#连理)、[连破](ChapterL.md#连破)、[连营](ChapterL.md#连营)、[烈弓](ChapterL.md#烈弓)、[烈弓-1v1](ChapterL.md#烈弓-1v1)、[烈刃](ChapterL.md#烈刃)、[裂围](ChapterL.md#裂围)、[流离](ChapterL.md#流离)、[龙胆](ChapterL.md#龙胆)、[龙魂](ChapterL.md#龙魂)、[龙魂-高达](ChapterL.md#龙魂-高达)、[龙吟](ChapterL.md#龙吟)、[笼络](ChapterL.md#笼络)、[乱击](ChapterL.md#乱击)、[乱武](ChapterL.md#乱武)、[裸衣](ChapterL.md#裸衣)、[裸衣-翼](ChapterL.md#裸衣-翼)、[洛神](ChapterL.md#洛神)、[落雁](ChapterL.md#落雁)、[落英](ChapterL.md#落英)
 - [Chapter M](ChapterM.md)  
@@ -52,11 +53,12 @@ Please copy the **sgs_ex.lua** to **QSanguosha-1217\lua** directory and use the 
 - Chapter O **暂无技能**
 - [Chapter P](ChapterP.md)  
 [排异](ChapterP.md#排异)、[咆哮](ChapterP.md#咆哮)、[翩仪](ChapterP.md#翩仪)、[破军](ChapterP.md#破军)、[普济](ChapterP.md#普济)
-- [Chapter Q](ChapterQ.md) 
+- [Chapter Q](ChapterQ.md)   
+[七星](ChapterQ.md#七星)、[戚乱](ChapterQ.md#戚乱)、[奇才](ChapterQ.md#奇才)、[奇才-旧](ChapterQ.md#奇才-旧)、[奇策](ChapterQ.md#奇策)、[奇袭](ChapterQ.md#奇袭)、[千幻](ChapterQ.md#千幻)、[谦逊](ChapterQ.md#谦逊)、[潜袭](ChapterQ.md#潜袭)、[潜袭-旧](ChapterQ.md#潜袭-旧)、[枪舞](ChapterQ.md#枪舞)、[强袭](ChapterQ.md#强袭)、[巧变](ChapterQ.md#巧变)、[巧说](ChapterQ.md#巧说)、[琴音](ChapterQ.md#琴音)、[青囊](ChapterQ.md#青囊)、[倾城](ChapterQ.md#倾城)、[倾国](ChapterQ.md#倾国)、[倾国-1V1](ChapterQ.md#倾国-1v1)、[求援](ChapterQ.md#求援)、[驱虎](ChapterQ.md#驱虎)、[权计](ChapterQ.md#权计)
 - [Chapter R](ChapterR.md)
 - [Chapter S](ChapterS.md)
 - [Chapter T](ChapterT.md)
-- [Chapter U](ChapterU.md)
+- Chapter U **暂无技能**
 - [Chapter V](ChapterV.md)
 - [Chapter W](ChapterW.md)
 - [Chapter X](ChapterX.md)

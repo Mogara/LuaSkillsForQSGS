@@ -128,9 +128,21 @@ LuaDahePindian = sgs.CreateTriggerSkill{
 	技能名：大雾
 	相关武将：神·诸葛亮
 	描述：结束阶段开始时，你可以将X张“星”置入弃牌堆并选择X名角色，若如此做，你的下回合开始前，每当这些角色受到的非雷电伤害结算开始时，防止此伤害。
-	引用：LuaDawu
+	引用：LuaDawu,LuaDawuPrevent,LuaDawuClear
 	状态：1217验证通过(需与本手册的“七星”配合使用)
+	备注：医治永恒：源码狂风和大雾的技能询问与标记的清除分别位于七星的QixingAsk和QixingClear中，此技能独立出来了。
 ]]--
+DiscardStar = function(shenzhuge, room,n, skillName)	
+	local stars = shenzhuge:getPile("stars")
+	for i = 1, n, 1 do
+		room:fillAG(stars, shenzhuge)
+		local card_id = room:askForAG(shenzhuge, stars, false, "qixing-discard")
+		room:clearAG(shenzhuge)		
+		stars:removeOne(card_id)
+		local card = sgs.Sanguosha:getCard(card_id)
+		room:throwCard(card, nil, nil)
+	end
+end
 LuaDawuCard = sgs.CreateSkillCard{
 	name = "LuaDawuCard",
 	target_fixed = false,
@@ -142,15 +154,8 @@ LuaDawuCard = sgs.CreateSkillCard{
 	end,
 	on_use = function(self, room, source, targets)
 		local count = #targets
-		local stars = source:getPile("stars")
-		for i = 1, count, 1 do
-			room:fillAG(stars, source);
-			local card_id = room:askForAG(source, stars, false, "qixing-discard")
-			source:invoke("clearAG")
-			stars:removeOne(card_id)
-			local star = sgs.Sanguosha:getCard(card_id)
-			room:throwCard(star, nil, nil)
-		end
+		DiscardStar(source,room,count,"LuaDawu")
+		source:setTag("LuaQixing_user", sgs.QVariant(true))		
 		for _,target in ipairs(targets) do
 			target:gainMark("@fog")
 		end
@@ -166,11 +171,23 @@ LuaDawuVS = sgs.CreateViewAsSkill{
 		return false
 	end,
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@dawu"
+		return pattern == "@@LuaDawu"
 	end
 }
 LuaDawu = sgs.CreateTriggerSkill{
 	name = "LuaDawu",
+	events = {sgs.EventPhaseStart},
+	view_as_skill = LuaDawuVS,
+	on_trigger = function(self,event,player,data)		
+		if player:getPhase() ~= sgs.Player_Finish then return false end
+		if player:getPile("stars"):isEmpty() then return false end
+		local room = player:getRoom()
+		room:askForUseCard(player,"@@LuaDawu","@LuaDawu")
+		return false
+	end
+}
+LuaDawuPrevent = sgs.CreateTriggerSkill{
+	name = "#LuaDawuPrevent",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.DamageForseen},
 	view_as_skill = LuaDawuVS,
@@ -181,6 +198,34 @@ LuaDawu = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		if target then
 			return target:getMark("@fog") > 0
+		end
+		return false
+	end
+}
+LuaDawuClear = sgs.CreateTriggerSkill{
+	name = "#LuaDawuClear",
+	events = {sgs.Death,sgs.EventPhaseStart},
+	can_trigger = function(self,target)
+		return target and target:getTag("LuaQixing_user"):toBool()
+	end,
+	on_trigger = function(self,event,player,data)
+		local room = player:getRoom()
+		if event == sgs.Death then
+			local death = data:toDeath()
+			if death.who:objectName() ~= player:objectName() then return false end
+			for _,p in sgs.qlist(room:getAllPlayers()) do
+				if p:getMark("@fog") > 0 then
+					p:loseAllMarks("@fog")
+				end
+			end
+		else
+			if player:getPhase() == sgs.Player_RoundStart then
+				for _,p in sgs.qlist(room:getAllPlayers()) do
+					if p:getMark("@fog") > 0 then
+						p:loseAllMarks("@fog")
+					end
+				end
+			end
 		end
 		return false
 	end
@@ -655,8 +700,7 @@ LuaDuanliangTargetMod = sgs.CreateTargetModSkill{
 	相关武将：铜雀台·吉本
 	描述：当你成为其他角色使用的牌的目标后，你可以弃置其至多两张牌（也可以不弃置），然后失去1点体力。
 	引用：LuaXDuanzhi、LuaXDuanzhiFakeMove
-	状态：1217验证通过
-	备注:原版遇到香香会有bug,新版选择手牌可能会有多次选择的情况，两次随机选卡为相同id,以后再修正(我会乱说下面就是原版？)
+	状态：1217验证通过	
 ]]--
 LuaXDuanzhi = sgs.CreateTriggerSkill{
 	name = "LuaXDuanzhi",
@@ -708,7 +752,7 @@ LuaXDuanzhiFakeMove = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		return target
 	end,
-end
+}
 --[[
 	技能名：夺刀
 	相关武将：一将成名2013·潘璋&马忠
