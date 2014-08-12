@@ -1564,6 +1564,7 @@ LuaZongshih = sgs.CreateTriggerSkill{
 	技能名：纵玄
 	相关武将：一将成名2013·虞翻
 	描述：当你的牌因弃置而置入弃牌堆前，你可以将其中任意数量的牌以任意顺序依次置于牌堆顶。
+	引用：LuaZongxuan
 	状态：1217验证通过
 ]]--
 LuaZongxuanCard = sgs.CreateSkillCard{
