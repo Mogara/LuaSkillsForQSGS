@@ -355,32 +355,42 @@
 ```lua
 	LuaBeifa = sgs.CreateTriggerSkill{
 		name = "LuaBeifa" ,
-		events = {sgs.CardsMoveOneTime} ,
 		frequency = sgs.Skill_Compulsory ,
+		events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime} ,
 		on_trigger = function(self, event, player, data)
 			local move = data:toMoveOneTime()
-			local room = player:getRoom()
-			if move.from and move.from:objectName() == player:objectName() and move.from_places:contains(sgs.Player_PlaceHand) and player:isKongcheng() then
-				local players = sgs.SPlayerList()
-				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-				slash:setSkillName(self:objectName())
-				for _, _player in sgs.qlist(room:getOtherPlayers(player)) do
-					if player:canSlash(_player, slash) then
-						players:append(_player)
+			if move.from and (move.from:objectName() == player:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
+				if event == sgs.BeforeCardsMove then
+					if player:isKongcheng() then return false end
+					for _, id in sgs.qlist(player:handCards()) do
+						if not move.card_ids:contains(id) then return false end
 					end
-				end	
-				local target = nil
-				if not players:isEmpty() then
-					target = room:askForPlayerChosen(player, players, self:objectName()) --没有处理TarMod
+					player:addMark(self:objectName())
+				else
+					local room = player:getRoom()
+					if player:getMark(self:objectName()) == 0 then return false end
+					player:removeMark(self:objectName())
+					local players = sgs.SPlayerList()
+					local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+					slash:setSkillName(self:objectName())
+					for _, _player in sgs.qlist(room:getOtherPlayers(player)) do
+						if player:canSlash(_player, slash) then
+							players:append(_player)
+						end
+					end
+					local target = nil
+					if not players:isEmpty() then
+						target = room:askForPlayerChosen(player, players, self:objectName()) --没有处理TarMod
+					end
+					if (not target) and (not player:isProhibited(player, slash)) then
+						target = player
+					end
+					local use = sgs.CardUseStruct()
+					use.card = slash
+					use.from = player
+					use.to:append(target)
+					room:useCard(use)
 				end
-				if (not target) and (not player:isProhibited(player, slash)) then
-					target = player
-				end
-				local use = sgs.CardUseStruct()
-				use.card = slash
-				use.from = player
-				use.to:append(target)
-				room:useCard(use)
 			end
 			return false
 		end

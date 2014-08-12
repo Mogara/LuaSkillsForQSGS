@@ -1,7 +1,7 @@
 代码速查手册（L区）
 ===
 #技能索引
-[狼顾](#狼顾)、[乐学](#乐学)、[雷击](#雷击)、[雷击-旧](#雷击-旧)、[离魂](#离魂)、[离间](#离间)、[离间-旧](#离间-旧)、[离迁](#离迁)、[礼让](#礼让)、[疠火](#疬火)、[连环](#连环)、[连理](#连理)、[连破](#连破)、[连营](#连营)、[烈弓](#烈弓)、[烈弓-1v1](#烈弓-1v1)、[烈刃](#烈刃)、[裂围](#裂围)、[流离](#流离)、[龙胆](#龙胆)、[龙魂](#龙魂)、[龙魂-高达](#龙魂-高达)、[龙吟](#龙吟)、[笼络](#笼络)、[乱击](#乱击)、[乱武](#乱武)、[裸衣](#裸衣)、[裸衣-翼](#裸衣-翼)、[洛神](#洛神)、[落雁](#落雁)、[落英](#落英)
+[狼顾](#狼顾)、[乐学](#乐学)、[雷击](#雷击)、[雷击-旧](#雷击-旧)、[离魂](#离魂)、[离间](#离间)、[离间-旧](#离间-旧)、[离迁](#离迁)、[礼让](#礼让)、[疠火](#疠火)、[连环](#连环)、[连理](#连理)、[连破](#连破)、[连营](#连营)、[烈弓](#烈弓)、[烈弓-1v1](#烈弓-1v1)、[烈刃](#烈刃)、[裂围](#裂围)、[流离](#流离)、[龙胆](#龙胆)、[龙魂](#龙魂)、[龙魂-高达](#龙魂-高达)、[龙吟](#龙吟)、[笼络](#笼络)、[乱击](#乱击)、[乱武](#乱武)、[裸衣](#裸衣)、[裸衣-翼](#裸衣-翼)、[洛神](#洛神)、[落雁](#落雁)、[落英](#落英)
 
 [返回目录](README.md#目录)
 ##狼顾
@@ -499,72 +499,61 @@
 **引用**：LuaLihuo、LuaLihuoTarget  
 **状态**：1217验证通过
 ```lua
-	LuaLihuoVS = sgs.CreateViewAsSkill{
-		name = "LuaLihuo",
-		n = 1,
-		view_filter = function(self, selected, to_select)
-			return to_select:objectName() == "slash"
-		end,
-		view_as = function(self, cards)
-			if #cards == 1 then
-				local card = cards[1]
-				local suit = card:getSuit()
-				local number = card:getNumber()
-				local id = card:getId()
-				local acard = sgs.Sanguosha:cloneCard("fire_slash", suit, number)
-				acard:addSubcard(id)
-				acard:setSkillName(self:objectName())
-				return acard
-			end
-		end,
+	LuaLihuoVS = sgs.CreateOneCardViewAsSkill{
+		name = "LuaLihuo" ,
+		filter_pattern = "%slash" ,
 		enabled_at_play = function(self, player)
 			return sgs.Slash_IsAvailable(player)
-		end,
+		end ,
 		enabled_at_response = function(self, player, pattern)
-			return pattern == "slash"
-		end
+			return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE and pattern == "slash"
+		end ,
+		view_as = function(self, card)
+			local acard = sgs.Sanguosha:cloneCard("fire_slash", card:getSuit(), card:getNumber())
+			acard:addSubcard(card)
+			acard:setSkillName(self:objectName())
+			return acard
+		end ,
 	}
+	invokeLihuo = {}
 	LuaLihuo = sgs.CreateTriggerSkill{
-		name = "LuaLihuo",
-		frequency = sgs.Skill_NotFrequent,
-		events = {sgs.DamageDone, sgs.CardFinished},
-		view_as_skill = LuaLihuoVS,
-		on_trigger = function(self, event, player, data)
-			local room = player:getRoom()
-			if event == sgs.DamageDone then
-				local damage = data:toDamage()
-				local card = damage.card
-				if card then
-					if card:isKindOf("Slash") then
-						if card:getSkillName() == self:objectName() then
-							room:setTag("Invokelihuo", sgs.QVariant(true))
-						end
-					end
-				end
-			elseif event == sgs.CardFinished then
-				if player:hasSkill(self:objectName()) then
-					local tag = room:getTag("Invokelihuo")
-					if tag:toBool() then
-						room:setTag("Invokelihuo", sgs.QVariant(false))
-						room:loseHp(player, 1)
-					end
-				end
-			end
-			return false;
-		end,
+		name = "LuaLihuo" ,
+		events = {sgs.PreDamageDone, sgs.CardFinished} ,
+		view_as_skill = LuaLihuoVS ,
 		can_trigger = function(self, target)
 			return target
+		end ,
+		on_trigger = function(self, event, player, data)
+			if event == sgs.PreDamageDone then
+				local damage = data:toDamage()
+				if damage.card and damage.card:isKindOf("Slash") and (damage.card:getSkillName() == self:objectName()) then
+					table.insert(invokeLihuo, damage.card)
+				end
+			elseif (player and player:isAlive() and player:hasSkill(self:objectName())) and (not player:hasFlag("Global_ProcessBroken")) then
+				local use = data:toCardUse()
+				if not use.card:isKindOf("Slash") then return false end
+				local can_invoke = false
+				for _, c in ipairs(invokeLihuo) do
+					if c:getEffectiveId() == use.card:getEffectiveId() then
+						can_invoke = true
+						table.removeOne(invokeLihuo,c)
+						break
+					end
+				end
+				if not can_invoke then return false end
+				player:getRoom():loseHp(player)
+			end
+			return false
 		end
 	}
-	LuaLihuoTarget = sgs.CreateTargetModSkill{
-		name = "#LuaLihuoTarget",
-		pattern = "FireSlash",
-		extra_target_func = function(self, player)
-			if player:hasSkill(self:objectName()) then
+	LuaLihuoTargetMod = sgs.CreateTargetModSkill{
+		name = "#LuaLihuo-target" ,
+		extra_target_func = function(self, from, card)
+			if from:hasSkill("LuaLihuo") and card:isKindOf("FireSlash") then
 				return 1
 			end
 			return 0
-		end,
+		end ,
 	}
 ```
 [返回索引](#技能索引)
@@ -935,7 +924,7 @@
 	}
 ```
 [返回索引](#技能索引)
-#烈弓-1v1
+##烈弓-1v1
 **相关武将**：1v1·黄忠1v1  
 **描述**：每当你于出牌阶段内使用【杀】指定对手为目标后，若对手的手牌数大于或等于你的体力值，你可以令该角色不能使用【闪】对此【杀】进行响应。  
 **引用**：LuaKOFLiegong  
@@ -1480,9 +1469,9 @@
 ```
 [返回索引](#技能索引)
 ##乱武
-**相关武将**：林·贾诩、SP·贾诩
-**描述**：**限定技，**出牌阶段，你可以令所有其他角色各选择一项：对距离最近的另一名角色使用一张【杀】，或失去1点体力。
-**引用**：LuaLuanwu、LuaChaos1
+**相关武将**：林·贾诩、SP·贾诩  
+**描述**：**限定技，**出牌阶段，你可以令所有其他角色各选择一项：对距离最近的另一名角色使用一张【杀】，或失去1点体力。  
+**引用**：LuaLuanwu  
 **状态**：1217验证通过	
 ```lua
 	LuaLuanwuCard = sgs.CreateSkillCard{
@@ -1689,9 +1678,9 @@
 	}
 ```
 [返回索引](#技能索引)
-##落雁（锁定技）
+##落雁
 **相关武将**：SP·大乔&小乔  
-**描述**：若你的武将牌上有“星舞牌”，你视为拥有技能“天香”和“流离”。  
+**描述**：**锁定技，**若你的武将牌上有“星舞牌”，你视为拥有技能“天香”和“流离”。  
 **引用**：LuaLuoyan  
 **状态**：1217验证通过(需与技能“星舞”配合使用)
 ```lua
