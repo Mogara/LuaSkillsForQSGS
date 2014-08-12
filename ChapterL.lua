@@ -494,72 +494,61 @@ LuaXLirang = sgs.CreateTriggerSkill{
 	引用：LuaLihuo、LuaLihuoTarget
 	状态：1217验证通过
 ]]--
-LuaLihuoVS = sgs.CreateViewAsSkill{
-	name = "LuaLihuo",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return to_select:objectName() == "slash"
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = cards[1]
-			local suit = card:getSuit()
-			local number = card:getNumber()
-			local id = card:getId()
-			local acard = sgs.Sanguosha:cloneCard("fire_slash", suit, number)
-			acard:addSubcard(id)
-			acard:setSkillName(self:objectName())
-			return acard
-		end
-	end,
+LuaLihuoVS = sgs.CreateOneCardViewAsSkill{
+	name = "LuaLihuo" ,
+	filter_pattern = "%slash" ,
 	enabled_at_play = function(self, player)
 		return sgs.Slash_IsAvailable(player)
-	end,
+	end ,
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "slash"
-	end
+		return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE and pattern == "slash"
+	end ,
+	view_as = function(self, card)
+		local acard = sgs.Sanguosha:cloneCard("fire_slash", card:getSuit(), card:getNumber())
+		acard:addSubcard(card)
+		acard:setSkillName(self:objectName())
+		return acard
+	end ,
 }
+invokeLihuo = {}
 LuaLihuo = sgs.CreateTriggerSkill{
-	name = "LuaLihuo",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.DamageDone, sgs.CardFinished},
-	view_as_skill = LuaLihuoVS,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if event == sgs.DamageDone then
-			local damage = data:toDamage()
-			local card = damage.card
-			if card then
-				if card:isKindOf("Slash") then
-					if card:getSkillName() == self:objectName() then
-						room:setTag("Invokelihuo", sgs.QVariant(true))
-					end
-				end
-			end
-		elseif event == sgs.CardFinished then
-			if player:hasSkill(self:objectName()) then
-				local tag = room:getTag("Invokelihuo")
-				if tag:toBool() then
-					room:setTag("Invokelihuo", sgs.QVariant(false))
-					room:loseHp(player, 1)
-				end
-			end
-		end
-		return false;
-	end,
+	name = "LuaLihuo" ,
+	events = {sgs.PreDamageDone, sgs.CardFinished} ,
+	view_as_skill = LuaLihuoVS ,
 	can_trigger = function(self, target)
 		return target
+	end ,
+	on_trigger = function(self, event, player, data)
+		if event == sgs.PreDamageDone then
+			local damage = data:toDamage()
+			if damage.card and damage.card:isKindOf("Slash") and (damage.card:getSkillName() == self:objectName()) then
+				table.insert(invokeLihuo, damage.card)
+			end
+		elseif (player and player:isAlive() and player:hasSkill(self:objectName())) and (not player:hasFlag("Global_ProcessBroken")) then
+			local use = data:toCardUse()
+			if not use.card:isKindOf("Slash") then return false end
+			local can_invoke = false
+			for _, c in ipairs(invokeLihuo) do
+				if c:getEffectiveId() == use.card:getEffectiveId() then
+					can_invoke = true
+					table.removeOne(invokeLihuo,c)
+					break
+				end
+			end
+			if not can_invoke then return false end
+			player:getRoom():loseHp(player)
+		end
+		return false
 	end
 }
-LuaLihuoTarget = sgs.CreateTargetModSkill{
-	name = "#LuaLihuoTarget",
-	pattern = "FireSlash",
-	extra_target_func = function(self, player)
-		if player:hasSkill(self:objectName()) then
+LuaLihuoTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaLihuo-target" ,
+	extra_target_func = function(self, from, card)
+		if from:hasSkill("LuaLihuo") and card:isKindOf("FireSlash") then
 			return 1
 		end
 		return 0
-	end,
+	end ,
 }
 --[[
 	技能名：连环
