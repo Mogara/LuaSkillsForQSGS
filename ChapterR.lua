@@ -154,12 +154,53 @@ LuaRende = sgs.CreateTriggerSkill{
 --[[
 	技能名：仁望
 	相关武将：1v1·刘备
-	描述：对手于其出牌阶段内对包括你的角色使用第二张及以上【杀】或非延时锦囊牌时，你可以弃置其一张牌。 
+	描述：对手于其出牌阶段内对包括你的角色使用第二张及以上【杀】或非延时锦囊牌时，你可以弃置其一张牌。
+	引用：LuaRenwang
+	状态：1217验证通过
 ]]--
+LuaRenwang = sgs.CreateTriggerSkill{
+	name = "LuaRenwang" ,
+	events = {sgs.CardUsed, sgs.EventPhaseChanging} ,
+	
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.CardUsed and player:getPhase() == sgs.Player_Play then
+			local use = data:toCardUse()
+			if not use.card:isKindOf("Slash") and not use.card:isNDTrick() then return false end
+			local first = sgs.SPlayerList()
+			for _,to in sgs.qlist(use.to) do
+				if to:objectName() ~= player:objectName() and not to:hasFlag("LuaRenwangEffect") then
+					first:append(to)
+					to:setFlags("LuaRenwangEffect")
+				end
+			end
+			for _,p in sgs.qlist(room:getOtherPlayers(use.from)) do
+				if use.to:contains(p) and not first:contains(p) and p:canDiscard(use.from, "he") and  p:hasFlag("LuaRenwangEffect") and p:isAlive() and p:hasSkill(self:objectName()) then
+					if not room:askForSkillInvoke(p, self:objectName(), data) then return false end
+					room:throwCard(room:askForCardChosen(p, use.from, "he", self:objectName(), false, sgs.Card_MethodDiscard), use.from, p);
+				end
+			end
+		elseif event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to == sgs.Player_NotActive then
+				for _,to in sgs.qlist(room:getAlivePlayers()) do
+					if to:hasFlag("LuaRenwangEffect") then
+						to:setFlags("-LuaRenwangEffect")
+					end
+				end
+			end
+		end
+	end,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
 --[[
 	技能名：仁心
 	相关武将：一将成名2013·曹冲
 	描述：一名其他角色处于濒死状态时，你可以将武将牌翻面并将所有手牌交给该角色，令该角色回复1点体力。
+	引用：LuaRenxin
+	状态：1217验证通过
 ]]--
 LuaRenxinCard = sgs.CreateSkillCard{
 	name = "LuaRenxinCard",
@@ -173,22 +214,21 @@ LuaRenxinCard = sgs.CreateSkillCard{
 		local recover = sgs.RecoverStruct()
 			recover.who = source
 			room:recover(who,recover)
+		end
 	end
-end
 }
-LuaRenxin = sgs.CreateViewAsSkill{
+LuaRenxin = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaRenxin",
-	n = 0,
 
-	view_as = function(self, cards)
+	view_as = function(self) 
 		return LuaRenxinCard:clone()
-end,
+	end, 
 	enabled_at_play = function(self, player)
 		return false
-end,
+	end, 
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "peach" and not player:isKongcheng()
-end
+	end
 }
 --[[
 	技能名：忍戒（锁定技）
@@ -237,59 +277,68 @@ LuaRenjieClear = sgs.CreateTriggerSkill{
 	相关武将：林·董卓
 	当你使用【杀】指定一名女性角色为目标后，该角色需连续使用两张【闪】才能抵消；当你成为女性角色使用【杀】的目标后，你需连续使用两张【闪】才能抵消。
 	引用：LuaRoulin
-	状态：验证通过
+	状态：1217验证通过
 ]]--
-LuaRoulinDummyCard = sgs.CreateSkillCard{
-	name = "LuaRoulinDummyCard",
-}
-askForDoubleJink = function(player, slasher, reason)
-	local room = player:getRoom()
-	local first_jink = nil
-	local second_jink = nil
-	local prompt = string.format("@%s-jink-1", reason)
-	first_jink = room:askForCard(player, "jink", prompt, sgs.QVariant(), sgs.CardUsed, slasher)
-	if first_jink then
-		prompt = string.format("@%s-jink-2", reason)
-		second_jink = room:askForCard(player, "jink", prompt, sgs.QVariant(), sgs.CardUsed, slasher)
-		local jink = nil
-		if first_jink and second_jink then
-			jink = LuaRoulinDummyCard:clone()
-			jink:addSubcard(first_jink)
-			jink:addSubcard(second_jink)
-		end
-		return jink
+Table2IntList = function(theTable)
+	local result = sgs.IntList()
+	for i = 1, #theTable, 1 do
+		result:append(theTable[i])
 	end
+	return result
 end
 LuaRoulin = sgs.CreateTriggerSkill{
 	name = "LuaRoulin",
 	frequency = sgs.Skill_Compulsory,
-	events = {sgs.SlashProceed},
+	events = {sgs.TargetConfirmed},
+
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local effect = data:toSlashEffect()
-		local source = effect.from
-		local target = effect.to
-		if source:hasSkill(self:objectName()) and target:isFemale() then
-			local female = target
-			local jink = askForDoubleJink(female, source, "roulin1")
-			room:slashResult(effect, jink)
-			return true
-		elseif source:isFemale() and target:hasSkill(self:objectName()) then
-			local dongzhuo = target
-			local jink = askForDoubleJink(dongzhuo, source, "roulin2")
-			room:slashResult(effect, jink)
-			return true
+		local use = data:toCardUse()
+		if use.card:isKindOf("Slash") and player:objectName() == use.from:objectName() then
+			local jink_table = sgs.QList2Table(use.from:getTag("Jink_" .. use.card:toString()):toIntList())
+			local index = 1
+			local play_effect = false
+			if use.from and use.from:isAlive() and use.from:hasSkill(self:objectName()) then
+				for _,p in sgs.qlist(use.to) do
+					if p:isFemale() then
+						play_effect = true
+						if jink_table[index] == 1 then
+							jink_table[index] = 2
+						end
+					end
+					index = index + 1
+				end
+				local jink_data = sgs.QVariant()
+				jink_data:setValue(Table2IntList(jink_table))
+				use.from:setTag("Jink_" .. use.card:toString(), jink_data)
+				if play_effect then
+					room:notifySkillInvoked(use.from, self:objectName())
+				end
+			elseif use.from:isFemale() then
+				for _,p in sgs.qlist(use.to) do
+					if p:hasSkill(self:objectName()) then
+						play_effect = true
+						if jink_table[index] == 1 then
+							jink_table[index] = 2
+						end
+					end
+					index = index + 1
+				end
+				local jink_data = sgs.QVariant()
+				jink_data:setValue(Table2IntList(jink_table))
+				use.from:setTag("Jink_" .. use.card:toString(), jink_data)
+				if play_effect then
+					for _,p in sgs.qlist(use.to) do
+						if p:hasSkill(self:objectName()) then
+							room:notifySkillInvoked(p, self:objectName())
+						end
+					end
+				end
+			end
 		end
-		return false
 	end,
 	can_trigger = function(self, target)
-		if target then
-			if target:hasSkill(self:objectName()) then
-				return true
-			end
-			return target:isFemale()
-		end
-		return false
+		return target ~= nil and (target:hasSkill(self:objectName()) or target:isFemale())
 	end
 }
 --[[
