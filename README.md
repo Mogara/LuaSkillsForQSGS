@@ -63,7 +63,8 @@ If you find BUG in reading, please [click here](https://github.com/DGAH/LuaSkill
 - Chapter U **暂无技能**
 - Chapter V **暂无技能**
 - [Chapter W](ChapterW.md)
-- [Chapter X](ChapterX.md)
+- [Chapter X](ChapterX.md)  
+[惜粮](ChapterX.md#惜粮)、[陷嗣](ChapterX.md#陷嗣)、[陷阵](ChapterX.md#陷阵)、[享乐](ChapterX.md#享乐)、[枭姬](ChapterX.md#枭姫)、[枭姬-1v1](ChapterX.md#枭姬-1v1)、[骁果](ChapterX.md#骁果)、[骁袭](ChapterX.md#骁袭)、[孝德](ChapterX.md#孝德)、[挟缠](ChapterX.md#挟缠)、[心战](ChapterX.md#心战)、[新生](ChapterX.md#新生)、[星舞](ChapterX.md#星舞)、[行殇](ChapterX.md#行殇)、[雄异](ChapterX.md#雄异)、[修罗](ChapterX.md#修罗)、[旋风](ChapterX.md#旋风)、[旋风-旧](ChapterX.md#旋风-旧)、[眩惑](ChapterX.md#昡惑)、[眩惑-旧](ChapterX.md#眩惑-旧)、[雪恨](ChapterX.md#雪恨)、[血祭](ChapterX.md#血祭)、[血裔](ChapterX.md#血裔)、[恂恂](ChapterX.md#恂恂)、[迅猛](ChapterX.md#迅猛)、[殉志](ChapterX.md#殉志)
 - [Chapter Y](ChapterY.md)  
 [延祸](ChapterY.md#延祸)、[严整](ChapterY.md#严整)、[言笑](ChapterY.md#言笑)、[燕语](ChapterY.md#燕语)、[耀武](ChapterY.md#耀武)、[业炎](ChapterY.md#业炎)、[遗计](ChapterY.md#遗计)、[疑城](ChapterY.md#疑城)、[倚天](ChapterY.md#倚天)、[义从](ChapterY.md#义从)、[义从-贴纸](ChapterY.md#义从-贴纸)、[义舍](ChapterY.md#义舍)、[义释](ChapterY.md#义释)、[异才](ChapterY.md#异才)、[毅重](ChapterY.md#毅重)、[姻礼](ChapterY.md#姻礼)、[银铃](ChapterY.md#银铃)、[英魂](ChapterY.md#英魂)、[英姿](ChapterY.md#英姿)、[影兵](ChapterY.md#影兵)、[庸肆](ChapterY.md#庸肆)、[勇决](ChapterY.md#勇决)、[狱刎](ChapterY.md#狱刎)、[御策](ChapterY.md#御策)、[援护](ChapterY.md#援护)
 - [Chapter Z](ChapterZ.md)  
