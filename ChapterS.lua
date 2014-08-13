@@ -4,7 +4,7 @@
 		伤逝、伤逝、尚义、烧营、涉猎、神愤、甚贤、神戟、神君、神力、神速、神威、神智、生息、师恩、识破、3D识破、恃才、恃勇、弑神、誓仇、慎拒、守成、授业、淑德、淑慎、双刃、双雄、水箭、水泳、死谏、死节、死战、颂词、颂威、肃资、随势
 ]]--
 --[[
-	技能名：伤逝（锁定技）
+	技能名：伤逝
 	相关武将：一将成名·张春华
 	描述：弃牌阶段外，当你的手牌数小于X时，你将手牌补至X张（X为你已损失的体力值且最多为2）。
 	引用：LuaShangshi
@@ -49,6 +49,12 @@ LuaShangshi = sgs.CreateTriggerSkill{
 			if zhangchunhua:getPhase() == sgs.Player_Discard then
 				zhangchunhua:addMark("shangshi")
 				return false
+			end
+		elseif triggerEvent == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.from ~= sgs.Player_Discard then
+				return false
+			end
 			end
 		elseif triggerEvent == sgs.EventPhaseChanging then
 			local change = data:toPhaseChange()
