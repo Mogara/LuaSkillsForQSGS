@@ -55,11 +55,6 @@ LuaShangshi = sgs.CreateTriggerSkill{
 			if change.from ~= sgs.Player_Discard then
 				return false
 			end
-		elseif triggerEvent == sgs.EventPhaseChanging then
-			local change = data:toPhaseChange()
-			if change.from ~= sgs.Player_Discard then
-				return false
-			end
 			if zhangchunhua:getMark("shangshi") <= 0 then
 				return false
 			end

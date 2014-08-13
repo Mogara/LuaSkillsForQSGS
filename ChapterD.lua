@@ -565,7 +565,7 @@ LuaDuwuVS = sgs.CreateViewAsSkill{
 }
 LuaDuwu = sgs.CreateTriggerSkill{
 	name = "LuaDuwu" ,
-	events = 39,
+	events = 39, --sgs.QuitDying事件没有Lua接口，用此代替。
 	view_as_skill = LuaDuwuVS ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
