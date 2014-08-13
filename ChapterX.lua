@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（X区）
 	技能索引：
-		惜粮、吓尿、先登、陷嗣、陷阵、享乐、枭姬、枭姬、骁果、骁果、骁袭、孝德、挟缠、心战、新生、星舞、行殇、雄异、修罗、旋风、旋风、眩惑、眩惑、雪恨、血祭、血裔、恂恂、循规、迅猛、殉志
+		惜粮、先登、陷嗣、陷阵、享乐、枭姬、枭姬、骁果、骁果、骁袭、孝德、挟缠、心战、新生、星舞、行殇、雄异、修罗、旋风、旋风、眩惑、眩惑、雪恨、血祭、血裔、恂恂、循规、迅猛、殉志
 ]]--
 --[[
 	技能名：惜粮
@@ -46,34 +46,10 @@ LuaXiliang = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：吓尿（锁定技）
-	相关武将：胆创·夏侯杰
-	描述：当其他角色造成一次伤害时，若你在其攻击范围内，你须弃置所有手牌，然后摸等同于该角色体力值张数的牌。
-	引用：LuaXianiao
-	状态：1217验证通过
-]]--
-LuaXianiao = sgs.CreateTriggerSkill{
-	name = "LuaXianiao" ,
-	events = {sgs.Damage} ,
-	frequency = sgs.Skill_Compulsory,
-
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local xiahoujie = room:findPlayerBySkillName(self:objectName())
-        if xiahoujie == nil or xiahoujie:isDead() or not player:inMyAttackRange(xiahoujie) then return false end
-			room:notifySkillInvoked(xiahoujie,self:objectName())
-			xiahoujie:throwAllHandCards()
-			xiahoujie:drawCards(player:getHp())
-	end,
-	can_trigger = function(self, target)
-		return target ~= nil and target:isAlive()
-	end
-}
---[[
 	技能名：陷嗣
 	相关武将：一将成名2013·刘封
 	描述：准备阶段开始时，你可以将一至两名角色的各一张牌置于你的武将牌上，称为“逆”。其他角色可以将两张“逆”置入弃牌堆，视为对你使用一张【杀】。
-	引用：LuaXiansi LuaXiansiAttach LuaXiansiSlash（技能暗降）
+	引用：LuaXiansi LuaXiansiAttach LuaXiansiSlash（技能暗将）
 ]]--
 LuaXiansiCard = sgs.CreateSkillCard{
 	name = "LuaXiansiCard", 
@@ -1381,11 +1357,11 @@ LuaXunmeng = sgs.CreateTriggerSkill{
 		if damage.card and damage.card:isKindOf("Slash") then
 			damage.damage = damage.damage + 1
 			data:setValue(damage)
-		if player:getHp() > 1 then
-			room:loseHp(player)
+			if player:getHp() > 1 then
+				room:loseHp(player)
+			end
 		end
 	end
-end
 }
 --[[
 	技能名：殉志
