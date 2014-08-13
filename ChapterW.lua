@@ -36,6 +36,22 @@ LuaWansha = sgs.CreateTriggerSkill{
 	技能名：婉容
 	相关武将：1v1·大乔
 	描述：每当你成为【杀】的目标后，你可以摸一张牌。 
+	引用：LuaWanrong
+	状态：1217验证通过
+	
+LuaWanrong = sgs.CreateTriggerSkill{
+	name = "LuaWanrong",
+	events = {sgs.TargetConfirmed},
+	frequency = sgs.Skill_Frequent,
+    	on_trigger=function(self, event, player, data)
+		local room = player:getRoom()
+		local use = data:toCardUse()
+		if (use.card:isKindOf("Slash") and use.to:contains(player) and room:askForSkillInvoke(player, self:objectName(), data)) then
+			player:drawCards(1)
+		end
+		return false
+	end
+	}
 ]]--
 --[[
 	技能名：忘隙
