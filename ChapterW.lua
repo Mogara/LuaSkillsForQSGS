@@ -129,82 +129,78 @@ LuaWangzunMaxCards = sgs.CreateMaxCardsSkill{
 	技能名：危殆（主公技）
 	相关武将：智·孙策
 	描述：当你需要使用一张【酒】时，所有吴势力角色按行动顺序依次选择是否打出一张黑桃2~9的手牌，视为你使用了一张【酒】，直到有一名角色或没有任何角色决定如此做时为止
-	引用：LuaXWeidai
-	状态：验证通过
+	引用：LuaWeidai
+	状态：1217验证通过
 ]]--
-LuaXWeidaiCard = sgs.CreateSkillCard{
-	name = "LuaXWeidaiCard",
+LuaWeidaiCard = sgs.CreateSkillCard{
+	name = "LuaWeidaiCard",
 	target_fixed = true,
-	will_throw = true,
-	on_use = function(self, room, source, targets)
-		if not source:hasFlag("drank") then
-			if source:hasLordSkill("LuaXWeidai") then
-				local players = room:getAlivePlayers()
-				for _,liege in sgs.qlist(players) do
-					if liege:getKingdom() == "wu" then
-						if source:getHp() <= 0 or not source:hasUsed("Analeptic") then
-							local tohelp = sgs.QVariant()
-							tohelp:setValue(source)
-							local prompt = string.format("@weidai-analeptic:%s", source:objectName())
-							local analeptic = room:askForCard(liege, ".|spade|2~9|hand", prompt, tohelp, sgs.CardResponsed, source)
-							if analeptic then
-								local suit = analeptic:getSuit()
-								local point = analeptic:getNumber()
-								local ana = sgs.Sanguosha:cloneCard("analeptic", suit, point)
-								ana:setSkillName("LuaXWeidai")
-								local use = sgs.CardUseStruct()
-								use.card = ana
-								use.from = source
-								use.to:append(use.from)
-								room:useCard(use)
-								if source:getHp() > 0 then
-									break
-								end
-							end
-						end
-					end
-				end
+    	mute = true,
+	on_validate = function(self, card_use)
+		card_use.m_isOwnerUse = false
+		local sunce = card_use.from
+		local room = sunce:getRoom()
+		for _ , liege in sgs.qlist(room:getLieges("wu", sunce)) do
+			local tohelp = sgs.QVariant()
+			tohelp:setValue(sunce)
+			local prompt = string.format("@weidai-analeptic:%s", sunce:objectName())
+			local card = room:askForCard(liege, ".|spade|2~9|hand", prompt, tohelp, sgs.Card_MethodNone)
+			if card then
+				local reason=sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, liege:objectName(), "LuaWeidai", "")
+				room:moveCardTo(card, nil, sgs.Player_DiscardPile, reason, true)
+				local ana = sgs.Sanguosha:cloneCard("analeptic", card:getSuit(), card:getNumber())
+				ana:setSkillName("LuaWeidai")
+				ana:addSubcard(card)
+				return ana
 			end
 		end
+		room:setPlayerFlag(sunce, "Global_LuaWeidaiFailed")
+		return nil
+	end,
+	on_validate_in_response = function(self, user)
+		local room = user:getRoom()
+		for _ , liege in sgs.qlist(room:getLieges("wu", user)) do
+			local tohelp = sgs.QVariant()
+			tohelp:setValue(user)
+			local prompt = string.format("@weidai-analeptic:%s", user:objectName())
+			local card = room:askForCard(liege, ".|spade|2~9|hand", prompt, tohelp, sgs.Card_MethodNone)
+			if card then
+				local reason=sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, liege:objectName(), "LuaWeidai", "")
+				room:moveCardTo(card, nil, sgs.Player_DiscardPile, reason, true)
+				local ana = sgs.Sanguosha:cloneCard("analeptic", card:getSuit(), card:getNumber())
+				ana:setSkillName("LuaWeidai")
+				ana:addSubcard(card)
+				return ana
+			end
+		end
+		room:setPlayerFlag(user, "Global_LuaWeidaiFailed")
+		return nil
 	end
-}
-LuaXWeidaiVS = sgs.CreateViewAsSkill{
-	name = "LuaXWeidai$",
-	n = 0,
-	view_as = function(self, cards)
-		return LuaXWeidaiCard:clone()
+	}
+
+LuaWeidai = sgs.CreateZeroCardViewAsSkill{
+	name = "LuaWeidai$",
+	view_as = function()
+		return LuaWeidaiCard:clone()
 	end,
 	enabled_at_play = function(self, player)
-		if player:hasLordSkill("LuaXWeidai") then
-			if not player:hasUsed("Analeptic") then
-				return not player:hasUsed("#LuaXWeidaiCard")
-			end
-		end
-		return false
+		return hasWuGenerals(player) and player:hasLordSkill("LuaWeidai")
+               and not player:hasFlag("Global_LuaWeidaiFailed")
+               and sgs.Analeptic_IsAvailable(player)
 	end,
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaXWeidai"
+		return hasWuGenerals(player) and pattern == "peach+analeptic" and not player:hasFlag("Global_LuaWeidaiFailed")
 	end
-}
-LuaXWeidai = sgs.CreateTriggerSkill{
-	name = "LuaXWeidai$",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Dying},
-	view_as_skill = LuaXWeidaiVS,
-	on_trigger = function(self, event, player, data)
-		local dying = data:toDying()
-		if dying.who:objectName() == player:objectName() then
-			local room = player:getRoom()
-			room:askForUseCard(player, "@@LuaXWeidai", "@weidai")
+	}
+	
+hasWuGenerals = function(player)
+	for _, p in sgs.qlist(player:getSiblings()) do
+		if p:isAlive() and p:getKingdom() == "wu" then
+			return true
 		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target then
-			return target:hasLordSkill("LuaXWeidai")
-		end
-		return false
 	end
+	return false
+end
 }
 --[[
 	技能名：围堰
