@@ -717,16 +717,14 @@
         LuaZhijianCard = sgs.CreateSkillCard{
         	name = "LuaZhijianCard" ,
         	will_throw = false,
-        	handling_method = sgs.Card_MethodNone,
-        
+        	handling_method = sgs.Card_MethodNone,        
         	filter = function(self, targets, to_select)
         		if not #targets == 0 or to_select:objectName() == sgs.Self:objectName() then return false end
         		local card = sgs.Sanguosha:getCard(self:getSubcards():first())
         		local equip = card:getRealCard():toEquipCard()
         		local equip_index = equip:location()
         		return to_select:getEquip(equip_index) == nil
-        	end,
-        	
+        	end,        	
         	on_effect = function(self, effect)
         		local erzhang = effect.from
         		erzhang:getRoom():moveCardTo(self, erzhang, effect.to, sgs.Player_PlaceEquip,
@@ -829,7 +827,7 @@
 ##制霸
 **相关武将**：山·孙策  
 **描述**：**主公技，**出牌阶段限一次，其他吴势力角色的出牌阶段可以与你拼点（“魂姿”发动后，你可以拒绝此拼点）。若其没赢，你可以获得两张拼点的牌。  
-**引用**：LuaSunceZhiba；LuaZhibaPindian（技能暗将）  
+**引用**：LuaZhiba；LuaZhibaPindian（技能暗将）  
 **状态**：1217验证通过  
 ```lua
         LuaZhibaCard = sgs.CreateSkillCard{
@@ -894,8 +892,8 @@
         		return false
         	end
         }
-        LuaSunceZhiba = sgs.CreateTriggerSkill{
-        	name = "LuaSunceZhiba$",
+        LuaZhiba = sgs.CreateTriggerSkill{
+        	name = "LuaZhiba$",
         	frequency = sgs.Skill_NotFrequent,
         	events = {sgs.TurnStart, sgs.Pindian, sgs.EventPhaseChanging, sgs.EventAcquireSkill, sgs.EventLoseSkill},
         	can_trigger = function(self, target)
@@ -1237,12 +1235,10 @@
         LuaZhoufuCard = sgs.CreateSkillCard{
         	name = "LuaZhoufuCard",
         	will_throw = false,
-        	handling_method =sgs.Card_MethodNone,
-        	
+        	handling_method =sgs.Card_MethodNone,        	
         	filter = function(self, targets, to_select)
         		return #targets == 0 and to_select:objectName() ~= sgs.Self:objectName() and to_select:getPile("incantation"):isEmpty()
-        	end,
-        	
+        	end,        	
         	on_use = function(self, room, source, targets)
         		local target = targets[1]
         		local value = sgs.QVariant()
@@ -1253,14 +1249,12 @@
         }
         LuaZhoufuVS = sgs.CreateOneCardViewAsSkill{
         	name = "LuaZhoufu",
-        	filter_pattern = ".|.|.|hand",
-        	
+        	filter_pattern = ".|.|.|hand",        	
         	view_as = function(self, cards)
         		local card = LuaZhoufuCard:clone()
         			card:addSubcard(cards)
                 return card
-        	end,
-        
+        	end,        
         	enabled_at_play = function(self,player)
         		return not player:hasUsed("#LuaZhoufuCard")
         	end
@@ -1268,8 +1262,7 @@
         LuaZhoufu = sgs.CreateTriggerSkill{
         	name = "LuaZhoufu",
         	events = {sgs.StartJudge,sgs.EventPhaseChanging},
-        	view_as_skill = LuaZhoufuVS,
-        	
+        	view_as_skill = LuaZhoufuVS,        	
         	on_trigger = function(self, event, player, data)
         		local room = player:getRoom()
         		if event == sgs.StartJudge then

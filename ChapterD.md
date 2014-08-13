@@ -574,7 +574,7 @@
 	}
 	LuaDuwu = sgs.CreateTriggerSkill{
 		name = "LuaDuwu" ,
-		events = {sgs.AskForPeachesDone},--DB:Lua没有QuitDying时机，在这里处理方式略有不同
+		events = 39,--此值代表枚举值sgs.QuitDying,1217无此接口，故用其数值代替
 		view_as_skill = LuaDuwuVS ,
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()

@@ -14,8 +14,8 @@ If you find BUG in reading, please [click here](https://github.com/DGAH/LuaSkill
 
 十一月的小胖(Baidu ID)、魅惑菇投手（Baidu ID)、赤魂go(Baidu ID)、whj329203709(Baidu ID)、波希米亚不后悔 (Baidu ID)、haoshuang(GitHub ID)、array88(GitHub ID)、自由fr(Baidu ID)
 
-**Note**: The **sgs\_ex.lua** in QSanguosha-1217 has some typos, I upload a new one which fixed the typos.
-Please copy the **sgs_ex.lua** to **QSanguosha-1217\lua** directory and use the lua skills to fix the bugs.
+把本项目中的sgs_ex.lua拷贝到神杀目录的lua文件夹下覆盖原有的同名文件
+==
 
  简介 
 ====================
@@ -58,11 +58,13 @@ Please copy the **sgs_ex.lua** to **QSanguosha-1217\lua** directory and use the 
 - [Chapter R](ChapterR.md)
 - [Chapter S](ChapterS.md)  
 [伤逝](ChapterS.md#伤逝)、[伤逝-旧](ChapterS.md#伤逝-旧)、[尚义](ChapterS.md#尚义)、[烧营](ChapterS.md#烧营)、[涉猎](ChapterS.md#涉猎)、[神愤](ChapterS.md#神愤)、[甚贤](ChapterS.md#甚贤)、[神戟](ChapterS.md#神戟)、[神君](ChapterS.md#神君)、[神力](ChapterS.md#神力)、[神速](ChapterS.md#神速)、[神威](ChapterS.md#神威)、[神智](ChapterS.md#神智)、[生息](ChapterS.md#生息)、[师恩](ChapterS.md#师恩)、[识破](ChapterS.md#识破)、[恃才](ChapterS.md#恃才)、[恃勇](ChapterS.md#恃勇)、[弑神](ChapterS.md#弑神)、[誓仇](ChapterS.md#誓仇)、[慎拒](ChapterS.md#慎拒)、[守成](ChapterS.md#守成)、[授业](ChapterS.md#授业)、[淑德](ChapterS.md#淑德)、[淑慎](ChapterS.md#淑慎)、[双刃](ChapterS.md#双刃)、[双雄](ChapterS.md#双雄)、[水箭](ChapterS.md#水箭)、[水泳](ChapterS.md#水泳)、[死谏](ChapterS.md#死谏)、[死节](ChapterS.md#死节)、[死战](ChapterS.md#死战)、[颂词](ChapterS.md#颂词)、[颂威](ChapterS.md#颂威)、[肃资](ChapterS.md#肃资)、[随势](ChapterS.md#随势)
-- [Chapter T](ChapterT.md)
+- [Chapter T](ChapterT.md)  
+[抬榇](ChapterT.md#抬榇)、[贪婪](ChapterT.md#贪婪)、[探虎](ChapterT.md#探虎)、[探囊](ChapterT.md#探囊)、[天妒](ChapterT.md#天妒)、[天命](ChapterT.md#天命)、[天香](ChapterT.md#天香)、[天义](ChapterT.md#天义)、[挑衅](ChapterT.md#挑衅)、[铁骑](ChapterT.md#铁骑)、[同疾](ChapterT.md#同疾)、[同心](ChapterT.md#同心)、[偷渡](ChapterT.md#偷渡)、[突骑](ChapterT.md#突骑)、[突袭](ChapterT.md#突袭)、[突袭-1v1](ChapterT.md#突袭-1v1)、[屯田](ChapterT.md#屯田)
 - Chapter U **暂无技能**
-- [Chapter V](ChapterV.md)
+- Chapter V **暂无技能**
 - [Chapter W](ChapterW.md)
 - [Chapter X](ChapterX.md)
 - [Chapter Y](ChapterY.md)
-- [Chapter Z](ChapterZ.md)
+- [Chapter Z](ChapterZ.md)  
+[灾变](ChapterZ.md#灾变)、[再起](ChapterZ.md#再起)、[凿险](ChapterZ.md#凿险)、[早夭](ChapterZ.md#早夭)、[战神](ChapterZ.md#战神)、[昭烈](ChapterZ.md#昭烈)、[昭心](ChapterZ.md#昭心)、[贞烈](ChapterZ.md#贞烈)、[贞烈-旧](ChapterZ.md#贞烈-旧)、[鸩毒](ChapterZ.md#鸩毒)、[镇威](ChapterZ.md#镇威)、[镇卫](ChapterZ.md#镇卫)、[争锋](ChapterZ.md#争锋)、[争功](ChapterZ.md#争功)、[争功-0610版](ChapterZ.md#争功-0610版)、[整军](ChapterZ.md#整军)、[直谏](ChapterZ.md#直谏)、[直言](ChapterZ.md#直言)、[志继](ChapterZ.md#志继)、[制霸](ChapterZ.md#制霸)、[制霸-制霸孙权](ChapterZ.md#制霸-制霸孙权)、[制衡](ChapterZ.md#制衡)、[智迟](ChapterZ.md#智迟)、[智愚](ChapterZ.md#智愚)、[忠义](ChapterZ.md#忠义)、[咒缚](ChapterZ.md#咒缚)、[筑楼](ChapterZ.md#筑楼)、[追忆](ChapterZ.md#追忆)、[惴恐](ChapterZ.md#惴恐)、[资粮](ChapterZ.md#资粮)、[自立](ChapterZ.md#自立)、[自守](ChapterZ.md#自守)、[宗室](ChapterZ.md#宗室)、[纵火](ChapterZ.md#纵火)、[纵适](ChapterZ.md#纵适)、[纵玄](ChapterZ.md#纵玄)、[醉乡](ChapterZ.md#醉乡)
 

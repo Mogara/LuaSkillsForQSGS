@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（T区）
 	技能索引：
-		抬榇、贪婪、探虎、探囊、躺枪、天妒、天命、天香、天义、挑衅、铁骑、同疾、同心、偷渡、突骑、突袭、突袭、屯田
+		抬榇、贪婪、探虎、探囊、天妒、天命、天香、天义、挑衅、铁骑、同疾、同心、偷渡、突骑、突袭、突袭、屯田
 ]]--
 --[[
 	技能名：抬榇
@@ -172,32 +172,7 @@ LuaXTannang = sgs.CreateDistanceSkill{
 		end
 	end
 }
---[[
-	技能名：躺枪（锁定技）
-	相关武将：胆创·夏侯杰
-	描述：杀死你的角色失去1点体力上限并获得技能“躺枪”。
-	引用：LuaTangqiang
-	状态：1217验证通过
-]]--
-LuaTangqiang = sgs.CreateTriggerSkill{
-	name = "LuaTangqiang" ,
-	events = {sgs.Death} ,
-	frequency = sgs.Skill_Compulsory,
 
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local death = data:toDeath()
-        if player:objectName() == death.who:objectName() and death.damage and death.damage.from then
-            room:notifySkillInvoked(player,self:objectName())
-            room:loseMaxHp(death.damage.from,1)
-            room:acquireSkill(death.damage.from,self:objectName())
-        end
-        return false
-	end,
-	can_trigger = function(self, target)
-		return target ~= nil and target:hasSkill(self:objectName())
-	end
-}
 --[[
 	技能名：天妒
 	相关武将：标准·郭嘉、SP·台版郭嘉
@@ -483,9 +458,6 @@ LuaTiaoxin = sgs.CreateViewAsSkill{
 	描述：当你使用【杀】指定一名角色为目标后，你可以进行一次判定，若判定结果为红色，该角色不可以使用【闪】对此【杀】进行响应。
 	引用：LuaTieji
 	状态：1217验证通过
-
-	备注：和无双一样的问题，由于0610缺少QVariant::toIntList()和QVariant::setValue(QList <int>)而导致技能无法实现
-	Fs吐槽下：上一个版本的技能谁写的？技能明明不是SlashProceed时机发动的！！
 ]]--
 Table2IntList = function(theTable)
 	local result = sgs.IntList()
@@ -658,7 +630,7 @@ LuaToudu = sgs.CreateMasochismSkill{
 	相关武将：贴纸·公孙瓒
 	描述：准备阶段开始时，若你的武将牌上有“扈”，你将所有“扈”置入弃牌堆：若X小于或等于2，你摸一张牌。本回合你与其他角色的距离-X。（X为准备阶段开始时置于弃牌堆的“扈”的数量）
 	引用：LuaXTuqi、LuaXTuqiDist
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaXTuqi = sgs.CreateTriggerSkill{
 	name = "LuaXTuqi",
