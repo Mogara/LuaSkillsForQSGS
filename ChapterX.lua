@@ -547,10 +547,11 @@ LuaXiechanVS = sgs.CreateZeroCardViewAsSkill{
 LuaXiechan = sgs.CreateTriggerSkill{
 	name = "LuaXiechan",
 	frequency = sgs.Skill_Limited,
+	limit_mark = "@twine",
 	events = {sgs.GameStart},
 	view_as_skill = LuaXiechanVS,
-	on_trigger = function(self, event, player, data)
-		player:gainMark("@twine", 1)
+	on_trigger = function()
+		return false
 	end
 }
 --[[
@@ -809,9 +810,9 @@ LuaXiongyi = sgs.CreateTriggerSkill{
 	name = "LuaXiongyi",
 	frequency = sgs.Skill_Limited,
 	events = {sgs.GameStart},
+	limit_mark = "@arise",
 	view_as_skill = LuaXiongyiVS,
-	on_trigger = function(self, event, player, data)
-		player:gainMark("@arise", 1)
+	on_trigger = function()
 	end
 }
 
@@ -1454,4 +1455,3 @@ LuaXXunzhi = sgs.CreateTriggerSkill{
 		return false
 	end,
 }
-aaaaa:addSkill(LuaXXunzhi)

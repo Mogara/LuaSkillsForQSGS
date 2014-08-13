@@ -795,7 +795,7 @@ LuaZhiji = sgs.CreateTriggerSkill{
 	技能名：制霸（主公技）
 	相关武将：山·孙策
 	描述：出牌阶段限一次，其他吴势力角色的出牌阶段可以与你拼点（“魂姿”发动后，你可以拒绝此拼点）。若其没赢，你可以获得两张拼点的牌。
-	引用：LuaSunceZhiba；LuaZhibaPindian（技能暗将）
+	引用：LuaZhiba；LuaZhibaPindian（技能暗将）
 	状态：1217验证通过
 ]]--
 LuaZhibaCard = sgs.CreateSkillCard{
@@ -860,8 +860,8 @@ LuaZhibaPindian = sgs.CreateViewAsSkill{
 		return false
 	end
 }
-LuaSunceZhiba = sgs.CreateTriggerSkill{
-	name = "LuaSunceZhiba$",
+LuaZhiba = sgs.CreateTriggerSkill{
+	name = "LuaZhiba$",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.TurnStart, sgs.Pindian, sgs.EventPhaseChanging, sgs.EventAcquireSkill, sgs.EventLoseSkill},
 	can_trigger = function(self, target)
