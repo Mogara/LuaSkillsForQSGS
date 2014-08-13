@@ -769,7 +769,7 @@ LuaWushenTargetMod = sgs.CreateTargetModSkill{
 	相关武将：标准·关羽、翼·关羽、2013-3v3·关羽、1v1·关羽1v1
 	描述：你可以将一张红色牌当【杀】使用或打出。
 	引用：LuaWusheng
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
 LuaWusheng = sgs.CreateOneCardViewAsSkill{
 	name = "LuaWusheng",
