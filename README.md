@@ -64,7 +64,8 @@ If you find BUG in reading, please [click here](https://github.com/DGAH/LuaSkill
 - Chapter V **暂无技能**
 - [Chapter W](ChapterW.md)
 - [Chapter X](ChapterX.md)
-- [Chapter Y](ChapterY.md)
+- [Chapter Y](ChapterY.md)  
+[延祸](ChapterY.md#延祸)、[严整](ChapterY.md#严整)、[言笑](ChapterY.md#言笑)、[燕语](ChapterY.md#燕语)、[耀武](ChapterY.md#耀武)、[业炎](ChapterY.md#业炎)、[遗计](ChapterY.md#遗计)、[疑城](ChapterY.md#疑城)、[倚天](ChapterY.md#倚天)、[义从](ChapterY.md#义从)、[义从-贴纸](ChapterY.md#义从-贴纸)、[义舍](ChapterY.md#义舍)、[义释](ChapterY.md#义释)、[异才](ChapterY.md#异才)、[毅重](ChapterY.md#毅重)、[姻礼](ChapterY.md#姻礼)、[银铃](ChapterY.md#银铃)、[英魂](ChapterY.md#英魂)、[英姿](ChapterY.md#英姿)、[影兵](ChapterY.md#影兵)、[庸肆](ChapterY.md#庸肆)、[勇决](ChapterY.md#勇决)、[狱刎](ChapterY.md#狱刎)、[御策](ChapterY.md#御策)、[援护](ChapterY.md#援护)
 - [Chapter Z](ChapterZ.md)  
 [灾变](ChapterZ.md#灾变)、[再起](ChapterZ.md#再起)、[凿险](ChapterZ.md#凿险)、[早夭](ChapterZ.md#早夭)、[战神](ChapterZ.md#战神)、[昭烈](ChapterZ.md#昭烈)、[昭心](ChapterZ.md#昭心)、[贞烈](ChapterZ.md#贞烈)、[贞烈-旧](ChapterZ.md#贞烈-旧)、[鸩毒](ChapterZ.md#鸩毒)、[镇威](ChapterZ.md#镇威)、[镇卫](ChapterZ.md#镇卫)、[争锋](ChapterZ.md#争锋)、[争功](ChapterZ.md#争功)、[争功-0610版](ChapterZ.md#争功-0610版)、[整军](ChapterZ.md#整军)、[直谏](ChapterZ.md#直谏)、[直言](ChapterZ.md#直言)、[志继](ChapterZ.md#志继)、[制霸](ChapterZ.md#制霸)、[制霸-制霸孙权](ChapterZ.md#制霸-制霸孙权)、[制衡](ChapterZ.md#制衡)、[智迟](ChapterZ.md#智迟)、[智愚](ChapterZ.md#智愚)、[忠义](ChapterZ.md#忠义)、[咒缚](ChapterZ.md#咒缚)、[筑楼](ChapterZ.md#筑楼)、[追忆](ChapterZ.md#追忆)、[惴恐](ChapterZ.md#惴恐)、[资粮](ChapterZ.md#资粮)、[自立](ChapterZ.md#自立)、[自守](ChapterZ.md#自守)、[宗室](ChapterZ.md#宗室)、[纵火](ChapterZ.md#纵火)、[纵适](ChapterZ.md#纵适)、[纵玄](ChapterZ.md#纵玄)、[醉乡](ChapterZ.md#醉乡)
 
