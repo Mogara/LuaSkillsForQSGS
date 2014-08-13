@@ -100,7 +100,7 @@ LuaWangzun = sgs.CreatePhaseChangeSkill{
 	on_phasechange = function(self, target)
 		local room = target:getRoom()
 		local mode = room:getMode()
-		if mode:endsWith("p") or mode:endsWith("pd") or mode.endsWith("pz") then
+		if mode:endsWith("p") or mode:endsWith("pd") or mode:endsWith("pz") then
 			if target:isLord() and target:getPhase() == sgs.Player_Start then
 				local yuanshu = room:findPlayerBySkillName(self:objectName())
 				if yuanshu and room:askForSkillInvoke(yuanshu, self:objectName()) then
