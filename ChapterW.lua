@@ -771,31 +771,26 @@ LuaWushenTargetMod = sgs.CreateTargetModSkill{
 	引用：LuaWusheng
 	状态：0610验证通过
 ]]--
-LuaWusheng = sgs.CreateViewAsSkill{
+LuaWusheng = sgs.CreateOneCardViewAsSkill{
 	name = "LuaWusheng",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		if not to_select:isRed() then return false end
-		local weapon = sgs.Self:getWeapon()
-		if (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY) and sgs.Self:getWeapon()
-				and (to_select:getEffectiveId() == sgs.Self:getWeapon():getId()) and to_select:isKindOf("Crossbow") then
-			return sgs.Self:canSlashWithoutCrossbow()
-		else
-			return true
-		end
+	view_filter = function(self, card)
+		if not card:isRed() then return false end
+		if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
+        		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_SuitToBeDecided, -1)
+            		slash:addSubcard(card:getEffectiveId())
+            		return slash:isAvailable(sgs.Self)
+        	end
+        	return true
 	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = cards[1]
-			local slash = sgs.Sanguosha:cloneCard("slash", card:getSuit(), card:getNumber())
-			slash:addSubcard(card:getId())
-			slash:setSkillName(self:objectName())
-			return slash
-		end
+	view_as = function(self, originalCard)
+		local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())
+		slash:addSubcard(originalCard:getId())
+		slash:setSkillName(self:objectName())
+		return slash
 	end,
 	enabled_at_play = function(self, player)
 		return sgs.Slash_IsAvailable(player)
-	end,
+	end, 
 	enabled_at_response = function(self, player, pattern)
 		return pattern == "slash"
 	end
