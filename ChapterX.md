@@ -2,7 +2,7 @@
 代码速查手册（X区）
 ==
 #技能索引
-[惜粮](#惜粮)、[先登](#先登)、[陷嗣](#陷嗣)、[陷阵](#陷阵)、[享乐](#享乐)、[枭姬](#枭姫)、[枭姬-1v1](#枭姬-1v1)、[骁果](#骁果)、[骁袭](#骁袭)、[孝德](#孝德)、[挟缠](#挟缠)、[心战](#心战)、[新生](#新生)、[星舞](#星舞)、[行殇](#行殇)、[雄异](#雄异)、[修罗](#修罗)、[旋风](#旋风)、[旋风-旧](#旋风-旧)、[眩惑](#昡惑)、[眩惑-旧](#眩惑-旧)、[雪恨](#雪恨)、[血祭](#血祭)、[血裔](#血裔)、[恂恂](#恂恂)、[循规](#循规)、[迅猛](#迅猛)、[殉志](#殉志)
+[惜粮](#惜粮)、[陷嗣](#陷嗣)、[陷阵](#陷阵)、[享乐](#享乐)、[枭姬](#枭姫)、[枭姬-1v1](#枭姬-1v1)、[骁果](#骁果)、[骁袭](#骁袭)、[孝德](#孝德)、[挟缠](#挟缠)、[心战](#心战)、[新生](#新生)、[星舞](#星舞)、[行殇](#行殇)、[雄异](#雄异)、[修罗](#修罗)、[旋风](#旋风)、[旋风-旧](#旋风-旧)、[眩惑](#昡惑)、[眩惑-旧](#眩惑-旧)、[雪恨](#雪恨)、[血祭](#血祭)、[血裔](#血裔)、[恂恂](#恂恂)、[迅猛](#迅猛)、[殉志](#殉志)
 
 [返回目录](README.md#目录)
 ##惜粮
@@ -52,7 +52,8 @@
 ##陷嗣  
 **相关武将**：一将成名2013·刘封  
 **描述**：准备阶段开始时，你可以将一至两名角色的各一张牌置于你的武将牌上，称为“逆”。其他角色可以将两张“逆”置入弃牌堆，视为对你使用一张【杀】。  
-**引用**：LuaXiansi LuaXiansiAttach LuaXiansiSlash（技能暗将）  
+**引用**：LuaXiansi LuaXiansiAttach LuaXiansiSlash（技能暗将）   
+**状态**：1217验证通过 
 ```lua
 	LuaXiansiCard = sgs.CreateSkillCard{
 		name = "LuaXiansiCard", 
@@ -65,16 +66,14 @@
 			local id = effect.from:getRoom():askForCardChosen(effect.from, effect.to, "he", "LuaXiansi")
 			effect.from:addToPile("counter", id)
 		end,
-	}
-	
+	}	
 	LuaXiansiVS = sgs.CreateZeroCardViewAsSkill{
 		name = "LuaXiansi",
 		response_pattern = "@@LuaXiansi",
 		view_as = function(self) 
 			return LuaXiansiCard:clone()
 		end, 
-	}
-	
+	}	
 	LuaXiansi = sgs.CreateTriggerSkill{
 		name = "LuaXiansi", 
 		events = {sgs.EventPhaseStart}, 
@@ -84,8 +83,7 @@
 				player:getRoom():askForUseCard(player, "@@LuaXiansi", "@xiansi-card")
 			end
 		end,
-	}
-	
+	}	
 	LuaXiansiAttach = sgs.CreateTriggerSkill{
 		name = "#LuaXiansiAttach", 
 		events = {sgs.TurnStart,sgs.EventAcquireSkill,sgs.EventLoseSkill}, 
@@ -111,8 +109,7 @@
 		can_trigger = function(self, target)
 			return target
 		end,
-	}
-	
+	}	
 	LuaXiansiSlashCard = sgs.CreateSkillCard{
 		name = "LuaXiansiSlashCard", 
 		target_fixed = false,
@@ -157,8 +154,7 @@
 	    if liufeng == nil then return false end
 	    local slash = sgs.Sanguosha:cloneCard("slash")
 	    return slash:targetFilter(sgs.PlayerList(), liufeng, player);
-	end
-	
+	end	
 	LuaXiansiSlash = sgs.CreateZeroCardViewAsSkill{
 		name = "LuaXiansiSlash",
 		view_as = function(self) 
@@ -202,9 +198,8 @@
 			else
 				room:setPlayerCardLimitation(effect.from, "use", "Slash", true);
 			end
-		end,
-		}
-	
+		end
+	}	
 	LuaXianzhenVs = sgs.CreateZeroCardViewAsSkill{
 		name = "LuaXianzhen",
 		view_as = function(self) 
@@ -213,8 +208,7 @@
 		enabled_at_play = function(self, player)
 			return (not player:hasUsed("#LuaXianzhenCard")) and (not player:isKongcheng())
 		end, 
-	}
-	
+	}	
 	LuaXianzhen = sgs.CreateTriggerSkill{
 		name = "LuaXianzhen",  
 		events = {sgs.EventPhaseChanging,sgs.Death}, 
@@ -618,7 +612,7 @@
 **相关武将**：山·左慈  
 **描述**：每当你受到1点伤害后，你可以获得一张“化身牌”。  
 **引用**：LuaXinSheng  
-**状态**：验证通过  
+**状态**：1217验证通过  
 **备注**：需调用ChapterH 的acquireGenerals 函数  
 ```lua
 	LuaXinSheng = sgs.CreateTriggerSkill{
@@ -1355,8 +1349,7 @@
 ```lua
 	LuaXunxun = sgs.CreatePhaseChangeSkill{
 		name = "LuaXunxun",
-		frequency = sgs.Skill_Frequent,
-	
+		frequency = sgs.Skill_Frequent,	
 		on_phasechange = function(self,player)
 			if player:getPhase() == sgs.Player_Draw then
 				local room = player:getRoom()
@@ -1395,8 +1388,7 @@
 	LuaXunmeng = sgs.CreateTriggerSkill{
 		name = "LuaXunmeng",
 		frequency = sgs.Skill_Compulsory,
-		events = {sgs.ConfirmDamage},
-	
+		events = {sgs.ConfirmDamage},	
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			local damage = data:toDamage()

@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（X区）
 	技能索引：
-		惜粮、先登、陷嗣、陷阵、享乐、枭姬、枭姬、骁果、骁果、骁袭、孝德、挟缠、心战、新生、星舞、行殇、雄异、修罗、旋风、旋风、眩惑、眩惑、雪恨、血祭、血裔、恂恂、循规、迅猛、殉志
+		惜粮、陷嗣、陷阵、享乐、枭姬、枭姬、骁果、骁袭、孝德、挟缠、心战、新生、星舞、行殇、雄异、修罗、旋风、旋风、眩惑、眩惑、雪恨、血祭、血裔、恂恂、迅猛、殉志
 ]]--
 --[[
 	技能名：惜粮
@@ -50,6 +50,7 @@ LuaXiliang = sgs.CreateTriggerSkill{
 	相关武将：一将成名2013·刘封
 	描述：准备阶段开始时，你可以将一至两名角色的各一张牌置于你的武将牌上，称为“逆”。其他角色可以将两张“逆”置入弃牌堆，视为对你使用一张【杀】。
 	引用：LuaXiansi LuaXiansiAttach LuaXiansiSlash（技能暗将）
+	状态：1217验证通过
 ]]--
 LuaXiansiCard = sgs.CreateSkillCard{
 	name = "LuaXiansiCard", 
@@ -595,7 +596,7 @@ LuaXinzhan = sgs.CreateViewAsSkill{
 	相关武将：山·左慈
 	描述：每当你受到1点伤害后，你可以获得一张“化身牌”。
 	引用：LuaXinSheng
-	状态：验证通过
+	状态：1217验证通过
 	备注：需调用ChapterH 的acquireGenerals 函数
 ]]--
 LuaXinSheng = sgs.CreateTriggerSkill{
