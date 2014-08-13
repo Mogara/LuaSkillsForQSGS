@@ -66,7 +66,7 @@ LuaTaichen = sgs.CreateViewAsSkill{
 	相关武将：智·许攸
 	描述：每当你受到一次伤害，可与伤害来源进行拼点：若你赢，你获得两张拼点牌
 	引用：LuaTanlan
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaTanlan = sgs.CreateTriggerSkill{
 	name = "LuaTanlan" ,
@@ -161,7 +161,7 @@ LuaTanhu = sgs.CreateTriggerSkill{
 	相关武将：翼·张飞
 	描述：你计算的与其他角色的距离-X（X为你已损失的体力值）。
 	引用：LuaXTannang
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaXTannang = sgs.CreateDistanceSkill{
 	name = "LuaXTannang",
@@ -203,18 +203,19 @@ LuaTangqiang = sgs.CreateTriggerSkill{
 	相关武将：标准·郭嘉、SP·台版郭嘉
 	描述：在你的判定牌生效后，你可以获得此牌。
 	引用：LuaTiandu
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
 LuaTiandu = sgs.CreateTriggerSkill{
 	name = "LuaTiandu",
 	frequency = sgs.Skill_Frequent,
 	events = {sgs.FinishJudge},
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local judge = data:toJudge()
 		local card = judge.card
 		local card_data = sgs.QVariant()
 		card_data:setValue(card)
-		if player:askForSkillInvoke(self:objectName(), card_data) then
+		if room:getCardPlace(card:getEffectiveId()) == sgs.Player_PlaceJudge and player:askForSkillInvoke(self:objectName(), card_data) then
 			player:obtainCard(card)
 		end
 	end
@@ -223,79 +224,81 @@ LuaTiandu = sgs.CreateTriggerSkill{
 	技能名：天覆
 	相关武将：阵·姜维
 	描述：你或与你相邻的角色的回合开始时，该角色可以令你拥有“看破”，直到回合结束。 
+	引用：LuaTianfu
+	状态：1217验证通过
 ]]--
+LuaTianfu = sgs.CreateTriggerSkill{
+	name = "LuaTianfu",
+	events = {sgs.EventPhaseStart,sgs.EventPhaseChanging},
+	priority = 4,
+
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.EventPhaseStart and player:getPhase() == sgs.Player_RoundStart then
+			local jiangweis = room:findPlayersBySkillName(self:objectName())
+			for _, jiangwei in sgs.qlist(jiangweis) do 
+				local _data = sgs.QVariant()
+				_data:setValue(jiangwei)
+				if jiangwei:isAlive() and player:objectName() == jiangwei:objectName() or player:isAdjacentTo(jiangwei) and room:askForSkillInvoke(player, self:objectName(),_data) then
+					if player:objectName() ~= jiangwei:objectName() then
+						room:notifySkillInvoked(jiangwei, self:objectName())
+					end
+					jiangwei:addMark(self:objectName())
+					room:acquireSkill(jiangwei, "kanpo")
+				end
+			end
+		elseif event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then return false end
+			for _, p in sgs.qlist(room:getAllPlayers()) do 
+				if p:getMark(self:objectName()) > 0 then
+					p:setMark(self:objectName(), 0)
+					room:detachSkillFromPlayer(p, "kanpo", false, true)
+				end
+			end
+		end
+	end,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
 --[[
 	技能名：天命
 	相关武将：铜雀台·汉献帝、SP·刘协
 	描述：当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；若此时全场体力值最多的角色仅有一名（且不是你），该角色也可如此做
 	引用：LuaXTianming
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaXTianming = sgs.CreateTriggerSkill{
 	name = "LuaXTianming",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.TargetConfirming},
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local use = data:toCardUse()
-		local slash = use.card
-		if slash and slash:isKindOf("Slash") then
-			if player:askForSkillInvoke(self:objectName()) then
-				local room = player:getRoom()
-				if not player:isNude() then
-					local total = 0
-					local jilei_cards = {}
-					local handcards = player:getHandcards()
-					for _,card in sgs.qlist(handcards) do
-						if player:isJilei(card) then
-							table.insert(jilei_cards, card)
-						end
-					end
-					total = handcards:length() - #jilei_cards + player:getEquips():length()
-					if total <= 2 then
-						player:throwAllHandCardsAndEquips()
-					else
-						room:askForDiscard(player, self:objectName(), 2, 2, false, true)
-					end
-				end
-				player:drawCards(2)
-				local maxHp = -1000
-				local allplayers = room:getAllPlayers()
-				for _,p in sgs.qlist(allplayers) do
-					if p:getHp() > maxHp then
-						maxHp = p:getHp()
-					end
-				end
-				if player:getHp() ~= maxHp then
-					local maxs = sgs.SPlayerList()
-					for _,p in sgs.qlist(allplayers) do
-						if p:getHp() == maxHp then
-							maxs:append(p)
-						end
-						if maxs:length() > 1 then
-							return false
-						end
-					end
-					local mosthp = maxs:first()
-					if room:askForSkillInvoke(mosthp, self:objectName()) then
-						local jilei_cards = {}
-						local handcards = mosthp:getHandcards()
-						for _,card in sgs.qlist(handcards) do
-							if mosthp:isJilei(card) then
-								table.insert(jilei_cards, card)
-							end
-						end
-						local total = handcards:length() - #jilei_cards + mosthp:getEquips():length()
-						if total <= 2 then
-							mosthp:throwAllHandCardsAndEquips()
-						else
-							room:askForDiscard(mosthp, self:objectName(), 2, 2, false, true)
-						end
-						mosthp:drawCards(2)
-					end
+		if use.card:isKindOf("Slash") and room:askForSkillInvoke(player,self:objectName()) then
+			room:askForDiscard(player, self:objectName(), 2, 2, false, true)
+			player:drawCards(2)
+			local max = -1000
+			for _,p in sgs.qlist(room:getAllPlayers()) do
+				if p:getHp() > max then
+					max = p:getHp()
 				end
 			end
+			if player:getHp() == max then return false end
+			local maxs = sgs.SPlayerList()
+			for _,p in sgs.qlist(room:getAllPlayers()) do
+				if p:getHp() == max then
+					maxs:append(p)
+				end
+				if maxs:length() > 1 then return false end
+			end
+			local mosthp = maxs:first()
+			if room:askForSkillInvoke(mosthp, self:objectName()) then
+				room:askForDiscard(mosthp, self:objectName(), 2, 2, false, true)
+				mosthp:drawCards(2)
+			end
 		end
-		return false
 	end
 }
 --[[
@@ -374,43 +377,32 @@ LuaTianxiangDraw = sgs.CreateTriggerSkill{
 	相关武将：火·太史慈
 	描述：出牌阶段限一次，你可以与一名角色拼点。若你赢，你获得以下锁定技，直到回合结束：你使用【杀】无距离限制；你于出牌阶段内能额外使用一张【杀】；你使用【杀】选择目标的个数上限+1。若你没赢，你不能使用【杀】，直到回合结束。
 	引用：LuaTianyi、LuaTianyiTargetMod
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaTianyiCard = sgs.CreateSkillCard{
 	name = "LuaTianyiCard",
-	target_fixed = false,
-	will_throw = false,
+
 	filter = function(self, targets, to_select)
 		return #targets == 0 and (not to_select:isKongcheng()) and to_select:objectName() ~= sgs.Self:objectName()
 	end,
-	feasible = function(self, targets)
-		return #targets == 1
-	end,
+
 	on_use = function(self, room, source, targets)
-		local success = source:pindian(targets[1], "tianyi", self)
+		local success = source:pindian(targets[1], "tianyi", nil)
 		if success then
 			room:setPlayerFlag(source, "tianyi_success")
 		else
 			room:setPlayerCardLimitation(source, "use", "Slash", true)
 		end
-	end,
+	end
 }
-LuaTianyiVS = sgs.CreateViewAsSkill{
+LuaTianyiVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaTianyi",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return not to_select:isEquipped()
-	end,
-	view_as = function(self, cards)
-		if #cards == 1 then
-			local card = LuaTianyiCard:clone()
-			card:addSubcard(cards[1])
-			return card
-		end
-	end,
+	view_as = function(self) 
+		return LuaTianyiCard:clone()
+	end, 
 	enabled_at_play = function(self, player)
-		return (not player:hasUsed("#LuaTianyiCard")) and (not player:isKongcheng())
-	end,
+		return not player:hasUsed("#LuaTianyiCard") and not player:isKongcheng()
+	end, 
 }
 LuaTianyi = sgs.CreateTriggerSkill{
 	name = "LuaTianyi",
@@ -490,7 +482,7 @@ LuaTiaoxin = sgs.CreateViewAsSkill{
 	相关武将：标准·马超、SP·马超、1v1·马超1v1、SP·台版马超
 	描述：当你使用【杀】指定一名角色为目标后，你可以进行一次判定，若判定结果为红色，该角色不可以使用【闪】对此【杀】进行响应。
 	引用：LuaTieji
-	状态：0901验证通过
+	状态：1217验证通过
 
 	备注：和无双一样的问题，由于0610缺少QVariant::toIntList()和QVariant::setValue(QList <int>)而导致技能无法实现
 	Fs吐槽下：上一个版本的技能谁写的？技能明明不是SlashProceed时机发动的！！
@@ -671,30 +663,33 @@ LuaToudu = sgs.CreateMasochismSkill{
 LuaXTuqi = sgs.CreateTriggerSkill{
 	name = "LuaXTuqi",
 	frequency = sgs.Skill_Compulsory,
-	events = {sgs.EventPhaseStart},
+	events = {sgs.EventPhaseStart,sgs.EventPhaseChanging},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_NotActive then
-			room:setPlayerMark(player, "yicong", 0)
+		if event == sgs.EventPhaseStart then
+		
+			if player:getPhase() == sgs.Player_Start and player:getPile("retinue"):length() > 0 then
+				room:notifySkillInvoked(player, self:objectName())
+				local n = player:getPile("retinue"):length()
+				room:setPlayerMark(player, "tuqi_dist", n)
+				player:clearOnePrivatePile("retinue")
+				if n <= 2 then
+					player:drawCards(1)
+				end
+			end
+		
+		else
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then return false end
+				room:setPlayerMark(player, "tuqi_dist", 0)
 		end
-		if player:getPhase() ~= sgs.Player_Start then return end
-		local n = player:getPile("retinue"):length()
-		if n < 1 then return end
-		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", nil, "LuaXYicong", "")
-		for _,card_id in sgs.qlist(player:getPile("retinue")) do
-			room:moveCardTo(sgs.Sanguosha:getCard(card_id), nil, sgs.Player_DiscardPile, reason, true)
-		end
-		room:setPlayerMark(player, "yicong", n)
-		if n <= 2 then
-			player:drawCards(1)
-		end
-	end,
+	end
 }
 LuaXTuqiDist = sgs.CreateDistanceSkill{
 	name = "#LuaXTuqi",
 	correct_func = function(self, from, to)
 		if from:hasSkill(self:objectName()) then
-			return -from:getMark("yicong")
+			return -from:getMark("tuqi_dist")
 		end
 	end,
 }
@@ -703,71 +698,51 @@ LuaXTuqiDist = sgs.CreateDistanceSkill{
 	相关武将：标准·张辽、SP·台版张辽
 	描述：摸牌阶段开始时，你可以放弃摸牌，改为获得一至两名其他角色的各一张手牌。
 	引用：LuaTuxi
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
 LuaTuxiCard = sgs.CreateSkillCard{
 	name = "LuaTuxiCard",
-	target_fixed = false,
-	will_throw = true,
+
 	filter = function(self, targets, to_select)
-		if (#targets >= 2) or (to_select:objectName() == sgs.Self:objectName()) then
-			return false
-		end
+		if (#targets >= 2) or (to_select:objectName() == sgs.Self:objectName()) then return false end
 		return not to_select:isKongcheng()
 	end,
-	on_use = function(self, room, source, targets)
-		local moves = sgs.CardsMoveList()
-		local move1 = sgs.CardsMoveStruct()
-		move1.card_ids:append(room:askForCardChosen(source, targets[1], "h", self:objectName()))
-		move1.to = source
-		move1.to_place = sgs.Player_PlaceHand
-		moves:append(move1)
-		if #targets == 2 then
-			local move2 = sgs.CardsMoveStruct()
-			move2.card_ids:append(room:askForCardChosen(source, targets[2], "h", self:objectName()))
-			move2.to = source
-			move2.to_place = sgs.Player_PlaceHand
-			moves:append(move2)
+	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
+		if effect.from:isAlive() and not effect.to:isKongcheng() then
+			local card_id = room:askForCardChosen(effect.from, effect.to, "h", "Luatuxi")
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, effect.from:objectName())
+			room:moveCardTo(sgs.Sanguosha:getCard(card_id),effect.from,sgs.Player_PlaceHand,reason)
 		end
-		room:moveCards(moves, false)
 	end
 }
-LuaTuxiVS = sgs.CreateViewAsSkill{
+LuaTuxiVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaTuxi",
-	n = 0,
-	view_as = function(self, cards)
+	response_pattern = "@@LuaTuxi",
+	
+	view_as = function(self) 
 		return LuaTuxiCard:clone()
-	end,
-	enabled_at_play = function(self, player)
-		return false
-	end,
-	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaTuxi"
 	end
 }
-LuaTuxi = sgs.CreateTriggerSkill{
-	name = "LuaTuxi",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.EventPhaseStart},
+LuaTuxi = sgs.CreatePhaseChangeSkill{
+	name = "LuaTuxi" ,
 	view_as_skill = LuaTuxiVS,
-	on_trigger = function(self, event, player, data)
+
+	on_phasechange = function(self, player)
+		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Draw then
-			local room = player:getRoom()
 			local can_invoke = false
 			local other_players = room:getOtherPlayers(player)
-			for _,target in sgs.qlist(other_players) do
-				if not target:isKongcheng() then
+			for _, player in sgs.qlist(other_players) do
+				if not player:isKongcheng() then
 					can_invoke = true
-					break;
+					break
 				end
 			end
-			if can_invoke then
-				if room:askForUseCard(player, "@@LuaTuxi", "@tuxi-card") then
-					return true
-				end
+			if can_invoke and room:askForUseCard(player, "@@LuaTuxi", "@tuxi-card") then
+				return true
 			end
 		end
-		return false
 	end
 }
 
@@ -775,61 +750,92 @@ LuaTuxi = sgs.CreateTriggerSkill{
 	技能名：突袭
 	相关武将：1v1·张辽1v1
 	描述：摸牌阶段，若你的手牌数小于对手的手牌数，你可以少摸一张牌并你获得对手的一张手牌。
+	引用：LuaKOFTuxi、LuaKOFTuxiAct
+	状态：1217验证通过
 ]]--
+LuaKOFTuxi = sgs.CreateDrawCardsSkill{
+	name = "LuaKOFTuxi",
+	
+	draw_num_func = function(self,player,n)
+		local room = player:getRoom() 
+		local can_invoke = false
+		local targets = sgs.SPlayerList()
+		for _,p in sgs.qlist(room:getOtherPlayers(player)) do
+			if p:getHandcardNum() > player:getHandcardNum() then
+				targets:append(p)
+			end
+		end
+		if not targets:isEmpty() then
+			can_invoke = true
+		end 
+		if can_invoke then
+			local target = room:askForPlayerChosen(player, targets, self:objectName(), "koftuxi-invoke", true, true)
+			if (target) then
+				target:setFlags("LuaKOFTuxiTarget")
+				player:setFlags("Luakoftuxi")
+				return n - 1
+			else 
+				return n
+			end
+		else
+			return n
+		end
+end
+}
+LuaKOFTuxiAct = sgs.CreateTriggerSkill{
+	name = "#Luakoftuxi",
+	events = {sgs.AfterDrawNCards},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if not player:hasFlag("Luakoftuxi") then
+			return false
+		end
+		player:setFlags("-Luakoftuxi")
+		local target = nil
+		for _,p in sgs.qlist(room:getOtherPlayers(player)) do
+			if p:hasFlag("LuaKOFTuxiTarget") then
+				p:setFlags("-LuaKOFTuxiTarget")
+				target = p
+				break
+			end
+		end
+		if not target then return false end
+		local card_id = room:askForCardChosen(player, target, "h", "koftuxi")
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, self:objectName())
+		room:moveCardTo(sgs.Sanguosha:getCard(card_id),player,sgs.Player_PlaceHand,reason)
+	end,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end
+}
 --[[
 	技能名：屯田
 	相关武将：山·邓艾
 	描述：你的回合外，当你失去牌时，你可以进行一次判定，将非红桃结果的判定牌置于你的武将牌上，称为“田”；每有一张“田”，你计算的与其他角色的距离便-1。
-	引用：LuaTuntian、LuaTuntianGet
-	状态：验证通过
+	引用：LuaTuntian、LuaTuntianDistance
+	状态：1217验证通过
 ]]--
-LuaTuntian = sgs.CreateDistanceSkill{
-	name = "#LuaTuntian",
-	correct_func = function(self, from, to)
-		if from:hasSkill(self:objectName()) then
-			local fields = from:getPile("field")
-			local count = fields:length()
-			return -count
-		end
-	end
-}
-LuaTuntianGet = sgs.CreateTriggerSkill{
-	name = "LuaTuntianGet",
-	frequency = sgs.Skill_NotFrequent,
+LuaTuntian = sgs.CreateTriggerSkill{
+	name = "LuaTuntian",
+	frequency = sgs.Skill_Frequent,
 	events = {sgs.CardsMoveOneTime, sgs.FinishJudge, sgs.EventLoseSkill},
 	on_trigger = function(self, event, player, data)
-		if player:isAlive() then
-			if player:hasSkill(self:objectName()) then
-				if player:getPhase() == sgs.Player_NotActive then
-					if event == sgs.CardsMoveOneTime then
-						local move = data:toMoveOneTime()
-						local source = move.from
-						if source and source:objectName() == player:objectName() then
-							local places = move.from_places
-							local room = player:getRoom()
-							if places:contains(sgs.Player_PlaceHand) or places:contains(sgs.Player_PlaceEquip) then
-								if player:askForSkillInvoke(self:objectName(), data) then
-									local judge = sgs.JudgeStruct()
-									judge.pattern = sgs.QRegExp("(.*):(heart):(.*)")
-									judge.good = false
-									judge.reason = self:objectName()
-									judge.who = player
-									judge.play_animation = true
-									room:judge(judge)
-								end
-							end
-						end
-					elseif event == sgs.FinishJudge then
-						local judge = data:toJudge()
-						if judge.reason == self:objectName() then
-							if judge:isGood() then
-								local id = judge.card:getEffectiveId()
-								player:addToPile("field", id)
-								return true
-							end
-						end
-					end
-				end
+		local room = player:getRoom()
+		if event == sgs.CardsMoveOneTime then
+			local move = data:toMoveOneTime()
+			if (move.from and (move.from:objectName() == player:objectName()) and (move.from_places:contains(sgs.Player_PlaceHand) or  move.from_places:contains(sgs.Player_PlaceEquip))) and not (move.to and (move.to:objectName() == player:objectName() and (move.to_place == sgs.Player_PlaceHand or move.to_place == sgs.Player_PlaceEquip))) then
+				if not player:askForSkillInvoke("LuaTuntian", data) then return end
+				local judge = sgs.JudgeStruct()
+				judge.pattern = ".|heart"
+				judge.good = false
+				judge.reason = self:objectName()
+				judge.who = player
+				room:judge(judge)
+			end
+		elseif event == sgs.FinishJudge then
+			local judge = data:toJudge()
+			if judge.reason == self:objectName() and judge:isGood() and room:getCardPlace(judge.card:getEffectiveId()) == sgs.Player_PlaceJudge then
+				player:addToPile("field", judge.card:getEffectiveId())
 			end
 		end
 		if event == sgs.EventLoseSkill then
@@ -837,9 +843,18 @@ LuaTuntianGet = sgs.CreateTriggerSkill{
 				player:removePileByName("field")
 			end
 		end
-		return false
 	end,
 	can_trigger = function(self, target)
-		return target
+		return target and target:isAlive() and target:hasSkill(self:objectName()) and target:getPhase() == sgs.Player_NotActive
 	end
+}
+LuaTuntianDistance = sgs.CreateDistanceSkill{
+	name = "#LuaTuntianDistance",
+	correct_func = function(self, from, to)
+		if from:hasSkill(self:objectName()) then
+			return - from:getPile("field"):length()
+		else
+			return 0
+		end
+	end  
 }
