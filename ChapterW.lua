@@ -93,19 +93,19 @@ LuaWangxi = sgs.CreateTriggerSkill{
 	相关武将：标准·袁术
 	描述：主公的准备阶段开始时，你可以摸一张牌，然后主公本回合手牌上限-1。
 	引用：LuaWangzun、LuaWangzunMaxCards
-	状态：0610验证通过
+	状态：1217验证通过
 ]]--
-LuaWangzun = sgs.CreateTriggerSkill{
+LuaWangzun = sgs.CreatePhaseChangeSkill{
 	name = "LuaWangzun" ,
-	events = {sgs.EventPhaseStart} ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if player:isLord() and (player:getPhase() == sgs.Player_Start) then
-			local yuanshu = room:findPlayerBySkillName(self:objectName())
-			if yuanshu then
-				if room:askForSkillInvoke(yuanshu, self:objectName()) then
+	on_phasechange = function(self, target)
+		local room = target:getRoom()
+		local mode = room:getMode()
+		if mode:endsWith("p") or mode:endsWith("pd") or mode:endsWith("pz") then
+			if target:isLord() and target:getPhase() == sgs.Player_Start then
+				local yuanshu = room:findPlayerBySkillName(self:objectName())
+				if yuanshu and room:askForSkillInvoke(yuanshu, self:objectName()) then
 					yuanshu:drawCards(1)
-					room:setPlayerFlag(player, "LuaWangzunDecMaxCards")
+					room:setPlayerFlag(target, "LuaWangzunDecMaxCards")
 				end
 			end
 		end
