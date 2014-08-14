@@ -87,11 +87,7 @@ LuaYanxiaoCard = sgs.CreateTrickCard{
 	subclass = sgs.LuaTrickCard_TypeDelayedTrick, -- LuaTrickCard_TypeNormal, LuaTrickCard_TypeSingleTargetTrick, LuaTrickCard_TypeDelayedTrick, LuaTrickCard_TypeAOE, LuaTrickCard_TypeGlobalEffect
 	filter = function(self, targets, to_select) 
 		if #targets ~= 0 then return false end
-		for _,card in sgs.qlist(to_select:getJudgingArea()) do
-			if card:objectName() == "YanxiaoCard" then
-				return false
-			end
-		end
+		if to_select:containsTrick("YanxiaoCard") then return false end		
 		return true
 	end,
 	is_cancelable = function(self, effect)
@@ -112,12 +108,8 @@ LuaYanxiao = sgs.CreatePhaseChangeSkill{
 	name = "LuaYanxiao",
 	view_as_skill = LuaYanxiaoVS,
 	can_trigger = function(self,target)
-		if target and target:getPhase() == sgs.Player_Judge then
-			for _,card in sgs.qlist(target:getJudgingArea()) do
-				if card:hasFlag("LuaYanxiao") then
-					return true
-				end
-			end
+		if target and target:getPhase() == sgs.Player_Judge then			
+			if target:containsTrick("YanxiaoCard") then return true end
 		end
 		return false
 	end,
@@ -128,10 +120,7 @@ LuaYanxiao = sgs.CreatePhaseChangeSkill{
 		log.type = "$YanxiaoGot"
 		log.from = target		
 		for _,card in sgs.qlist(target:getJudgingArea()) do
-			move.card_ids:append(card:getEffectiveId())
-			if card:hasFlag("LuaYanxiao") then
-				card:setFlags("-LuaYanxiao")
-			end
+			move.card_ids:append(card:getEffectiveId())			
 		end
 		log.card_str = table.concat(sgs.QList2Table(move.card_ids),"+")
 		room:sendLog(log)
@@ -311,31 +300,33 @@ LuaYeyanCard = sgs.CreateSkillCard{
 		local source = card_use.from
 		source:loseMark("@flame")
 		if subcards_length == 0 then
-		for _,target in ipairs(targets) do
-			room:cardEffect(self, source, target)
-		end
-		elseif #targets == 2 then
-			room:loseHp(source,3)
-			local choice = room:askForChoice(source, self:objectName(), "2:1+1:2")
-			if choice == "2:1" then
-				Fire(source, targets[1], 2)
-				Fire(source, targets[2], 1)
+			for _,target in ipairs(targets) do
+				room:cardEffect(self, source, target)
 			end
-			if choice == "1:2" then
-				Fire(source, targets[1], 1)
-				Fire(source, targets[2], 2)
+		else
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_THROW, source:objectName(), nil, "LuaYeyan", nil)
+			if #targets == 2 then
+				local choice = room:askForChoice(source, self:objectName(), "2:1+1:2")
+				room:moveCardTo(self, source, nil, sgs.Player_DiscardPile, reason, true)
+				room:loseHp(source,3)
+				if choice == "2:1" then					
+					Fire(source, targets[1], 2)
+					Fire(source, targets[2], 1)
+				elseif choice == "1:2" then
+					Fire(source, targets[1], 1)
+					Fire(source, targets[2], 2)
+				end			
+			elseif #targets == 1 then
+				local choice = room:askForChoice(source, self:objectName(), "2+3")
+				room:moveCardTo(self, source, nil, sgs.Player_DiscardPile, reason, true)
+				room:loseHp(source,3)
+				if choice == "2" then
+					Fire(source, targets[1], 2)
+				else
+					Fire(source, targets[1], 3)
+				end
 			end
-			
-		elseif #targets == 1 then
-			local choice = room:askForChoice(source, self:objectName(), "2+3")
-			if choice == "2" then
-				Fire(source, targets[1], 2)
-			else
-				Fire(source, targets[1], 3)
-			end
-		end
-		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_THROW, source:objectName(), nil, "LuaYeyan", nil)
-		room:moveCardTo(self, source, nil, sgs.Player_DiscardPile, reason, true)
+		end		
 	end,
 	on_effect = function(self,effect)
 		Fire(effect.from, effect.to, 1)
@@ -361,7 +352,6 @@ LuaYeyanViewAsSkill = sgs.CreateViewAsSkill{
 		end
 		return YeyanCard
 	end,
-
 	enabled_at_play=function(self, player)
 		return player:getMark("@flame") >= 1
 	end
@@ -371,7 +361,6 @@ LuaYeyan = sgs.CreateTriggerSkill{
 	frequency = sgs.Skill_Limited,
 	events = {sgs.GameStart},
 	view_as_skill = LuaYeyanViewAsSkill,
-
 	on_trigger = function(self,event,player,data)
 		player:gainMark("@flame")
 	end
