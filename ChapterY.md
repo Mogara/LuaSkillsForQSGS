@@ -1066,87 +1066,105 @@
 ##勇决
 **相关武将**：势·糜夫人  
 **描述**：若一名角色于出牌阶段内使用的第一张牌为【杀】，此【杀】结算完毕后置入弃牌堆时，你可以令其获得之。  
-**引用**：LuaYongjue,LuaYongjueStart  
-**状态**：待验证
+**引用**：LuaYongjue,LuaYongjueRecord  
+**状态**：1217验证通过
 ```lua
-	LuaYongjue = sgs.CreateTriggerSkill{
-		name = "LuaYongjue",
-		events = {sgs.CardUsed,sgs.BeforeCardsMove},
+	LuaYongjueRecord = sgs.CreateTriggerSkill{
+		name = "#LuaYongjueRecord",
+		events = {sgs.PreCardUsed,sgs.CardResponded,sgs.EventPhaseChanging},
 		can_trigger = function(self,target)
 			return target ~= nil
 		end,
 		on_trigger = function(self,event,player,data)
 			local room = player:getRoom()
-			if event == sgs.CardUsed then
-				local use = data:toCardUse()
-				if use.from:getPhase() == sgs.Player_Play and use.from:getMark(self:objectName()) == 0 then
-					use.from:addMark(self:objectName())
-					if use.card:isKindOf("Slash") then
+			if event == sgs.PreCardUsed or event == sgs.CardResponded then
+				if player:getPhase() ~= sgs.Player_Play then return false end
+				local card = nil
+				if event == sgs.PreCardUsed then
+					card = data:toCardUse().card
+				else
+					local response = data:toCardResponse()
+					if response.m_isUse then
+						card = response.m_card
+					end
+				end
+				if card and card:getHandlingMethod() == sgs.Card_MethodUse and player:getMark("LuaYongjue") == 0 then
+					player:addMark("LuaYongjue")
+					if card:isKindOf("Slash") then
 						local ids = sgs.IntList()
-						if not use.card:isVirtualCard() then
-							ids:append(use.card:getEffectiveId())
-						elseif use.card:subcardsLength() > 0 then
-							ids = use.card:getSubcards()
+						if not card:isVirtualCard() then
+							ids:append(card:getEffectiveId())
+						else
+							if card:subcardsLength() > 0 then
+								ids = card:getSubcards()
+							end
 						end
 						if not ids:isEmpty() then
-							room:setCardFlag(use.card,"LuaYongjue")
+							room:setCardFlag(card,"LuaYongjue")
 							local pdata ,cdata= sgs.QVariant() ,sgs.QVariant()
-							pdata:setValue(use.from)
-							cdata:setValue(use.card)
+							pdata:setValue(player)
+							cdata:setValue(card)
 							room:setTag("LuaYongjue_user",pdata)
 							room:setTag("LuaYongjue_card",cdata)
 						end
 					end
+				end			
+			else
+				local change = data:toPhaseChange()
+				if change.to == sgs.Player_Play then
+					player:setMark("LuaYongjue",0)
 				end
-			elseif player and player:isAlive() and player:hasSkill(self:objectName()) then
-				local move = data:toMoveOneTime()
-				if move.from_places:contains(sgs.Player_PlaceTable) and move.to_place == sgs.Player_DiscardPile and
-					move.reason.m_reason == sgs.CardMoveReason_S_REASON_USE then
-					local yongjue_user = room:getTag("LuaYongjue_user"):toPlayer()
-					local yongjue_card = room:getTag("LuaYongjue_card"):toCard()
-					room:removeTag("LuaYongjue_card")
-					room:removeTag("LuaYongjue_user")
-					if yongjue_card and yongjue_user and yongjue_card:hasFlag("LuaYongjue") then
-						local ids = sgs.IntList()
-						if not yongjue_card:isVirtualCard() then
-							ids:append(yongjue_card:getEffectiveId())
-						elseif yongjue_card:subcardsLength() > 0 then
+			end
+			return false
+		end		
+	}
+	LuaYongjue = sgs.CreateTriggerSkill{
+		name = "LuaYongjue",
+		events = {sgs.BeforeCardsMove},
+		on_trigger = function(self,event,player,data)
+			local room = player:getRoom()
+			local move = data:toMoveOneTime()
+			if move.card_ids:isEmpty() then return false end
+			if not (move.from and move.from:isAlive() and move.from:getPhase() == sgs.Player_Play) then return false end		
+			local basic = bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON)
+			if move.from_places:contains(sgs.Player_PlaceTable) and move.to_place == sgs.Player_DiscardPile and
+				(basic == sgs.CardMoveReason_S_REASON_USE) then			
+				local yongjue_user = room:getTag("LuaYongjue_user"):toPlayer()
+				local yongjue_card = room:getTag("LuaYongjue_card"):toCard()
+				room:removeTag("LuaYongjue_card")
+				room:removeTag("LuaYongjue_user")
+				if yongjue_card and yongjue_user and yongjue_card:hasFlag("LuaYongjue") and move.from:objectName() == yongjue_user:objectName() then
+					local ids = sgs.IntList()
+					if not yongjue_card:isVirtualCard() then					
+						ids:append(yongjue_card:getEffectiveId())
+					else
+						if yongjue_card:subcardsLength() > 0 then
 							ids = yongjue_card:getSubcards()
 						end
-						if not ids:isEmpty() then
-							for _,id in sgs.qlist(ids) do
-								if not move.card_ids:contains(id) then return false end
-							end
-						else
-							return false
+					end
+					if not ids:isEmpty() then					
+						for _,id in sgs.qlist(ids) do						
+							if not move.card_ids:contains(id) then return false end
 						end
-						local pdata = sgs.QVariant()
-						pdata:setValue(yongjue_user)
-						if room:askForSkillInvoke(player,self:objectName(),pdata) then
-							local slash = sgs.Sanguosha:cloneCard("slash",sgs.Card_NoSuit,0)
-							for _,id in sgs.qlist(ids) do
-								slash:addSubcard(id)
-							end
-							yongjue_user:obtainCard(slash)
-							slash:deleteLater()
-							move.card_ids:clear()
-							data:setValue(move)
+					else
+						return false
+					end
+					local pdata = sgs.QVariant()
+					pdata:setValue(yongjue_user)				
+					if room:askForSkillInvoke(player,self:objectName(),pdata) then
+						local slash = sgs.Sanguosha:cloneCard("slash",sgs.Card_NoSuit,0)
+						for _,id in sgs.qlist(ids) do
+							slash:addSubcard(id)
 						end
+						yongjue_user:obtainCard(slash)
+						slash:deleteLater()
+						move.card_ids = sgs.IntList()
+						data:setValue(move)
 					end
 				end
 			end
 			return false
-		end
-	}
-	LuaYongjueStart = sgs.CreatePhaseChangeSkill{
-		name = "#LuaYongjueStart",
-		priority = 10,
-		on_phasechange = function(self,target)
-			if target:getPhase() == sgs.Player_Play then
-				target:setMark("LuaYongjue",0)
-			end
-			return false
-		end
+		end	
 	}
 ```
 [返回索引](#技能索引)
