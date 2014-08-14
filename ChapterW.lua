@@ -8,7 +8,7 @@
 	相关武将：林·贾诩、SP·贾诩
 	描述：在你的回合，除你以外，只有处于濒死状态的角色才能使用【桃】。
 	引用：LuaWansha
-	状态：验证通过
+	状态：1217验证通过
 ]]--
 LuaWansha=sgs.CreateTriggerSkill{
 	name = "LuaWansha",
