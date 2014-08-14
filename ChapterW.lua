@@ -34,7 +34,7 @@ LuaWansha=sgs.CreateTriggerSkill{
 			end
 			for _ , p in sgs.qlist(room:getAllPlayers()) do
 				if p:hasFlag("Global_PreventPeach") then
-                    room:setPlayerFlag(p, "-Global_PreventPeach")
+                			 room:setPlayerFlag(p, "-Global_PreventPeach")
 				end
 			end
 		end
