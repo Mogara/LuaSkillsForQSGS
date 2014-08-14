@@ -512,7 +512,7 @@
 					targets_list:append(target)
 				end
 			end
-			if targets_lists:length() > 0 then
+			if targets_list:length() > 0 then
 				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 				slash:setSkillName("LuaShensu")
 				room:useCard(sgs.CardUseStruct(slash, source, targets_list))
