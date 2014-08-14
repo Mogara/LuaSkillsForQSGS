@@ -408,8 +408,7 @@
 **相关武将**：标准·吕布、SP·最强神话、SP·暴怒战神、SP·台版吕布  
 **描述**：**锁定技，**当你使用【杀】指定一名角色为目标后，该角色需连续使用两张【闪】才能抵消；与你进行【决斗】的角色每次需连续打出两张【杀】。  
 **引用**：LuaWushuang  
-**状态**：0901验证通过  
-**备注**：0610版本中源码上有个WushuangInvoke就可以触发决斗无双效果，但无奈没有QVariant::toIntList和QVariant:setValue(QList <int>)这两个接口所以杀的无双效果无法实现
+**状态**：1217验证通过
 ```lua
 	Table2IntList = function(theTable)
 		local result = sgs.IntList()
@@ -421,8 +420,9 @@
 	LuaWushuang = sgs.CreateTriggerSkill{
 		name = "LuaWushuang" ,
 		frequency = sgs.Skill_Compulsory ,
-		events = {sgs.TargetConfirmed, sgs.CardFinished} ,
+		events = {sgs.TargetConfirmed,sgs.CardEffected } ,
 		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
 			if event == sgs.TargetConfirmed then
 				local use = data:toCardUse()
 				local can_invoke = false
@@ -438,34 +438,67 @@
 					jink_data:setValue(Table2IntList(jink_table))
 					player:setTag("Jink_" .. use.card:toString(), jink_data)
 				end
-				if use.card:isKindOf("Duel") then
-					if (use.from and use.from:isAlive() and use.from:hasSkill(self:objectName())) and (use.from:objectName() == player:objectName()) then
+			elseif event == sgs.CardEffected then
+				local effect = data:toCardEffect()
+				if effect.card:isKindOf("Duel") then				
+					if effect.from and effect.from:isAlive() and effect.from:hasSkill(self:objectName()) then
 						can_invoke = true
 					end
-					if (player and player:isAlive() and player:hasSkill(self:objectName())) and use.to:contains(player) then
+					if effect.to and effect.to:isAlive() and effect.to:hasSkill(self:objectName()) then
 						can_invoke = true
 					end
 				end
 				if not can_invoke then return false end
-				if use.card:isKindOf("Duel") then
-					player:getRoom():setPlayerMark(player, "WushuangTarget", 1) --决斗的具体部分在源码中
-				end
-			elseif event == sgs.CardFinished then
-				local use = data:toCardUse()
-				if use.card:isKindOf("Duel") then
-					local room = player:getRoom()
-					for _, lvbu in sgs.qlist(room:getAllPlayers()) do
-						if lvbu:getMark("WushuangTarget") > 0 then
-							room:setPlayerMark(lvbu, "WushuangTarget", 0)
+				if effect.card:isKindOf("Duel") then
+					if room:isCanceled(effect) then
+	                    effect.to:setFlags("Global_NonSkillNullify")
+	                    return true;
+	                end
+	                if effect.to:isAlive() then
+						local second = effect.from
+						local first = effect.to
+	                    room:setEmotion(first, "duel");
+						room:setEmotion(second, "duel")
+						while true do
+							if not first:isAlive() then
+								break
+							end
+							local slash
+							if second:hasSkill(self:objectName()) then
+								slash = room:askForCard(first,"slash","@Luawushuang-slash-1:" .. second:objectName(),data,sgs.Card_MethodResponse, second);
+								if slash == nil then
+									break
+								end	
+								slash = room:askForCard(first, "slash", "@Luawushuang-slash-2:" .. second:objectName(),data,sgs.Card_MethodResponse,second);
+								if slash == nil then
+									break
+								end
+							else
+								slash = room:askForCard(first,"slash","duel-slash:" .. second:objectName(),data,sgs.Card_MethodResponse,second)
+								if slash == nil then
+									break
+								end
+							end
+							local temp = first
+							first = second
+							second = temp
 						end
+						local daamgeSource = function() if second:isAlive() then return secoud else return nil end end
+						local damage = sgs.DamageStruct(effect.card, daamgeSource() , first)
+						if second:objectName() ~= effect.from:objectName() then
+							damage.by_user = false;
+						end
+						room:damage(damage)
 					end
+					room:setTag("SkipGameRule",sgs.QVariant(true))
 				end
 			end
 			return false
 		end ,
 		can_trigger = function(self, target)
 			return target
-		end
+		end,
+		priority = 1,
 	}
 ```
 [返回索引](#技能索引)
