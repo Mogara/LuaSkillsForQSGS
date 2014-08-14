@@ -7,7 +7,109 @@
 	技能名：仁德
 	相关武将：标准·刘备
 	描述：出牌阶段限一次，你可以将任意数量的手牌以任意分配方式交给任意数量的其他角色，然后当你于以此法交给其他角色的手牌首次达到两张或更多时，你回复1点体力。
+	状态：1217验证通过
+	引用：LuaRende
+	注备：为什么table.contains不好使……
 ]]--
+LuaRendeCard = sgs.CreateSkillCard{
+	name = "LuaRendeCard" ,
+	will_throw = false ,
+	handling_method = sgs.Card_MethodNone ,
+	filter = function(self, selected, to_select)
+		return (#selected == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+	end ,
+	on_use = function(self, room, source, targets)
+		local target = targets[1];
+		source:speak("a")
+		local old_value = source:getMark("LuaRende");
+		local rende_list = {}
+		if old_value > 0 then
+			rende_list = source:property("LuaRende"):toString():split("+")
+		else
+			rende_list = sgs.QList2Table(source:handCards())
+		end
+		for _,id in sgs.qlist(self:getSubcards())do
+			table.removeOne(rende_list,id)
+		end
+		room:setPlayerProperty(source, "LuaRende", sgs.QVariant(table.concat(rende_list,"+")));
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GIVE, source:objectName(), target:objectName(), "LuaRende","")
+		room:moveCardTo(self,target,sgs.Player_PlaceHand,reason)
+		local new_value = old_value + self:getSubcards():length()
+		room:setPlayerMark(source, "LuaRende", new_value);
+		if (old_value < 2 and new_value >= 2) then
+			local recover = sgs.RecoverStruct()
+			recover.card = self
+			recover.who = source;
+			room:recover(source, recover);
+		end
+		if room:getMode() == "04_1v3" and source:getMark("LuaRende") >= 2 then return end
+		if source:isKongcheng() or source:isDead() or #rende_list == 0 then return end
+		room:addPlayerHistory(source, "#LuaRendeCard", -1);
+		if not room:askForUseCard(source, "@@LuaRende", "@rende-give", -1, sgs.Card_MethodNone) then
+			room:addPlayerHistory(source,"#LuaRendeCard")
+		end
+	end,
+}
+LuaRendeVs = sgs.CreateViewAsSkill{
+	name = "LuaRende", 
+	n = 10086, 
+	response_pattern = "@@LuaRende",
+	view_filter = function(self, selected, to_select)
+		if sgs.Self:property("GameMode"):toString() == "04_1v3" and #selected + sgs.Self:getMark("LuaRende") >= 2 then
+           return false
+        else
+            if to_select:isEquipped() then return false end
+            if sgs.Sanguosha:getCurrentCardUsePattern() == "@@LuaRende" then
+				local rende_list = sgs.Self:property("LuaRende"):toString():split("+")
+                return function()
+					for _,id in pairs(rende_list)do
+						if id == to_select:getEffectiveId() then
+							return true
+						end
+					end
+					return false
+				end
+            else
+                return true
+			end
+			return true
+        end
+	end, 
+	view_as = function(self, cards) 
+		if #cards > 0 then
+			local rende =  LuaRendeCard:clone()
+			for _,c in ipairs(cards)do
+				rende:addSubcard(c)
+			end
+			return rende
+		end
+	end, 
+	enabled_at_play = function(self, player)
+		if player:property("GameMode"):toString() == "04_1v3" and player:getMark("LuaRende") >= 2 then
+           return false
+		end
+        return (not player:hasUsed("#LuaRendeCard")) and not player:isKongcheng()
+	end, 
+}
+LuaRende = sgs.CreateTriggerSkill{
+	name = "LuaRende" ,
+	events = {sgs.EventPhaseChanging,sgs.TurnStart} ,
+	view_as_skill = LuaRendeVs ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.EventPhaseChanging and player:getMark("LuaRende") > 0 then
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then return false end
+				room:setPlayerMark(player,"LuaRende", 0)
+			return false
+		elseif event == sgs.TurnStart and player:property("GameMode"):toString() == "" then
+			room:setPlayerProperty(player,"GameMode",sgs.QVariant(room:getMode()))
+		end
+	end ,
+	can_trigger = function(self, target)
+		return target
+	end
+}
 --[[
 	技能名：仁德
 	相关武将：怀旧-标准·刘备-旧
