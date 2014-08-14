@@ -431,8 +431,7 @@ LuaWushuang = sgs.CreateTriggerSkill{
 			end
 		elseif event == sgs.CardEffected then
 			local effect = data:toCardEffect()
-			if effect.card:isKindOf("Duel") then
-				player:speak("a")
+			if effect.card:isKindOf("Duel") then				
 				if effect.from and effect.from:isAlive() and effect.from:hasSkill(self:objectName()) then
 					can_invoke = true
 				end

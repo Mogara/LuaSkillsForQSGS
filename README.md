@@ -63,7 +63,8 @@ If you find BUG in reading, please [click here](https://github.com/DGAH/LuaSkill
 [抬榇](ChapterT.md#抬榇)、[贪婪](ChapterT.md#贪婪)、[探虎](ChapterT.md#探虎)、[探囊](ChapterT.md#探囊)、[天妒](ChapterT.md#天妒)、[天命](ChapterT.md#天命)、[天香](ChapterT.md#天香)、[天义](ChapterT.md#天义)、[挑衅](ChapterT.md#挑衅)、[铁骑](ChapterT.md#铁骑)、[同疾](ChapterT.md#同疾)、[同心](ChapterT.md#同心)、[偷渡](ChapterT.md#偷渡)、[突骑](ChapterT.md#突骑)、[突袭](ChapterT.md#突袭)、[突袭-1v1](ChapterT.md#突袭-1v1)、[屯田](ChapterT.md#屯田)
 - Chapter U **暂无技能**
 - Chapter V **暂无技能**
-- [Chapter W](ChapterW.md)
+- [Chapter W](ChapterW.md)  
+[完杀](ChapterW.md#完杀)、[婉容](ChapterW.md#婉容)、[忘隙](ChapterW.md#忘隙)、[妄尊](ChapterW.md#妄尊)、[危殆](ChapterW.md#危殆)、[围堰](ChapterW.md#围堰)、[帷幕](ChapterW.md#帷幕)、[伪帝](ChapterW.md#伪帝)、[温酒](ChapterW.md#温酒)、[无谋](ChapterW.md#无谋)、[无前](ChapterW.md#无前)、[无双](ChapterW.md#无双)、[无言](ChapterW.md#无言)、[无言-旧](ChapterW.md#无言-旧)、[五灵](ChapterW.md#五灵)、[武魂](ChapterW.md#武魂)、[武继](ChapterW.md#武继)、[武神](ChapterW.md#武神)、[武圣](ChapterW.md#武圣)
 - [Chapter X](ChapterX.md)  
 [惜粮](ChapterX.md#惜粮)、[陷嗣](ChapterX.md#陷嗣)、[陷阵](ChapterX.md#陷阵)、[享乐](ChapterX.md#享乐)、[枭姬](ChapterX.md#枭姫)、[枭姬-1v1](ChapterX.md#枭姬-1v1)、[骁果](ChapterX.md#骁果)、[骁袭](ChapterX.md#骁袭)、[孝德](ChapterX.md#孝德)、[挟缠](ChapterX.md#挟缠)、[心战](ChapterX.md#心战)、[新生](ChapterX.md#新生)、[星舞](ChapterX.md#星舞)、[行殇](ChapterX.md#行殇)、[雄异](ChapterX.md#雄异)、[修罗](ChapterX.md#修罗)、[旋风](ChapterX.md#旋风)、[旋风-旧](ChapterX.md#旋风-旧)、[眩惑](ChapterX.md#昡惑)、[眩惑-旧](ChapterX.md#眩惑-旧)、[雪恨](ChapterX.md#雪恨)、[血祭](ChapterX.md#血祭)、[血裔](ChapterX.md#血裔)、[恂恂](ChapterX.md#恂恂)、[迅猛](ChapterX.md#迅猛)、[殉志](ChapterX.md#殉志)
 - [Chapter Y](ChapterY.md)  
