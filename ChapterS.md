@@ -500,7 +500,7 @@
 			for _, target in ipairs(targets) do
 				targets_list:append(target)
 			end
-			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+	    		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 			slash:setSkillName("LuaShensu")
 			slash:deleteLater()
 			return slash:targetFilter(targets_list, to_select, sgs.Self)
@@ -512,12 +512,12 @@
 					targets_list:append(target)
 				end
 			end
-			if targets_list:length() > 0 then
+			if targets_lists:length() > 0 then
 				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 				slash:setSkillName("LuaShensu")
 				room:useCard(sgs.CardUseStruct(slash, source, targets_list))
 			end
-		end
+	    end
 	}
 	LuaShensuVS = sgs.CreateViewAsSkill{
 		name = "LuaShensu" ,
@@ -534,13 +534,11 @@
 				return #cards == 0 and LuaShensuCard:clone() or nil
 			else
 				if #cards ~= 1 then
-					return nil
+	                		return nil
 				end
-				local card = LuaShensuCard:clone()
-				for _, cd in ipairs(cards) do
-					card:addSubcard(cd)
-				end
-				return card
+	        		local card = LuaShensuCard:clone()
+	        		card:addSubcards(cards)
+	        		return card
 			end
 		end ,
 		enabled_at_play = function()
