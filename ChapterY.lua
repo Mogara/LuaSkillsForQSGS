@@ -295,7 +295,6 @@ end
 LuaYeyanCard = sgs.CreateSkillCard{
 	name = "LuaYeyanCard",
 	will_throw = true,
-
 	filter = function(self, targets, to_select, player)
 		if self:subcardsLength() == 0 then return #targets < 3 end
 		if self:subcardsLength() == 4 and #targets == 1 then 
@@ -306,18 +305,17 @@ LuaYeyanCard = sgs.CreateSkillCard{
 			end
 		end
 	end,
-	on_effect = function(self,effect)
-		Fire(effect.from, effect.to, 1)
-	end,
-	on_use = function(self, room, source, targets)
+	about_to_use = function(self,room,card_use)
 		local subcards_length = self:subcardsLength()
+		local targets = sgs.QList2Table(card_use.to)
+		local source = card_use.from
+		source:loseMark("@flame")
 		if subcards_length == 0 then
-			source:loseMark("@flame")
 		for _,target in ipairs(targets) do
 			room:cardEffect(self, source, target)
 		end
 		elseif #targets == 2 then
-			source:loseMark("@flame")
+			room:loseHp(source,3)
 			local choice = room:askForChoice(source, self:objectName(), "2:1+1:2")
 			if choice == "2:1" then
 				Fire(source, targets[1], 2)
@@ -327,24 +325,25 @@ LuaYeyanCard = sgs.CreateSkillCard{
 				Fire(source, targets[1], 1)
 				Fire(source, targets[2], 2)
 			end
-			room:loseHp(source,3)
+			
 		elseif #targets == 1 then
-			source:loseMark("@flame")
 			local choice = room:askForChoice(source, self:objectName(), "2+3")
 			if choice == "2" then
 				Fire(source, targets[1], 2)
 			else
 				Fire(source, targets[1], 3)
 			end
-			room:loseHp(source,3)
 		end
-	end
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_THROW, source:objectName(), nil, "LuaYeyan", nil)
+		room:moveCardTo(self, source, nil, sgs.Player_DiscardPile, reason, true)
+	end,
+	on_effect = function(self,effect)
+		Fire(effect.from, effect.to, 1)
+	end,
 }
-
 LuaYeyanViewAsSkill = sgs.CreateViewAsSkill{
 	name = "Luayeyan",
 	n = 4,
-
 	view_filter = function(self, selected, to_select)
 		if #selected >= 4 then return false end
 		if to_select:isEquipped() then return false end
@@ -367,7 +366,6 @@ LuaYeyanViewAsSkill = sgs.CreateViewAsSkill{
 		return player:getMark("@flame") >= 1
 	end
 }
-
 LuaYeyan = sgs.CreateTriggerSkill{
 	name = "Luayeyan",
 	frequency = sgs.Skill_Limited,
