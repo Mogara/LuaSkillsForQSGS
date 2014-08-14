@@ -1179,15 +1179,14 @@
 		name = "luaXYuwen",
 		events = {sgs.AskForPeachesDone},
 		frequency = sgs.Skill_Compulsory,
-		priority = 10,
+		priority = 1,
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			local dying = data:toDying()
 			if player:getHp() <= 0 and dying.damage and dying.damage.from then
-				room:setTag("SkipGameRule",sgs.QVariant(true))
 				dying.damage.from = player
 				room:killPlayer(player,dying.damage)
-				return true
+				room:setTag("SkipGameRule",sgs.QVariant(true))
 			end
 		end,
 	}
