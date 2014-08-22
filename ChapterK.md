@@ -10,26 +10,15 @@
 **引用**：LuaKanpo  
 **状态**：1217验证通过
 ```lua
-	LuaKanpo = sgs.CreateViewAsSkill{
+	LuaKanpo = sgs.CreateOneCardViewAsSkill{
 		name = "LuaKanpo",
-		n = 1,
-		view_filter = function(self, selected, to_select)
-			return to_select:isBlack() and (not to_select:isEquipped())
-		end,
-		view_as = function(self, cards)
-			if #cards == 1 then
-				local first = cards[1]
-				local ncard = sgs.Sanguosha:cloneCard("nullification", first:getSuit(), first:getNumber())
-				ncard:addSubcard(first)
-				ncard:setSkillName(self:objectName())
-				return ncard
-			end
-		end,
-		enabled_at_play = function(self, player)
-			return false
-		end,
-		enabled_at_response = function(self, player, pattern)
-			return pattern == "nullification"
+		filter_pattern = ".|black|.|hand",
+	    response_pattern = "nullification",
+		view_as = function(self, first)
+			local ncard = sgs.Sanguosha:cloneCard("nullification", first:getSuit(), first:getNumber())
+			ncard:addSubcard(first)
+			ncard:setSkillName(self:objectName())
+			return ncard
 		end,
 		enabled_at_nullification = function(self, player)
 			for _, card in sgs.qlist(player:getHandcards()) do
@@ -203,9 +192,8 @@
 			end
 		end
 	}
-	LuaKurou = sgs.CreateViewAsSkill{
-		name = "LuaKurou",
-		n = 0,
+	LuaKurou = sgs.CreateZeroCardViewAsSkill{
+		name = "LuaKurou",		
 		view_as = function(self, cards)
 			return LuaKurouCard:clone()
 		end,
