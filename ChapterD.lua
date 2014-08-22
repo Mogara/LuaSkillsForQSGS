@@ -722,13 +722,13 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
                 if not player:canDiscard(target, "he") then break end
                 if room:askForChoice(player, self:objectName(), "discard+cancel") == "cancel" then break end
                 card_ids:append(room:askForCardChosen(player, target, "he", self:objectName()))
-                original_places:append(room:getCardPlace(card_ids:ai(i-1)))
-                dummy-:addSubcard(card_ids:ai(i-1))
-                target:addToPile("#duanzhi", card_ids:ai(i-1), false)
+                original_places:append(room:getCardPlace(card_ids:at(i-1)))
+                dummy:addSubcard(card_ids:at(i-1))
+                target:addToPile("#duanzhi", card_ids:at(i-1), false)
             end
             if dummy:subcardsLength() > 0 then
                 for i = 1,dummy:subcardsLength(),1 do
-                    room:moveCardTo(sgs.Sanguosha:getCard(card_ids:ai(i-1)), target, original_places:at(i-1), false)
+                    room:moveCardTo(sgs.Sanguosha:getCard(card_ids:at(i-1)), target, original_places:at(i-1), false)
 				end
 			end
             room:setPlayerFlag(player, "-LuaXDuanzhi_InTempMoving")
