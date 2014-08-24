@@ -189,7 +189,11 @@
 		filter = function(self, targets, to_select, player)		
 			local pattern = patterns[player:getMark("LuaQicePos")]		
 			local card = sgs.Sanguosha:cloneCard(pattern, sgs.Card_SuitToBeDecided, -1)
-			card:setSkillName("LuaQice")
+			if card then
+				for _,id in sgs.qlist(self:getSubcards()) do				
+					card:addSubcard(id)
+				end
+			end		
 			if card and card:targetFixed() then
 				return false
 			end
@@ -202,12 +206,21 @@
 		target_fixed = function(self)		
 			local pattern = patterns[player:getMark("LuaQicePos")]		
 			local card = sgs.Sanguosha:cloneCard(pattern, sgs.Card_SuitToBeDecided, -1)
+			if card then
+				for _,id in sgs.qlist(self:getSubcards()) do				
+					card:addSubcard(id)
+				end
+			end		
 			return card and card:targetFixed()
 		end,	
 		feasible = function(self, targets)		
 			local pattern = patterns[sgs.Self:getMark("LuaQicePos")]		
 			local card = sgs.Sanguosha:cloneCard(pattern, sgs.Card_SuitToBeDecided, -1)
-			card:setSkillName("LuaQice")
+			if card then
+				for _,id in sgs.qlist(self:getSubcards()) do				
+					card:addSubcard(id)
+				end
+			end		
 			local qtargets = sgs.PlayerList()
 			for _, p in ipairs(targets) do
 				qtargets:append(p)
@@ -222,8 +235,17 @@
 			use_card:setSkillName("LuaQice")
 			for _,id in sgs.qlist(self:getSubcards()) do				
 				use_card:addSubcard(id)
-			end		
+			end
+			local available = true
+			for _,p in sgs.qlist(card_use.to) do
+				if xunyou:isProhibited(p,use_card)	then
+					available = false
+					break
+				end
+			end
+			available = available and use_card:isAvailable(xunyou)	
 			use_card:deleteLater()
+			if not available then return nil end		
 			room:setPlayerFlag(xunyou,"QiceUsed")			
 			return use_card		
 		end	
@@ -246,7 +268,7 @@
 				return LuaQice_select:clone()
 			else
 				if sgs.Sanguosha:getCurrentCardUsePattern() == "@LuaQice" then
-					local pattern = patterns[sgs.Self:getMark("LuaQicePos")]	
+					local pattern = patterns[sgs.Self:getMark("LuaQicePos")]				
 					local c = sgs.Sanguosha:cloneCard(pattern, sgs.Card_SuitToBeDecided, -1)
 					if c and #cards == sgs.Self:getHandcardNum() then
 						c:deleteLater()
@@ -261,7 +283,7 @@
 			end
 			return nil
 		end	
-	}   
+	}  
 ```   
 [返回索引](#技能索引)
 ##千幻
