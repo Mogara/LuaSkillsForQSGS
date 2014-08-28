@@ -583,7 +583,7 @@ LuaJianxiong = sgs.CreateTriggerSkill{
 				local card_data = sgs.QVariant()
 				card_data:setValue(card)
 				if room:askForSkillInvoke(player, self:objectName(), card_data) then
-					player:obtainCard(card);
+					player:obtainCard(card)
 				end
 			end
 		end

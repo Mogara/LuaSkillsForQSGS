@@ -476,9 +476,9 @@
 								local ids = move.card_ids
 								i = 0
 								for _,card_id in sgs.qlist(ids) do
-									if (original_lirang.contains(card_id) and not lirang_card.contains(card_id)) then
-										move.card_ids.removeOne(card_id)
-										move.from_places.removeAt(i)
+									if (original_lirang:contains(card_id) and not lirang_card:contains(card_id)) then
+										move.card_ids:removeOne(card_id)
+										move.from_places:removeAt(i)
 									end
 									i = i+1
 								end
