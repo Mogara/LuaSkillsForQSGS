@@ -488,7 +488,7 @@ LuaMieji = sgs.CreateTriggerSkill{
 					end
 				end
 				if (targets:isEmpty()) then return false end
-				extra = room:askForPlayerChosen(player, targets, self:objectName(), "@qiaoshui-add:::" + use.card:objectName(), true)
+				extra = room:askForPlayerChosen(player, targets, self:objectName(), "@qiaoshui-add:::"..use.card:objectName(), true)
 			elseif (use.card:isKindOf("Collateral")) then
 				for _, p in sgs.qlist(room:getAlivePlayers()) do
 					if (use.to:contains(p) or room:isProhibited(player, p, use.card)) then continue end
