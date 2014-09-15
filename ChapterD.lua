@@ -332,55 +332,67 @@ LuaDangxian = sgs.CreateTriggerSkill{
 	引用：LuaDimeng
 	状态：1217验证通过
 ]]--
+local json = require ("json")
 LuaDimengCard = sgs.CreateSkillCard{
 	name = "LuaDimengCard",
 	target_fixed = false,
 	will_throw = true,
 	filter = function(self, targets, to_select)
-		if to_select:objectName() == sgs.Self:objectName() then
-			return false
-		elseif #targets == 0 then
-			return true
-		elseif #targets == 1 then
-			local max_diff = sgs.Self:getCardCount(true)
-			sc = to_select:getHandcardNum()
-			tc = targets[1]:getHandcardNum()
-			local diff = math.abs(sc - tc)
-			return max_diff >= diff
+		if to_select:objectName() == sgs.Self:objectName() then return false end
+		if #targets == 0 then return true end
+		if #targets == 1 then
+			return math.abs(to_select:getHandcardNum() - targets[1]:getHandcardNum()) == self:subcardsLength()
 		end
 	end,
 	feasible = function(self, targets)
 		return #targets == 2
 	end,
 	on_use = function(self, room, source, targets)
-		local playerA = targets[1]
-		local playerB = targets[2]
-		local countA = playerA:getHandcardNum()
-		local countB = playerB:getHandcardNum()
-		local diff = math.abs(countA - countB)
-		if diff > 0 then
-			room:askForDiscard(source, self:objectName(), diff, diff, false, true)
-		end
-		local moveA = sgs.CardsMoveStruct()
-		moveA.card_ids = playerA:handCards()
-		moveA.to = playerB
-		moveA.to_place = sgs.Player_PlaceHand
-		local moveB = sgs.CardsMoveStruct()
-		moveB.card_ids = playerB:handCards()
-		moveB.to = playerA
-		moveB.to_place = sgs.Player_PlaceHand
-		room:moveCards(moveA, false)
-		room:moveCards(moveB, false)
+		local a = targets[1]
+		local b = targets[2]
+		a:setFlags("DimengTarget")
+		b:setFlags("DimengTarget")
+		local n1 = a:getHandcardNum()
+		local n2 = b:getHandcardNum()
+		for _, p in sgs.qlist(room:getAlivePlayers()) do
+            		if p:objectName() ~= a:objectName() and p:objectName() ~= b:objectName() then
+                		room:doNotify(p, sgs.CommandType.S_COMMAND_EXCHANGE_KNOWN_CARDS,
+                              			       json.encode({a:objectName(), b:objectName()}))
+        		end
+        	end
+        	local exchangeMove = sgs.CardsMoveList()
+        	local move1 = sgs.CardsMoveStruct(a:handCards(), b, sgs.Player_PlaceHand,
+                       		      		  sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, a:objectName(), b:objectName(), "LuaDimeng", ""))
+        	local move2 = sgs.CardsMoveStruct(b:handCards(), a, sgs.Player_PlaceHand,
+        					  sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, b:objectName(), a:objectName(), "LuaDimeng", ""))
+        	exchangeMove:append(move1)
+        	exchangeMove:append(move2)
+        	room:moveCards(exchangeMove, false)
+ 		local log = sgs.LogMessage()
+		log.type = "#Dimeng"
+       		log.from = a
+       		log.to:append(b)
+       		log.arg = tostring(n1)
+       		log.arg2 = tostring(n2)
+       		room:sendLog(log)
+       		room:getThread():delay()
+       		a:setFlags("-DimengTarget")
+       		b:setFlags("-DimengTarget")
 	end
 }
 LuaDimeng = sgs.CreateViewAsSkill{
 	name = "LuaDimeng",
-	n = 0,
+	n = 999 ,
+	view_filter = function(self, selected, to_select)
+		return not sgs.Self:isJilei(to_select)
+	end ,
 	view_as = function(self, cards)
 		local card = LuaDimengCard:clone()
-		card:setSkillName(self:objectName())
-		return card
-	end,
+		for _, c in ipairs(cards) do
+       			card:addSubcard(c)
+		end
+       		return card
+	end ,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaDimengCard")
 	end
