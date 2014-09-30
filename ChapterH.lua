@@ -650,7 +650,7 @@ LuaHuwei = sgs.CreateTriggerSkill{
 		local drowning = sgs.Sanguosha:cloneCard("drowning")
 		local opponent = player:getNext()
 		if not opponent:isAlive() then return false end
-        adrowing:setSkillName("_LuaHuwei")
+        drowning:setSkillName("_LuaHuwei")
         if not (drowning:isAvailable(player) and player:isProhibited(opponent, drowning)) then
             drowning:deleteLater()
             return false
