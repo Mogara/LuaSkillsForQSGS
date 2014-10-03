@@ -243,6 +243,7 @@ LuaJilve = sgs.CreateTriggerSkill{
 
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
+		player:setMark("JilveEvent",tonumber(event))
 		if event == sgs.CardUsed then
 			local jizhi = sgs.Sanguosha:getTriggerSkill("jizhi")
 			local use = data:toCardUse()
