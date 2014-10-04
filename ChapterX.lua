@@ -1088,7 +1088,10 @@ LuaXuanhuoFakeMove = sgs.CreateTriggerSkill{
 			if p:hasFlag("LuaXuanhuo_InTempMoving") then return true end
 		end
 		return false
-	end
+	end,
+	can_trigger = function(self, target)
+		return target
+	end,
 }
 --[[
 	技能名：眩惑
