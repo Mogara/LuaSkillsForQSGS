@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>ExtExamples by QSanguosha</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>ExtExamples</h1>
+        <h2>新版太阳神三国杀武将技能代码速查手册（Lua版）</h2>
+        <a href="https://github.com/QSanguosha/LuaSkillsForQSGS" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a name="luaskillsforqsgs" class="anchor" href="#luaskillsforqsgs"><span class="octicon octicon-link"></span></a>LuaSkillsForQSGS</h1>
+
+<p>新版太阳神三国杀武将技能代码速查手册（Lua版）</p>
+
+<p><strong>Fs</strong>: Most of the skills is written in the year 2012, and can't be used in the newest 1210 &amp; 1217 versions anymore.
+Coders needed badly, for we should update the skills to the newest version.</p>
+
+<p>If you find BUG in reading, please <a href="https://github.com/DGAH/LuaSkillsForQSGS/issues/7">click here</a> to let us know. We would fix it as quickly as possible.</p>
+
+<h2>
+<a name="acknowledgement" class="anchor" href="#acknowledgement"><span class="octicon octicon-link"></span></a>Acknowledgement</h2>
+
+<p><strong>Special thanks to the following for aid of looking for BUGs.^_^</strong></p>
+
+<p>十一月的小胖(Baidu ID)、魅惑菇投手（Baidu ID)、赤魂go(Baidu ID)、whj329203709(Baidu ID)、波希米亚不后悔 (Baidu ID)、haoshuang(GitHub ID)、array88(GitHub ID)、自由fr(Baidu ID)</p>
+
+<h1>
+<a name="%E6%8A%8A%E6%9C%AC%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84sgs_exlua%E6%8B%B7%E8%B4%9D%E5%88%B0%E7%A5%9E%E6%9D%80%E7%9B%AE%E5%BD%95%E7%9A%84lua%E6%96%87%E4%BB%B6%E5%A4%B9%E4%B8%8B%E8%A6%86%E7%9B%96%E5%8E%9F%E6%9C%89%E7%9A%84%E5%90%8C%E5%90%8D%E6%96%87%E4%BB%B6" class="anchor" href="#%E6%8A%8A%E6%9C%AC%E9%A1%B9%E7%9B%AE%E4%B8%AD%E7%9A%84sgs_exlua%E6%8B%B7%E8%B4%9D%E5%88%B0%E7%A5%9E%E6%9D%80%E7%9B%AE%E5%BD%95%E7%9A%84lua%E6%96%87%E4%BB%B6%E5%A4%B9%E4%B8%8B%E8%A6%86%E7%9B%96%E5%8E%9F%E6%9C%89%E7%9A%84%E5%90%8C%E5%90%8D%E6%96%87%E4%BB%B6"><span class="octicon octicon-link"></span></a>把本项目中的sgs_ex.lua拷贝到神杀目录的lua文件夹下覆盖原有的同名文件</h1>
+
+<h1>
+<a name="-%E7%AE%80%E4%BB%8B-" class="anchor" href="#-%E7%AE%80%E4%BB%8B-"><span class="octicon octicon-link"></span></a> 简介 </h1>
+
+<p>本手册分为A~Z共26个章节，分别以技能名第一个字的拼音首字母归类，其中<strong>ChapterV</strong>用于存放一些待完善的技能。 </p>
+
+<h1>
+<a name="%E7%9B%AE%E5%BD%95" class="anchor" href="#%E7%9B%AE%E5%BD%95"><span class="octicon octicon-link"></span></a>目录</h1>
+
+<ul>
+<li>
+<a href="ChapterA.md">Chapter A</a><br>
+<a href="ChapterA.md#%E5%AE%89%E5%A8%B4">安娴</a>、<a href="ChapterA.md#%E5%AE%89%E6%81%A4">安恤</a>、<a href="ChapterA.md#%E6%9A%97%E7%AE%AD">暗箭</a>、<a href="ChapterA.md#%E5%82%B2%E6%89%8D">傲才</a>
+</li>
+<li>
+<a href="ChapterB.md">Chapter B</a><br>
+<a href="ChapterB.md#%E5%85%AB%E9%98%B5">八阵</a>、<a href="ChapterB.md#%E9%9C%B8%E5%88%80">霸刀</a>、<a href="ChapterB.md#%E9%9C%B8%E7%8E%8B">霸王</a>、<a href="ChapterB.md#%E6%8B%9C%E5%8D%B0">拜印</a>、<a href="ChapterB.md#%E8%B1%B9%E5%8F%98">豹变</a>、<a href="ChapterB.md#%E6%9A%B4%E8%99%90">暴虐</a>、<a href="ChapterB.md#%E6%82%B2%E6%AD%8C">悲歌</a>、<a href="ChapterB.md#%E5%8C%97%E4%BC%90">北伐</a>、<a href="ChapterB.md#%E5%B4%A9%E5%9D%8F">崩坏</a>、<a href="ChapterB.md#%E7%AC%94%E4%BC%90">笔伐</a>、<a href="ChapterB.md#%E9%97%AD%E6%9C%88">闭月</a>、<a href="ChapterB.md#%E8%A1%A5%E7%9B%8A">补益</a>、<a href="ChapterB.md#%E4%B8%8D%E5%B1%88">不屈</a>、<a href="ChapterB.md#%E4%B8%8D%E5%B1%88-%E6%97%A7%E9%A3%8E">不屈-旧风</a> </li>
+<li>
+<a href="ChapterC.md">Chapter C</a><br>
+<a href="ChapterC.md#%E8%97%8F%E6%9C%BA">藏机</a>、<a href="ChapterC.md#%E8%97%8F%E5%8C%BF">藏匿</a>、<a href="ChapterC.md#%E7%BC%A0%E6%80%A8">缠怨</a>、<a href="ChapterC.md#%E8%B6%85%E7%BA%A7%E8%A7%82%E6%98%9F">超级观星</a>、<a href="ChapterC.md#%E7%A7%B0%E8%B1%A1">称象</a>、<a href="ChapterC.md#%E7%A7%B0%E8%B1%A1-%E5%80%9A%E5%A4%A9">称象-倚天</a>、<a href="ChapterC.md#%E6%8C%81%E9%87%8D">持重</a>、<a href="ChapterC.md#%E5%86%B2%E9%98%B5">冲阵</a>、<a href="ChapterC.md#%E7%AD%B9%E7%B2%AE">筹粮</a>、<a href="ChapterC.md#%E9%86%87%E9%86%AA">醇醪</a>、<a href="ChapterC.md#%E8%81%AA%E6%85%A7">聪慧</a>、<a href="ChapterC.md#%E5%AD%98%E5%97%A3">存嗣</a>、<a href="ChapterC.md#%E6%8C%AB%E9%94%90">挫锐</a>
+</li>
+<li>
+<a href="ChapterD.md">Chapter D</a><br>
+<a href="ChapterD.md#%E5%A4%A7%E5%96%9D">大喝</a>、<a href="ChapterD.md#%E5%A4%A7%E9%9B%BE">大雾</a>、<a href="ChapterD.md#%E5%8D%95%E9%AA%91">单骑</a>、<a href="ChapterD.md#%E8%83%86%E5%AE%88">胆守</a>、<a href="ChapterD.md#%E5%95%96%E9%85%AA">啖酪</a>、<a href="ChapterD.md#%E5%BD%93%E5%85%88">当先</a>、<a href="ChapterD.md#%E7%BC%94%E7%9B%9F">缔盟</a>、<a href="ChapterD.md#%E6%B4%9E%E5%AF%9F">洞察</a>、<a href="ChapterD.md#%E6%AF%92%E5%A3%AB">毒士</a>、<a href="ChapterD.md#%E6%AF%92%E5%8C%BB">毒医</a>、<a href="ChapterD.md#%E9%BB%A9%E6%AD%A6">黩武</a>、<a href="ChapterD.md#%E7%9F%AD%E5%85%B5">短兵</a>、<a href="ChapterD.md#%E6%96%AD%E8%82%A0">断肠</a>、<a href="ChapterD.md#%E6%96%AD%E7%B2%AE">断粮</a>、<a href="ChapterD.md#%E6%96%AD%E6%8C%87">断指</a>、<a href="ChapterD.md#%E5%BA%A6%E5%8A%BF">度势</a>、<a href="ChapterD.md#%E5%A4%BA%E5%88%80">夺刀</a>
+</li>
+<li>
+<a href="ChapterE.md">Chapter E</a><br>
+<a href="ChapterE.md#%E6%81%A9%E6%80%A8">恩怨</a>、<a href="ChapterE.md#%E6%81%A9%E6%80%A8-%E6%97%A7">恩怨-旧</a>
+</li>
+<li>
+<a href="ChapterF.md">Chapter F</a><br>
+<a href="ChapterF.md#%E5%8F%8D%E9%97%B4">反间</a>、<a href="ChapterF.md#%E5%8F%8D%E9%97%B4-%E7%BF%BC">反间-翼</a>、<a href="ChapterF.md#%E5%8F%8D%E9%A6%88">反馈</a>、<a href="ChapterF.md#%E6%94%BE%E6%9D%83">放权</a>、<a href="ChapterF.md#%E6%94%BE%E9%80%90">放逐</a>、<a href="ChapterF.md#%E9%A3%9E%E5%BD%B1">飞影</a>、<a href="ChapterF.md#%E7%84%9A%E5%9F%8E">焚城</a>、<a href="ChapterF.md#%E7%84%9A%E5%BF%83">焚心</a>、<a href="ChapterF.md#%E5%A5%8B%E6%BF%80">奋激</a>、<a href="ChapterF.md#%E5%A5%8B%E8%BF%85">奋迅</a>、<a href="ChapterF.md#%E6%84%A4%E5%8B%87">愤勇</a>、<a href="ChapterF.md#%E5%A5%89%E5%8D%B0">奉印</a>、<a href="ChapterF.md#%E4%BC%8F%E6%9E%A5">伏枥</a>、<a href="ChapterF.md#%E6%89%B6%E4%B9%B1">扶乱</a>、<a href="ChapterF.md#%E8%BE%85%E4%BD%90">辅佐</a>、<a href="ChapterF.md#%E7%88%B6%E9%AD%82">父魂</a>、<a href="ChapterF.md#%E7%88%B6%E9%AD%82-%E6%97%A7">父魂-旧</a>
+</li>
+<li>
+<a href="ChapterG.md">Chapter G</a><br>
+<a href="ChapterG.md#%E7%94%98%E9%9C%B2">甘露</a>、<a href="ChapterG.md#%E6%84%9F%E6%9F%93">感染</a>、<a href="ChapterG.md#%E5%88%9A%E7%83%88">刚烈</a>、<a href="ChapterG.md#%E5%88%9A%E7%83%88-3v3">刚烈-3v3</a>、<a href="ChapterG.md#%E5%88%9A%E7%83%88-%E7%BF%BC">刚烈-翼</a>、<a href="ChapterG.md#%E5%BC%93%E9%AA%91">弓骑</a>、<a href="ChapterG.md#%E5%BC%93%E9%AA%91-%E6%97%A7">弓骑-旧</a>、<a href="ChapterG.md#%E6%94%BB%E5%BF%83">攻心</a>、<a href="ChapterG.md#%E5%85%B1%E8%B0%8B">共谋</a>、<a href="ChapterG.md#%E8%9B%8A%E6%83%91">蛊惑</a>、<a href="ChapterG.md#%E8%9B%8A%E6%83%91-%E6%97%A7">蛊惑-旧</a>、<a href="ChapterG.md#%E5%9B%BA%E5%AE%88">固守</a>、<a href="ChapterG.md#%E5%9B%BA%E6%94%BF">固政</a>、<a href="ChapterG.md#%E8%A7%82%E6%98%9F">观星</a>、<a href="ChapterG.md#%E5%BD%92%E6%B1%89">归汉</a>、<a href="ChapterG.md#%E5%BD%92%E5%BF%83">归心</a>、<a href="ChapterG.md#%E5%BD%92%E5%BF%83-%E5%80%9A%E5%A4%A9">归心-倚天</a>、<a href="ChapterG.md#%E9%97%BA%E7%A7%80">闺秀</a>、<a href="ChapterG.md#%E9%AC%BC%E6%89%8D">鬼才</a>、<a href="ChapterG.md#%E9%AC%BC%E9%81%93">鬼道</a>、<a href="ChapterG.md#%E5%9B%BD%E8%89%B2">国色</a>
+</li>
+<li>
+<a href="ChapterH.md">Chapter H</a><br>
+<a href="ChapterH.md#%E6%B1%89%E7%BB%9F">汉统</a>、<a href="ChapterH.md#%E5%A5%BD%E6%96%BD">好施</a>、<a href="ChapterH.md#%E9%B9%A4%E7%BF%BC">鹤翼</a>、<a href="ChapterH.md#%E6%A8%AA%E6%B1%9F">横江</a>、<a href="ChapterH.md#%E5%BC%98%E6%8F%B4">弘援</a>、<a href="ChapterH.md#%E5%BC%98%E6%8F%B4sp">弘援sp</a>、<a href="ChapterH.md#%E7%BA%A2%E9%A2%9C">红颜</a>、<a href="ChapterH.md#%E5%90%8E%E6%8F%B4">后援</a>、<a href="ChapterH.md#%E8%83%A1%E7%AC%B3">胡笳</a>、<a href="ChapterH.md#%E8%99%8E%E5%A8%81">虎威</a>、<a href="ChapterH.md#%E8%99%8E%E5%95%B8">虎啸</a>、<a href="ChapterH.md#%E6%8A%A4%E9%A9%BE">护驾</a>、<a href="ChapterH.md#%E6%8A%A4%E6%8F%B4">护援</a>、<a href="ChapterH.md#%E5%8C%96%E8%BA%AB">化身</a>、<a href="ChapterH.md#%E6%8E%92%E5%BC%82">怀异</a>、<a href="ChapterH.md#%E7%BC%93%E9%87%8A">缓释</a>、<a href="ChapterH.md#%E7%BC%93%E9%87%8Asp">缓释sp</a>、<a href="ChapterH.md#%E7%9A%87%E6%81%A9">皇恩</a>、<a href="ChapterH.md#%E9%BB%84%E5%A4%A9">黄天</a>、<a href="ChapterH.md#%E6%8C%A5%E6%B3%AA">挥泪</a>、<a href="ChapterH.md#%E9%AD%82%E5%A7%BF">魂姿</a>、<a href="ChapterH.md#%E7%81%AB%E8%AE%A1">火计</a>、<a href="ChapterH.md#%E7%A5%B8%E9%A6%96">祸首</a>、<a href="ChapterH.md#%E7%A5%B8%E6%B0%B4">祸水</a>
+</li>
+<li>Chapter I <strong>暂无技能</strong>
+</li>
+<li>
+<a href="ChapterJ.md">Chapter J</a><br>
+<a href="ChapterJ.md#%E9%B8%A1%E8%82%8B">鸡肋</a>、<a href="ChapterJ.md#%E6%BF%80%E6%98%82">激昂</a>、<a href="ChapterJ.md#%E6%BF%80%E5%B0%86">激将</a>、<a href="ChapterJ.md#%E6%9E%81%E7%95%A5">极略</a>、<a href="ChapterJ.md#%E6%80%A5%E6%95%91">急救</a>、<a href="ChapterJ.md#%E6%80%A5%E9%80%9F">急速</a>、<a href="ChapterJ.md#%E6%80%A5%E8%A2%AD">急袭</a>、<a href="ChapterJ.md#%E9%9B%86%E6%99%BA">集智</a>、<a href="ChapterJ.md#%E9%9B%86%E6%99%BA-%E6%97%A7">集智-旧</a>、<a href="ChapterJ.md#%E5%AB%89%E6%81%B6">嫉恶</a>、<a href="ChapterJ.md#%E5%A5%B8%E9%9B%84">奸雄</a>、<a href="ChapterJ.md#%E5%9D%9A%E5%AE%88">坚守</a>、<a href="ChapterJ.md#%E5%B0%86%E9%A9%B0">将驰</a>、<a href="ChapterJ.md#%E8%8A%82%E5%91%BD">节命</a>、<a href="ChapterJ.md#%E7%BB%93%E5%A7%BB">结姻</a>、<a href="ChapterJ.md#%E7%AB%AD%E7%BC%98">竭缘</a>、<a href="ChapterJ.md#%E8%A7%A3%E7%83%A6">解烦</a>、<a href="ChapterJ.md#%E8%A7%A3%E7%83%A6-%E6%97%A7">解烦-旧</a>、<a href="ChapterJ.md#%E8%A7%A3%E6%83%91">解惑</a>、<a href="ChapterJ.md#%E8%A7%A3%E5%9B%B4">解围</a>、<a href="ChapterJ.md#%E5%B0%BD%E7%98%81">尽瘁</a>、<a href="ChapterJ.md#%E7%A6%81%E9%85%92">禁酒</a>、<a href="ChapterJ.md#%E7%B2%BE%E7%AD%96">精策</a>、<a href="ChapterJ.md#%E7%B2%BE%E9%94%90">精锐</a>、<a href="ChapterJ.md#%E9%85%92%E6%B1%A0">酒池</a>、<a href="ChapterJ.md#%E9%85%92%E8%AF%97">酒诗</a>、<a href="ChapterJ.md#%E6%95%91%E6%8F%B4">救援</a>、<a href="ChapterJ.md#%E6%95%91%E4%B8%BB">救主</a>、<a href="ChapterJ.md#%E4%B8%BE%E8%8D%90">举荐</a>、<a href="ChapterJ.md#%E4%B8%BE%E8%8D%90-%E6%97%A7">举荐-旧</a>、<a href="ChapterJ.md#%E5%B7%A8%E8%B1%A1">巨象</a>、<a href="ChapterJ.md#%E5%80%A8%E5%82%B2">倨傲</a>、<a href="ChapterJ.md#%E6%8D%AE%E5%AE%88">据守</a>、<a href="ChapterJ.md#%E6%8D%AE%E5%AE%88-%E6%97%A7">据守-旧</a>、<a href="ChapterJ.md#%E6%8D%AE%E5%AE%88-%E7%BF%BC">据守-翼</a>、<a href="ChapterJ.md#%E8%81%9A%E6%AD%A6">聚武</a>、<a href="ChapterJ.md#%E7%BB%9D%E7%AD%96">绝策</a>、<a href="ChapterJ.md#%E7%BB%9D%E6%B1%B2">绝汲</a>、<a href="ChapterJ.md#%E7%BB%9D%E5%A2%83">绝境</a>、<a href="ChapterJ.md#%E7%BB%9D%E5%A2%83-%E6%97%A7">绝境-旧</a>、<a href="ChapterJ.md#%E7%BB%9D%E6%83%85">绝情</a>、<a href="ChapterJ.md#%E5%86%9B%E5%A8%81">军威</a>、<a href="ChapterJ.md#%E5%B3%BB%E5%88%91">峻刑</a>
+</li>
+<li>
+<a href="ChapterK.md">Chapter K</a><br>
+<a href="ChapterK.md#%E7%9C%8B%E7%A0%B4">看破</a>、<a href="ChapterK.md#%E6%85%B7%E5%BF%BE">慷忾</a>、<a href="ChapterK.md#%E5%85%8B%E6%9E%84">克构</a>、<a href="ChapterK.md#%E5%85%8B%E5%B7%B1">克己</a>、<a href="ChapterK.md#%E7%A9%BA%E5%9F%8E">空城</a>、<a href="ChapterK.md#%E8%8B%A6%E8%82%89">苦肉</a>、<a href="ChapterK.md#%E7%8B%82%E6%9A%B4">狂暴</a>、<a href="ChapterK.md#%E7%8B%82%E9%A3%8E">狂风</a>、<a href="ChapterK.md#%E7%8B%82%E6%96%A7">狂斧</a>、<a href="ChapterK.md#%E7%8B%82%E9%AA%A8">狂骨</a>、<a href="ChapterK.md#%E7%8B%82%E9%AA%A8-1v1">狂骨-1v1</a>、<a href="ChapterK.md#%E6%BA%83%E5%9B%B4">溃围</a>
+</li>
+<li>
+<a href="ChapterL.md">Chapter L</a><br>
+<a href="ChapterL.md#%E7%8B%BC%E9%A1%BE">狼顾</a>、<a href="ChapterL.md#%E4%B9%90%E5%AD%A6">乐学</a>、<a href="ChapterL.md#%E9%9B%B7%E5%87%BB">雷击</a>、<a href="ChapterL.md#%E9%9B%B7%E5%87%BB-%E6%97%A7">雷击-旧</a>、<a href="ChapterL.md#%E7%A6%BB%E9%AD%82">离魂</a>、<a href="ChapterL.md#%E7%A6%BB%E9%97%B4">离间</a>、<a href="ChapterL.md#%E7%A6%BB%E9%97%B4-%E6%97%A7">离间-旧</a>、<a href="ChapterL.md#%E7%A6%BB%E8%BF%81">离迁</a>、<a href="ChapterL.md#%E7%A4%BC%E8%AE%A9">礼让</a>、<a href="ChapterL.md#%E7%96%A0%E7%81%AB">疠火</a>、<a href="ChapterL.md#%E8%BF%9E%E7%8E%AF">连环</a>、<a href="ChapterL.md#%E8%BF%9E%E7%90%86">连理</a>、<a href="ChapterL.md#%E8%BF%9E%E7%A0%B4">连破</a>、<a href="ChapterL.md#%E8%BF%9E%E8%90%A5">连营</a>、<a href="ChapterL.md#%E7%83%88%E5%BC%93">烈弓</a>、<a href="ChapterL.md#%E7%83%88%E5%BC%93-1v1">烈弓-1v1</a>、<a href="ChapterL.md#%E7%83%88%E5%88%83">烈刃</a>、<a href="ChapterL.md#%E8%A3%82%E5%9B%B4">裂围</a>、<a href="ChapterL.md#%E6%B5%81%E7%A6%BB">流离</a>、<a href="ChapterL.md#%E9%BE%99%E8%83%86">龙胆</a>、<a href="ChapterL.md#%E9%BE%99%E9%AD%82">龙魂</a>、<a href="ChapterL.md#%E9%BE%99%E9%AD%82-%E9%AB%98%E8%BE%BE">龙魂-高达</a>、<a href="ChapterL.md#%E9%BE%99%E5%90%9F">龙吟</a>、<a href="ChapterL.md#%E7%AC%BC%E7%BB%9C">笼络</a>、<a href="ChapterL.md#%E4%B9%B1%E5%87%BB">乱击</a>、<a href="ChapterL.md#%E4%B9%B1%E6%AD%A6">乱武</a>、<a href="ChapterL.md#%E8%A3%B8%E8%A1%A3">裸衣</a>、<a href="ChapterL.md#%E8%A3%B8%E8%A1%A3-%E7%BF%BC">裸衣-翼</a>、<a href="ChapterL.md#%E6%B4%9B%E7%A5%9E">洛神</a>、<a href="ChapterL.md#%E8%90%BD%E9%9B%81">落雁</a>、<a href="ChapterL.md#%E8%90%BD%E8%8B%B1">落英</a>
+</li>
+<li>
+<a href="ChapterM.md">Chapter M</a><br>
+<a href="ChapterM.md#%E9%A9%AC%E6%9C%AF">马术</a>、<a href="ChapterM.md#%E8%9B%AE%E8%A3%94">蛮裔</a>、<a href="ChapterM.md#%E6%BC%AB%E5%8D%B7">漫卷</a>、<a href="ChapterM.md#%E7%8C%9B%E8%BF%9B">猛进</a>、<a href="ChapterM.md#%E7%A7%98%E8%AE%A1">秘计</a>、<a href="ChapterM.md#%E7%A7%98%E8%AE%A1-%E6%97%A7">秘计-旧</a>、<a href="ChapterM.md#%E5%AF%86%E4%BF%A1">密信</a>、<a href="ChapterM.md#%E5%AF%86%E8%AF%8F">密诏</a>、<a href="ChapterM.md#%E7%81%AD%E8%AE%A1">灭计</a>、<a href="ChapterM.md#%E5%90%8D%E5%A3%AB">名士</a>、<a href="ChapterM.md#%E5%90%8D%E5%A3%AB-%E5%9B%BD">名士-国</a>、<a href="ChapterM.md#%E6%98%8E%E7%AD%96">明策</a>、<a href="ChapterM.md#%E6%98%8E%E9%89%B4">明鉴</a>、<a href="ChapterM.md#%E6%98%8E%E5%93%B2">明哲</a>、<a href="ChapterM.md#%E8%B0%8B%E6%96%AD">谋断</a>、<a href="ChapterM.md#%E8%B0%8B%E6%BA%83">谋溃</a>、<a href="ChapterM.md#%E8%B0%8B%E8%AF%9B">谋诛</a>
+</li>
+<li>
+<a href="ChapterN.md">Chapter N</a><br>
+<a href="ChapterN.md#%E9%80%86%E4%B9%B1">逆乱</a>、<a href="ChapterN.md#%E9%B8%9F%E7%BF%94">鸟翔</a>、<a href="ChapterN.md#%E6%B6%85%E6%A7%83">涅槃</a>
+</li>
+<li>Chapter O <strong>暂无技能</strong>
+</li>
+<li>
+<a href="ChapterP.md">Chapter P</a><br>
+<a href="ChapterP.md#%E6%8E%92%E5%BC%82">排异</a>、<a href="ChapterP.md#%E5%92%86%E5%93%AE">咆哮</a>、<a href="ChapterP.md#%E7%BF%A9%E4%BB%AA">翩仪</a>、<a href="ChapterP.md#%E7%A0%B4%E5%86%9B">破军</a>、<a href="ChapterP.md#%E6%99%AE%E6%B5%8E">普济</a>
+</li>
+<li>
+<a href="ChapterQ.md">Chapter Q</a><br>
+<a href="ChapterQ.md#%E4%B8%83%E6%98%9F">七星</a>、<a href="ChapterQ.md#%E6%88%9A%E4%B9%B1">戚乱</a>、<a href="ChapterQ.md#%E5%A5%87%E6%89%8D">奇才</a>、<a href="ChapterQ.md#%E5%A5%87%E6%89%8D-%E6%97%A7">奇才-旧</a>、<a href="ChapterQ.md#%E5%A5%87%E7%AD%96">奇策</a>、<a href="ChapterQ.md#%E5%A5%87%E8%A2%AD">奇袭</a>、<a href="ChapterQ.md#%E5%8D%83%E5%B9%BB">千幻</a>、<a href="ChapterQ.md#%E8%B0%A6%E9%80%8A">谦逊</a>、<a href="ChapterQ.md#%E6%BD%9C%E8%A2%AD">潜袭</a>、<a href="ChapterQ.md#%E6%BD%9C%E8%A2%AD-%E6%97%A7">潜袭-旧</a>、<a href="ChapterQ.md#%E6%9E%AA%E8%88%9E">枪舞</a>、<a href="ChapterQ.md#%E5%BC%BA%E8%A2%AD">强袭</a>、<a href="ChapterQ.md#%E5%B7%A7%E5%8F%98">巧变</a>、<a href="ChapterQ.md#%E5%B7%A7%E8%AF%B4">巧说</a>、<a href="ChapterQ.md#%E7%90%B4%E9%9F%B3">琴音</a>、<a href="ChapterQ.md#%E9%9D%92%E5%9B%8A">青囊</a>、<a href="ChapterQ.md#%E5%80%BE%E5%9F%8E">倾城</a>、<a href="ChapterQ.md#%E5%80%BE%E5%9B%BD">倾国</a>、<a href="ChapterQ.md#%E5%80%BE%E5%9B%BD-1v1">倾国-1V1</a>、<a href="ChapterQ.md#%E6%B1%82%E6%8F%B4">求援</a>、<a href="ChapterQ.md#%E9%A9%B1%E8%99%8E">驱虎</a>、<a href="ChapterQ.md#%E6%9D%83%E8%AE%A1">权计</a>
+</li>
+<li>
+<a href="ChapterR.md">Chapter R</a><br>
+<a href="ChapterR.md#%E4%BB%81%E5%BE%B7">仁德</a>、<a href="ChapterR.md#%E4%BB%81%E5%BE%B7-%E6%97%A7">仁德-旧</a>、<a href="ChapterR.md#%E4%BB%81%E6%9C%9B">仁望</a>、<a href="ChapterR.md#%E4%BB%81%E5%BF%83">仁心</a>、<a href="ChapterR.md#%E5%BF%8D%E6%88%92">忍戒</a>、<a href="ChapterR.md#%E8%82%89%E6%9E%97">肉林</a>、<a href="ChapterR.md#%E8%8B%A5%E6%84%9A">若愚</a>
+</li>
+<li>
+<a href="ChapterS.md">Chapter S</a><br>
+<a href="ChapterS.md#%E4%BC%A4%E9%80%9D">伤逝</a>、<a href="ChapterS.md#%E4%BC%A4%E9%80%9D-%E6%97%A7">伤逝-旧</a>、<a href="ChapterS.md#%E5%B0%9A%E4%B9%89">尚义</a>、<a href="ChapterS.md#%E7%83%A7%E8%90%A5">烧营</a>、<a href="ChapterS.md#%E6%B6%89%E7%8C%8E">涉猎</a>、<a href="ChapterS.md#%E7%A5%9E%E6%84%A4">神愤</a>、<a href="ChapterS.md#%E7%94%9A%E8%B4%A4">甚贤</a>、<a href="ChapterS.md#%E7%A5%9E%E6%88%9F">神戟</a>、<a href="ChapterS.md#%E7%A5%9E%E5%90%9B">神君</a>、<a href="ChapterS.md#%E7%A5%9E%E5%8A%9B">神力</a>、<a href="ChapterS.md#%E7%A5%9E%E9%80%9F">神速</a>、<a href="ChapterS.md#%E7%A5%9E%E5%A8%81">神威</a>、<a href="ChapterS.md#%E7%A5%9E%E6%99%BA">神智</a>、<a href="ChapterS.md#%E7%94%9F%E6%81%AF">生息</a>、<a href="ChapterS.md#%E5%B8%88%E6%81%A9">师恩</a>、<a href="ChapterS.md#%E8%AF%86%E7%A0%B4">识破</a>、<a href="ChapterS.md#%E6%81%83%E6%89%8D">恃才</a>、<a href="ChapterS.md#%E6%81%83%E5%8B%87">恃勇</a>、<a href="ChapterS.md#%E5%BC%91%E7%A5%9E">弑神</a>、<a href="ChapterS.md#%E8%AA%93%E4%BB%87">誓仇</a>、<a href="ChapterS.md#%E6%85%8E%E6%8B%92">慎拒</a>、<a href="ChapterS.md#%E5%AE%88%E6%88%90">守成</a>、<a href="ChapterS.md#%E6%8E%88%E4%B8%9A">授业</a>、<a href="ChapterS.md#%E6%B7%91%E5%BE%B7">淑德</a>、<a href="ChapterS.md#%E6%B7%91%E6%85%8E">淑慎</a>、<a href="ChapterS.md#%E5%8F%8C%E5%88%83">双刃</a>、<a href="ChapterS.md#%E5%8F%8C%E9%9B%84">双雄</a>、<a href="ChapterS.md#%E6%B0%B4%E7%AE%AD">水箭</a>、<a href="ChapterS.md#%E6%B0%B4%E6%B3%B3">水泳</a>、<a href="ChapterS.md#%E6%AD%BB%E8%B0%8F">死谏</a>、<a href="ChapterS.md#%E6%AD%BB%E8%8A%82">死节</a>、<a href="ChapterS.md#%E6%AD%BB%E6%88%98">死战</a>、<a href="ChapterS.md#%E9%A2%82%E8%AF%8D">颂词</a>、<a href="ChapterS.md#%E9%A2%82%E5%A8%81">颂威</a>、<a href="ChapterS.md#%E8%82%83%E8%B5%84">肃资</a>、<a href="ChapterS.md#%E9%9A%8F%E5%8A%BF">随势</a>
+</li>
+<li>
+<a href="ChapterT.md">Chapter T</a><br>
+<a href="ChapterT.md#%E6%8A%AC%E6%A6%87">抬榇</a>、<a href="ChapterT.md#%E8%B4%AA%E5%A9%AA">贪婪</a>、<a href="ChapterT.md#%E6%8E%A2%E8%99%8E">探虎</a>、<a href="ChapterT.md#%E6%8E%A2%E5%9B%8A">探囊</a>、<a href="ChapterT.md#%E5%A4%A9%E5%A6%92">天妒</a>、<a href="ChapterT.md#%E5%A4%A9%E5%91%BD">天命</a>、<a href="ChapterT.md#%E5%A4%A9%E9%A6%99">天香</a>、<a href="ChapterT.md#%E5%A4%A9%E4%B9%89">天义</a>、<a href="ChapterT.md#%E6%8C%91%E8%A1%85">挑衅</a>、<a href="ChapterT.md#%E9%93%81%E9%AA%91">铁骑</a>、<a href="ChapterT.md#%E5%90%8C%E7%96%BE">同疾</a>、<a href="ChapterT.md#%E5%90%8C%E5%BF%83">同心</a>、<a href="ChapterT.md#%E5%81%B7%E6%B8%A1">偷渡</a>、<a href="ChapterT.md#%E7%AA%81%E9%AA%91">突骑</a>、<a href="ChapterT.md#%E7%AA%81%E8%A2%AD">突袭</a>、<a href="ChapterT.md#%E7%AA%81%E8%A2%AD-1v1">突袭-1v1</a>、<a href="ChapterT.md#%E5%B1%AF%E7%94%B0">屯田</a>
+</li>
+<li>Chapter U <strong>暂无技能</strong>
+</li>
+<li>Chapter V <strong>暂无技能</strong>
+</li>
+<li>
+<a href="ChapterW.md">Chapter W</a><br>
+<a href="ChapterW.md#%E5%AE%8C%E6%9D%80">完杀</a>、<a href="ChapterW.md#%E5%A9%89%E5%AE%B9">婉容</a>、<a href="ChapterW.md#%E5%BF%98%E9%9A%99">忘隙</a>、<a href="ChapterW.md#%E5%A6%84%E5%B0%8A">妄尊</a>、<a href="ChapterW.md#%E5%8D%B1%E6%AE%86">危殆</a>、<a href="ChapterW.md#%E5%9B%B4%E5%A0%B0">围堰</a>、<a href="ChapterW.md#%E5%B8%B7%E5%B9%95">帷幕</a>、<a href="ChapterW.md#%E4%BC%AA%E5%B8%9D">伪帝</a>、<a href="ChapterW.md#%E6%B8%A9%E9%85%92">温酒</a>、<a href="ChapterW.md#%E6%97%A0%E8%B0%8B">无谋</a>、<a href="ChapterW.md#%E6%97%A0%E5%89%8D">无前</a>、<a href="ChapterW.md#%E6%97%A0%E5%8F%8C">无双</a>、<a href="ChapterW.md#%E6%97%A0%E8%A8%80">无言</a>、<a href="ChapterW.md#%E6%97%A0%E8%A8%80-%E6%97%A7">无言-旧</a>、<a href="ChapterW.md#%E4%BA%94%E7%81%B5">五灵</a>、<a href="ChapterW.md#%E6%AD%A6%E9%AD%82">武魂</a>、<a href="ChapterW.md#%E6%AD%A6%E7%BB%A7">武继</a>、<a href="ChapterW.md#%E6%AD%A6%E7%A5%9E">武神</a>、<a href="ChapterW.md#%E6%AD%A6%E5%9C%A3">武圣</a>
+</li>
+<li>
+<a href="ChapterX.md">Chapter X</a><br>
+<a href="ChapterX.md#%E6%83%9C%E7%B2%AE">惜粮</a>、<a href="ChapterX.md#%E9%99%B7%E5%97%A3">陷嗣</a>、<a href="ChapterX.md#%E9%99%B7%E9%98%B5">陷阵</a>、<a href="ChapterX.md#%E4%BA%AB%E4%B9%90">享乐</a>、<a href="ChapterX.md#%E6%9E%AD%E5%A7%AB">枭姬</a>、<a href="ChapterX.md#%E6%9E%AD%E5%A7%AC-1v1">枭姬-1v1</a>、<a href="ChapterX.md#%E9%AA%81%E6%9E%9C">骁果</a>、<a href="ChapterX.md#%E9%AA%81%E8%A2%AD">骁袭</a>、<a href="ChapterX.md#%E5%AD%9D%E5%BE%B7">孝德</a>、<a href="ChapterX.md#%E6%8C%9F%E7%BC%A0">挟缠</a>、<a href="ChapterX.md#%E5%BF%83%E6%88%98">心战</a>、<a href="ChapterX.md#%E6%96%B0%E7%94%9F">新生</a>、<a href="ChapterX.md#%E6%98%9F%E8%88%9E">星舞</a>、<a href="ChapterX.md#%E8%A1%8C%E6%AE%87">行殇</a>、<a href="ChapterX.md#%E9%9B%84%E5%BC%82">雄异</a>、<a href="ChapterX.md#%E4%BF%AE%E7%BD%97">修罗</a>、<a href="ChapterX.md#%E6%97%8B%E9%A3%8E">旋风</a>、<a href="ChapterX.md#%E6%97%8B%E9%A3%8E-%E6%97%A7">旋风-旧</a>、<a href="ChapterX.md#%E6%98%A1%E6%83%91">眩惑</a>、<a href="ChapterX.md#%E7%9C%A9%E6%83%91-%E6%97%A7">眩惑-旧</a>、<a href="ChapterX.md#%E9%9B%AA%E6%81%A8">雪恨</a>、<a href="ChapterX.md#%E8%A1%80%E7%A5%AD">血祭</a>、<a href="ChapterX.md#%E8%A1%80%E8%A3%94">血裔</a>、<a href="ChapterX.md#%E6%81%82%E6%81%82">恂恂</a>、<a href="ChapterX.md#%E8%BF%85%E7%8C%9B">迅猛</a>、<a href="ChapterX.md#%E6%AE%89%E5%BF%97">殉志</a>
+</li>
+<li>
+<a href="ChapterY.md">Chapter Y</a><br>
+<a href="ChapterY.md#%E5%BB%B6%E7%A5%B8">延祸</a>、<a href="ChapterY.md#%E4%B8%A5%E6%95%B4">严整</a>、<a href="ChapterY.md#%E8%A8%80%E7%AC%91">言笑</a>、<a href="ChapterY.md#%E7%87%95%E8%AF%AD">燕语</a>、<a href="ChapterY.md#%E8%80%80%E6%AD%A6">耀武</a>、<a href="ChapterY.md#%E4%B8%9A%E7%82%8E">业炎</a>、<a href="ChapterY.md#%E9%81%97%E8%AE%A1">遗计</a>、<a href="ChapterY.md#%E7%96%91%E5%9F%8E">疑城</a>、<a href="ChapterY.md#%E5%80%9A%E5%A4%A9">倚天</a>、<a href="ChapterY.md#%E4%B9%89%E4%BB%8E">义从</a>、<a href="ChapterY.md#%E4%B9%89%E4%BB%8E-%E8%B4%B4%E7%BA%B8">义从-贴纸</a>、<a href="ChapterY.md#%E4%B9%89%E8%88%8D">义舍</a>、<a href="ChapterY.md#%E4%B9%89%E9%87%8A">义释</a>、<a href="ChapterY.md#%E5%BC%82%E6%89%8D">异才</a>、<a href="ChapterY.md#%E6%AF%85%E9%87%8D">毅重</a>、<a href="ChapterY.md#%E5%A7%BB%E7%A4%BC">姻礼</a>、<a href="ChapterY.md#%E9%93%B6%E9%93%83">银铃</a>、<a href="ChapterY.md#%E8%8B%B1%E9%AD%82">英魂</a>、<a href="ChapterY.md#%E8%8B%B1%E5%A7%BF">英姿</a>、<a href="ChapterY.md#%E5%BD%B1%E5%85%B5">影兵</a>、<a href="ChapterY.md#%E5%BA%B8%E8%82%86">庸肆</a>、<a href="ChapterY.md#%E5%8B%87%E5%86%B3">勇决</a>、<a href="ChapterY.md#%E7%8B%B1%E5%88%8E">狱刎</a>、<a href="ChapterY.md#%E5%BE%A1%E7%AD%96">御策</a>、<a href="ChapterY.md#%E6%8F%B4%E6%8A%A4">援护</a>
+</li>
+<li>
+<a href="ChapterZ.md">Chapter Z</a><br>
+<a href="ChapterZ.md#%E7%81%BE%E5%8F%98">灾变</a>、<a href="ChapterZ.md#%E5%86%8D%E8%B5%B7">再起</a>、<a href="ChapterZ.md#%E5%87%BF%E9%99%A9">凿险</a>、<a href="ChapterZ.md#%E6%97%A9%E5%A4%AD">早夭</a>、<a href="ChapterZ.md#%E6%88%98%E7%A5%9E">战神</a>、<a href="ChapterZ.md#%E6%98%AD%E7%83%88">昭烈</a>、<a href="ChapterZ.md#%E6%98%AD%E5%BF%83">昭心</a>、<a href="ChapterZ.md#%E8%B4%9E%E7%83%88">贞烈</a>、<a href="ChapterZ.md#%E8%B4%9E%E7%83%88-%E6%97%A7">贞烈-旧</a>、<a href="ChapterZ.md#%E9%B8%A9%E6%AF%92">鸩毒</a>、<a href="ChapterZ.md#%E9%95%87%E5%A8%81">镇威</a>、<a href="ChapterZ.md#%E9%95%87%E5%8D%AB">镇卫</a>、<a href="ChapterZ.md#%E4%BA%89%E9%94%8B">争锋</a>、<a href="ChapterZ.md#%E4%BA%89%E5%8A%9F">争功</a>、<a href="ChapterZ.md#%E4%BA%89%E5%8A%9F-0610%E7%89%88">争功-0610版</a>、<a href="ChapterZ.md#%E6%95%B4%E5%86%9B">整军</a>、<a href="ChapterZ.md#%E7%9B%B4%E8%B0%8F">直谏</a>、<a href="ChapterZ.md#%E7%9B%B4%E8%A8%80">直言</a>、<a href="ChapterZ.md#%E5%BF%97%E7%BB%A7">志继</a>、<a href="ChapterZ.md#%E5%88%B6%E9%9C%B8">制霸</a>、<a href="ChapterZ.md#%E5%88%B6%E9%9C%B8-%E5%88%B6%E9%9C%B8%E5%AD%99%E6%9D%83">制霸-制霸孙权</a>、<a href="ChapterZ.md#%E5%88%B6%E8%A1%A1">制衡</a>、<a href="ChapterZ.md#%E6%99%BA%E8%BF%9F">智迟</a>、<a href="ChapterZ.md#%E6%99%BA%E6%84%9A">智愚</a>、<a href="ChapterZ.md#%E5%BF%A0%E4%B9%89">忠义</a>、<a href="ChapterZ.md#%E5%92%92%E7%BC%9A">咒缚</a>、<a href="ChapterZ.md#%E7%AD%91%E6%A5%BC">筑楼</a>、<a href="ChapterZ.md#%E8%BF%BD%E5%BF%86">追忆</a>、<a href="ChapterZ.md#%E6%83%B4%E6%81%90">惴恐</a>、<a href="ChapterZ.md#%E8%B5%84%E7%B2%AE">资粮</a>、<a href="ChapterZ.md#%E8%87%AA%E7%AB%8B">自立</a>、<a href="ChapterZ.md#%E8%87%AA%E5%AE%88">自守</a>、<a href="ChapterZ.md#%E5%AE%97%E5%AE%A4">宗室</a>、<a href="ChapterZ.md#%E7%BA%B5%E7%81%AB">纵火</a>、<a href="ChapterZ.md#%E7%BA%B5%E9%80%82">纵适</a>、<a href="ChapterZ.md#%E7%BA%B5%E7%8E%84">纵玄</a>、<a href="ChapterZ.md#%E9%86%89%E4%B9%A1">醉乡</a>
+</li>
+</ul>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/QSanguosha/LuaSkillsForQSGS/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/QSanguosha/LuaSkillsForQSGS/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/QSanguosha/LuaSkillsForQSGS"></a> is maintained by <a href="https://github.com/QSanguosha">QSanguosha</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
