@@ -478,71 +478,67 @@ LuaXHongyuanAct = sgs.CreateTriggerSkill {
 	技能名：弘援
 	相关武将：新3V3·诸葛瑾（身份局）
 	描述：摸牌阶段，你可以少摸一张牌，令一至两名其他角色各摸一张牌。
-	引用：LuaXHongyuan、LuaXHongyuanAct
+	引用：LuaHongyuan、LuaHongyuanAct
 	状态：1217验证通过
 ]]--
-LuaXHongyuanCard = sgs.CreateSkillCard{
-	name = "LuaXHongyuanCard",
+LuaHongyuanCard = sgs.CreateSkillCard{
+	name = "LuaHongyuanCard",
 	target_fixed = false,
 	will_throw = true,
-	filter = function(self, targets, to_select)
-		if to_select:objectName() ~= sgs.Self:objectName() then
+	filter = function(self, targets, to_select, Self)
+		if to_select:objectName() ~= Self:objectName() then
 			return #targets < 2
 		end
 		return false
 	end,
 	on_effect = function(self, effect)
-		effect.to:setFlags("LuaHongyan_Target")
+		effect.to:setFlags("LuaHongyuan_Target")
 	end
 }
-LuaXHongyuanVS = sgs.CreateViewAsSkill{
-	name = "LuaXHongyuan",
+LuaHongyuanVS = sgs.CreateViewAsSkill{
+	name = "LuaHongyuan",
 	n = 0,
 	view_as = function(self, cards)
-		return LuaXHongyuanCard:clone()
+		return LuaHongyuanCard:clone()
 	end,
 	enabled_at_play = function(self, player)
 		return false
 	end,
 	enabled_at_response = function(self, player, pattern)
-		return pattern == "@@LuaXHongyuan"
+		return pattern == "@@LuaHongyuan"
 	end
 }
-LuaXHongyuan = sgs.CreateTriggerSkill{
-	name = "LuaXHongyuan",
+LuaHongyuan = sgs.CreateTriggerSkill{
+	name = "LuaHongyuan",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.DrawNCards},
-	view_as_skill = LuaXHongyuanVS,
+	view_as_skill = LuaHongyuanVS,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if room:askForSkillInvoke(player, self:objectName()) then
-			room:setPlayerFlag(player, self:objectName())
-			if not room:askForUseCard(player, "@@LuaXHongyuan", "@hongyuan") then
-				local count = data:toInt() - 1
-				data:setValue(count)
-				player:setFlags("LuaHongyan")
-			end
+		if room:askForUseCard(player, "@@LuaHongyuan", "@hongyuan") then
+			local count = data:toInt() - 1
+			data:setValue(count)
+			player:setFlags("LuaHongyuan")
 		end
+		return false
 	end
 }
-LuaXHongyuanAct = sgs.CreateTriggerSkill{
-	name = "#LuaXHongyuanAct",
+LuaHongyuanAct = sgs.CreateTriggerSkill{
+	name = "#LuaHongyuanAct",
 	frequency = sgs.Skill_Frequent,
 	events = {sgs.AfterDrawNCards},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Draw then
-			if player:hasFlag("LuaHongyan") then
-				player:setFlags("-LuaHongyan")
-				local targets = sgs.SPlayerList()
-				for _,p in sgs.qlist(room:getAlivePlayers())do
-					if p:hasFlag("LuaHongyan_Target") then
-						p:setFlags("-LuaHongyan_Target")
-						targets:append(p)
-					end
+		if player:getPhase() == sgs.Player_Draw and player:hasFlag("LuaHongyuan") then
+			player:setFlags("-LuaHongyuan")
+			local targets = sgs.SPlayerList()
+			for _,p in sgs.qlist(room:getAlivePlayers())do
+				if p:hasFlag("LuaHongyuan_Target") then
+					p:setFlags("-LuaHongyuan_Target")
+					targets:append(p)
 				end
-				room:drawCards(targets,1,"LuaHongyan")
 			end
+			room:drawCards(targets,1,"LuaHongyuan")
 		end
 		return false
 	end
