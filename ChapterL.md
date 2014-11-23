@@ -1043,7 +1043,7 @@
 			if sgs.Self:getWeapon() and (sgs.Self:getWeapon():getId() == card_id) then
 				local weapon = sgs.Self:getWeapon():getRealCard():toWeapon()
 				range_fix = range_fix + weapon:getRange() - 1
-			elseif sgs.Self:getOffensiveHorse() and (self:getOffensiveHorse():getId() == card_id) then
+			elseif sgs.Self:getOffensiveHorse() and (sgs.Self:getOffensiveHorse():getId() == card_id) then
 				range_fix = range_fix + 1
 			end
 			return sgs.Self:distanceTo(to_select, range_fix) <= sgs.Self:getAttackRange()
