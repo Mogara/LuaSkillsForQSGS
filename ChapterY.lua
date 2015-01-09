@@ -167,26 +167,24 @@ LuaYanyu = sgs.CreateTriggerSkill{
 					end
 				end
 				if ids:isEmpty() then return false end
-                		while not ids:isEmpty() do
+                	while not ids:isEmpty() do
 					room:fillAG(all_ids, player, disabled)
 					local only = (all_ids:length() == 1)
 					local card_id = -1 
 					if only then
-                        			card_id = ids:first()
-                    			else
-                        			card_id = room:askForAG(player, ids, true, self:objectName())
+            			card_id = ids:first()
+        			else
+            			card_id = room:askForAG(player, ids, true, self:objectName())
 					end
 					room:clearAG(player)
 					if card_id == -1 then break end
 					if only then
-                        			player:setMark("YanyuOnlyId", card_id + 1)
+                        player:setMark("YanyuOnlyId", card_id + 1)
 					end
 					local card = sgs.Sanguosha:getCard(card_id)
 					local target = room:askForPlayerChosen(player, room:getAlivePlayers(), self:objectName(),
-									string.format("@yanyu-give:::%s:%s\\%s", card:objectName()
-													       , card:getSuitString().."_char"
-													       , card:getNumberString()),
-                                                                	 only, true)
+						string.format("@yanyu-give:::%s:%s\\%s", card:objectName(), card:getSuitString().."_char"
+						, card:getNumberString()),only, true)
 					player:setMark("YanyuOnlyId", 0)
 					if target then
 						player:removeMark("LuaYanyuDiscard" .. tostring(card:getTypeId()))
@@ -604,26 +602,26 @@ LuaXYisheVS = sgs.CreateViewAsSkill{
 	n = 5,
 	view_filter = function(self, selected, to_select)
 		local n = sgs.Self:getPile("rice"):length()
-		if #selected + n < 5 then
-			return not to_select:isEquipped()
+		if #selected + n >= 5 then
+			return false
 		end
-		return false
+		return not to_select:isEquipped()
 	end,
 	view_as = function(self, cards)
 		local n = sgs.Self:getPile("rice"):length()
-		if #cards > 0 and #cards <= 5 - n then
-			local card = LuaXYisheCard:clone()
-			for _,cd in pairs(cards) do
-				card:addSubcard(cd)
-			end
-			return card
+		if n == 0 and #cards == 0 then return nil end
+		local card = LuaXYisheCard:clone()
+		for _,cd in ipairs(cards) do
+			card:addSubcard(cd)
 		end
+		return card		
 	end,
 	enabled_at_play = function(self, player)
 		if player:getPile("rice"):isEmpty() then
 			return not player:isKongcheng()
+		else
+			return true
 		end
-		return true
 	end
 }
 LuaXYisheAskCard = sgs.CreateSkillCard{

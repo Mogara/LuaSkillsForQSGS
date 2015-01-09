@@ -611,26 +611,26 @@
 		n = 5,
 		view_filter = function(self, selected, to_select)
 			local n = sgs.Self:getPile("rice"):length()
-			if #selected + n < 5 then
-				return not to_select:isEquipped()
+			if #selected + n >= 5 then
+				return false
 			end
-			return false
+			return not to_select:isEquipped()
 		end,
 		view_as = function(self, cards)
 			local n = sgs.Self:getPile("rice"):length()
-			if #cards > 0 and #cards <= 5 - n then
-				local card = LuaXYisheCard:clone()
-				for _,cd in pairs(cards) do
-					card:addSubcard(cd)
-				end
-				return card
+			if n == 0 and #cards == 0 then return nil end
+			local card = LuaXYisheCard:clone()
+			for _,cd in ipairs(cards) do
+				card:addSubcard(cd)
 			end
+			return card		
 		end,
 		enabled_at_play = function(self, player)
 			if player:getPile("rice"):isEmpty() then
 				return not player:isKongcheng()
+			else
+				return true
 			end
-			return true
 		end
 	}
 	LuaXYisheAskCard = sgs.CreateSkillCard{
