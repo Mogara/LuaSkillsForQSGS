@@ -289,12 +289,13 @@
 		view_filter = function(self, selected, to_select)
 			if to_select:getTypeId() ~= sgs.Card_TypeEquip then return false end
 			if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
-			local slash = sgs.Sanguosha:cloneCard("slash",sgs.Card_SuitToBeDecided,-1)
-	            slash:addSubcard(to_select:getEffectiveId())
-	            slash:deleteLater()
-	            return slash:isAvailable(sgs.Self)
+				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_SuitToBeDecided, -1)
+				slash:addSubcard(to_select:getEffectiveId())
+				slash:deleteLater()
+				return slash:isAvailable(sgs.Self)
 			end
-		end ,
+			return true
+		end,
 		view_as = function(self, cards)
 			if #cards == 1 then
 			local slash = sgs.Sanguosha:cloneCard("slash", cards[1]:getSuit(), cards[1]:getNumber())
