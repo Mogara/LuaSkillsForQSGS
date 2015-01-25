@@ -731,7 +731,7 @@ LuaHujia = sgs.CreateTriggerSkill{
 		tohelp:setValue(player)
 		for _, p in sgs.qlist(lieges) do
 			local prompt = string.format("@hujia-jink:%s", player:objectName())
-			local jink = room:askForCard(p, "jink", prompt, tohelp, sgs.Card_MethodResponse, player,false,"", true)
+			local jink = room:askForCard(p, "jink", prompt, tohelp, sgs.Card_MethodResponse, player, false,"", true)
 			if jink then
 				room:provide(jink)
 				return true
