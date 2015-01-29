@@ -320,7 +320,7 @@ LuaNosGongqiTargetMod = sgs.CreateTargetModSkill{
 LuaGongxinCard = sgs.CreateSkillCard{
 	name = "LuaGongxinCard" ,
 	filter = function(self, targets, to_select)
-		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName()) and not to_select:isKongcheng()
 	end ,
 	on_effect = function(self, effect)
 		local room = effect.from:getRoom()
