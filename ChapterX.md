@@ -729,6 +729,8 @@
 		frequency = sgs.Skill_NotFrequent,
 		events = {sgs.Death},
 		on_trigger = function(self, event, player, data)
+			local death = data:toDeath()
+			if death.who:objectName() ~= player:objectName() then return false end
 			if not player:isNude() then
 				local room = player:getRoom()
 				local alives = room:getAlivePlayers()
