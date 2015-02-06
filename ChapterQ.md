@@ -1100,7 +1100,7 @@
 	}
 	LuaQingchengVs = sgs.CreateOneCardViewAsSkill{
 		name = "LuaQingcheng", 
-		filter_pattern = "EquipCard!",
+		filter_pattern = "EquipCard",
 		view_as = function(self, card) 
 			local qcc = LuaQingchengCard:clone()
 			qcc:addSubcard(card)

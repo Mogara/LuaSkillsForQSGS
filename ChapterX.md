@@ -644,7 +644,7 @@
 			if (event == sgs.PreCardUsed) or (event == sgs.CardResponded) then
 				local card = nil
 				if event == sgs.PreCardUsed then
-					card = data:toCard()
+					card = data:toCardUse().card
 				else
 					local response = data:toCardResponse()
 					if response.m_isUse then
@@ -652,7 +652,7 @@
 					end
 				end
 				if card and (card:getTypeId() ~= sgs.Card_TypeSkill) and (card:getHandlingMethod() == sgs.Card_MethodUse) then
-					local n = player:getMark()
+					local n = player:getMark(self:objectName())
 					if card:isBlack() then
 						n = bit32.bor(n, 1)
 					elseif card:isRed() then
