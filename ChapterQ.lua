@@ -123,77 +123,20 @@ LuaNosQicai = sgs.CreateTargetModSkill{
 	相关武将：二将成名·荀攸
 	描述：出牌阶段限一次，你可以将你的所有手牌（至少一张）当任意一张非延时锦囊牌使用。
 	引用：LuaQice
-	状态：1217验证通过
+	状态：0401验证通过
 ]]--
-local patterns = {"snatch", "dismantlement", "collateral", "ex_nihilo", "duel", "fire_attack", "amazing_grace", "savage_assault", "archery_attack", "god_salvation", "iron_chain"}
-function getPos(table, value)
-	for i, v in ipairs(table) do
-		if v == value then
-			return i
-		end
-	end
-	return 0
-end
-local pos = 0
-LuaQice_select = sgs.CreateSkillCard {
-	name = "LuaQice_select",
-	will_throw = false,
-	handling_method = sgs.Card_MethodNone,
-	target_fixed = true,
-	mute = true,
-	on_use = function(self, room, source, targets)
-		local type = {}		
-		local sttrick = {}
-		local mttrick = {}
-		for _, cd in ipairs(patterns) do
-			local card = sgs.Sanguosha:cloneCard(cd, sgs.Card_NoSuit, 0)
-			if card then
-				card:deleteLater()
-				if card:isAvailable(source) then
-					if card:isKindOf("SingleTargetTrick") then
-						table.insert(sttrick, cd)
-					else
-						table.insert(mttrick, cd)
-					end					
-				end
-			end
-		end		
-		if #sttrick ~= 0 then table.insert(type, "single_target_trick") end
-		if #mttrick ~= 0 then table.insert(type, "multiple_target_trick") end
-		local typechoice = ""
-		if #type > 0 then
-			typechoice = room:askForChoice(source, "LuaQice", table.concat(type, "+"))
-		end
-		local choices = {}
-		if typechoice == "single_target_trick" then
-			choices = table.copyFrom(sttrick)
-		elseif typechoice == "multiple_target_trick" then
-			choices = table.copyFrom(mttrick)
-		end
-		local pattern = room:askForChoice(source, "LuaQice", table.concat(choices, "+"))
-		if pattern then			
-			pos = getPos(patterns, pattern)
-			room:setPlayerMark(source, "LuaQicePos", pos)
-			room:askForUseCard(source, "@LuaQice", "@@LuaQice")			
-		end
-	end,
-}
 LuaQiceCard = sgs.CreateSkillCard {
-	name = "LuaQiceCard",
+	name = "LuaQice",
 	will_throw = false,
 	handling_method = sgs.Card_MethodNone,
 	player = nil,
 	on_use = function(self, room, source)
 		player = source
 	end,
-	filter = function(self, targets, to_select, player)		
-		local pattern = patterns[player:getMark("LuaQicePos")]		
-		local card = sgs.Sanguosha:cloneCard(pattern, sgs.Card_SuitToBeDecided, -1)
-		if card then
-			for _,id in sgs.qlist(self:getSubcards()) do				
-				card:addSubcard(id)
-			end
-		end		
+	filter = function(self, targets, to_select, player)
+		local card = player:getTag("LuaQice"):toCard()
+		card:addSubcards(player:getHandcards())
+		card:setSkillName(self:objectName())
 		if card and card:targetFixed() then
 			return false
 		end
@@ -201,41 +144,34 @@ LuaQiceCard = sgs.CreateSkillCard {
 		for _, p in ipairs(targets) do
 			qtargets:append(p)
 		end
-		return card and card:targetFilter(qtargets, to_select, sgs.Self) and not sgs.Self:isProhibited(to_select, card, qtargets)
+		return card and card:targetFilter(qtargets, to_select, sgs.Self) 
+			and not sgs.Self:isProhibited(to_select, card, qtargets)
 	end,	
-	target_fixed = function(self)		
-		local pattern = patterns[player:getMark("LuaQicePos")]		
-		local card = sgs.Sanguosha:cloneCard(pattern, sgs.Card_SuitToBeDecided, -1)
-		if card then
-			for _,id in sgs.qlist(self:getSubcards()) do				
-				card:addSubcard(id)
-			end
-		end		
+	target_fixed = function(self)
+		local card = sgs.Self:getTag("LuaQice"):toCard()
+		card:addSubcards(sgs.Self:getHandcards())
+		card:setSkillName(self:objectName())
 		return card and card:targetFixed()
 	end,	
-	feasible = function(self, targets)		
-		local pattern = patterns[sgs.Self:getMark("LuaQicePos")]		
-		local card = sgs.Sanguosha:cloneCard(pattern, sgs.Card_SuitToBeDecided, -1)
-		if card then
-			for _,id in sgs.qlist(self:getSubcards()) do				
-				card:addSubcard(id)
-			end
-		end		
+	feasible = function(self, targets)
+		local card = sgs.Self:getTag("LuaQice"):toCard()
+		
+		card:setSkillName(self:objectName())
 		local qtargets = sgs.PlayerList()
 		for _, p in ipairs(targets) do
 			qtargets:append(p)
+		end
+		if card and card:canRecast() and #targets == 0 then
+			return false
 		end
 		return card and card:targetsFeasible(qtargets, sgs.Self)
 	end,	
 	on_validate = function(self, card_use)
 		local xunyou = card_use.from
-		local room = xunyou:getRoom()		
-		room:broadcastSkillInvoke("qice")		
-		local use_card = sgs.Sanguosha:cloneCard(self:getUserString(), sgs.Card_SuitToBeDecided, 0)
-		use_card:setSkillName("LuaQice")
-		for _,id in sgs.qlist(self:getSubcards()) do				
-			use_card:addSubcard(id)
-		end
+		local room = xunyou:getRoom()
+		local use_card = sgs.Sanguosha:cloneCard(self:getUserString())
+		use_card:addSubcards(xunyou:getHandcards())
+		use_card:setSkillName(self:objectName())
 		local available = true
 		for _,p in sgs.qlist(card_use.to) do
 			if xunyou:isProhibited(p,use_card)	then
@@ -243,47 +179,31 @@ LuaQiceCard = sgs.CreateSkillCard {
 				break
 			end
 		end
-		available = available and use_card:isAvailable(xunyou)	
-		use_card:deleteLater()
-		if not available then return nil end		
-		room:setPlayerFlag(xunyou,"QiceUsed")			
+		available = available and use_card:isAvailable(xunyou)
+		if not available then return nil end
 		return use_card		
-	end	
+	end,
 }
 LuaQice = sgs.CreateViewAsSkill {
-	name = "LuaQice",	
-	n = 999,
-	enabled_at_response = function(self,player,pattern)
-		return pattern == "@LuaQice"	
-	end,	
-	enabled_at_play = function(self, player)				
-		return not player:isKongcheng() and not player:hasFlag("QiceUsed")
-	end,	
+	name = "LuaQice",
+	n = 0,
 	view_filter = function(self, selected, to_select)
-		return not to_select:isEquipped()
+		return false
 	end,
 	view_as = function(self, cards)
-		if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
-			if #cards ~= 0 then return nil end
-			return LuaQice_select:clone()
-		else
-			if sgs.Sanguosha:getCurrentCardUsePattern() == "@LuaQice" then
-				local pattern = patterns[sgs.Self:getMark("LuaQicePos")]				
-				local c = sgs.Sanguosha:cloneCard(pattern, sgs.Card_SuitToBeDecided, -1)
-				if c and #cards == sgs.Self:getHandcardNum() then
-					c:deleteLater()
-					local card = LuaQiceCard:clone()
-					card:setUserString(c:objectName())	
-					for _,c in ipairs(cards) do
-						card:addSubcard(c)
-					end				
-					return card
-				end
-			end
+		local c = sgs.Self:getTag("LuaQice"):toCard()
+		if c then
+			local card = LuaQiceCard:clone()
+			card:setUserString(c:objectName())	
+			return card
 		end
 		return nil
-	end	
+	end,
+	enabled_at_play = function(self, player)
+		return (not player:hasUsed("#LuaQice")) and (not player:isKongcheng())
+	end,
 }
+LuaQice:setGuhuoDialog("r")
 --[[
 	技能名：千幻
 	相关武将：阵·于吉
