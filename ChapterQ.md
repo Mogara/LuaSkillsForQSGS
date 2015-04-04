@@ -129,13 +129,9 @@
 		name = "LuaQice",
 		will_throw = false,
 		handling_method = sgs.Card_MethodNone,
-		player = nil,
-		on_use = function(self, room, source)
-			player = source
-		end,
-		filter = function(self, targets, to_select, player)
-			local card = player:getTag("LuaQice"):toCard()
-			card:addSubcards(player:getHandcards())
+		filter = function(self, targets, to_select)
+			local card = sgs.Self:getTag("LuaQice"):toCard()
+			card:addSubcards(sgs.Self:getHandcards())
 			card:setSkillName(self:objectName())
 			if card and card:targetFixed() then
 				return false
@@ -146,16 +142,10 @@
 			end
 			return card and card:targetFilter(qtargets, to_select, sgs.Self) 
 				and not sgs.Self:isProhibited(to_select, card, qtargets)
-		end,	
-		target_fixed = function(self)
-			local card = sgs.Self:getTag("LuaQice"):toCard()
-			card:addSubcards(sgs.Self:getHandcards())
-			card:setSkillName(self:objectName())
-			return card and card:targetFixed()
-		end,	
+		end,
 		feasible = function(self, targets)
 			local card = sgs.Self:getTag("LuaQice"):toCard()
-			
+			card:addSubcards(sgs.Self:getHandcards())
 			card:setSkillName(self:objectName())
 			local qtargets = sgs.PlayerList()
 			for _, p in ipairs(targets) do
@@ -203,7 +193,7 @@
 			return (not player:hasUsed("#LuaQice")) and (not player:isKongcheng())
 		end,
 	}
-	LuaQice:setGuhuoDialog("r")  
+	LuaQice:setGuhuoDialog("r")
 ```   
 [返回索引](#技能索引)
 ##千幻
