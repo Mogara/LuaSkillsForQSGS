@@ -394,19 +394,28 @@ LuaZhaoxin = sgs.CreateTriggerSkill{
 ]]--
 LuaZhenlie = sgs.CreateTriggerSkill{
 	name = "LuaZhenlie" ,
-	events = {sgs.TargetConfirmed, sgs.CardEffected, sgs.SlashEffected} ,
+	events = {sgs.TargetConfirmed} ,       
+	can_trigger = function(self, target)
+        	return target ~= nil
+	end,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if event == sgs.TargetConfirmed then
-			if player and player:isAlive() and player:hasSkill(self:objectName()) then
-				local use = data:toCardUse()
-				if use.to:contains(player) and (use.from:objectName() ~= player:objectName()) then
-					if use.card:isKindOf("Slash") or use.card:isNDTrick() then
-						if room:askForSkillInvoke(player, self:objectName(), data) then
-							room:setCardFlag(use.card, "LuaZhenlieNullify")
-							player:setFlags("LuaZhenlieTarget")
-							room:loseHp(player)
-							if player:isAlive() and player:hasFlag("LuaZhenlieTarget") and player:canDiscard(use.from, "he") then
+        	if event == sgs.TargetConfirmed then
+			local use = data:toCardUse()
+			if use.to:contains(player) and use.from:objectName() ~= player:objectName() then
+				if use.card:isKindOf("Slash") or use.card:isNDTrick() then
+					if room:askForSkillInvoke(player, self:objectName(), data) then
+						room:broadcastSkillInvoke(self:objectName())
+						player:setFlags("-ZhenlieTarget")
+						player:setFlags("ZhenlieTarget")
+						room:loseHp(player)
+						if player:isAlive() and player:hasFlag("ZhenlieTarget") then
+							player:setFlags("-ZhenlieTarget")
+							local nullified_list = use.nullified_list
+                            				table.insert(nullified_list, player:objectName())
+                            				use.nullified_list = nullified_list
+							data:setValue(use)
+							if player:canDiscard(use.from, "he") then
 								local id = room:askForCardChosen(player, use.from, "he", self:objectName(), false, sgs.Card_MethodDiscard)
 								room:throwCard(id, use.from, player)
 							end
@@ -414,23 +423,8 @@ LuaZhenlie = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-		elseif event == sgs.CardEffected then
-			local effect = data:toCardEffect()
-			if (not effect.card:isKindOf("Slash")) and effect.card:hasFlag("LuaZhenlieNullify") and player:hasFlag("LuaZhenlieTarget") then
-				player:setFlags("-LuaZhenlieTarget")
-				return true
-			end
-		elseif event == sgs.SlashEffected then
-			local effect = data:toSlashEffect()
-			if effect.slash:hasFlag("LuaZhenlieNullify") and player:hasFlag("LuaZhenlieTarget") then
-				player:setFlags("-LuaZhenlieTarget")
-				return true
-			end
-		end
+        	end
 		return false
-	end ,
-	can_trigger = function(self, target)
-		return target
 	end
 }
 --[[
