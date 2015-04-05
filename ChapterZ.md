@@ -404,43 +404,43 @@
 **相关武将**：一将成名2012·王异  
 **描述**： 每当你成为一名其他角色使用的【杀】或非延时类锦囊牌的目标后，你可以失去1点体力，令此牌对你无效，然后你弃置其一张牌。  
 **引用**：LuaZhenlie  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
-LuaZhenlie = sgs.CreateTriggerSkill{
-	name = "LuaZhenlie" ,
-	events = {sgs.TargetConfirmed} ,       
-	can_trigger = function(self, target)
-        return target ~= nil
-	end,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-        if event == sgs.TargetConfirmed then
-			local use = data:toCardUse()
-			if use.to:contains(player) and use.from:objectName() ~= player:objectName() then
-				if use.card:isKindOf("Slash") or use.card:isNDTrick() then
-					if room:askForSkillInvoke(player, self:objectName(), data) then
-						room:broadcastSkillInvoke(self:objectName())
-						player:setFlags("-ZhenlieTarget")
-						player:setFlags("ZhenlieTarget")
-						room:loseHp(player)
-						if player:isAlive() and player:hasFlag("ZhenlieTarget") then
+	LuaZhenlie = sgs.CreateTriggerSkill{
+		name = "LuaZhenlie" ,
+		events = {sgs.TargetConfirmed} ,       
+		can_trigger = function(self, target)
+        	return target ~= nil
+		end,
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+        	if event == sgs.TargetConfirmed then
+				local use = data:toCardUse()
+				if use.to:contains(player) and use.from:objectName() ~= player:objectName() then
+					if use.card:isKindOf("Slash") or use.card:isNDTrick() then
+						if room:askForSkillInvoke(player, self:objectName(), data) then
+							room:broadcastSkillInvoke(self:objectName())
 							player:setFlags("-ZhenlieTarget")
-							local nullified_list = use.nullified_list
-                            table.insert(nullified_list, player:objectName())
-                            use.nullified_list = nullified_list
-							data:setValue(use)
-							if player:canDiscard(use.from, "he") then
-								local id = room:askForCardChosen(player, use.from, "he", self:objectName(), false, sgs.Card_MethodDiscard)
-								room:throwCard(id, use.from, player)
+							player:setFlags("ZhenlieTarget")
+							room:loseHp(player)
+							if player:isAlive() and player:hasFlag("ZhenlieTarget") then
+								player:setFlags("-ZhenlieTarget")
+								local nullified_list = use.nullified_list
+                	            table.insert(nullified_list, player:objectName())
+                	            use.nullified_list = nullified_list
+								data:setValue(use)
+								if player:canDiscard(use.from, "he") then
+									local id = room:askForCardChosen(player, use.from, "he", self:objectName(), false, sgs.Card_MethodDiscard)
+									room:throwCard(id, use.from, player)
+								end
 							end
 						end
 					end
 				end
-			end
-        end
-		return false
-    end
-}
+	        end
+			return false
+	    end
+	}
 ```
 [返回索引](#技能索引)
 
