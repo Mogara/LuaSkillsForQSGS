@@ -125,8 +125,8 @@
 **引用**：LuaQice  
 **状态**：0401验证通过  
 ```lua
-	LuaQiceCard = sgs.CreateSkillCard {
-		name = "LuaQice",
+	LuaQiceCard = sgs.CreateSkillCard{
+		name = "LuaQiceCard",
 		will_throw = false,
 		handling_method = sgs.Card_MethodNone,
 		filter = function(self, targets, to_select)
@@ -174,7 +174,7 @@
 			return use_card		
 		end,
 	}
-	LuaQice = sgs.CreateViewAsSkill {
+	LuaQice = sgs.CreateViewAsSkill{
 		name = "LuaQice",
 		n = 0,
 		view_filter = function(self, selected, to_select)
