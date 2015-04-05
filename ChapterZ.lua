@@ -394,10 +394,7 @@ LuaZhaoxin = sgs.CreateTriggerSkill{
 ]]--
 LuaZhenlie = sgs.CreateTriggerSkill{
 	name = "LuaZhenlie" ,
-	events = {sgs.TargetConfirmed} ,       
-	can_trigger = function(self, target)
-        	return target ~= nil
-	end,
+	events = {sgs.TargetConfirmed} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
         	if event == sgs.TargetConfirmed then
@@ -405,7 +402,6 @@ LuaZhenlie = sgs.CreateTriggerSkill{
 			if use.to:contains(player) and use.from:objectName() ~= player:objectName() then
 				if use.card:isKindOf("Slash") or use.card:isNDTrick() then
 					if room:askForSkillInvoke(player, self:objectName(), data) then
-						room:broadcastSkillInvoke(self:objectName())
 						player:setFlags("-ZhenlieTarget")
 						player:setFlags("ZhenlieTarget")
 						room:loseHp(player)
