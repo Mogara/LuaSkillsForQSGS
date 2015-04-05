@@ -390,7 +390,7 @@ LuaZhaoxin = sgs.CreateTriggerSkill{
 	相关武将：一将成名2012·王异
 	描述： 每当你成为一名其他角色使用的【杀】或非延时类锦囊牌的目标后，你可以失去1点体力，令此牌对你无效，然后你弃置其一张牌。
 	引用：LuaZhenlie
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaZhenlie = sgs.CreateTriggerSkill{
 	name = "LuaZhenlie" ,
