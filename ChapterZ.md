@@ -406,7 +406,7 @@
 **引用**：LuaZhenlie  
 **状态**：1217验证通过
 ```lua
-        LuaZhenlie = sgs.CreateTriggerSkill{
+LuaZhenlie = sgs.CreateTriggerSkill{
 	name = "LuaZhenlie" ,
 	events = {sgs.TargetConfirmed} ,       
 	can_trigger = function(self, target)
