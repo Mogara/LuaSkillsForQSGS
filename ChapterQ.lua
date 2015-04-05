@@ -123,7 +123,7 @@ LuaNosQicai = sgs.CreateTargetModSkill{
 	相关武将：二将成名·荀攸
 	描述：出牌阶段限一次，你可以将你的所有手牌（至少一张）当任意一张非延时锦囊牌使用。
 	引用：LuaQice
-	状态：0401验证通过
+	状态：0405验证通过
 ]]--
 LuaQiceCard = sgs.CreateSkillCard{
 	name = "LuaQiceCard",
