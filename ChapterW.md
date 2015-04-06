@@ -784,7 +784,7 @@
 **相关武将**：神·关羽  
 **描述**：**锁定技，**你的♥手牌视为普通【杀】。你使用♥【杀】无距离限制。   
 **引用**：LuaWushen、LuaWushenTargetMod  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 
 	LuaWushen = sgs.CreateFilterSkill{
