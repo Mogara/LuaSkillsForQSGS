@@ -312,7 +312,7 @@ LuaNosGongqiTargetMod = sgs.CreateTargetModSkill{
 }
 --[[
 	技能名：攻心
-	相关武将：神·吕蒙
+	相关武将：神·吕蒙，界·吕蒙
 	描述：出牌阶段限一次，你可以观看一名其他角色的手牌，然后选择其中一张♥牌并选择一项：弃置之，或将之置于牌堆顶。
 	引用：LuaGongxin
 	状态：1217验证通过
