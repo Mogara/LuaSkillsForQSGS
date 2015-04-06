@@ -526,45 +526,8 @@ LuaBiyue = sgs.CreatePhaseChangeSkill{
 	相关武将：一将成名2014·顾雍
 	描述：结束阶段开始时，若你有手牌，你可以展示所有手牌：若均为同一颜色，你可以令至多X名角色各摸一张牌。（X为你的手牌数）
 	引用：LuaBingyi
-	状态：0405验证通过
+	状态：0405验证失败
 ]]--
-LuaBingyiCard = sgs.CreateSkillCard{
-	name = "LuaBingyiCard" ,
-	filter = function(self, targets, to_select, player)
-		return #targets < player:getHandcardNum()
-	end ,
-	on_use = function(self, room, player, targets)
-		room:showAllCards(player)
-		local cards = player:getHandcards()
-		local isred = cards:first():isRed()
-		for _, card in sgs.qlist(cards) do
-			if card:isRed() ~= isred then
-				return false
-			end
-		end
-		for _, target in ipairs(targets) do
-			target:drawCards(1)
-		end
-	end
-}
-LuaBingyiVS = sgs.CreateZeroCardViewAsSkill{
-	name = "LuaBingyi" ,
-	response_pattern = "@@LuaBingyi"
-	view_as = function()
-		return LuaBingyiCard:clone()
-	end
-}
-LuaBingyi = sgs.CreatePhaseChangeSkill{
-	name = "LuaBingyi" ,
-	view_as_skill = LuaBingyiVS ,
-	on_phasechange = function(self, player)
-		local room = player:getRoom()
-		if player:getPhase() == sgs.Player_Finish and not player:isKongcheng() then
-			room:askForUseCard(player, "@@LuaBingyi", "@bingyi-card")
-		end
-		return false
-	end
-}
 --[[
 	技能名：补益
 	相关武将：一将成名·吴国太
