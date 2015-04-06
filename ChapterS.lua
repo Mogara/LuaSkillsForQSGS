@@ -270,10 +270,10 @@ LuaShaoying = sgs.CreateTriggerSkill{
 --[[
 	技能名：涉猎
 	相关武将：神·吕蒙，界·吕蒙
-	描述：摸牌阶段开始时，你可以放弃摸牌并亮出牌堆顶的五张牌：若如此做，你获得其中每种花色的牌各一张，然后将其余的牌置入弃牌堆。 
+	描述：摸牌阶段开始时，你可以放弃摸牌并亮出牌堆顶的五张牌。若如此做，你获得其中每种花色的牌各一张，然后将其余的牌置入弃牌堆。 
 	引用：LuaShelie
 	状态：0405验证通过
-	备注：与源码略有区别，源码的自定函数删除，新增自定义函数
+	备注：与源码略有区别，源码的自定义函数删除，新增自定义函数
 ]]--
 function getCardList(intlist)
 	local ids = sgs.CardList()
@@ -300,7 +300,7 @@ LuaShelie = sgs.CreateTriggerSkill{
 		while not card_ids:isEmpty() do
 			local card_id = room:askForAG(shenlvmeng, card_ids, false, "shelie")
 			card_ids:removeOne(card_id)
-			to_get:append(card_id)--弃置剩余所有合符花色的牌(原文：throw the rest cards that matches the same suit)
+			to_get:append(card_id)--弃置剩余所有符合花色的牌(原文：throw the rest cards that matches the same suit)
 			local card = sgs.Sanguosha:getCard(card_id)
 			local suit = card:getSuit()
 			room:takeAG(shenlvmeng, card_id, false)
