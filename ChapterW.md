@@ -654,7 +654,7 @@
 [返回索引](#技能索引)
 ##武魂
 **相关武将**：神·关羽  
-**描述**：**锁定技，**每当你受到1点伤害后，伤害来源获得一枚“梦魇”标记；你死亡时，令拥有最多该标记的一名其他角色进行一次判定，若判定结果不为【桃】或【桃园结义】，该角色死亡。  
+**描述**：**锁定技，**每当你受到伤害扣减体力前，伤害来源获得等于伤害点数的“梦魇”标记。你死亡时，你选择一名存活的“梦魇”标记数最多（不为0）的角色，该角色进行判定：若结果不为【桃】或【桃园结义】，该角色死亡。   
 **引用**：LuaWuhun、LuaWuhunRevenge
 **状态**：0405验证通过
 ```lua
@@ -782,35 +782,36 @@
 [返回索引](#技能索引)
 ##武神
 **相关武将**：神·关羽  
-**描述**：**锁定技，**你的红桃手牌均视为【杀】；你使用红桃【杀】时无距离限制。  
+**描述**：**锁定技，**你的♥手牌视为普通【杀】。你使用♥【杀】无距离限制。   
 **引用**：LuaWushen、LuaWushenTargetMod  
 **状态**：1217验证通过
 ```lua
+
 	LuaWushen = sgs.CreateFilterSkill{
-		name = "LuaWushen",	
-		view_filter = function(self,to_select)
-			local room = sgs.Sanguosha:currentRoom()
-			local place = room:getCardPlace(to_select:getEffectiveId())
-			return (to_select:getSuit() == sgs.Card_Heart) and (place == sgs.Player_PlaceHand)
-		end,	
-		view_as = function(self, card)
-			local slash = sgs.Sanguosha:cloneCard("Slash", card:getSuit(), card:getNumber())
-			slash:setSkillName(self:objectName())
-			local _card = sgs.Sanguosha:getWrappedCard(card:getId())
-			_card:takeOver(slash)
-			return _card
-		end
+        name = "LuaWushen", 
+        view_filter = function(self,to_select)
+            local room = sgs.Sanguosha:currentRoom()
+            local place = room:getCardPlace(to_select:getEffectiveId())
+            return (to_select:getSuit() == sgs.Card_Heart) and (place == sgs.Player_PlaceHand)
+        end,
+        view_as = function(self, originalCard)
+            local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())
+            slash:setSkillName(self:objectName())
+            local card = sgs.Sanguosha:getWrappedCard(originalCard:getId())
+            card:takeOver(slash)
+            return card
+        end
 	}
-	LuaWushenTargetMod = sgs.CreateTargetModSkill{
-		name = "#LuaWushen-target",
-		distance_limit_func = function(self, from, card)
-			if from:hasSkill("LuaWushen") and (card:getSuit() == sgs.Card_Heart) then
-				return 1000
-			else
-				return 0
-			end
-		end
-	}
+    LuaWushenTargetMod = sgs.CreateTargetModSkill{
+        name = "#LuaWushen-target",
+        distance_limit_func = function(self, from, card)
+            if from:hasSkill("LuaWushen") and (card:getSuit() == sgs.Card_Heart) then
+                return 1000
+            else
+                return 0
+            end
+        end
+    }
 ```
 [返回索引](#技能索引)
 ##武圣
