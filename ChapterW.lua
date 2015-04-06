@@ -610,79 +610,75 @@ LuaWuling = sgs.CreateTriggerSkill{
 --[[
 	技能名：武魂（锁定技）
 	相关武将：神·关羽
-	描述：每当你受到1点伤害后，伤害来源获得一枚“梦魇”标记；你死亡时，令拥有最多该标记的一名其他角色进行一次判定，若判定结果不为【桃】或【桃园结义】，该角色死亡。
-	引用：LuaWuhun、LuaWuhunRevenge、LuaWuhunClear
-	状态：1217验证通过
+	描述：锁定技，每当你受到伤害扣减体力前，伤害来源获得等于伤害点数的“梦魇”标记。你死亡时，你选择一名存活的“梦魇”标记数最多（不为0）的角色，该角色进行判定：若结果不为【桃】或【桃园结义】，该角色死亡。 
+	引用：LuaWuhun、LuaWuhunRevenge
+	状态：0405验证通过
 ]]--
+
 LuaWuhun = sgs.CreateTriggerSkill{
 	name = "LuaWuhun" ,
-	events = {sgs.Damaged} ,
-	frequency = sgs.Skill_Compulsory ,
+	events = {sgs.PreDamageDone},
+    frequency = sgs.Skill_Compulsory,
 	on_trigger = function(self, event, player, data)
-		local damage = data:toDamage()
-		if damage.from and (damage.from:objectName() ~= player:objectName()) then
-			damage.from:gainMark("@nightmare", damage.damage)
-		end
-	end
+        local damage = data:toDamage()
+		local room = player:getRoom()
+		if damage.from and damage.from:objectName() ~= player:objectName() then
+            damage.from:gainMark("@nightmare", damage.damage)
+            room:notifySkillInvoked(player, self:objectName())
+        end
+        return false
+    end
 }
 LuaWuhunRevenge = sgs.CreateTriggerSkill{
 	name = "#LuaWuhun" ,
-	events = {sgs.Death} ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		local death = data:toDeath()
-		if death.who:objectName() ~= player:objectName() then return false end
-		local players = room:getOtherPlayers(player)
-		local _max = 0
-		for _, _player in sgs.qlist(players) do
-			_max = math.max(_max, _player:getMark("@nightmare"))
+	events = {sgs.Death},
+	can_trigger = function(self, target)
+		return target ~= nil and target:hasSkill("LuaWuhun");
+	end ,
+	on_trigger = function(self, event, shenguanyu, data)
+        local death = data:toDeath()
+		local room = shenguanyu:getRoom()
+        if death.who:objectName() ~= shenguanyu:objectName() then
+            return false
 		end
-		if _max == 0 then return false end
-		local foes = sgs.SPlayerList()
-		for _, _player in sgs.qlist(players) do
-			if _player:getMark("@nightmare") == _max then
-				foes:append(_player)
+        local players = room:getOtherPlayers(shenguanyu)
+        local max = 0
+        for _, player in sgs.qlist(players) do
+            max = math.max(max, player:getMark("@nightmare"))
+		end
+        if max == 0 then return false end
+        local foes = sgs.SPlayerList()
+        for _, player in sgs.qlist(players) do
+            if player:getMark("@nightmare") == max then
+                foes:append(player)
 			end
 		end
-		if foes:isEmpty() then return false end
-		local foe
-		if foes:length() == 1 then
-			foe = foes:first()
-		else
-			foe = room:askForPlayerChosen(player, foes, self:objectName(), "@wuhun-revenge")
+        if foes:isEmpty() then
+            return false
 		end
+        local foe
+        if foes:length() == 1 then
+            foe = foes:first()
+        else
+            foe = room:askForPlayerChosen(shenguanyu, foes, "wuhun", "@wuhun-revenge")
+		end
+        room:notifySkillInvoked(shenguanyu, "wuhun")
 		local judge = sgs.JudgeStruct()
-		judge.pattern = "Peach,GodSalvation"
-		judge.good = true
-		judge.reason = "LuaWuhun"
-		judge.who = foe
-		room:judge(judge)
-		if judge:isBad() then
-			room:killPlayer(foe)
-		end
+        judge.pattern = "Peach,GodSalvation"
+        judge.good = true
+        judge.negative = true
+        judge.reason = "wuhun"
+        judge.who = foe
+        room:judge(judge)
+        if judge:isBad() then
+            room:killPlayer(foe)
+        end
 		local killers = room:getAllPlayers()
-		for _, _player in sgs.qlist(killers) do
-			_player:loseAllMarks("@nightmare")
+        for _, player in sgs.qlist(killers) do
+			player:loseAllMarks("@nightmare")
 		end
-		return false
-	end ,
-	can_trigger = function(self, target)
-		return target and target:hasSkill("LuaWuhun")
-	end
-}
-LuaWuhunClear = sgs.CreateTriggerSkill{
-	name = "LuaWuhun-clear" ,
-	events = {sgs.EventLoseSkill} ,
-	on_trigger = function(self, event, player, data)
-		if data:toString() == "LuaWuhun" then
-			for _, p in sgs.qlist(player:getRoom():getAllPlayers()) do
-				p:loseAllMarks("@nightmare")
-			end
-		end
-	end ,
-	can_trigger = function(self, target)
-		return target
-	end ,
+        return false
+    end
 }
 --[[
 	技能名：武继（觉醒技）
@@ -740,34 +736,35 @@ LuaWuji = sgs.CreateTriggerSkill{
 --[[
 	技能名：武神（锁定技）
 	相关武将：神·关羽
-	描述：你的红桃手牌均视为【杀】；你使用红桃【杀】时无距离限制。
+	描述：锁定技，你的红桃手牌视为普通【杀】。你使用红桃【杀】无距离限制。 
 	引用：LuaWushen、LuaWushenTargetMod
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
+
 LuaWushen = sgs.CreateFilterSkill{
-	name = "LuaWushen",	
-	view_filter = function(self,to_select)
-		local room = sgs.Sanguosha:currentRoom()
-		local place = room:getCardPlace(to_select:getEffectiveId())
-		return (to_select:getSuit() == sgs.Card_Heart) and (place == sgs.Player_PlaceHand)
-	end,	
-	view_as = function(self, card)
-		local slash = sgs.Sanguosha:cloneCard("Slash", card:getSuit(), card:getNumber())
-		slash:setSkillName(self:objectName())
-		local _card = sgs.Sanguosha:getWrappedCard(card:getId())
-		_card:takeOver(slash)
-		return _card
-	end
+    name = "LuaWushen", 
+    view_filter = function(self,to_select)
+        local room = sgs.Sanguosha:currentRoom()
+        local place = room:getCardPlace(to_select:getEffectiveId())
+        return (to_select:getSuit() == sgs.Card_Heart) and (place == sgs.Player_PlaceHand)
+    end,
+    view_as = function(self, originalCard)
+        local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())
+        slash:setSkillName(self:objectName())
+        local card = sgs.Sanguosha:getWrappedCard(originalCard:getId())
+        card:takeOver(slash)
+        return card
+    end
 }
 LuaWushenTargetMod = sgs.CreateTargetModSkill{
-	name = "#LuaWushen-target",
-	distance_limit_func = function(self, from, card)
-		if from:hasSkill("LuaWushen") and (card:getSuit() == sgs.Card_Heart) then
-			return 1000
-		else
-			return 0
-		end
-	end
+    name = "#LuaWushen-target",
+    distance_limit_func = function(self, from, card)
+        if from:hasSkill("LuaWushen") and (card:getSuit() == sgs.Card_Heart) then
+            return 1000
+        else
+            return 0
+        end
+    end
 }
 --[[
 	技能名：武圣
