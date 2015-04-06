@@ -270,48 +270,64 @@
 ```
 [返回索引](#技能索引)
 ##涉猎
-**相关武将**：神·吕蒙  
+**相关武将**：神·吕蒙，界·吕蒙
 **描述**：摸牌阶段开始时，你可以放弃摸牌，改为从牌堆顶亮出五张牌，你获得不同花色的牌各一张，将其余的牌置入弃牌堆。  
 **引用**：LuaShelie  
-**状态**：1217验证通过
+**状态**：0405验证通过
+**备注**：与源码略有区别，源码自定义函数删除，再新增自定义函数
 ```lua
+	function getCardList(intlist)
+		local ids = sgs.CardList()
+		for _, id in sgs.qlist(intlist) do
+			ids:append(sgs.Sanguosha:getCard(id))
+		end
+		return ids
+	end
 	LuaShelie = sgs.CreateTriggerSkill{
 		name = "LuaShelie",
-		frequency = sgs.Skill_NotFrequent,
 		events = {sgs.EventPhaseStart},
-		on_trigger = function(self, event, player, data)
-			if player:getPhase() ~= sgs.Player_Draw then
+		on_trigger = function(self, event, shenlvmeng, data)
+			if shenlvmeng:getPhase() ~= sgs.Player_Draw then
 				return false
 			end
-			local room = player:getRoom()
-			if not player:askForSkillInvoke(self:objectName()) then
+			local room = shenlvmeng:getRoom()
+			if not shenlvmeng:askForSkillInvoke(self:objectName()) then
 				return false
 			end
 			local card_ids = room:getNCards(5)
 			room:fillAG(card_ids)
-			while (not card_ids:isEmpty()) do
-				local card_id = room:askForAG(player, card_ids, false, self:objectName())
+			local to_get = sgs.IntList()
+			local to_throw = sgs.IntList()
+			while not card_ids:isEmpty() do
+				local card_id = room:askForAG(shenlvmeng, card_ids, false, "shelie")
 				card_ids:removeOne(card_id)
+				to_get:append(card_id)--弃置剩余所有符合花色的牌(原文：throw the rest cards that matches the same suit)
 				local card = sgs.Sanguosha:getCard(card_id)
 				local suit = card:getSuit()
-				room:takeAG(player, card_id)
-				local removelist = {}
-				for _,id in sgs.qlist(card_ids) do
+				room:takeAG(shenlvmeng, card_id, false)
+				local _card_ids = card_ids
+				for _,id in sgs.qlist(_card_ids) do
 					local c = sgs.Sanguosha:getCard(id)
 					if c:getSuit() == suit then
-						room:takeAG(nil, c:getId())
-						table.insert(removelist, id)
-					end
-				end
-				if #removelist > 0 then
-					for _,id in ipairs(removelist) do
-						if card_ids:contains(id) then
-							card_ids:removeOne(id)
-						end
+						card_ids:removeOne(id)
+						room:takeAG(nil, id, false)
+						to_throw:append(id)
 					end
 				end
 			end
-			room:broadcastInvoke("clearAG")
+			local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			if not to_get:isEmpty() then
+				dummy:addSubcards(getCardList(to_get))
+				shenlvmeng:obtainCard(dummy)
+			end
+			dummy:clearSubcards()
+	        if not to_throw:isEmpty() then
+	            dummy:addSubcards(getCardList(to_throw))
+	            local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NATURAL_ENTER, shenlvmeng:objectName(), self:objectName(),"")
+	            room:throwCard(dummy, reason, nil)
+	        end
+			dummy:deleteLater()
+	        room:clearAG()
 			return true
 		end
 	}
