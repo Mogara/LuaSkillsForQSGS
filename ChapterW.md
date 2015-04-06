@@ -655,78 +655,74 @@
 ##武魂
 **相关武将**：神·关羽  
 **描述**：**锁定技，**每当你受到1点伤害后，伤害来源获得一枚“梦魇”标记；你死亡时，令拥有最多该标记的一名其他角色进行一次判定，若判定结果不为【桃】或【桃园结义】，该角色死亡。  
-**引用**：LuaWuhun、LuaWuhunRevenge、LuaWuhunClear  
-**状态**：1217验证通过
+**引用**：LuaWuhun、LuaWuhunRevenge
+**状态**：0405验证通过
 ```lua
+	
 	LuaWuhun = sgs.CreateTriggerSkill{
 		name = "LuaWuhun" ,
-		events = {sgs.Damaged} ,
-		frequency = sgs.Skill_Compulsory ,
+		events = {sgs.PreDamageDone},
+	    frequency = sgs.Skill_Compulsory,
 		on_trigger = function(self, event, player, data)
-			local damage = data:toDamage()
-			if damage.from and (damage.from:objectName() ~= player:objectName()) then
-				damage.from:gainMark("@nightmare", damage.damage)
-			end
-		end
+	        local damage = data:toDamage()
+			local room = player:getRoom()
+			if damage.from and damage.from:objectName() ~= player:objectName() then
+	            damage.from:gainMark("@nightmare", damage.damage)
+	            room:notifySkillInvoked(player, self:objectName())
+	        end
+	        return false
+	    end
 	}
 	LuaWuhunRevenge = sgs.CreateTriggerSkill{
 		name = "#LuaWuhun" ,
-		events = {sgs.Death} ,
-		on_trigger = function(self, event, player, data)
-			local room = player:getRoom()
-			local death = data:toDeath()
-			if death.who:objectName() ~= player:objectName() then return false end
-			local players = room:getOtherPlayers(player)
-			local _max = 0
-			for _, _player in sgs.qlist(players) do
-				_max = math.max(_max, _player:getMark("@nightmare"))
+		events = {sgs.Death},
+		can_trigger = function(self, target)
+			return target ~= nil and target:hasSkill("LuaWuhun");
+		end ,
+		on_trigger = function(self, event, shenguanyu, data)
+        	local death = data:toDeath()
+			local room = shenguanyu:getRoom()
+        	if death.who:objectName() ~= shenguanyu:objectName() then
+        	    return false
 			end
-			if _max == 0 then return false end
-			local foes = sgs.SPlayerList()
-			for _, _player in sgs.qlist(players) do
-				if _player:getMark("@nightmare") == _max then
-					foes:append(_player)
+        	local players = room:getOtherPlayers(shenguanyu)
+        	local max = 0
+        	for _, player in sgs.qlist(players) do
+        	    max = math.max(max, player:getMark("@nightmare"))
+			end
+        	if max == 0 then return false end
+        	local foes = sgs.SPlayerList()
+        	for _, player in sgs.qlist(players) do
+        	    if player:getMark("@nightmare") == max then
+        	        foes:append(player)
 				end
 			end
-			if foes:isEmpty() then return false end
-			local foe
-			if foes:length() == 1 then
-				foe = foes:first()
-			else
-				foe = room:askForPlayerChosen(player, foes, self:objectName(), "@wuhun-revenge")
+        	if foes:isEmpty() then
+        	    return false
 			end
+        	local foe
+        	if foes:length() == 1 then
+        	    foe = foes:first()
+        	else
+        	    foe = room:askForPlayerChosen(shenguanyu, foes, "wuhun", "@wuhun-revenge")
+			end
+        	room:notifySkillInvoked(shenguanyu, "wuhun")
 			local judge = sgs.JudgeStruct()
-			judge.pattern = "Peach,GodSalvation"
-			judge.good = true
-			judge.reason = "LuaWuhun"
-			judge.who = foe
-			room:judge(judge)
-			if judge:isBad() then
-				room:killPlayer(foe)
-			end
+        	judge.pattern = "Peach,GodSalvation"
+        	judge.good = true
+        	judge.negative = true
+        	judge.reason = "wuhun"
+        	judge.who = foe
+        	room:judge(judge)
+        	if judge:isBad() then
+        	    room:killPlayer(foe)
+        	end
 			local killers = room:getAllPlayers()
-			for _, _player in sgs.qlist(killers) do
-				_player:loseAllMarks("@nightmare")
+        	for _, player in sgs.qlist(killers) do
+				player:loseAllMarks("@nightmare")
 			end
-			return false
-		end ,
-		can_trigger = function(self, target)
-			return target and target:hasSkill("LuaWuhun")
-		end
-	}
-	LuaWuhunClear = sgs.CreateTriggerSkill{
-		name = "LuaWuhun-clear" ,
-		events = {sgs.EventLoseSkill} ,
-		on_trigger = function(self, event, player, data)
-			if data:toString() == "LuaWuhun" then
-				for _, p in sgs.qlist(player:getRoom():getAllPlayers()) do
-					p:loseAllMarks("@nightmare")
-				end
-			end
-		end ,
-		can_trigger = function(self, target)
-			return target
-		end ,
+        	return false
+	 	end
 	}
 ```
 [返回索引](#技能索引)
