@@ -53,7 +53,7 @@ LuaQixingVS = sgs.CreateViewAsSkill{
 		if #selected < sgs.Self:getPile("stars"):length() then
 			return not to_select:isEquipped()
 		end
-        return false
+		return false
 	end,
 	view_as = function(self, cards)
 		if #cards == sgs.Self:getPile("stars"):length() then
@@ -63,7 +63,7 @@ LuaQixingVS = sgs.CreateViewAsSkill{
 			end
 			return c
 		end
-        return nil
+		return nil
 	end,
 }
 LuaQixing = sgs.CreateTriggerSkill{
@@ -85,13 +85,13 @@ LuaQixingStart = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.DrawInitialCards then
-            room:sendCompulsoryTriggerLog(player, "LuaQixing")
-            data:setValue(data:toInt() + 7)
-        elseif event == sgs.AfterDrawInitialCards then
-            local exchange_card = room:askForExchange(player, "LuaQixing", 7, 7)
-            player:addToPile("stars", exchange_card:getSubcards(), false)
-            exchange_card:deleteLater()
-        end
+			room:sendCompulsoryTriggerLog(player, "LuaQixing")
+			data:setValue(data:toInt() + 7)
+		elseif event == sgs.AfterDrawInitialCards then
+			local exchange_card = room:askForExchange(player, "LuaQixing", 7, 7)
+			player:addToPile("stars", exchange_card:getSubcards(), false)
+			exchange_card:deleteLater()
+		end
 		return false
 	end,
 }
@@ -148,7 +148,6 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 		return false
 	end,
 }
-
 --[[
 	技能名：戚乱
 	相关武将：阵·何太后
