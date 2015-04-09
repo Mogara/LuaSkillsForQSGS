@@ -133,7 +133,7 @@
 **状态**：0405验证通过(需配合本手册的“七星”使用)  
 **备注**：医治永恒&水饺wch哥：源码狂风和大雾的技能询问与标记的清除分别位于七星的QixingAsk和QixingClear中，此技能独立出来了  
 ```lua
-	LuaDawuCard = sgs.CreateSkillCard{
+LuaDawuCard = sgs.CreateSkillCard{
 	name = "LuaDawuCard",
 	handling_method = sgs.Card_MethodNone,
 	will_throw = false,
