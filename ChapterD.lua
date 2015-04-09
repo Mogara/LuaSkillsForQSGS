@@ -164,7 +164,7 @@ LuaDawuVS = sgs.CreateViewAsSkill{
 			end
 			return dw
 		end
-        return nil
+		return nil
 	end,
 }
 LuaDawu = sgs.CreateTriggerSkill{
