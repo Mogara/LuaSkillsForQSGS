@@ -7,45 +7,146 @@
 ##七星
 **相关武将**：神·诸葛亮  
 **描述**：分发起始手牌时，共发你十一张牌，你选四张作为手牌，其余的面朝下置于一旁，称为“星”；摸牌阶段结束时，你可以用任意数量的手牌等量替换这些“星”。  
-**引用**：LuaQixing、LuaQixingStart  
-**状态**：1217验证通过
+**引用**：LuaQixing、LuaQixingStart、LuaQingxingAsk、LuaQingxingClear
+**状态**：0405验证通过
 ```lua
-	LuaQixing = sgs.CreateTriggerSkill{
-		name = "LuaQixing",
-		frequency = sgs.Skill_Frequent,
-		events = {sgs.EventPhaseEnd},
-		on_trigger = function(self, event, player, data)
-			if player:hasSkill(self:objectName()) then
-				local stars = player:getPile("stars")
-				if stars:length() > 0 then
-					if player:getPhase() == sgs.Player_Draw then
-						player:exchangeFreelyFromPrivatePile(self:objectName(), "stars")
-					end
-				end
-			end		
-			return false
-		end,
-		can_trigger = function(self, target)
-			return (target ~= nil)
+LuaQixingCard = sgs.CreateSkillCard{
+	name = "LuaQixingCard",
+	will_throw = false,
+	handling_method = sgs.Card_MethodNone,
+	target_fixed = true,
+	on_use = function(self, room, source, targets)
+		local pile = source:getPile("stars")
+		local subCards = self:getSubcards()
+		local to_handcard = sgs.IntList()
+		local to_pile = sgs.IntList()
+		local set = source:getPile("stars")
+		for _,id in sgs.qlist(subCards) do
+			set:append(id)
 		end
-	}
-	LuaQixingStart = sgs.CreateTriggerSkill{
-		name = "#LuaQixingStart",
-		frequency = sgs.Skill_Frequent,
-		events = {sgs.DrawInitialCards,sgs.AfterDrawInitialCards},
-		on_trigger = function(self, triggerEvent, shenzhuge, data)
-			local room = shenzhuge:getRoom()
-			if triggerEvent == sgs.DrawInitialCards then
-	            room:notifySkillInvoked(shenzhuge,"LuaQixing");
-	            data:setValue(data:toInt() + 7)
-	        elseif triggerEvent == sgs.AfterDrawInitialCards then
-	            local exchange_card = room:askForExchange(shenzhuge, "LuaQixing", 7);
-	            shenzhuge:addToPile("stars", exchange_card:getSubcards(), false);
-	            exchange_card:deleteLater()
-	        end
-		end,
-		priority = -1
-	}	
+		for _,id in sgs.qlist(set) do
+			if not subCards:contains(id) then
+				to_handcard:append(id)
+			elseif not pile:contains(id) then
+				to_pile:append(id)
+			end
+		end
+		assert(to_handcard:length() == to_pile:length())
+		if to_pile:length() == 0 or to_handcard:length() ~= to_pile:length() then return end
+		room:notifySkillInvoked(source, "LuaQixing")
+		source:addToPile("stars", to_pile, false)
+		local to_handcard_x = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+		for _,id in sgs.qlist(to_handcard) do
+			to_handcard_x:addSubcard(id)
+		end
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXCHANGE_FROM_PILE, source:objectName())
+		room:obtainCard(source, to_handcard_x, reason, false)
+	end,
+}
+LuaQixingVS = sgs.CreateViewAsSkill{
+	name = "LuaQixing", 
+	n = 998,
+	response_pattern = "@@LuaQixing",
+	expand_pile = "stars",
+	view_filter = function(self, selected, to_select)
+		if #selected < sgs.Self:getPile("stars"):length() then
+			return not to_select:isEquipped()
+		end
+		return false
+	end,
+	view_as = function(self, cards)
+		if #cards == sgs.Self:getPile("stars"):length() then
+			local c = LuaQixingCard:clone()
+			for _,card in ipairs(cards) do
+				c:addSubcard(card)
+			end
+			return c
+		end
+		return nil
+	end,
+}
+LuaQixing = sgs.CreateTriggerSkill{
+	name = "LuaQixing",
+	events = {sgs.EventPhaseEnd},
+	view_as_skill = LuaQixingVS,
+	can_trigger = function(self, player)
+		return player:isAlive() and player:hasSkill(self:objectName()) and player:getPile("stars"):length() > 0
+			and player:getPhase() == sgs.Player_Draw
+	end,
+	on_trigger = function(self, event, player, data)
+		player:getRoom():askForUseCard(player, "@@LuaQixing", "@qixing-exchange", -1, sgs.Card_MethodNone)
+		return false
+	end,
+}
+LuaQixingStart = sgs.CreateTriggerSkill{
+	name = "#LuaQixingStart",
+	events = {sgs.DrawInitialCards,sgs.AfterDrawInitialCards},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.DrawInitialCards then
+			room:sendCompulsoryTriggerLog(player, "LuaQixing")
+			data:setValue(data:toInt() + 7)
+		elseif event == sgs.AfterDrawInitialCards then
+			local exchange_card = room:askForExchange(player, "LuaQixing", 7, 7)
+			player:addToPile("stars", exchange_card:getSubcards(), false)
+			exchange_card:deleteLater()
+		end
+		return false
+	end,
+}
+LuaQixingAsk = sgs.CreateTriggerSkill{
+	name = "#LuaQixingAsk",
+	events = {sgs.EventPhaseStart},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_Finish then
+			if player:getPile("stars"):length() > 0 and player:hasSkill("LuaKuangfeng") then
+				room:askForUseCard(player, "@@LuaKuangfeng", "@kuangfeng-card", -1, sgs.Card_MethodNone)
+			end
+			if player:getPile("stars"):length() > 0 and player:hasSkill("LuaDawu") then
+				room:askForUseCard(player, "@@LuaDawu", "@dawu-card", -1, sgs.Card_MethodNone)
+			end
+		end
+		return false
+	end,
+}
+LuaQixingClear = sgs.CreateTriggerSkill{
+	name = "#LuaQixingClear",
+	events = {sgs.EventPhaseStart, sgs.Death, sgs.EventLoseSkill},
+	can_trigger = function(self, player)
+		return player ~= nil
+	end,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if sgs.event == EventPhaseStart or event == sgs.Death then
+			if event == sgs.Death then
+				local death = data:toDeath()
+				if death.who:objectName() ~= player:objectName() then
+					return false
+				end
+			end
+			if not player:getTag("LuaQixing_user"):toBool() then
+				return false
+			end
+			local invoke = false
+			if (event == sgs.EventPhaseStart and player:getPhase() == sgs.Player_RoundStart) or event == sgs.Death then
+				invoke = true
+			end
+			if not invoke then
+				return false
+			end
+			local players = room:getAllPlayers()
+			for _,p in sgs.qlist(players) do
+				p:loseAllMarks("@gale")
+				p:loseAllMarks("@fog")
+			end
+			player:removeTag("LuaQixing_user")
+		elseif event == sgs.EventLoseSkill and data:toString() == "LuaQixing" then
+			player:clearOnePrivatePile("stars")
+		end
+		return false
+	end,
+}	
 ```
 [返回索引](#技能索引)
 ##戚乱
