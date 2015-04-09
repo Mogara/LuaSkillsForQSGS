@@ -672,43 +672,38 @@ LuaZhenggong610 = sgs.CreateTriggerSkill{
 --[[
 	技能名：直谏
 	相关武将：山·张昭张纮
-	描述：出牌阶段，你可以将手牌中的一张装备牌置于一名其他角色的装备区里（不能替换原装备），然后摸一张牌。
+	描述：出牌阶段，你可以将手牌中的一张装备牌置于一名其他角色装备区内：若如此做，你摸一张牌。
 	引用：LuaZhijian
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaZhijianCard = sgs.CreateSkillCard{
-	name = "LuaZhijianCard" ,
+	name = "LuaZhijianCard",
 	will_throw = false,
 	handling_method = sgs.Card_MethodNone,
-
-	filter = function(self, targets, to_select)
-		if not #targets == 0 or to_select:objectName() == sgs.Self:objectName() then return false end
+	filter = function(self, targets, to_select, erzhang)
+		if #targets ~= 0 or to_select:objectName() == erzhang:objectName() then return false end
 		local card = sgs.Sanguosha:getCard(self:getSubcards():first())
 		local equip = card:getRealCard():toEquipCard()
 		local equip_index = equip:location()
 		return to_select:getEquip(equip_index) == nil
 	end,
-	
 	on_effect = function(self, effect)
 		local erzhang = effect.from
-		erzhang:getRoom():moveCardTo(self, erzhang, effect.to, sgs.Player_PlaceEquip,
-									sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT,
-													   erzhang:objectName(), self:objectName(), nil))
+		local room = erzhang:getRoom()
+		room:moveCardTo(self, erzhang, effect.to, sgs.Player_PlaceEquip,
+			sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, erzhang:objectName(), "zhijian", ""))
 		erzhang:drawCards(1)
 	end
 }
-LuaZhijian = sgs.CreateViewAsSkill{
-	name = "LuaZhijian" ,
-	n = 1 ,
-	view_filter = function(self, cards, to_select)
-		return (not to_select:isEquipped()) and (to_select:getTypeId() == sgs.Card_TypeEquip)
-	end ,
-	view_as = function(self, cards)
-		if #cards ~= 1 then return nil end
-		local zhijian_card = LuaZhijianCard:clone()
-		zhijian_card:addSubcard(cards[1])
-		return zhijian_card
-	end
+LuaZhijian = sgs.CreateOneCardViewAsSkill{
+	name = "LuaZhijian",	
+	filter_pattern = "EquipCard|.|.|hand",
+	view_as = function(self, card)
+		local vscard = LuaZhijianCard:clone()
+		vscard:addSubcard(card)
+		vscard:setSkillName(self:objectName())
+		return vscard
+	end,	
 }
 --[[
 	技能名：直言
