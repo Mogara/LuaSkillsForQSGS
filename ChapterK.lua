@@ -271,11 +271,11 @@ LuaKuangfeng = sgs.CreateTriggerSkill{
 	end,
 	on_trigger = function(self, event, player, data)
 		local damage = data:toDamage()
-        if damage.nature == sgs.DamageStruct_Fire then
+		if damage.nature == sgs.DamageStruct_Fire then
 			damage.damage = damage.damage + 1
 			data:setValue(damage)
-        end
-        return false
+		end
+		return false
 	end,
 }
 --[[
