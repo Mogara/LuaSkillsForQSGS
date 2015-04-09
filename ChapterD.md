@@ -130,107 +130,60 @@
 **相关武将**：神·诸葛亮  
 **描述**：结束阶段开始时，你可以将X张“星”置入弃牌堆并选择X名角色，若如此做，你的下回合开始前，每当这些角色受到的非雷电伤害结算开始时，防止此伤害。  
 **引用**：LuaDawu  
-**状态**：1217验证通过(需配合本手册的“七星”使用)  
-**备注**：医治永恒：源码狂风和大雾的技能询问与标记的清除分别位于七星的QixingAsk和QixingClear中，此技能独立出来了  
+**状态**：0405验证通过(需配合本手册的“七星”使用)  
+**备注**：医治永恒%水饺wch哥：源码狂风和大雾的技能询问与标记的清除分别位于七星的QixingAsk和QixingClear中，此技能独立出来了  
 ```lua
-	DiscardStar = function(shenzhuge, room,n, skillName)	
-		local stars = shenzhuge:getPile("stars")
-		for i = 1, n, 1 do
-			room:fillAG(stars, shenzhuge)
-			local card_id = room:askForAG(shenzhuge, stars, false, "qixing-discard")
-			room:clearAG(shenzhuge)		
-			stars:removeOne(card_id)
-			local card = sgs.Sanguosha:getCard(card_id)
-			room:throwCard(card, nil, nil)
-		end
-	end
 	LuaDawuCard = sgs.CreateSkillCard{
-		name = "LuaDawuCard",
-		target_fixed = false,
-		will_throw = true,
-		filter = function(self, targets, to_select)
-			local stars = sgs.Self:getPile("stars")
-			local count = stars:length()
-			return #targets < count
-		end,
-		on_use = function(self, room, source, targets)
-			local count = #targets
-			DiscardStar(source,room,count,"LuaDawu")
-			source:setTag("LuaQixing_user", sgs.QVariant(true))		
-			for _,target in ipairs(targets) do
-				target:gainMark("@fog")
+	name = "LuaDawuCard",
+	handling_method = sgs.Card_MethodNone,
+	will_throw = false,
+	filter = function(self, targets, to_select, player)
+		return #targets < self:subcardsLength()
+	end,
+	on_use = function(self, room, source, targets)
+		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", "LuaDawu", "")
+		room:throwCard(self, reason, nil)
+		source:setTag("LuaQixing_user", sgs.QVariant(true))
+		for _,p in ipairs(targets) do
+			p:gainMark("@fog")
+		end
+	end,
+}
+LuaDawuVS = sgs.CreateViewAsSkill{
+	name = "LuaDawu", 
+	n = 998,
+	response_pattern = "@@LuaDawu",
+	expand_pile = "stars",
+	view_filter = function(self, selected, to_select)
+		return sgs.Self:getPile("stars"):contains(to_select:getId())
+	end,
+	view_as = function(self, cards)
+		if #cards > 0 then
+			local dw = LuaDawuCard:clone()
+			for _,card in pairs(cards) do
+				dw:addSubcard(card)
 			end
+			return dw
 		end
-	}
-	LuaDawuVS = sgs.CreateViewAsSkill{
-		name = "LuaDawu",
-		n = 0,
-		view_as = function(self, cards)
-			return LuaDawuCard:clone()
-		end,
-		enabled_at_play = function(self, player)
-			return false
-		end,
-		enabled_at_response = function(self, player, pattern)
-			return pattern == "@@LuaDawu"
-		end
-	}
-	LuaDawu = sgs.CreateTriggerSkill{
-		name = "LuaDawu",
-		events = {sgs.EventPhaseStart},
-		view_as_skill = LuaDawuVS,
-		on_trigger = function(self,event,player,data)		
-			if player:getPhase() ~= sgs.Player_Finish then return false end
-			if player:getPile("stars"):isEmpty() then return false end
-			local room = player:getRoom()
-			room:askForUseCard(player,"@@LuaDawu","@LuaDawu")
+		return nil
+	end,
+}
+LuaDawu = sgs.CreateTriggerSkill{
+	name = "LuaDawu",
+	events = {sgs.DamageForseen},
+	view_as_skill = LuaDawuVS,
+	can_trigger = function(self, player)
+		return player ~= nil and player:getMark("@fog") > 0
+	end,
+	on_trigger = function(self, event, player, data)
+		local damage = data:toDamage()
+		if damage.nature ~= sgs.DamageStruct_Thunder then
+			return true
+		else
 			return false
 		end
-	}
-	LuaDawuPrevent = sgs.CreateTriggerSkill{
-		name = "#LuaDawuPrevent",
-		frequency = sgs.Skill_NotFrequent,
-		events = {sgs.DamageForseen},
-		view_as_skill = LuaDawuVS,
-		on_trigger = function(self, event, player, data)
-			local damage = data:toDamage()
-			return damage.nature ~= sgs.DamageStruct_Thunder
-		end,
-		can_trigger = function(self, target)
-			if target then
-				return target:getMark("@fog") > 0
-			end
-			return false
-		end
-	}
-	LuaDawuClear = sgs.CreateTriggerSkill{
-		name = "#LuaDawuClear",
-		events = {sgs.Death,sgs.EventPhaseStart},
-		can_trigger = function(self,target)
-			return target and target:getTag("LuaQixing_user"):toBool()
-		end,
-		on_trigger = function(self,event,player,data)
-			local room = player:getRoom()
-			if event == sgs.Death then
-				local death = data:toDeath()
-				if death.who:objectName() ~= player:objectName() then return false end
-				for _,p in sgs.qlist(room:getAllPlayers()) do
-					if p:getMark("@fog") > 0 then
-						p:loseAllMarks("@fog")
-					end
-				end
-			else
-				if player:getPhase() == sgs.Player_RoundStart then
-					for _,p in sgs.qlist(room:getAllPlayers()) do
-						if p:getMark("@fog") > 0 then
-							p:loseAllMarks("@fog")
-						end
-					end
-				end
-			end
-			return false
-		end
-	}
+	end,
+}
 ```
 [返回索引](#技能索引)
 ##单骑
