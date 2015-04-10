@@ -138,5 +138,5 @@ LuaPuji = sgs.CreateOneCardViewAsSkill{
 		local pujiCard = LuaPujiCard:clone()
 		pujiCard:addSubcard(card)
 		return pujiCard
-    end,
+	end,
 }

@@ -34,7 +34,7 @@
 				end
 				for _ , p in sgs.qlist(room:getAllPlayers()) do
 					if p:hasFlag("Global_PreventPeach") then
-	                			 room:setPlayerFlag(p, "-Global_PreventPeach")
+								 room:setPlayerFlag(p, "-Global_PreventPeach")
 					end
 				end
 			end
@@ -56,7 +56,7 @@
 		name = "LuaWanrong",
 		events = {sgs.TargetConfirmed},
 		frequency = sgs.Skill_Frequent,
-	    	on_trigger=function(self, event, player, data)
+			on_trigger=function(self, event, player, data)
 			local room = player:getRoom()
 			local use = data:toCardUse()
 			if (use.card:isKindOf("Slash") and use.to:contains(player) and room:askForSkillInvoke(player, self:objectName(), data)) then
@@ -157,7 +157,7 @@
 	LuaWeidaiCard = sgs.CreateSkillCard{
 		name = "LuaWeidaiCard",
 		target_fixed = true,
-	    	mute = true,
+			mute = true,
 		on_validate = function(self, card_use)
 			card_use.m_isOwnerUse = false
 			local sunce = card_use.from
@@ -206,8 +206,8 @@
 		end,
 		enabled_at_play = function(self, player)
 			return hasWuGenerals(player) and player:hasLordSkill("LuaWeidai")
-	               and not player:hasFlag("Global_LuaWeidaiFailed")
-	               and sgs.Analeptic_IsAvailable(player)
+				   and not player:hasFlag("Global_LuaWeidaiFailed")
+				   and sgs.Analeptic_IsAvailable(player)
 		end,
 		enabled_at_response = function(self, player, pattern)
 			return hasWuGenerals(player) and pattern == "peach+analeptic" and not player:hasFlag("Global_LuaWeidaiFailed")
@@ -451,13 +451,13 @@
 				if not can_invoke then return false end
 				if effect.card:isKindOf("Duel") then
 					if room:isCanceled(effect) then
-	                    effect.to:setFlags("Global_NonSkillNullify")
-	                    return true;
-	                end
-	                if effect.to:isAlive() then
+						effect.to:setFlags("Global_NonSkillNullify")
+						return true;
+					end
+					if effect.to:isAlive() then
 						local second = effect.from
 						local first = effect.to
-	                    room:setEmotion(first, "duel");
+						room:setEmotion(first, "duel");
 						room:setEmotion(second, "duel")
 						while true do
 							if not first:isAlive() then
@@ -662,16 +662,16 @@
 	LuaWuhun = sgs.CreateTriggerSkill{
 		name = "LuaWuhun" ,
 		events = {sgs.PreDamageDone},
-	    frequency = sgs.Skill_Compulsory,
+		frequency = sgs.Skill_Compulsory,
 		on_trigger = function(self, event, player, data)
-	        local damage = data:toDamage()
+			local damage = data:toDamage()
 			local room = player:getRoom()
 			if damage.from and damage.from:objectName() ~= player:objectName() then
-	            damage.from:gainMark("@nightmare", damage.damage)
-	            room:notifySkillInvoked(player, self:objectName())
-	        end
-	        return false
-	    end
+				damage.from:gainMark("@nightmare", damage.damage)
+				room:notifySkillInvoked(player, self:objectName())
+			end
+			return false
+		end
 	}
 	LuaWuhunRevenge = sgs.CreateTriggerSkill{
 		name = "#LuaWuhun" ,
@@ -680,48 +680,48 @@
 			return target ~= nil and target:hasSkill("LuaWuhun");
 		end ,
 		on_trigger = function(self, event, shenguanyu, data)
-        	local death = data:toDeath()
+			local death = data:toDeath()
 			local room = shenguanyu:getRoom()
-        	if death.who:objectName() ~= shenguanyu:objectName() then
-        	    return false
+			if death.who:objectName() ~= shenguanyu:objectName() then
+				return false
 			end
-        	local players = room:getOtherPlayers(shenguanyu)
-        	local max = 0
-        	for _, player in sgs.qlist(players) do
-        	    max = math.max(max, player:getMark("@nightmare"))
+			local players = room:getOtherPlayers(shenguanyu)
+			local max = 0
+			for _, player in sgs.qlist(players) do
+				max = math.max(max, player:getMark("@nightmare"))
 			end
-        	if max == 0 then return false end
-        	local foes = sgs.SPlayerList()
-        	for _, player in sgs.qlist(players) do
-        	    if player:getMark("@nightmare") == max then
-        	        foes:append(player)
+			if max == 0 then return false end
+			local foes = sgs.SPlayerList()
+			for _, player in sgs.qlist(players) do
+				if player:getMark("@nightmare") == max then
+					foes:append(player)
 				end
 			end
-        	if foes:isEmpty() then
-        	    return false
+			if foes:isEmpty() then
+				return false
 			end
-        	local foe
-        	if foes:length() == 1 then
-        	    foe = foes:first()
-        	else
-        	    foe = room:askForPlayerChosen(shenguanyu, foes, "wuhun", "@wuhun-revenge")
+			local foe
+			if foes:length() == 1 then
+				foe = foes:first()
+			else
+				foe = room:askForPlayerChosen(shenguanyu, foes, "wuhun", "@wuhun-revenge")
 			end
-        	room:notifySkillInvoked(shenguanyu, "wuhun")
+			room:notifySkillInvoked(shenguanyu, "wuhun")
 			local judge = sgs.JudgeStruct()
-        	judge.pattern = "Peach,GodSalvation"
-        	judge.good = true
-        	judge.negative = true
-        	judge.reason = "wuhun"
-        	judge.who = foe
-        	room:judge(judge)
-        	if judge:isBad() then
-        	    room:killPlayer(foe)
-        	end
+			judge.pattern = "Peach,GodSalvation"
+			judge.good = true
+			judge.negative = true
+			judge.reason = "wuhun"
+			judge.who = foe
+			room:judge(judge)
+			if judge:isBad() then
+				room:killPlayer(foe)
+			end
 			local killers = room:getAllPlayers()
-        	for _, player in sgs.qlist(killers) do
+			for _, player in sgs.qlist(killers) do
 				player:loseAllMarks("@nightmare")
 			end
-        	return false
+			return false
 	 	end
 	}
 ```
@@ -788,30 +788,30 @@
 ```lua
 
 	LuaWushen = sgs.CreateFilterSkill{
-        name = "LuaWushen", 
-        view_filter = function(self,to_select)
-            local room = sgs.Sanguosha:currentRoom()
-            local place = room:getCardPlace(to_select:getEffectiveId())
-            return (to_select:getSuit() == sgs.Card_Heart) and (place == sgs.Player_PlaceHand)
-        end,
-        view_as = function(self, originalCard)
-            local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())
-            slash:setSkillName(self:objectName())
-            local card = sgs.Sanguosha:getWrappedCard(originalCard:getId())
-            card:takeOver(slash)
-            return card
-        end
+		name = "LuaWushen", 
+		view_filter = function(self,to_select)
+			local room = sgs.Sanguosha:currentRoom()
+			local place = room:getCardPlace(to_select:getEffectiveId())
+			return (to_select:getSuit() == sgs.Card_Heart) and (place == sgs.Player_PlaceHand)
+		end,
+		view_as = function(self, originalCard)
+			local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())
+			slash:setSkillName(self:objectName())
+			local card = sgs.Sanguosha:getWrappedCard(originalCard:getId())
+			card:takeOver(slash)
+			return card
+		end
 	}
-    LuaWushenTargetMod = sgs.CreateTargetModSkill{
-        name = "#LuaWushen-target",
-        distance_limit_func = function(self, from, card)
-            if from:hasSkill("LuaWushen") and (card:getSuit() == sgs.Card_Heart) then
-                return 1000
-            else
-                return 0
-            end
-        end
-    }
+	LuaWushenTargetMod = sgs.CreateTargetModSkill{
+		name = "#LuaWushen-target",
+		distance_limit_func = function(self, from, card)
+			if from:hasSkill("LuaWushen") and (card:getSuit() == sgs.Card_Heart) then
+				return 1000
+			else
+				return 0
+			end
+		end
+	}
 ```
 [返回索引](#技能索引)
 ##武圣
@@ -825,12 +825,12 @@
 		view_filter = function(self, card)
 			if not card:isRed() then return false end
 			if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
-	    		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_SuitToBeDecided, -1)
-	        	slash:addSubcard(card:getEffectiveId())
-	        	slash:deleteLater()
-	        	return slash:isAvailable(sgs.Self)
-	    	end
-	    	return true
+				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_SuitToBeDecided, -1)
+				slash:addSubcard(card:getEffectiveId())
+				slash:deleteLater()
+				return slash:isAvailable(sgs.Self)
+			end
+			return true
 		end,
 		view_as = function(self, originalCard)
 			local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())

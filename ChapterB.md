@@ -185,7 +185,7 @@
 				table.insert(baobian_skills, skill_name)
 			end
 		else
-	        if table.contains(baobian_skills, skill_name) then			
+			if table.contains(baobian_skills, skill_name) then			
 				room:handleAcquireDetachSkills(player, "-"..skill_name)
 				table.removeOne(baobian_skills, skill_name)
 			end
@@ -202,9 +202,9 @@
 				local xiahouba = room:findPlayerBySkillName(self:objectName())
 				if not xiahouba or not xiahouba:isAlive() then return false end
 				BaobianChange(room, xiahouba, 1, "shensu")
-		        BaobianChange(room, xiahouba, 2, "paoxiao")
-		        BaobianChange(room, xiahouba, 3, "tiaoxin")
-		    end
+				BaobianChange(room, xiahouba, 2, "paoxiao")
+				BaobianChange(room, xiahouba, 3, "tiaoxin")
+			end
 			if event == sgs.EventLoseSkill then
 				if data:toString() == self:objectName() then
 					local baobian_skills = player:getTag("LuaBaobianSkills"):toString():split("+")
@@ -221,8 +221,8 @@
 			end
 			if not player:isAlive() or not player:hasSkill(self:objectName(), true) then return false end		
 			BaobianChange(room, player, 1, "shensu")
-	        BaobianChange(room, player, 2, "paoxiao")
-	        BaobianChange(room, player, 3, "tiaoxin")        
+			BaobianChange(room, player, 2, "paoxiao")
+			BaobianChange(room, player, 3, "tiaoxin")		
 			return false
 		end ,
 		can_trigger = function(self, target)
@@ -627,46 +627,46 @@
 		frequency = sgs.Skill_Compulsory ,
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
-	        local dying_data = data:toDying()
+			local dying_data = data:toDying()
 			if dying_data.who:objectName() ~= player:objectName() then
-	        	return false
+				return false
 			end
-	    	if player:getHp() > 0 then return false end
-	    	local log = sgs.LogMessage()
-	    	log.type = "#TriggerSkill"
-	    	log.from = player
-	    	log.arg = self:objectName()
-	    	room:sendLog(log)
-	    	local id = room:drawCard()
-	    	local num = sgs.Sanguosha:getCard(id):getNumber()
-	    	local duplicate = false
-	    	for _, card_id in sgs.qlist(player:getPile("buqu")) do
-	    		if sgs.Sanguosha:getCard(card_id):getNumber() == num then
-	    			duplicate = true
-	            	break
-	    		end
-	    	end
-	    	player:addToPile("buqu", id)
-	    	if duplicate then
-	    		local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(), "")
-	    		room:throwCard(sgs.Sanguosha:getCard(id), reason, nil)
-	    	else
-	    		local recover = sgs.RecoverStruct()
-	    		recover.who = player
-	    		recover.recover = 1 - player:getHp()
-	    		room:recover(player, recover)
-	    	end
-	    	return false
-	    end
+			if player:getHp() > 0 then return false end
+			local log = sgs.LogMessage()
+			log.type = "#TriggerSkill"
+			log.from = player
+			log.arg = self:objectName()
+			room:sendLog(log)
+			local id = room:drawCard()
+			local num = sgs.Sanguosha:getCard(id):getNumber()
+			local duplicate = false
+			for _, card_id in sgs.qlist(player:getPile("buqu")) do
+				if sgs.Sanguosha:getCard(card_id):getNumber() == num then
+					duplicate = true
+					break
+				end
+			end
+			player:addToPile("buqu", id)
+			if duplicate then
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(), "")
+				room:throwCard(sgs.Sanguosha:getCard(id), reason, nil)
+			else
+				local recover = sgs.RecoverStruct()
+				recover.who = player
+				recover.recover = 1 - player:getHp()
+				room:recover(player, recover)
+			end
+			return false
+		end
 	}
 	LuaBuquMaxCards = sgs.CreateMaxCardsSkill{
 		name = "#LuaBuqu" ,
 		fixed_func = function(self, target)
-	    	local len = target:getPile("buqu"):length()
-	    	if len > 0 then
-	        	return len
-	    	else
-	    		return -1
+			local len = target:getPile("buqu"):length()
+			if len > 0 then
+				return len
+			else
+				return -1
 			end
 		end
 	}

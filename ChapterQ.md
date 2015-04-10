@@ -162,31 +162,31 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 		on_trigger = function(self, triggerEvent, player, data)
 			local room = player:getRoom()
 			if (triggerEvent == sgs.Death) then
-	            local death = data:toDeath()
-	            if death.who:objectName() ~= player:objectName() then return false end
-	            local killer = death.damage.from
-	            local current = room:getCurrent();
-	            if killer and current and (current:isAlive() or death.who == current)
-	                and current:getPhase() ~= sgs.Player_NotActive then
-	                killer:addMark(self:objectName())
+				local death = data:toDeath()
+				if death.who:objectName() ~= player:objectName() then return false end
+				local killer = death.damage.from
+				local current = room:getCurrent();
+				if killer and current and (current:isAlive() or death.who == current)
+					and current:getPhase() ~= sgs.Player_NotActive then
+					killer:addMark(self:objectName())
 				end
-	        else 
-	            if player:getPhase() == sgs.Player_NotActive then
-	                local hetaihous = sgs.SPlayerList()
-	                for _,p in sgs.qlist(room:getAllPlayers()) do
-	                    if p:getMark(self:objectName()) > 0 and player:hasSkill(self:objectName()) then
-	                        hetaihous:append(p)
+			else 
+				if player:getPhase() == sgs.Player_NotActive then
+					local hetaihous = sgs.SPlayerList()
+					for _,p in sgs.qlist(room:getAllPlayers()) do
+						if p:getMark(self:objectName()) > 0 and player:hasSkill(self:objectName()) then
+							hetaihous:append(p)
 						end
-	                    p:setMark(self:objectName(), 0);
-	                end	
-	                for _,p in sgs.qlist(hetaihous)do
-	                    if room:askForSkillInvoke(p, self:objectName()) then
-	                        p:drawCards(3)
+						p:setMark(self:objectName(), 0);
+					end	
+					for _,p in sgs.qlist(hetaihous)do
+						if room:askForSkillInvoke(p, self:objectName()) then
+							p:drawCards(3)
 						end
-	                end
-	            end
-	        end
-	        return false
+					end
+				end
+			end
+			return false
 		end,
 		can_trigger = function(self, target)
 			return target
@@ -309,51 +309,51 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 		on_trigger = function(self, triggerEvent, player, data)
 			local room = player:getRoom()
 			if triggerEvent == sgs.Damaged and player:isAlive() then
-	            local yuji = room:findPlayerBySkillName(self:objectName())
-	            if yuji and room:askForSkillInvoke(player, self:objectName(), sgs.QVariant("choice:" .. yuji:objectName()))then
-	                if (yuji:objectName() ~= player:objectName()) then
-	                    room:notifySkillInvoked(yuji, self:objectName());
-	                end
-	                local id = room:drawCard()
-	                local suit = sgs.Sanguosha:getCard(id):getSuit()
-	                local duplicate = false;
-	                for _,card_id in sgs.qlist(yuji:getPile("sorcery")) do
-	                    if (sgs.Sanguosha:getCard(card_id):getSuit() == suit) then
-	                        duplicate = true
-	                        break
-	                    end
-	                end
-	                yuji:addToPile("sorcery", id)
-	                if (duplicate) then
-	                    local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE,"", self:objectName(), "")
-	                    room:throwCard(sgs.Sanguosha:getCard(id), reason, nil)
-	                end
-	            end
-	        elseif triggerEvent == sgs.TargetConfirming then
-	            local use = data:toCardUse()
-	            if (not use.card) or use.card:getTypeId() == sgs.Card_TypeEquip or use.card:getTypeId() == sgs.Card_TypeSkill then return false end
-	            if use.to:length() ~= 1 then return false end
-	            local yuji = room:findPlayerBySkillName(self:objectName());
-	            if yuji == nil or yuji:getPile("sorcery"):isEmpty() then return false end
-	            if room:askForSkillInvoke(yuji, self:objectName(), data) then
-	                if (yuji:objectName() == player:objectName() or room:askForChoice(player, self:objectName(), "accept+reject", data) == "accept") then
-	                    local ids = yuji:getPile("sorcery")
-	                    local id = -1
-	                    if (ids:length() > 1) then
-	                        room:fillAG(ids, yuji)
-	                        id = room:askForAG(yuji, ids, false, self:objectName())
-	                        room:clearAG(yuji)
-	                    else
-	                        id = ids:first()
-	                    end
-	                    local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(),"")
-	                    room:throwCard(sgs.Sanguosha:getCard(id), reason,nil);
-	                    use.to = sgs.SPlayerList()
-	                    data:setValue(use)
-	                end
-	            end
-	        end
-	        return false;
+				local yuji = room:findPlayerBySkillName(self:objectName())
+				if yuji and room:askForSkillInvoke(player, self:objectName(), sgs.QVariant("choice:" .. yuji:objectName()))then
+					if (yuji:objectName() ~= player:objectName()) then
+						room:notifySkillInvoked(yuji, self:objectName());
+					end
+					local id = room:drawCard()
+					local suit = sgs.Sanguosha:getCard(id):getSuit()
+					local duplicate = false;
+					for _,card_id in sgs.qlist(yuji:getPile("sorcery")) do
+						if (sgs.Sanguosha:getCard(card_id):getSuit() == suit) then
+							duplicate = true
+							break
+						end
+					end
+					yuji:addToPile("sorcery", id)
+					if (duplicate) then
+						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE,"", self:objectName(), "")
+						room:throwCard(sgs.Sanguosha:getCard(id), reason, nil)
+					end
+				end
+			elseif triggerEvent == sgs.TargetConfirming then
+				local use = data:toCardUse()
+				if (not use.card) or use.card:getTypeId() == sgs.Card_TypeEquip or use.card:getTypeId() == sgs.Card_TypeSkill then return false end
+				if use.to:length() ~= 1 then return false end
+				local yuji = room:findPlayerBySkillName(self:objectName());
+				if yuji == nil or yuji:getPile("sorcery"):isEmpty() then return false end
+				if room:askForSkillInvoke(yuji, self:objectName(), data) then
+					if (yuji:objectName() == player:objectName() or room:askForChoice(player, self:objectName(), "accept+reject", data) == "accept") then
+						local ids = yuji:getPile("sorcery")
+						local id = -1
+						if (ids:length() > 1) then
+							room:fillAG(ids, yuji)
+							id = room:askForAG(yuji, ids, false, self:objectName())
+							room:clearAG(yuji)
+						else
+							id = ids:first()
+						end
+						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(),"")
+						room:throwCard(sgs.Sanguosha:getCard(id), reason,nil);
+						use.to = sgs.SPlayerList()
+						data:setValue(use)
+					end
+				end
+			end
+			return false;
 		end,
 		can_trigger = function(self, target)
 			return target
@@ -1129,21 +1129,21 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 		on_trigger = function(self, event, player, data)
 			if player:getPhase() == sgs.Player_RoundStart then
 				local room = player:getRoom()
-	            local Qingchenglist = player:getTag("Qingcheng"):toString():split("+")
-	            if #Qingchenglist == 0 then return false end
-	            for _,skill_name in pairs(Qingchenglist)do
-	                room:setPlayerMark(player, "Qingcheng" .. skill_name, 0);
-	            end
-	            player:removeTag("Qingcheng")
-	            for _,p in sgs.qlist(room:getAllPlayers())do
-	                room:filterCards(p, p:getCards("he"), true)
+				local Qingchenglist = player:getTag("Qingcheng"):toString():split("+")
+				if #Qingchenglist == 0 then return false end
+				for _,skill_name in pairs(Qingchenglist)do
+					room:setPlayerMark(player, "Qingcheng" .. skill_name, 0);
 				end
-	            local jsonValue = {
+				player:removeTag("Qingcheng")
+				for _,p in sgs.qlist(room:getAllPlayers())do
+					room:filterCards(p, p:getCards("he"), true)
+				end
+				local jsonValue = {
 					8
 				}
 				room:doBroadcastNotify(sgs.CommandType.S_COMMAND_LOG_EVENT, json.encode(jsonValue))
-	        end
-	        return false
+			end
+			return false
 		end,
 		can_trigger = function(self, target)
 			return target
@@ -1164,9 +1164,9 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 		filter_pattern = ".|black|.|hand",
 		view_as = function(self, card) 
 			local jink = sgs.Sanguosha:cloneCard("jink",card:getSuit(),card:getNumber())
-	        jink:setSkillName(self:objectName());
-	        jink:addSubcard(card:getId());
-	        return jink
+			jink:setSkillName(self:objectName());
+			jink:addSubcard(card:getId());
+			return jink
 		end, 
 	}
 ```
@@ -1183,9 +1183,9 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 		filter_pattern = ".|.|.|equipped",
 		view_as = function(self, card) 
 			local jink = sgs.Sanguosha:cloneCard("jink",card:getSuit(),card:getNumber())
-	        jink:setSkillName(self:objectName());
-	        jink:addSubcard(card:getId());
-	        return jink
+			jink:setSkillName(self:objectName());
+			jink:addSubcard(card:getId());
+			return jink
 		end, 
 	}
 ```

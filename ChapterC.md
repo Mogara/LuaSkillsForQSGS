@@ -12,46 +12,46 @@
 ```lua
 	LuaCangjiCard = sgs.CreateSkillCard{
 		name = "LuaCangjiCard",
-	    will_throw = false,
-	    filter = function(self,targets,to_select)
-	    	if #targets>0 or to_select:objectName() == sgs.Self:objectName() then return false end
-	    	local equip_loc = sgs.IntList()
-		    for _,id in sgs.qlist(self:getSubcards()) do
-		        local card = sgs.Sanguosha:getCard(id)
-		        local equip = card:getRealCard():toEquipCard()
-		        if equip then
-		            equip_loc:append(equip:location())
-		        end
-		    end
-		    for _,loc in sgs.qlist(equip_loc) do
-		        if to_select:getEquip(loc) then
-		            return false
-		        end
-		    end
-		    return true
+		will_throw = false,
+		filter = function(self,targets,to_select)
+			if #targets>0 or to_select:objectName() == sgs.Self:objectName() then return false end
+			local equip_loc = sgs.IntList()
+			for _,id in sgs.qlist(self:getSubcards()) do
+				local card = sgs.Sanguosha:getCard(id)
+				local equip = card:getRealCard():toEquipCard()
+				if equip then
+					equip_loc:append(equip:location())
+				end
+			end
+			for _,loc in sgs.qlist(equip_loc) do
+				if to_select:getEquip(loc) then
+					return false
+				end
+			end
+			return true
 		end,
 		on_effect = function(self,effect)
 			local room = effect.from:getRoom()
-		    local move = sgs.CardsMoveStruct(self:getSubcards(), effect.from, effect.to, sgs.Player_PlaceUnknown, sgs.Player_PlaceEquip, sgs.CardMoveReason())
-		    room:moveCardsAtomic(move, true)
-		    if effect.from:getEquips():isEmpty() then
-		        return
-		    end
-		    local loop = false;
-		    for i = 0,3,1 do
-		        if effect.from:getEquip(i) then
-		            for _,p in sgs.qlist(room:getOtherPlayers(effect.from)) do
-		                if not p:getEquip(i) then
-		                    loop = true
-		                    break
-		                end
-		            end
-		            if loop then break end
-		        end
-		    end
-		    if loop then
-		        room:askForUseCard(effect.from, "@@cangji", "@cangji-install", -1, sgs.Card_MethodNone)
-		    end
+			local move = sgs.CardsMoveStruct(self:getSubcards(), effect.from, effect.to, sgs.Player_PlaceUnknown, sgs.Player_PlaceEquip, sgs.CardMoveReason())
+			room:moveCardsAtomic(move, true)
+			if effect.from:getEquips():isEmpty() then
+				return
+			end
+			local loop = false;
+			for i = 0,3,1 do
+				if effect.from:getEquip(i) then
+					for _,p in sgs.qlist(room:getOtherPlayers(effect.from)) do
+						if not p:getEquip(i) then
+							loop = true
+							break
+						end
+					end
+					if loop then break end
+				end
+			end
+			if loop then
+				room:askForUseCard(effect.from, "@@cangji", "@cangji-install", -1, sgs.Card_MethodNone)
+			end
 		end
 	}	
 	LuaCangjiVS = sgs.CreateViewAsSkill{
@@ -103,37 +103,37 @@
 				room:askForUseCard(player,"@@LuaCangji","@cangji-install",-1,sgs.Card_MethodNone)
 			end
 			return false
-	    end,
-	    can_trigger = function(self,target)
-	    	return target ~= nil
-	    end   
+		end,
+		can_trigger = function(self,target)
+			return target ~= nil
+		end   
 	}	
 	LuaCangjiInstall = sgs.CreateTriggerSkill {
 		name = "#LuaCangjiInstall",
 		events = {sgs.Debut},
 		priority = 5,
 		can_trigger = function(self,target)
-	    	return target:getTag("LuaCangji"):toString() ~= ""
-	    end,  
-	    on_trigger = function(self,event,player, data)
-	    	local room = player:getRoom()
-	    	local equip_list = sgs.IntList()
-	    	for _,id in ipairs(player:getTag("LuaCangji"):toString():split("+")) do
-	    		local card_id = tonumber(id)
-	    		if sgs.Sanguosha:getCard(card_id):getTypeId() == sgs.Card_TypeEquip then
-	    			equip_list:append(card_id)
-	    		end
-	    	end
-	    	player:removeTag("LuaCangji")
-	    	if equip_list:isEmpty() then return false end
-	    	local log = sgs.LogMessage()
-	    	log.from = player
-	    	log.type = "$Install"
-	    	log.card_str = table.concat(sgs.QList2Table(equip_list),"+")
-	    	room:sendLog(log)
-	    	room:moveCardsAtomic(sgs.CardsMoveStruct(equip_list,player,sgs.Player_PlaceEquip,sgs.CardMoveReason()),true)
-	        return false
-	    end
+			return target:getTag("LuaCangji"):toString() ~= ""
+		end,  
+		on_trigger = function(self,event,player, data)
+			local room = player:getRoom()
+			local equip_list = sgs.IntList()
+			for _,id in ipairs(player:getTag("LuaCangji"):toString():split("+")) do
+				local card_id = tonumber(id)
+				if sgs.Sanguosha:getCard(card_id):getTypeId() == sgs.Card_TypeEquip then
+					equip_list:append(card_id)
+				end
+			end
+			player:removeTag("LuaCangji")
+			if equip_list:isEmpty() then return false end
+			local log = sgs.LogMessage()
+			log.from = player
+			log.type = "$Install"
+			log.card_str = table.concat(sgs.QList2Table(equip_list),"+")
+			room:sendLog(log)
+			room:moveCardsAtomic(sgs.CardsMoveStruct(equip_list,player,sgs.Player_PlaceEquip,sgs.CardMoveReason()),true)
+			return false
+		end
 	}
 ```
 [返回索引](#技能索引)

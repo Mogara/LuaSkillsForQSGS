@@ -308,29 +308,29 @@ LuaDimengCard = sgs.CreateSkillCard{
 		local n1 = a:getHandcardNum()
 		local n2 = b:getHandcardNum()
 		for _, p in sgs.qlist(room:getAlivePlayers()) do
-            		if p:objectName() ~= a:objectName() and p:objectName() ~= b:objectName() then
-                		room:doNotify(p, sgs.CommandType.S_COMMAND_EXCHANGE_KNOWN_CARDS,
-                              			       json.encode({a:objectName(), b:objectName()}))
-        		end
-        	end
-        	local exchangeMove = sgs.CardsMoveList()
-        	local move1 = sgs.CardsMoveStruct(a:handCards(), b, sgs.Player_PlaceHand,
-                       		      		  sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, a:objectName(), b:objectName(), "LuaDimeng", ""))
-        	local move2 = sgs.CardsMoveStruct(b:handCards(), a, sgs.Player_PlaceHand,
-        					  sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, b:objectName(), a:objectName(), "LuaDimeng", ""))
-        	exchangeMove:append(move1)
-        	exchangeMove:append(move2)
-        	room:moveCards(exchangeMove, false)
+					if p:objectName() ~= a:objectName() and p:objectName() ~= b:objectName() then
+						room:doNotify(p, sgs.CommandType.S_COMMAND_EXCHANGE_KNOWN_CARDS,
+							  				   json.encode({a:objectName(), b:objectName()}))
+				end
+			end
+			local exchangeMove = sgs.CardsMoveList()
+			local move1 = sgs.CardsMoveStruct(a:handCards(), b, sgs.Player_PlaceHand,
+					   			  		  sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, a:objectName(), b:objectName(), "LuaDimeng", ""))
+			local move2 = sgs.CardsMoveStruct(b:handCards(), a, sgs.Player_PlaceHand,
+							  sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, b:objectName(), a:objectName(), "LuaDimeng", ""))
+			exchangeMove:append(move1)
+			exchangeMove:append(move2)
+			room:moveCards(exchangeMove, false)
  		local log = sgs.LogMessage()
 		log.type = "#Dimeng"
-       		log.from = a
-       		log.to:append(b)
-       		log.arg = tostring(n1)
-       		log.arg2 = tostring(n2)
-       		room:sendLog(log)
-       		room:getThread():delay()
-       		a:setFlags("-DimengTarget")
-       		b:setFlags("-DimengTarget")
+	   		log.from = a
+	   		log.to:append(b)
+	   		log.arg = tostring(n1)
+	   		log.arg2 = tostring(n2)
+	   		room:sendLog(log)
+	   		room:getThread():delay()
+	   		a:setFlags("-DimengTarget")
+	   		b:setFlags("-DimengTarget")
 	end
 }
 LuaDimeng = sgs.CreateViewAsSkill{
@@ -342,9 +342,9 @@ LuaDimeng = sgs.CreateViewAsSkill{
 	view_as = function(self, cards)
 		local card = LuaDimengCard:clone()
 		for _, c in ipairs(cards) do
-       			card:addSubcard(c)
+	   			card:addSubcard(c)
 		end
-       		return card
+	   		return card
 	end ,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaDimengCard")
@@ -675,34 +675,34 @@ LuaXDuanzhi = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local use = data:toCardUse()
 		if use.card:getTypeId() == sgs.Card_TypeSkill or use.from:objectName() == player:objectName() or (not use.to:contains(player)) then
-            return false
+			return false
 		end
-        if player:askForSkillInvoke(self:objectName(), data) then
-            room:setPlayerFlag(player, "LuaXDuanzhi_InTempMoving");
-            local target = use.from
-            local dummy = sgs.Sanguosha:cloneCard("slash") --没办法了，暂时用你代替DummyCard吧……
-            local card_ids = sgs.IntList()
-            local original_places = sgs.PlaceList()
-            for i = 1,2,1 do
-                if not player:canDiscard(target, "he") then break end
-                if room:askForChoice(player, self:objectName(), "discard+cancel") == "cancel" then break end
-                card_ids:append(room:askForCardChosen(player, target, "he", self:objectName()))
-                original_places:append(room:getCardPlace(card_ids:at(i-1)))
-                dummy:addSubcard(card_ids:at(i-1))
-                target:addToPile("#duanzhi", card_ids:at(i-1), false)
-            end
-            if dummy:subcardsLength() > 0 then
-                for i = 1,dummy:subcardsLength(),1 do
-                    room:moveCardTo(sgs.Sanguosha:getCard(card_ids:at(i-1)), target, original_places:at(i-1), false)
+		if player:askForSkillInvoke(self:objectName(), data) then
+			room:setPlayerFlag(player, "LuaXDuanzhi_InTempMoving");
+			local target = use.from
+			local dummy = sgs.Sanguosha:cloneCard("slash") --没办法了，暂时用你代替DummyCard吧……
+			local card_ids = sgs.IntList()
+			local original_places = sgs.PlaceList()
+			for i = 1,2,1 do
+				if not player:canDiscard(target, "he") then break end
+				if room:askForChoice(player, self:objectName(), "discard+cancel") == "cancel" then break end
+				card_ids:append(room:askForCardChosen(player, target, "he", self:objectName()))
+				original_places:append(room:getCardPlace(card_ids:at(i-1)))
+				dummy:addSubcard(card_ids:at(i-1))
+				target:addToPile("#duanzhi", card_ids:at(i-1), false)
+			end
+			if dummy:subcardsLength() > 0 then
+				for i = 1,dummy:subcardsLength(),1 do
+					room:moveCardTo(sgs.Sanguosha:getCard(card_ids:at(i-1)), target, original_places:at(i-1), false)
 				end
 			end
-            room:setPlayerFlag(player, "-LuaXDuanzhi_InTempMoving")
-            if dummy:subcardsLength() > 0 then
-                room:throwCard(dummy, target, player)
+			room:setPlayerFlag(player, "-LuaXDuanzhi_InTempMoving")
+			if dummy:subcardsLength() > 0 then
+				room:throwCard(dummy, target, player)
 			end
-            room:loseHp(player);
-        end
-        return false
+			room:loseHp(player);
+		end
+		return false
 	end,
 }
 LuaXDuanzhiFakeMove = sgs.CreateTriggerSkill{

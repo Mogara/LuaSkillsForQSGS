@@ -610,7 +610,7 @@
 		view_as = function(self, cards)
 			local toudu = LuaTouduCard:clone()
 			toudu:addSubcard(cards)
-	        return toudu
+			return toudu
 		end,	
 		enabled_at_play = function()
 			return false
@@ -720,7 +720,7 @@
 [返回索引](#技能索引)
 ##突袭-1v1
 **相关武将**：1v1·张辽1v1  
-**描述**：摸牌阶段，若你的手牌数小于对手的手牌数，你可以少摸一张牌并你获得对手的一张手牌。    
+**描述**：摸牌阶段，若你的手牌数小于对手的手牌数，你可以少摸一张牌并你获得对手的一张手牌。	
 **引用**：LuaKOFTuxi、LuaKOFTuxiAct  
 **状态**：1217验证通过  
 ```lua

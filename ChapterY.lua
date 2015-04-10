@@ -167,19 +167,19 @@ LuaYanyu = sgs.CreateTriggerSkill{
 					end
 				end
 				if ids:isEmpty() then return false end
-                	while not ids:isEmpty() do
+					while not ids:isEmpty() do
 					room:fillAG(all_ids, player, disabled)
 					local only = (all_ids:length() == 1)
 					local card_id = -1 
 					if only then
-            			card_id = ids:first()
-        			else
-            			card_id = room:askForAG(player, ids, true, self:objectName())
+						card_id = ids:first()
+					else
+						card_id = room:askForAG(player, ids, true, self:objectName())
 					end
 					room:clearAG(player)
 					if card_id == -1 then break end
 					if only then
-                        player:setMark("YanyuOnlyId", card_id + 1)
+						player:setMark("YanyuOnlyId", card_id + 1)
 					end
 					local card = sgs.Sanguosha:getCard(card_id)
 					local target = room:askForPlayerChosen(player, room:getAlivePlayers(), self:objectName(),
@@ -198,11 +198,11 @@ LuaYanyu = sgs.CreateTriggerSkill{
 						for _, id in sgs.qlist(ids) do
 							local card = sgs.Sanguosha:getCard(id)
 							if player:getMark("LuaYanyuDiscard" .. tostring(card:getTypeId())) == 0 then
-                                				ids:removeOne(id)
-                                				disabled:append(id)
+												ids:removeOne(id)
+												disabled:append(id)
 							end
 						end
-						if move.from and move.from:objectName() == target:objectName() and place ~= sgs.Player_PlaceTable then                                                                                                                                                                                                                                                                                                                                                                                           
+						if move.from and move.from:objectName() == target:objectName() and place ~= sgs.Player_PlaceTable then																																																																																														   
 							local log = sgs.LogMessage()
 							log.type = "$MoveCard"
 							log.from = target
@@ -220,10 +220,10 @@ LuaYanyu = sgs.CreateTriggerSkill{
 			local change = data:toPhaseChange()
 			if change.to == sgs.Player_Discard then
 				for _, p in sgs.qlist(room:getAlivePlayers()) do
-                			p:setMark("LuaYanyuDiscard1", 0)
-                			p:setMark("LuaYanyuDiscard2", 0)
-                			p:setMark("LuaYanyuDiscard3", 0)
-                		end
+							p:setMark("LuaYanyuDiscard1", 0)
+							p:setMark("LuaYanyuDiscard2", 0)
+							p:setMark("LuaYanyuDiscard3", 0)
+						end
 			end
 		end
 		return false
@@ -791,43 +791,43 @@ LuaYinli = sgs.CreateTriggerSkill{
 		local move = data:toMoveOneTime()
 		if (move.from == nil) or (move.from:objectName() == player:objectName()) then return false end
 		if (move.from:getPhase() ~= sgs.Player_NotActive) and (move.to_place == sgs.Player_DiscardPile) then
-        		local card_ids = sgs.IntList()
+				local card_ids = sgs.IntList()
 			local i = 0
-        		for _, card_id in sgs.qlist(move.card_ids) do
-                		if (sgs.Sanguosha:getCard(card_id):getTypeId() == sgs.Card_TypeEquip)  
+				for _, card_id in sgs.qlist(move.card_ids) do
+						if (sgs.Sanguosha:getCard(card_id):getTypeId() == sgs.Card_TypeEquip)  
 						and (room:getCardOwner(card_id):objectName() == move.from:objectName())
 						and ((move.from_places:at(i) == sgs.Player_PlaceHand) or (move.from_places:at(i) == sgs.Player_PlaceEquip)) then
-                			card_ids:append(card_id)
-                		end
+							card_ids:append(card_id)
+						end
 				i = i + 1
 			end
 			if card_ids:isEmpty() then
 				return false
-      			elseif player:askForSkillInvoke(self:objectName(), data) then
-        			while not card_ids:isEmpty() do
-        			room:fillAG(card_ids, player)
-       				local id = room:askForAG(player, card_ids, true, self:objectName())
-                		if id == -1 then
+	  			elseif player:askForSkillInvoke(self:objectName(), data) then
+					while not card_ids:isEmpty() do
+					room:fillAG(card_ids, player)
+	   				local id = room:askForAG(player, card_ids, true, self:objectName())
+						if id == -1 then
 					room:clearAG(player)
 					break
 				end
-                		card_ids:removeOne(id)
+						card_ids:removeOne(id)
 				room:clearAG(player)
-                	end
+					end
 			if not card_ids:isEmpty() then
-                		for _, id in sgs.qlist(card_ids) do
-                        		if move.card_ids:contains(id) then
-                        			move.from_places:removeAt(move.card_ids:indexOf(id))
-                         			move.card_ids:removeOne(id)
+						for _, id in sgs.qlist(card_ids) do
+								if move.card_ids:contains(id) then
+									move.from_places:removeAt(move.card_ids:indexOf(id))
+						 			move.card_ids:removeOne(id)
 						data:setValue(move)
-                        		end
+								end
 					room:moveCardTo(sgs.Sanguosha:getCard(id), player, sgs.Player_PlaceHand, move.reason, true)
-                        		if not player:isAlive() then break end 
-                    			end
-                		end
-                	end
-        	end
-        	return false
+								if not player:isAlive() then break end 
+								end
+						end
+					end
+			end
+			return false
 	end
 }
 --[[
@@ -1219,7 +1219,7 @@ LuaYuanhuCard = sgs.CreateSkillCard{
 			local card = sgs.Sanguosha:getCard(id)
 			local equip = card:getRealCard():toEquipCard()
 			local index = equip:location()
-		    return to_select:getEquip(index) == nil
+			return to_select:getEquip(index) == nil
 		end
 		return false
 	end,

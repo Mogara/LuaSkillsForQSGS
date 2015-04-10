@@ -132,7 +132,7 @@ LuaAnjian = sgs.CreateTriggerSkill{
 local json = require ("json")
 function view(room, player, ids, enabled, disabled)
 	local result = -1;
-    local jsonLog = {
+	local jsonLog = {
 		"$ViewDrawPile",
 		player:objectName(),
 		"",
@@ -140,25 +140,25 @@ function view(room, player, ids, enabled, disabled)
 		"",
 		""
 	}
-    room:doNotify(player,sgs.CommandType.S_COMMAND_LOG_SKILL, json.encode(jsonLog))
-    room:notifySkillInvoked(player, "LuaAocai");
-    if enabled:isEmpty() then
-        local jsonValue = {
-            ".",
-            false,
-            sgs.QList2Table(ids)
+	room:doNotify(player,sgs.CommandType.S_COMMAND_LOG_SKILL, json.encode(jsonLog))
+	room:notifySkillInvoked(player, "LuaAocai");
+	if enabled:isEmpty() then
+		local jsonValue = {
+			".",
+			false,
+			sgs.QList2Table(ids)
 		}
-        room:doNotify(player,sgs.CommandType.S_COMMAND_SHOW_ALL_CARDS, json.encode(jsonValue));
-    else
-        room:fillAG(ids, player, disabled)
-        local id = room:askForAG(player, enabled, true, "LuaAocai");
-        if (id ~= -1) then
-            ids:removeOne(id)
-            result = id
-        end
-        room:clearAG(player)
-    end
-    --源码各种可恶，竟然用引用……
+		room:doNotify(player,sgs.CommandType.S_COMMAND_SHOW_ALL_CARDS, json.encode(jsonValue));
+	else
+		room:fillAG(ids, player, disabled)
+		local id = room:askForAG(player, enabled, true, "LuaAocai");
+		if (id ~= -1) then
+			ids:removeOne(id)
+			result = id
+		end
+		room:clearAG(player)
+	end
+	--源码各种可恶，竟然用引用……
 	--用这种方法应该也可以解决问题。
 	local dummy = sgs.Sanguosha:cloneCard("jink")
 	local moves = {}
@@ -171,10 +171,10 @@ function view(room, player, ids, enabled, disabled)
 		room:moveCardTo(dummy, nil, sgs.Player_DrawPile, false)
 		room:setPlayerFlag(player,"-LuaAocai_InTempMoving")
 	end
-    if result == -1 then
-        room:setPlayerFlag(player, "Global_LuaAocaiFailed")
+	if result == -1 then
+		room:setPlayerFlag(player, "Global_LuaAocaiFailed")
 	end
-    return result
+	return result
 end
 LuaAocaiVS = sgs.CreateViewAsSkill{
 	name = "LuaAocai",

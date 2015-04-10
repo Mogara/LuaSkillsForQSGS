@@ -22,7 +22,7 @@ LuaWanrong = sgs.CreateTriggerSkill{
 	name = "LuaWanrong",
 	events = {sgs.TargetConfirmed},
 	frequency = sgs.Skill_Frequent,
-    	on_trigger=function(self, event, player, data)
+		on_trigger=function(self, event, player, data)
 		local room = player:getRoom()
 		local use = data:toCardUse()
 		if (use.card:isKindOf("Slash") and use.to:contains(player) and room:askForSkillInvoke(player, self:objectName(), data)) then
@@ -120,7 +120,7 @@ end
 LuaWeidaiCard = sgs.CreateSkillCard{
 	name = "LuaWeidaiCard",
 	target_fixed = true,
-    	mute = true,
+		mute = true,
 	on_validate = function(self, card_use)
 		card_use.m_isOwnerUse = false
 		local sunce = card_use.from
@@ -169,8 +169,8 @@ LuaWeidai = sgs.CreateZeroCardViewAsSkill{
 	end,
 	enabled_at_play = function(self, player)
 		return hasWuGenerals(player) and player:hasLordSkill("LuaWeidai")
-               and not player:hasFlag("Global_LuaWeidaiFailed")
-               and sgs.Analeptic_IsAvailable(player)
+			   and not player:hasFlag("Global_LuaWeidaiFailed")
+			   and sgs.Analeptic_IsAvailable(player)
 	end,
 	enabled_at_response = function(self, player, pattern)
 		return hasWuGenerals(player) and pattern == "peach+analeptic" and not player:hasFlag("Global_LuaWeidaiFailed")
@@ -409,13 +409,13 @@ LuaWushuang = sgs.CreateTriggerSkill{
 			if not can_invoke then return false end
 			if effect.card:isKindOf("Duel") then
 				if room:isCanceled(effect) then
-                    effect.to:setFlags("Global_NonSkillNullify")
-                    return true;
-                end
-                if effect.to:isAlive() then
+					effect.to:setFlags("Global_NonSkillNullify")
+					return true;
+				end
+				if effect.to:isAlive() then
 					local second = effect.from
 					local first = effect.to
-                    room:setEmotion(first, "duel");
+					room:setEmotion(first, "duel");
 					room:setEmotion(second, "duel")
 					while true do
 						if not first:isAlive() then
@@ -778,12 +778,12 @@ LuaWusheng = sgs.CreateOneCardViewAsSkill{
 	view_filter = function(self, card)
 		if not card:isRed() then return false end
 		if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
-    		local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_SuitToBeDecided, -1)
-        	slash:addSubcard(card:getEffectiveId())
-        	slash:deleteLater()
-        	return slash:isAvailable(sgs.Self)
-    	end
-    	return true
+			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_SuitToBeDecided, -1)
+			slash:addSubcard(card:getEffectiveId())
+			slash:deleteLater()
+			return slash:isAvailable(sgs.Self)
+		end
+		return true
 	end,
 	view_as = function(self, originalCard)
 		local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())

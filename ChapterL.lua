@@ -1002,7 +1002,7 @@ LuaLiewei = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-    end,
+	end,
 }
 --[[
 	技能名：流离

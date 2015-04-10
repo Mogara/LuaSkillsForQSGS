@@ -277,7 +277,7 @@
 			local change = data:toPhaseChange()
 			if change.to ~= sgs.Player_NotActive then return false end
 			room:detachSkillFromPlayer(player,"wansha",false, true)
-	    end,	
+		end,	
 		can_trigger = function(self, target)
 			return target ~= nil and target:hasFlag("LuaJilveWansha")
 		end
@@ -989,15 +989,15 @@
 				end
 			elseif (card:getTypeId() == sgs.Card_TypeEquip) then
 				for _, p in sgs.qlist(room:getAlivePlayers()) do
-	                		if (not p:getEquips():isEmpty()) and (player:canDiscard(p, "e")) then
-	                			targets:append(p)
+							if (not p:getEquips():isEmpty()) and (player:canDiscard(p, "e")) then
+								targets:append(p)
 					else
 						for _, judge in sgs.qlist(p:getJudgingArea()) do
-	                        			if judge:getTypeId() == sgs.Card_TypeSkill then
+										if judge:getTypeId() == sgs.Card_TypeSkill then
 							local real_card = Sanguosha:getEngineCard(judge:getEffectiveId())
-	                         				if (real_card:getTypeId() == sgs.Card_TypeEquip) and (player:canDiscard(p, real_card:getEffectiveId())) then
-	                                				targets:append(p)
-	                               					break
+							 				if (real_card:getTypeId() == sgs.Card_TypeEquip) and (player:canDiscard(p, real_card:getEffectiveId())) then
+													targets:append(p)
+								   					break
 								end
 							end
 						end

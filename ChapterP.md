@@ -140,7 +140,7 @@
 			local pujiCard = LuaPujiCard:clone()
 			pujiCard:addSubcard(card)
 			return pujiCard
-	    end,
+		end,
 	}
 ```
 [返回索引](#技能索引)

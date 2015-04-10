@@ -397,7 +397,7 @@ LuaZhenlie = sgs.CreateTriggerSkill{
 	events = {sgs.TargetConfirmed} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-        	if event == sgs.TargetConfirmed then
+			if event == sgs.TargetConfirmed then
 			local use = data:toCardUse()
 			if use.to:contains(player) and use.from:objectName() ~= player:objectName() then
 				if use.card:isKindOf("Slash") or use.card:isNDTrick() then
@@ -408,8 +408,8 @@ LuaZhenlie = sgs.CreateTriggerSkill{
 						if player:isAlive() and player:hasFlag("ZhenlieTarget") then
 							player:setFlags("-ZhenlieTarget")
 							local nullified_list = use.nullified_list
-                            				table.insert(nullified_list, player:objectName())
-                            				use.nullified_list = nullified_list
+											table.insert(nullified_list, player:objectName())
+											use.nullified_list = nullified_list
 							data:setValue(use)
 							if player:canDiscard(use.from, "he") then
 								local id = room:askForCardChosen(player, use.from, "he", self:objectName(), false, sgs.Card_MethodDiscard)
@@ -419,7 +419,7 @@ LuaZhenlie = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-        	end
+			end
 		return false
 	end
 }
@@ -535,7 +535,7 @@ LuaZhenweiDistance = sgs.CreateDistanceSkill{
 				return 1
 			end
 		end
-        return 0
+		return 0
 	end
 }
 LuaZhenweiCard = sgs.CreateSkillCard{
@@ -1104,9 +1104,9 @@ LuaZhiyu = sgs.CreateTriggerSkill{
 ]]--
 LuaZhongyiCard = sgs.CreateSkillCard{
 	name = "LuaZhongyiCard",
-    will_throw = false,
-    target_fixed = true,
-    handling_method = sgs.Card_MethodNone,
+	will_throw = false,
+	target_fixed = true,
+	handling_method = sgs.Card_MethodNone,
 	on_use = function(self, room, source, targets)
 		room:removePlayerMark(source, "@loyal")
 		source:addToPile("loyal", self)
@@ -1117,11 +1117,11 @@ LuaZhongyiViewAsSkill = sgs.CreateOneCardViewAsSkill{
 	filter_pattern = ".|red|.|hand",
 	enabled_at_play = function(self, player)
 		return not player:isKongcheng() and player:getMark("@loyal") > 0
-    end,
+	end,
 	view_as = function(self, originalCard)
 		local card = LuaZhongyiCard:clone()
-        card:addSubcard(originalCard)
-        return card
+		card:addSubcard(originalCard)
+		return card
 	end,
 }
 LuaZhongyi = sgs.CreateTriggerSkill{
@@ -1131,7 +1131,7 @@ LuaZhongyi = sgs.CreateTriggerSkill{
 	limit_mark = "@loyal",
 	view_as_skill = LuaZhongyiViewAsSkill,
 	can_trigger = function(self, target)
-        return target ~= nil
+		return target ~= nil
 	end,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
@@ -1164,7 +1164,7 @@ LuaZhongyi = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-    end,
+	end,
 }
 --[[
 	技能名：咒缚
@@ -1197,7 +1197,7 @@ LuaZhoufuVS = sgs.CreateOneCardViewAsSkill{
 	view_as = function(self, cards)
 		local card = LuaZhoufuCard:clone()
 			card:addSubcard(cards)
-        return card
+		return card
 	end,
 
 	enabled_at_play = function(self,player)
@@ -1307,7 +1307,7 @@ LuaZhuikong = sgs.CreateTriggerSkill{
 	events = {sgs.EventPhaseStart},
 	can_trigger = function(self, target)
 		return target ~= nil
-    end,
+	end,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:getPhase() ~= sgs.Player_RoundStart or player:isKongcheng() then
@@ -1330,7 +1330,7 @@ LuaZhuikong = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end    
+	end	
 }
 LuaZhuikongClear = sgs.CreateTriggerSkill{
 	name = "#LuaZhuikong-clear",
@@ -1365,7 +1365,7 @@ LuaZiliang = sgs.CreateTriggerSkill{
 	can_trigger = function(self, target)
 		return target ~= nil
 	end,
-    on_trigger = function(self, event, player, data)
+	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local dengai = room:findPlayerBySkillName(self:objectName())
 		if not player:isAlive() then return false end

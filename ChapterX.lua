@@ -146,15 +146,15 @@ LuaXiansiSlashCard = sgs.CreateSkillCard{
 }
 function canSlashLiufeng (player)
 	local liufeng = nil;
-    for _,p in sgs.qlist(player:getAliveSiblings()) do
-        if (p:hasSkill("LuaXiansi") and p:getPile("counter"):length() > 1) then
-            liufeng = p;
-            break;
-        end
-    end
-    if liufeng == nil then return false end
-    local slash = sgs.Sanguosha:cloneCard("slash")
-    return slash:targetFilter(sgs.PlayerList(), liufeng, player);
+	for _,p in sgs.qlist(player:getAliveSiblings()) do
+		if (p:hasSkill("LuaXiansi") and p:getPile("counter"):length() > 1) then
+			liufeng = p;
+			break;
+		end
+	end
+	if liufeng == nil then return false end
+	local slash = sgs.Sanguosha:cloneCard("slash")
+	return slash:targetFilter(sgs.PlayerList(), liufeng, player);
 end
 
 LuaXiansiSlash = sgs.CreateZeroCardViewAsSkill{
@@ -167,7 +167,7 @@ LuaXiansiSlash = sgs.CreateZeroCardViewAsSkill{
 	end, 
 	enabled_at_response = function(self, player, pattern)
 		return  pattern == "slash"and sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE
-               and canSlashLiufeng(player)
+			   and canSlashLiufeng(player)
 	end,
 }
 --[[
@@ -217,33 +217,33 @@ LuaXianzhen = sgs.CreateTriggerSkill{
 	view_as_skill = LuaXianzhenVs,
 	on_trigger = function(self, event, gaoshun, data)
 		if (triggerEvent == sgs.EventPhaseChanging) then
-            local change = data:toPhaseChange()
-            if change.to ~= sgs.Player_NotActive then
-                return false
+			local change = data:toPhaseChange()
+			if change.to ~= sgs.Player_NotActive then
+				return false
 			end
-        end
+		end
 		local room = gaoshun:getRoom()
-        local target = gaoshun:getTag("XianzhenTarget"):toPlayer()
-        if (triggerEvent == sgs.Death) then
-            local death = data:toDeath()
-            if death.who:objectName() ~= gaoshun:objectName() then
-                if death.who:objectName() == target:objectName() then
-                    room:setFixedDistance(gaoshun, target, -1);
-                    gaoshun:removeTag("XianzhenTarget");
-                    room:setPlayerFlag(gaoshun, "-XianzhenSuccess");
-                end
-                return false;
-            end
-        end
-        if target then
-            local assignee_list = gaoshun:property("extra_slash_specific_assignee"):toString():split("+")
-            table.removeOne(assignee_list,target:objectName())
-            room:setPlayerProperty(gaoshun, "extra_slash_specific_assignee", sgs.QVariant(table.concat(assignee_list,"+")));
-            room:setFixedDistance(gaoshun, target, -1);
-            gaoshun:removeTag("XianzhenTarget");
-            room:removePlayerMark(target, "Armor_Nullified");
-        end
-        return false;
+		local target = gaoshun:getTag("XianzhenTarget"):toPlayer()
+		if (triggerEvent == sgs.Death) then
+			local death = data:toDeath()
+			if death.who:objectName() ~= gaoshun:objectName() then
+				if death.who:objectName() == target:objectName() then
+					room:setFixedDistance(gaoshun, target, -1);
+					gaoshun:removeTag("XianzhenTarget");
+					room:setPlayerFlag(gaoshun, "-XianzhenSuccess");
+				end
+				return false;
+			end
+		end
+		if target then
+			local assignee_list = gaoshun:property("extra_slash_specific_assignee"):toString():split("+")
+			table.removeOne(assignee_list,target:objectName())
+			room:setPlayerProperty(gaoshun, "extra_slash_specific_assignee", sgs.QVariant(table.concat(assignee_list,"+")));
+			room:setFixedDistance(gaoshun, target, -1);
+			gaoshun:removeTag("XianzhenTarget");
+			room:removePlayerMark(target, "Armor_Nullified");
+		end
+		return false;
 	end,
 	can_trigger = function(self, target)
 		return target and target:getTag("XianzhenTarget"):toPlayer()
@@ -440,7 +440,7 @@ LuaXiaode = sgs.CreateTriggerSkill{
 		local skill_name = room:askForChoice(xiahoushi, self:objectName(), table.concat(skill_list, "+"))
 		xiahoushi:setTag("LuaXiaodeSkill", sgs.QVariant(skill_name))
 		room:acquireSkill(xiahoushi, skill_name)
-        	return false
+			return false
 	end ,
 	can_trigger = function(self, target)
 		return target ~= nil
@@ -458,14 +458,14 @@ LuaXiaodeEx = sgs.CreateTriggerSkill{
 				local skill_name = player:getTag("LuaXiaodeSkill"):toString()
 				if skill_name ~= "" then
 					room:detachSkillFromPlayer(player, skill_name, false, true)
-                			player:setTag("LuaXiaodeSkill", sgs.QVariant())
+							player:setTag("LuaXiaodeSkill", sgs.QVariant())
 				end
 			end
 		elseif event == sgs.EventLoseSkill and data:toString() == sef:objectName() then
 			local skill_name = player:getTag("LuaXiaodeSkill"):toString()
 			if skill_name ~= "" then
 				room:detachSkillFromPlayer(player, skill_name, false, true)
-                		player:setTag("LuaXiaodeSkill", sgs.QVariant())
+						player:setTag("LuaXiaodeSkill", sgs.QVariant())
 			end
 		elseif event == sgs.Death and self:triggerable(player) then
 			local death = data:toDeath()
@@ -1327,9 +1327,9 @@ LuaXunxun = sgs.CreatePhaseChangeSkill{
 			local obtained = sgs.IntList()
 				room:fillAG(card_ids,player)
 			local id1 = room:askForAG(player,card_ids,false,self:objectName())
-                card_ids:removeOne(id1)
-                obtained:append(id1)
-                room:takeAG(player,id1,false)
+				card_ids:removeOne(id1)
+				obtained:append(id1)
+				room:takeAG(player,id1,false)
 			local id2 = room:askForAG(player,card_ids,false,self:objectName())
 				card_ids:removeOne(id2)
 				obtained:append(id2)

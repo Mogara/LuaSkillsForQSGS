@@ -605,7 +605,7 @@ LuaTouduVS = sgs.CreateOneCardViewAsSkill{
 	view_as = function(self, cards)
 		local toudu = LuaTouduCard:clone()
 			toudu:addSubcard(cards)
-        return toudu
+		return toudu
 	end,
 
 	enabled_at_play = function()

@@ -320,13 +320,13 @@ LuaShelie = sgs.CreateTriggerSkill{
 			shenlvmeng:obtainCard(dummy)
 		end
 		dummy:clearSubcards()
-        if not to_throw:isEmpty() then
-            dummy:addSubcards(getCardList(to_throw))
-            local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NATURAL_ENTER, shenlvmeng:objectName(), self:objectName(),"")
-            room:throwCard(dummy, reason, nil)
-        end
+		if not to_throw:isEmpty() then
+			dummy:addSubcards(getCardList(to_throw))
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NATURAL_ENTER, shenlvmeng:objectName(), self:objectName(),"")
+			room:throwCard(dummy, reason, nil)
+		end
 		dummy:deleteLater()
-        room:clearAG()
+		room:clearAG()
 		return true
 	end
 }
@@ -658,21 +658,21 @@ LuaShengxi = sgs.CreateTriggerSkill{
 	events = {sgs.DamageDone,sgs.EventPhaseEnd}, 
 	on_trigger = function(self, triggerEvent, player, data)
 		if triggerEvent == sgs.EventPhaseEnd then
-            if player and player:isAlive() and player:hasSkill(self:objectName()) and player:getPhase() == sgs.Player_Play then
-                if (not player:hasFlag("ShengxiDamageInPlayPhase")) and player:askForSkillInvoke(self:objectName()) then
-                    player:drawCards(2)
+			if player and player:isAlive() and player:hasSkill(self:objectName()) and player:getPhase() == sgs.Player_Play then
+				if (not player:hasFlag("ShengxiDamageInPlayPhase")) and player:askForSkillInvoke(self:objectName()) then
+					player:drawCards(2)
 				end
-            end
-            if player:hasFlag("ShengxiDamageInPlayPhase") then
-                player:setFlags("-ShengxiDamageInPlayPhase")
 			end
-        elseif triggerEvent == sgs.DamageDone then
-            local damage = data:toDamage()
-            if damage.from and damage.from:getPhase() == sgs.Player_Play and not damage.from:hasFlag("ShengxiDamageInPlayPhase") then
-                damage.from:setFlags("ShengxiDamageInPlayPhase")
+			if player:hasFlag("ShengxiDamageInPlayPhase") then
+				player:setFlags("-ShengxiDamageInPlayPhase")
 			end
-        end
-        return false
+		elseif triggerEvent == sgs.DamageDone then
+			local damage = data:toDamage()
+			if damage.from and damage.from:getPhase() == sgs.Player_Play and not damage.from:hasFlag("ShengxiDamageInPlayPhase") then
+				damage.from:setFlags("ShengxiDamageInPlayPhase")
+			end
+		end
+		return false
 	end,
 	can_trigger = function(self, target)
 		return target
@@ -901,9 +901,9 @@ LuaShenju = sgs.CreateMaxCardsSkill{
 	name = "Luashenju",
 	extra_func = function(self, target) 
 		if target:hasSkill(self:objectName()) then
-            return target:getMark("shenju")
-        else
-            return 0
+			return target:getMark("shenju")
+		else
+			return 0
 		end
 	end
 }
@@ -913,16 +913,16 @@ LuaShenjuMark = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:getPhase() == sgs.Player_Discard then
-            local max_hp = -1000
+			local max_hp = -1000
 			for _, p in sgs.qlist(room:getOtherPlayers(player)) do
-                local hp = p:getHp()
-                if hp > max_hp then
-                    max_hp = hp
+				local hp = p:getHp()
+				if hp > max_hp then
+					max_hp = hp
 				end
 			end 
-            player:setMark("shenju", math.max(max_hp, 0))
-        end
-        return false
+			player:setMark("shenju", math.max(max_hp, 0))
+		end
+		return false
 	end,
 }
 --[[
@@ -939,8 +939,8 @@ LuaShoucheng = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local move = data:toMoveOneTime()
 		local room = player:getRoom()
-        if (move.from and move.from:isAlive() and move.from:getPhase() == sgs.Player_NotActive
-            and move.from_places:contains(sgs.Player_PlaceHand) and move.is_last_handcard) then
+		if (move.from and move.from:isAlive() and move.from:getPhase() == sgs.Player_NotActive
+			and move.from_places:contains(sgs.Player_PlaceHand) and move.is_last_handcard) then
 			local target = nil
 			for _,p in sgs.qlist(room:getAlivePlayers())do
 				if p:objectName() == move.from:objectName() then
@@ -949,11 +949,11 @@ LuaShoucheng = sgs.CreateTriggerSkill{
 			end
 			local ai_data = sgs.QVariant()
 			ai_data:setValue(target)
-            if (room:askForSkillInvoke(player, self:objectName(), ai_data)) then
-                target:drawCards(1)
-            end
-        end
-        return false
+			if (room:askForSkillInvoke(player, self:objectName(), ai_data)) then
+				target:drawCards(1)
+			end
+		end
+		return false
 	end,
 }
 --[[
@@ -1414,22 +1414,22 @@ LuaSuzi = sgs.CreateTriggerSkill{
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if player:isNude() then return false end
-        local xiahouyuan = room:findPlayerBySkillName(self:objectName())
+		local xiahouyuan = room:findPlayerBySkillName(self:objectName())
 		local death = data:toDeath()
-        if xiahouyuan and xiahouyuan:objectName() == death.who:objectName() then return false end
-        if room:askForSkillInvoke(xiahouyuan, self:objectName(), data) then
-            local dummy = sgs.Sanguosha:cloneCard("jink")
-            local cards = player:getCards("he")
+		if xiahouyuan and xiahouyuan:objectName() == death.who:objectName() then return false end
+		if room:askForSkillInvoke(xiahouyuan, self:objectName(), data) then
+			local dummy = sgs.Sanguosha:cloneCard("jink")
+			local cards = player:getCards("he")
 			for _, card in sgs.qlist(cards) do
-                dummy:addSubcard(card);
+				dummy:addSubcard(card);
 			end
-            if dummy:subcardsLength() > 0 then
+			if dummy:subcardsLength() > 0 then
 				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_RECYCLE, xiahouyuan:objectName())
 				room:moveCardTo(dummy, player, xiahouyuan, sgs.Player_PlaceHand, reason)
-            end
-            dummy:deleteLater()
-        end
-        return false
+			end
+			dummy:deleteLater()
+		end
+		return false
 	end,
 	can_trigger = function(self, target)
 		return target ~= nil

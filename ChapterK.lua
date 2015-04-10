@@ -13,7 +13,7 @@
 LuaKanpo = sgs.CreateOneCardViewAsSkill{
 	name = "LuaKanpo",
 	filter_pattern = ".|black|.|hand",
-    response_pattern = "nullification",
+	response_pattern = "nullification",
 	view_as = function(self, first)
 		local ncard = sgs.Sanguosha:cloneCard("nullification", first:getSuit(), first:getNumber())
 		ncard:addSubcard(first)
@@ -138,7 +138,7 @@ LuaKeji = sgs.CreateTriggerSkill{
 				end
 			end
 		else
-		    if player:getPhase() == sgs.Player_Play then
+			if player:getPhase() == sgs.Player_Play then
 				local card = nil
 				if event == sgs.PreCardUsed then
 					card = data:toCardUse().card

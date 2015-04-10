@@ -56,12 +56,12 @@ LuaRendeVs = sgs.CreateViewAsSkill{
 	response_pattern = "@@LuaRende",
 	view_filter = function(self, selected, to_select)
 		if sgs.Self:property("GameMode"):toString() == "04_1v3" and #selected + sgs.Self:getMark("LuaRende") >= 2 then
-           return false
-        else
-            if to_select:isEquipped() then return false end
-            if sgs.Sanguosha:getCurrentCardUsePattern() == "@@LuaRende" then
+		   return false
+		else
+			if to_select:isEquipped() then return false end
+			if sgs.Sanguosha:getCurrentCardUsePattern() == "@@LuaRende" then
 				local rende_list = sgs.Self:property("LuaRende"):toString():split("+")
-                return function()
+				return function()
 					for _,id in pairs(rende_list)do
 						if id == to_select:getEffectiveId() then
 							return true
@@ -69,11 +69,11 @@ LuaRendeVs = sgs.CreateViewAsSkill{
 					end
 					return false
 				end
-            else
-                return true
+			else
+				return true
 			end
 			return true
-        end
+		end
 	end, 
 	view_as = function(self, cards) 
 		if #cards > 0 then
@@ -86,9 +86,9 @@ LuaRendeVs = sgs.CreateViewAsSkill{
 	end, 
 	enabled_at_play = function(self, player)
 		if player:property("GameMode"):toString() == "04_1v3" and player:getMark("LuaRende") >= 2 then
-           return false
+		   return false
 		end
-        return (not player:hasUsed("#LuaRendeCard")) and not player:isKongcheng()
+		return (not player:hasUsed("#LuaRendeCard")) and not player:isKongcheng()
 	end, 
 }
 LuaRende = sgs.CreateTriggerSkill{

@@ -45,7 +45,7 @@
 				room:setPlayerFlag(source, "Global_JijiangFailed");
 				return nil
 			end
-	        return self
+			return self
 		end,
 		on_use = function(self, room, source, targets)
 		end,
@@ -143,14 +143,14 @@
 		on_trigger = function(self, event, player, data)
 			local change = data:toPhaseChange()
 			local room = player:getRoom()
-	        if change.to ~= sgs.Player_NotActive then return false end
-	        for _,p in sgs.qlist(room:getAllPlayers())do
-	            if p:getTag("LuaXHantong"):toBool() then
+			if change.to ~= sgs.Player_NotActive then return false end
+			for _,p in sgs.qlist(room:getAllPlayers())do
+				if p:getTag("LuaXHantong"):toBool() then
 					room:handleAcquireDetachSkills(p, "-hujia|-jijiang|-jiuyuan|-xueyi")
 					p:removeTag("LuaXHantong")
 				end
-	        end
-	        return false
+			end
+			return false
 		end,
 		can_trigger = function(self, target)
 			return target
@@ -331,30 +331,30 @@
 		on_trigger = function(self, triggerEvent, player, data)
 			local room = player:getRoom()
 			if triggerEvent == sgs.Death then
-	            local death = data:toDeath()
-	            if death.who:objectName() ~= player:objectName() then
-	                return false
+				local death = data:toDeath()
+				if death.who:objectName() ~= player:objectName() then
+					return false
 				end
-	        elseif triggerEvent == sgs.EventPhaseChanging then
-	            local change = data:toPhaseChange()
-	            if change.to ~= sgs.Player_NotActive then
-	                return false
+			elseif triggerEvent == sgs.EventPhaseChanging then
+				local change = data:toPhaseChange()
+				if change.to ~= sgs.Player_NotActive then
+					return false
 				end
-	        end
-	        if room:getTag("LuaHeyiSource"):toPlayer() and room:getTag("LuaHeyiSource"):toPlayer():objectName() == player:objectName()then
-	            room:removeTag("LuaHeyiSource")
-	            local list = player:getTag(self:objectName()):toString():split("+");
-	            player:removeTag(self:objectName())
-	            for _,p in sgs.qlist(room:getOtherPlayers(player))do
-	                if table.contains(list,p:objectName()) then
-	                    room:detachSkillFromPlayer(p, "feiying", false, true)
-					end
-	            end
-	        end
-	        if player and player:isAlive() and player:hasSkill(self:objectName()) and triggerEvent == sgs.EventPhaseChanging then
-	            room:askForUseCard(player, "@@LuaHeyi", "@LuaHeyi")
 			end
-	        return false
+			if room:getTag("LuaHeyiSource"):toPlayer() and room:getTag("LuaHeyiSource"):toPlayer():objectName() == player:objectName()then
+				room:removeTag("LuaHeyiSource")
+				local list = player:getTag(self:objectName()):toString():split("+");
+				player:removeTag(self:objectName())
+				for _,p in sgs.qlist(room:getOtherPlayers(player))do
+					if table.contains(list,p:objectName()) then
+						room:detachSkillFromPlayer(p, "feiying", false, true)
+					end
+				end
+			end
+			if player and player:isAlive() and player:hasSkill(self:objectName()) and triggerEvent == sgs.EventPhaseChanging then
+				room:askForUseCard(player, "@@LuaHeyi", "@LuaHeyi")
+			end
+			return false
 		end,
 		can_trigger = function(self, target)
 			return target
@@ -393,9 +393,9 @@
 			local room = player:getRoom()
 			if event == sgs.TurnStart then
 				room:setPlayerMark(player,"@hengjiang",0)
-	        elseif event == sgs.CardsMoveOneTime then
+			elseif event == sgs.CardsMoveOneTime then
 				local move = data:toMoveOneTime()
-	            if move.from and player:objectName() == move.from:objectName() and player:getPhase() == sgs.Player_Discard and bit32.band(move.reason.m_reason,sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
+				if move.from and player:objectName() == move.from:objectName() and player:getPhase() == sgs.Player_Discard and bit32.band(move.reason.m_reason,sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
 					player:setFlags("LuaHengjiangDiscarded")
 			end
 			elseif event == sgs.EventPhaseChanging then
@@ -652,15 +652,15 @@
 			local drowning = sgs.Sanguosha:cloneCard("drowning")
 			local opponent = player:getNext()
 			if not opponent:isAlive() then return false end
-	        adrowing:setSkillName("_LuaHuwei")
-	        if not (drowning:isAvailable(player) and player:isProhibited(opponent, drowning)) then
-	            drowning:deleteLater()
-	            return false
-	        end
-	        if room:askForSkillInvoke(player, objectName()) then
-	            room:useCard(CardUseStruct(drowning,player,opponent),false)
+			adrowing:setSkillName("_LuaHuwei")
+			if not (drowning:isAvailable(player) and player:isProhibited(opponent, drowning)) then
+				drowning:deleteLater()
+				return false
 			end
-	        return false
+			if room:askForSkillInvoke(player, objectName()) then
+				room:useCard(CardUseStruct(drowning,player,opponent),false)
+			end
+			return false
 		end,
 	}
 ```
@@ -825,95 +825,95 @@
 	end
 	function GetAvailableGenerals(zuoci) ----完全按照源码写的，累死了……
 		local all = sgs.Sanguosha:getLimitedGeneralNames()
-	    local room = zuoci:getRoom()
-	        if (isNormalGameMode(room:getMode()) or room:getMode():find("_mini_")or room:getMode() == "custom_scenario") then
+		local room = zuoci:getRoom()
+			if (isNormalGameMode(room:getMode()) or room:getMode():find("_mini_")or room:getMode() == "custom_scenario") then
 				table.removeTable(all,sgs.GetConfig("Banlist/Roles",""):split(","))
-	        elseif (room:getMode() == "04_1v3") then
+			elseif (room:getMode() == "04_1v3") then
 				table.removeTable(all,sgs.GetConfig("Banlist/HulaoPass",""):split(","))
-	        elseif (room:getMode() == "06_XMode") then
+			elseif (room:getMode() == "06_XMode") then
 				table.removeTable(all,sgs.GetConfig("Banlist/XMode",""):split(","))
-	            for _,p in sgs.qlist(room:getAlivePlayers())do
+				for _,p in sgs.qlist(room:getAlivePlayers())do
 					table.removeTable(all,(p:getTag("XModeBackup"):toStringList()) or {})
 				end
-	        elseif (room:getMode() == "02_1v1") then
+			elseif (room:getMode() == "02_1v1") then
 				table.removeTable(all,sgs.GetConfig("Banlist/1v1",""):split(","))
-	            for _,p in sgs.qlist(room:getAlivePlayers())do
+				for _,p in sgs.qlist(room:getAlivePlayers())do
 					table.removeTable(all,(p:getTag("1v1Arrange"):toStringList()) or {})
 				end
-	        end
-	        local Huashens = {}
+			end
+			local Huashens = {}
 			local Hs_String = zuoci:getTag("LuaHuashens"):toString()
 			if Hs_String and Hs_String ~= "" then
 				Huashens = Hs_String:split("+")
 			end
 			table.removeTable(all,Huashens)
-	        for _,player in sgs.qlist(room:getAlivePlayers())do
-	            local name = player:getGeneralName()
-	            if sgs.Sanguosha:isGeneralHidden(name) then
-	                local fname = sgs.Sanguosha:findConvertFrom(name);
-	                if fname ~= "" then name = fname end
-	            end
-	            table.removeOne(all,name)	
-	            if player:getGeneral2() == nil then continue end	
-	            name = player:getGeneral2Name();
-	            if sgs.Sanguosha:isGeneralHidden(name) then
-	                local fname = sgs.Sanguosha:findConvertFrom(name);
-	                if fname ~= "" then name = fname end
-	            end
-	            table.removeOne(all,name)
-	        end	
-	        local banned = {"zuoci", "guzhielai", "dengshizai", "caochong", "jiangboyue", "bgm_xiahoudun"}
+			for _,player in sgs.qlist(room:getAlivePlayers())do
+				local name = player:getGeneralName()
+				if sgs.Sanguosha:isGeneralHidden(name) then
+					local fname = sgs.Sanguosha:findConvertFrom(name);
+					if fname ~= "" then name = fname end
+				end
+				table.removeOne(all,name)	
+				if player:getGeneral2() == nil then continue end	
+				name = player:getGeneral2Name();
+				if sgs.Sanguosha:isGeneralHidden(name) then
+					local fname = sgs.Sanguosha:findConvertFrom(name);
+					if fname ~= "" then name = fname end
+				end
+				table.removeOne(all,name)
+			end	
+			local banned = {"zuoci", "guzhielai", "dengshizai", "caochong", "jiangboyue", "bgm_xiahoudun"}
 			table.removeTable(all,banned)	
-	        return all
+			return all
 	end
 	function AcquireGenerals(zuoci, n)
 		local room = zuoci:getRoom();
-	    local Huashens = {}
+		local Huashens = {}
 		local Hs_String = zuoci:getTag("LuaHuashens"):toString()
 		if Hs_String and Hs_String ~= "" then
 			Huashens = Hs_String:split("+")
 		end
-	    local list = GetAvailableGenerals(zuoci)
-	    if #list == 0 then return end
-	    n = math.min(n, #list)
+		local list = GetAvailableGenerals(zuoci)
+		if #list == 0 then return end
+		n = math.min(n, #list)
 		local acquired = {}
-	    repeat
+		repeat
 			local rand = math.random(1,#list)
 			if not table.contains(acquired,list[rand]) then
 				table.insert(acquired,(list[rand]))
 			end
 		until #acquired == n		
-	        for _,name in pairs(acquired)do
-	            table.insert(Huashens,name)
-	            localgeneral = sgs.Sanguosha:getGeneral(name)
-	            if general then
-	                for _,skill in sgs.list(general:getTriggerSkills()) do
-	                    if skill:isVisible() then
-	                        room:getThread():addTriggerSkill(skill)
+			for _,name in pairs(acquired)do
+				table.insert(Huashens,name)
+				localgeneral = sgs.Sanguosha:getGeneral(name)
+				if general then
+					for _,skill in sgs.list(general:getTriggerSkills()) do
+						if skill:isVisible() then
+							room:getThread():addTriggerSkill(skill)
 						end
-	                end
-	            end
-	        end
-	        zuoci:setTag("LuaHuashens", sgs.QVariant(table.concat(Huashens, "+")))	
-	        local hidden = {}
+					end
+				end
+			end
+			zuoci:setTag("LuaHuashens", sgs.QVariant(table.concat(Huashens, "+")))	
+			local hidden = {}
 			for i = 1,n,1 do
 				table.insert(hidden,"unknown")
 			end
-	        for _,p in sgs.qlist(room:getAllPlayers())do
+			for _,p in sgs.qlist(room:getAllPlayers())do
 				local splist = sgs.SPlayerList()
 				splist:append(p)
-	            if p:objectName() == zuoci:objectName() then
-	                room:doAnimate(4, zuoci:objectName(), table.concat(acquired,":"), splist)
-	            else
-	                room:doAnimate(4, zuoci:objectName(),table.concat(hidden,":"),splist);
+				if p:objectName() == zuoci:objectName() then
+					room:doAnimate(4, zuoci:objectName(), table.concat(acquired,":"), splist)
+				else
+					room:doAnimate(4, zuoci:objectName(),table.concat(hidden,":"),splist);
 				end
-	        end	
-	        local log = sgs.LogMessage()
-	        log.type = "#GetHuashen"
-	        log.from = zuoci
-	        log.arg = n
-	        log.arg2 = #Huashens
-	        room:sendLog(log)
+			end	
+			local log = sgs.LogMessage()
+			log.type = "#GetHuashen"
+			log.from = zuoci
+			log.arg = n
+			log.arg2 = #Huashens
+			room:sendLog(log)
 			--Json大法好 ^_^
 			local jsonLog ={
 				"#GetHuashenDetail",
@@ -923,77 +923,77 @@
 				table.concat(acquired,"\\, \\"),
 				"",
 			}
-	        room:doNotify(zuoci,sgs.CommandType.S_COMMAND_LOG_SKILL,json.encode(jsonLog));
-	        room:setPlayerMark(zuoci, "@huashen", #Huashens)
+			room:doNotify(zuoci,sgs.CommandType.S_COMMAND_LOG_SKILL,json.encode(jsonLog));
+			room:setPlayerMark(zuoci, "@huashen", #Huashens)
 	end
 	function SelectSkill(zuoci)
 		local room = zuoci:getRoom();
-	    local ac_dt_list = {}
+		local ac_dt_list = {}
 		local huashen_skill = zuoci:getTag("LuaHuashenSkill"):toString();
-	        if huashen_skill ~= "" then
-	            table.insert(ac_dt_list,"-"..huashen_skill)
+			if huashen_skill ~= "" then
+				table.insert(ac_dt_list,"-"..huashen_skill)
 			end
-	        local Huashens = {}
+			local Huashens = {}
 			local Hs_String = zuoci:getTag("LuaHuashens"):toString()
 			if Hs_String and Hs_String ~= "" then
 				Huashens = Hs_String:split("+")
 			end
-	        if #Huashens == 0 then return end
-	        local huashen_generals = {}
-	        for _,huashen in pairs(Huashens)do
-	            table.insert(huashen_generals,huashen)
+			if #Huashens == 0 then return end
+			local huashen_generals = {}
+			for _,huashen in pairs(Huashens)do
+				table.insert(huashen_generals,huashen)
 			end
-	        local skill_names = {}
-	        local skill_name
-	        local general 
-	        local ai = zuoci:getAI();
-	        if (ai) then
+			local skill_names = {}
+			local skill_name
+			local general 
+			local ai = zuoci:getAI();
+			if (ai) then
 				local hash = {}
-	            for _,general_name in pairs (huashen_generals) do
-	                local general = sgs.Sanguosha:getGeneral(general_name)
-	                for _,skill in (general:getVisibleSkillList())do
-	                    if skill:isLordSkill() or skill:getFrequency() == sgs.Skill_Limited or skill:getFrequency() == sgs.Skill_Wake then
-	                        continue
+				for _,general_name in pairs (huashen_generals) do
+					local general = sgs.Sanguosha:getGeneral(general_name)
+					for _,skill in (general:getVisibleSkillList())do
+						if skill:isLordSkill() or skill:getFrequency() == sgs.Skill_Limited or skill:getFrequency() == sgs.Skill_Wake then
+							continue
 						end
-	                    if not table.contains(skill_names,skill:objectName()) then
-	                        hash[skill:objectName()] = general;
-	                        table.insert(skill_names,skill:objectName())
-	                    end
-	                end
-	            end
-	            if #skill_names == 0 then return end
-	            skill_name = ai:askForChoice("huashen",table.concat(skill_names,"+"), sgs.QVariant());
-	            general = hash[skill_name]
-	        else
-				local general_name = room:askForGeneral(zuoci, table.concat(huashen_generals,"+"))
-	            general = sgs.Sanguosha:getGeneral(general_name)
-				assert(general)
-	            for _,skill in sgs.qlist(general:getVisibleSkillList())do
-	                if skill:isLordSkill() or skill:getFrequency() == sgs.Skill_Limited or skill:getFrequency() == sgs.Skill_Wake then
-	                    continue
+						if not table.contains(skill_names,skill:objectName()) then
+							hash[skill:objectName()] = general;
+							table.insert(skill_names,skill:objectName())
+						end
 					end
-	                if not table.contains(skill_names,skill:objectName()) then
-	                    table.insert(skill_names,skill:objectName())
-	                end
-	            end
-	            if #skill_names > 0 then
-	                skill_name = room:askForChoice(zuoci, "huashen",table.concat(skill_names,"+"))
 				end
-	        end
-	        local kingdom = general:getKingdom()
-	        if zuoci:getKingdom() ~= kingdom then
-	            if kingdom == "god" then
-	                kingdom = room:askForKingdom(zuoci);
-	                local log = sgs.LogMessage()
-	                log.type = "#ChooseKingdom";
-	                log.from = zuoci;
-	                log.arg = kingdom;
-	                room:sendLog(log);
-	            end
-	            room:setPlayerProperty(zuoci, "kingdom", sgs.QVariant(kingdom))
-	        end
-	        if zuoci:getGender() ~= general:getGender() then
-	            zuoci:setGender(general:getGender())
+				if #skill_names == 0 then return end
+				skill_name = ai:askForChoice("huashen",table.concat(skill_names,"+"), sgs.QVariant());
+				general = hash[skill_name]
+			else
+				local general_name = room:askForGeneral(zuoci, table.concat(huashen_generals,"+"))
+				general = sgs.Sanguosha:getGeneral(general_name)
+				assert(general)
+				for _,skill in sgs.qlist(general:getVisibleSkillList())do
+					if skill:isLordSkill() or skill:getFrequency() == sgs.Skill_Limited or skill:getFrequency() == sgs.Skill_Wake then
+						continue
+					end
+					if not table.contains(skill_names,skill:objectName()) then
+						table.insert(skill_names,skill:objectName())
+					end
+				end
+				if #skill_names > 0 then
+					skill_name = room:askForChoice(zuoci, "huashen",table.concat(skill_names,"+"))
+				end
+			end
+			local kingdom = general:getKingdom()
+			if zuoci:getKingdom() ~= kingdom then
+				if kingdom == "god" then
+					kingdom = room:askForKingdom(zuoci);
+					local log = sgs.LogMessage()
+					log.type = "#ChooseKingdom";
+					log.from = zuoci;
+					log.arg = kingdom;
+					room:sendLog(log);
+				end
+				room:setPlayerProperty(zuoci, "kingdom", sgs.QVariant(kingdom))
+			end
+			if zuoci:getGender() ~= general:getGender() then
+				zuoci:setGender(general:getGender())
 			end
 			----Json大法又释放了一次英姿！
 			local jsonValue = {
@@ -1002,12 +1002,12 @@
 				general:objectName(),
 				skill_name,
 			}
-	        room:doBroadcastNotify(sgs.CommandType.S_COMMAND_LOG_EVENT, json.encode(jsonValue))
-	        zuoci:setTag("LuaHuashenSkill",sgs.QVariant(skill_name))
-	        if skill_name ~= "" then
-	            table.insert(ac_dt_list,skill_name)
+			room:doBroadcastNotify(sgs.CommandType.S_COMMAND_LOG_EVENT, json.encode(jsonValue))
+			zuoci:setTag("LuaHuashenSkill",sgs.QVariant(skill_name))
+			if skill_name ~= "" then
+				table.insert(ac_dt_list,skill_name)
 			end
-	        room:handleAcquireDetachSkills(zuoci, table.concat(ac_dt_list,"|"), true)
+			room:handleAcquireDetachSkills(zuoci, table.concat(ac_dt_list,"|"), true)
 	end
 	LuaHuashen = sgs.CreateTriggerSkill{
 		name = "LuaHuashen",
@@ -1105,16 +1105,16 @@
 			local room = player:getRoom()
 			local card
 			local ids, disabled_ids,all = sgs.IntList(),sgs.IntList(),sgs.IntList()
-	            for _,card in sgs.qlist(player:getCards("he"))do
-	                if player:isCardLimited(card, sgs.Card_MethodResponse) then
-	                    disabled_ids:append(card:getEffectiveId())
-	                else
-	                    ids:append(card:getEffectiveId())
+				for _,card in sgs.qlist(player:getCards("he"))do
+					if player:isCardLimited(card, sgs.Card_MethodResponse) then
+						disabled_ids:append(card:getEffectiveId())
+					else
+						ids:append(card:getEffectiveId())
 					end
 					all:append(card:getEffectiveId())
-	            end
-	            if (not ids:isEmpty()) and room:askForSkillInvoke(player, self:objectName(), data)) {
-	                if judge.who:objectName() ~= player:objectName() and not player:isKongcheng() then
+				end
+				if (not ids:isEmpty()) and room:askForSkillInvoke(player, self:objectName(), data)) {
+					if judge.who:objectName() ~= player:objectName() and not player:isKongcheng() then
 						local jsonLog ={
 							"$ViewAllCards",
 							judge.who:objectName(),
@@ -1123,13 +1123,13 @@
 							"",
 							"",
 						}
-	                    room:doNotify(judge.who,sgs.CommandType.S_COMMAND_LOG_SKILL, json.encode(jsonLog))
-	                end
-	                room:fillAG(all, judge.who, disabled_ids)
-	                local card_id = room:askForAG(judge.who, ids, false, self:objectName())
-	                room:clearAG(judge.who)
-	                card = sgs.Sanguosha:getCard(card_id)
-	            end
+						room:doNotify(judge.who,sgs.CommandType.S_COMMAND_LOG_SKILL, json.encode(jsonLog))
+					end
+					room:fillAG(all, judge.who, disabled_ids)
+					local card_id = room:askForAG(judge.who, ids, false, self:objectName())
+					room:clearAG(judge.who)
+					card = sgs.Sanguosha:getCard(card_id)
+				end
 			if card then
 				room:retrial(card, player, judge, self:objectName())
 			end
@@ -1235,7 +1235,7 @@
 		handling_method = sgs.Card_MethodNone,
 		filter = function(self, targets, to_select)
 			return #targets == 0 and to_select:hasSkill("LuaHuangtian")
-	           and to_select:objectName() ~= sgs.Self:objectName() and not to_select:hasFlag("LuaHuangtianInvoked")
+			   and to_select:objectName() ~= sgs.Self:objectName() and not to_select:hasFlag("LuaHuangtianInvoked")
 		end,
 		on_use = function(self, room, source, targets)
 			local zhangjiao = targets[1]
@@ -1273,44 +1273,44 @@
 			local room = player:getRoom()
 			local lords = room:findPlayersBySkillName(self:objectName())
 			if (triggerEvent == sgs.TurnStart)or(triggerEvent == sgs.EventAcquireSkill and data:toString() == "LuaHuangtian") then 
-	            if lords:isEmpty() then return false end
-	            local players
-	            if lords:length() > 1 then
-	                players = room:getAlivePlayers()
-	            else
-	                players = room:getOtherPlayers(lords:first())
+				if lords:isEmpty() then return false end
+				local players
+				if lords:length() > 1 then
+					players = room:getAlivePlayers()
+				else
+					players = room:getOtherPlayers(lords:first())
 				end
-	            for _,p in sgs.qlist(players) do
-	                if not p:hasSkill("LuaHuangtianVS") then
-	                    room:attachSkillToPlayer(p, "LuaHuangtianVS")
+				for _,p in sgs.qlist(players) do
+					if not p:hasSkill("LuaHuangtianVS") then
+						room:attachSkillToPlayer(p, "LuaHuangtianVS")
 					end
-	            end
-	        elseif triggerEvent == sgs.EventLoseSkill and data:toString() == "LuaHuangtian" then
-	            if lords:length() > 2 then return false end
-	            local players
-	            if lords:isEmpty() then
-	                players = room:getAlivePlayers()
-	            else
-	                players:append(lords:first())
 				end
-	            for _,p in sgs.qlist(players) do
-	                if p:hasSkill("LuaHuangtianVS") then
-	                    room:detachSkillFromPlayer(p, "LuaHuangtianVS", true)
-					end
-	            end
-	        elseif (triggerEvent == sgs.EventPhaseChanging) then
-	            local phase_change = data:toPhaseChange()
-	            if phase_change.from ~= sgs.Player_Play then return false end
-	            if player:hasFlag("ForbidHuangtian") then
-	                room:setPlayerFlag(player, "-ForbidHuangtian")
+			elseif triggerEvent == sgs.EventLoseSkill and data:toString() == "LuaHuangtian" then
+				if lords:length() > 2 then return false end
+				local players
+				if lords:isEmpty() then
+					players = room:getAlivePlayers()
+				else
+					players:append(lords:first())
 				end
-	            local players = room:getOtherPlayers(player);
-	            for _,p in sgs.qlist(players) do
-	                if p:hasFlag("HuangtianInvoked") then
-	                    room:setPlayerFlag(p, "-HuangtianInvoked")
+				for _,p in sgs.qlist(players) do
+					if p:hasSkill("LuaHuangtianVS") then
+						room:detachSkillFromPlayer(p, "LuaHuangtianVS", true)
 					end
-	            end
-	        end
+				end
+			elseif (triggerEvent == sgs.EventPhaseChanging) then
+				local phase_change = data:toPhaseChange()
+				if phase_change.from ~= sgs.Player_Play then return false end
+				if player:hasFlag("ForbidHuangtian") then
+					room:setPlayerFlag(player, "-ForbidHuangtian")
+				end
+				local players = room:getOtherPlayers(player);
+				for _,p in sgs.qlist(players) do
+					if p:hasFlag("HuangtianInvoked") then
+						room:setPlayerFlag(p, "-HuangtianInvoked")
+					end
+				end
+			end
 			return false
 		end,
 	}
@@ -1490,27 +1490,27 @@
 			local jsonValue = {
 				8
 			}
-	        room:doBroadcastNotify(sgs.CommandType.S_COMMAND_LOG_EVENT, json.encode(jsonValue))
+			room:doBroadcastNotify(sgs.CommandType.S_COMMAND_LOG_EVENT, json.encode(jsonValue))
 			if triggerEvent == sgs.EventPhaseStart then
-	            if (not triggerable(player)) or (player:getPhase() ~= sgs.Player_RoundStart and player:getPhase() ~= sgs.Player_NotActive) then
+				if (not triggerable(player)) or (player:getPhase() ~= sgs.Player_RoundStart and player:getPhase() ~= sgs.Player_NotActive) then
 					return false
 				end
-	        elseif triggerEvent == sgs.Death then
-	            local death = data:toDeath()
-	            if death.who:objectName() ~= player:objectName() or (not player:hasSkill(self:objectName())) then 
+			elseif triggerEvent == sgs.Death then
+				local death = data:toDeath()
+				if death.who:objectName() ~= player:objectName() or (not player:hasSkill(self:objectName())) then 
 					return false 
 				end
-	        elseif triggerEvent == sgs.EventLoseSkill then
-	            if data:toString() ~= self:objectName() or player:getPhase() == sgs.Player_NotActive then return false end
-	        elseif (triggerEvent == sgs.EventAcquireSkill) then
-	            if data:toString() ~= self:objectName() or (not player:hasSkill(self:objectName())) or player:getPhase() == sgs.Player_NotActive then
-	                return false
+			elseif triggerEvent == sgs.EventLoseSkill then
+				if data:toString() ~= self:objectName() or player:getPhase() == sgs.Player_NotActive then return false end
+			elseif (triggerEvent == sgs.EventAcquireSkill) then
+				if data:toString() ~= self:objectName() or (not player:hasSkill(self:objectName())) or player:getPhase() == sgs.Player_NotActive then
+					return false
 				end
-	        elseif triggerEvent == sgs.MaxHpChanged or triggerEvent == sgs.HpChanged then
-	            if not(room:getCurrent() and room:getCurrent():hasSkill(self:objectName())) then
+			elseif triggerEvent == sgs.MaxHpChanged or triggerEvent == sgs.HpChanged then
+				if not(room:getCurrent() and room:getCurrent():hasSkill(self:objectName())) then
 					return false 
 				end
-	        end			
+			end			
 			for _,p in sgs.qlist(room:getOtherPlayers(player))do
 				if p:getHp() >= (p:getMaxHp()/2) then
 					room:filterCards(p,p:getCards("he"),true)
@@ -1519,10 +1519,10 @@
 					end
 				end
 			end
-	        local jsonValue = {
+			local jsonValue = {
 				8
 			}
-	        room:doBroadcastNotify(sgs.CommandType.S_COMMAND_LOG_EVENT, json.encode(jsonValue))
+			room:doBroadcastNotify(sgs.CommandType.S_COMMAND_LOG_EVENT, json.encode(jsonValue))
 		end,
 		can_trigger = function(self, player)
 			return player
