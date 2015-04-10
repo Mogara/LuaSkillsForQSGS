@@ -960,43 +960,55 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 [返回索引](#技能索引)
 ##琴音
 **相关武将**：神·周瑜  
-**描述**：当你于弃牌阶段内弃置了两张或更多的手牌后，你可以令所有角色各回复1点体力或各失去1点体力。**每阶段限一次**  
+**描述**：弃牌阶段结束时，若你于本阶段内弃置了至少两张你的牌，你可以选择一项：令所有角色各回复1点体力，或令所有角色各失去1点体力。  
 **引用**：LuaQinyin  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaQinyin = sgs.CreateTriggerSkill{
 		name = "LuaQinyin" ,
-		events = {sgs.CardsMoveOneTime, sgs.EventPhaseStart} ,
-		on_trigger = function(self, event, player, data)
-			local room = player:getRoom()
-			if player:getPhase() ~= sgs.Player_Discard then return false end
+		events = {sgs.CardsMoveOneTime, sgs.EventPhaseEnd, sgs.EventPhaseChanging} ,
+		can_trigger = function(self, target)
+			return target ~= nil
+		end ,
+		on_trigger = function(self, event, shenzhouyu, data)
+			local room = shenzhouyu:getRoom()
 			if event == sgs.CardsMoveOneTime then
 				local move = data:toMoveOneTime()
-				if (move.from:objectName() == player:objectName()) and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
-					player:setMark("LuaQinyin", player:getMark("LuaQinyin") + move.card_ids:length())
-					if (not player:hasFlag("LuaQinyinUsed")) and (player:getMark("LuaQinyin") >= 2) then
-						if player:askForSkillInvoke(self:objectName()) then
-							player:setFlags("LuaQinyinUsed")
-							local result = room:askForChoice(player, "LuaQinyin", "up+down")
-							local all_players = room:getAllPlayers()
-							if result == "up" then
-								for _, player in sgs.qlist(all_players) do
-									local recover = sgs.RecoverStruct()
-									recover.who = player
-									room:recover(player, recover)
-								end
-							elseif result == "down" then
-								for _, player in sgs.qlist(all_players) do
-									room:loseHp(player)
-								end
-							end
+				if shenzhouyu:getPhase() == sgs.Player_Discard and move.from:objectName() == shenzhouyu:objectName()  and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
+					shenzhouyu:addMark("qinyin", move.card_ids:length())
+				end
+			elseif event == sgs.EventPhaseEnd and shenzhouyu:getPhase() == sgs.Player_Discard and shenzhouyu:getMark("qinyin") >= 2 then
+				local choices = {"down+cancel"}
+				local all_players = room:getAllPlayers()
+				for _, player in sgs.qlist(all_players) do
+					if player:isWounded() then
+						table.insert(choices, "up")
+						break
+					end
+				end
+				local result = room:askForChoice(shenzhouyu, self:objectName(), table.concat(choices, "+"))
+				if (result == "cancel") then
+					return
+				else
+					room:notifySkillInvoked(shenzhouyu, "qinyin")
+					if result == "up" then
+						for _, player in sgs.qlist(all_players) do
+							room:recover(player, sgs.RecoverStruct(shenzhouyu))
+						end
+					elseif (result == "down") then
+						for _, player in sgs.qlist(all_players) do
+							room:loseHp(player)
+						end
+						local index = 1
+						if room:findPlayer("caocao+shencaocao+yt_shencaocao") then
+							index = 3
 						end
 					end
 				end
-			elseif event == sgs.EventPhaseStart then
-				player:setMark("qinyin", 0)
-				player:setFlags("-QinyinUsed")
+			elseif event == sgs.EventPhaseChanging then
+				shenzhouyu:setMark("qinyin", 0)
 			end
+			return false
 		end
 	}
 ```
