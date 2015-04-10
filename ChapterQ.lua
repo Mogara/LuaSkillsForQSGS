@@ -978,7 +978,7 @@ LuaQinyin = sgs.CreateTriggerSkill{
 				end
 			end
 			local result = room:askForChoice(shenzhouyu, self:objectName(), table.concat(choices, "+"))
-			if (result == "cancel") then
+			if result == "cancel" then
 				return
 			else
 				room:notifySkillInvoked(shenzhouyu, "qinyin")
@@ -986,7 +986,7 @@ LuaQinyin = sgs.CreateTriggerSkill{
 					for _, player in sgs.qlist(all_players) do
 						room:recover(player, sgs.RecoverStruct(shenzhouyu))
 					end
-				elseif (result == "down") then
+				elseif result == "down" then
 					for _, player in sgs.qlist(all_players) do
 						room:loseHp(player)
 					end
