@@ -990,10 +990,6 @@ LuaQinyin = sgs.CreateTriggerSkill{
 					for _, player in sgs.qlist(all_players) do
 						room:loseHp(player)
 					end
-					local index = 1
-					if room:findPlayer("caocao+shencaocao+yt_shencaocao") then
-						index = 3
-					end
 				end
 			end
 		elseif event == sgs.EventPhaseChanging then
