@@ -17,12 +17,12 @@ LuaBazhen = sgs.CreateTriggerSkill{
 	events = {sgs.CardAsked} ,
 	can_trigger = function(self, target)
 		return (target and target:isAlive() and target:hasSkill(self:objectName())) and not target:getArmor() and target:hasArmorEffect("eight_diagram") 
-	end
+	end ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local pattern = data:toStringList()[1]
 		if pattern == "jink" then
-			if player:askForSkillInvoke("eight_diagram", data) then
+			if player:askForSkillInvoke("eight_diagram") then
 				local judge = sgs.JudgeStruct()
 				judge.pattern = ".|red"
 				judge.good = true
