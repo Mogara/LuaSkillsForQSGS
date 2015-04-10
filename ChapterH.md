@@ -1377,19 +1377,17 @@
 **相关武将**：火·诸葛亮  
 **描述**：你可以将一张红色手牌当【火攻】使用。  
 **引用**：LuaHuoji  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaHuoji = sgs.CreateOneCardViewAsSkill{
 		name = "LuaHuoji",
 		filter_pattern = ".|red|.|hand",
-		view_as = function(self, card)
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local id = card:getId()
-			local fireattack = sgs.Sanguosha:cloneCard("FireAttack", suit, point)
-			fireattack:setSkillName(self:objectName())
-			fireattack:addSubcard(id)
-			return fireattack
+		response_or_use = true,
+		view_as = function(self, originalCard)
+			local fire_attack = sgs.Sanguosha:cloneCard("FireAttack", originalCard:getSuit(), originalCard:getNumber())
+			fire_attack:setSkillName(self:objectName())
+			fire_attack:addSubcard(originalCard)
+			return fire_attack
 		end
 	}
 ```
