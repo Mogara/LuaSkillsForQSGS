@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（B区）
 	技能索引：
-		八阵、霸刀、霸王、拜印、豹变、豹变、暴敛、暴凌、暴虐、悲歌、北伐、賁育、奔雷、奔袭、崩坏、笔伐、闭月、变天、秉壹、补益、不屈、不屈
+		八阵、霸刀、霸王、拜印、豹变、豹变、暴敛、暴凌、暴虐、悲歌、悲鸣、北伐、賁育、奔雷、奔袭、崩坏、笔伐、闭月、变天、秉壹、补益、不屈、不屈
 ]]--
 --[[
 	技能名：八阵（锁定技）
@@ -9,40 +9,32 @@
 	描述：若你的装备区没有防具牌，视为你装备【八卦阵】。
 	引用：LuaBazhen
 	状态：0405验证通过
+	备注：八阵改为直接发动八卦阵
 ]]--
 LuaBazhen = sgs.CreateTriggerSkill{
 	name = "LuaBazhen",
 	frequency = sgs.Skill_Compulsory,
-	events = {sgs.CardAsked},
+	events = {sgs.CardAsked} ,
+	can_trigger = function(self, target)
+		return (target and target:isAlive() and target:hasSkill(self:objectName())) and not target:getArmor() and target:hasArmorEffect("eight_diagram") 
+	end
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local pattern = data:toStringList()[1]
 		if pattern == "jink" then
-			if player:askForSkillInvoke("EightDiagram", data) then
+			if player:askForSkillInvoke("eight_diagram", data) then
 				local judge = sgs.JudgeStruct()
 				judge.pattern = ".|red"
 				judge.good = true
-				judge.reason = self:objectName()
+				judge.reason = "eight_diagram"
 				judge.who = player
-				judge.play_animation = true
-				room:setEmotion(player, "armor/EightDiagram");
 				room:judge(judge)
 				if judge:isGood() then
+					room:setEmotion(player, "armor/eight_diagram");
 					local jink = sgs.Sanguosha:cloneCard("jink", sgs.Card_NoSuit, 0)
-					jink:setSkillName(self:objectName())
+					jink:setSkillName("eight_diagram")
 					room:provide(jink)
 					return true
-				end
-			end
-		end
-		return false
-	end,
-	can_trigger = function(self, target)
-		if target and target:isAlive() and target:hasSkill(self:objectName()) and target:getArmor() then
-			if target:getMark("Armor_Nullified")==0 and not target:hasFlag("WuqianTarget") then
-				if target:getMark("Equips_Nullified_to_Yourself") == 0 then
-					local list = target:getTag("Qinggang"):toStringList()
-					return #list == 0
 				end
 			end
 		end
