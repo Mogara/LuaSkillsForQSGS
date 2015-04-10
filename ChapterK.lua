@@ -8,23 +8,21 @@
 	相关武将：火·诸葛亮
 	描述：你可以将一张黑色手牌当【无懈可击】使用。
 	引用：LuaKanpo
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaKanpo = sgs.CreateOneCardViewAsSkill{
 	name = "LuaKanpo",
 	filter_pattern = ".|black|.|hand",
-    response_pattern = "nullification",
-	view_as = function(self, first)
-		local ncard = sgs.Sanguosha:cloneCard("nullification", first:getSuit(), first:getNumber())
-		ncard:addSubcard(first)
+    	response_pattern = "nullification",
+    	response_or_use = true,
+	view_as = function(self, originalCard)
+		local ncard = sgs.Sanguosha:cloneCard("nullification", originalCard:getSuit(), originalCard:getNumber())
+		ncard:addSubcard(originalCard)
 		ncard:setSkillName(self:objectName())
 		return ncard
-	end,
+	end ,
 	enabled_at_nullification = function(self, player)
-		for _, card in sgs.qlist(player:getHandcards()) do
-			if card:isBlack() then return true end
-		end
-		return false
+		return not player:isKongcheng() or not player:getHandPile():isEmpty()
 	end
 }
 --[[
