@@ -394,62 +394,20 @@
 **相关武将**：山·邓艾  
 **描述**：你可以将一张“田”当【顺手牵羊】使用。  
 **引用**：LuaJixi  
-**状态**：1217验证通过(需与技能“屯田”配合使用)
+**状态**：0405验证通过(需与技能“屯田”配合使用)
 ```lua
-	LuaJixiCard = sgs.CreateSkillCard{
-		name = "LuaJixiCard",
-		target_fixed = true,
-		will_throw = false,
-		on_use = function(self, room, source, targets)
-			local fields = source:getPile("field")
-			local count = fields:length()
-			local id
-			if count == 0 then
-				return
-			elseif count == 1 then
-				id = fields:first()
-			else
-				room:fillAG(fields, source)
-				id = room:askForAG(source, fields, false, self:objectName())
-				source:invoke("clearAG")
-				if id == -1 then
-					return
-				end
-			end
-			local card = sgs.Sanguosha:getCard(id)
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local snatch = sgs.Sanguosha:cloneCard("Snatch", suit, point)
+	LuaJixi = sgs.CreateOneCardViewAsSkill{
+		name = "LuaJixi", 
+		filter_pattern = ".|.|.|field",
+		expand_pile = "field",
+		view_as = function(self, originalCard) 
+			local snatch = sgs.Sanguosha:cloneCard("snatch", originalCard:getSuit(), originalCard:getNumber())
+			snatch:addSubcard(originalCard:getId())
 			snatch:setSkillName(self:objectName())
-			snatch:addSubcard(id)
-			local list = room:getAlivePlayers()
-			local targets = sgs.SPlayerList()
-			local emptylist = sgs.PlayerList()
-			for _,p in sgs.qlist(list) do
-				if snatch:targetFilter(emptylist, p, source) then
-					if not source:isProhibited(p, snatch) then
-						targets:append(p)
-					end
-				end
-			end
-			if not targets:isEmpty() then
-				local target = room:askForPlayerChosen(source, targets, self:objectName())
-				local use = sgs.CardUseStruct()
-				use.card = snatch
-				use.from = source
-				use.to:append(target)
-				room:useCard(use)
-			end
-		end
-	}
-	LuaJixi = sgs.CreateViewAsSkill{
-		name = "LuaJixi",
-		n = 0,
-		view_as = function(self, cards)
-			return LuaJixiCard:clone()
-		end,
+			return snatch
+		end, 
 		enabled_at_play = function(self, player)
-			return player:getPile("field"):length() > 0
+			return not player:getPile("field"):isEmpty()
 		end
 	}
 ```
