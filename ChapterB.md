@@ -2,52 +2,40 @@
 代码速查手册（B区）
 ==
 #技能索引
-[八阵](#八阵)、[霸刀](#霸刀)、[霸王](#霸王)、[拜印](#拜印)、[豹变](#豹变)、[暴虐](#暴虐)、[悲歌](#悲歌)、[北伐](#北伐)、[崩坏](#崩坏)、[笔伐](#笔伐)、[闭月](#闭月)、[补益](#补益)、[不屈](#不屈)、[不屈-旧风](#不屈-旧风) 
+[八阵](#八阵)、[霸刀](#霸刀)、[霸王](#霸王)、[拜印](#拜印)、[豹变](#豹变)、[豹变-台](#豹变-台)、[暴敛](#暴敛)、[暴凌](#暴凌)、[暴虐](#暴虐)、[悲歌](#悲歌)、[悲鸣](#悲鸣)、[北伐](#北伐)、[賁育](#賁育)、[奔雷](#奔雷)、[奔袭](#奔袭)、[崩坏](#崩坏)、[笔伐](#笔伐)、[闭月](#闭月)、[变天](#变天)、[秉壹](#秉壹)、[补益](#补益)、[不屈](#不屈)、[不屈-旧风](#不屈-旧风) 
 
 [返回目录](README.md#目录)
 ##八阵
 **相关武将**：火·诸葛亮  
-**描述**：**锁定技，**若你的装备区没有防具牌，视为你装备着【八卦阵】。  
+**描述**：**锁定技，**若你的装备区没有防具牌，视为你装备【八卦阵】。  
 **引用**：LuaBazhen  
-**状态**：1217验证通过
+**状态**：0405验证通过  
+**备注**：八阵改为直接发动八卦阵
 ```lua
 	LuaBazhen = sgs.CreateTriggerSkill{
 		name = "LuaBazhen",
 		frequency = sgs.Skill_Compulsory,
-		events = {sgs.CardAsked},
+		events = {sgs.CardAsked} ,
+		can_trigger = function(self, target)
+			return (target and target:isAlive() and target:hasSkill(self:objectName())) and not target:getArmor() and target:hasArmorEffect("eight_diagram") 
+		end ,
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			local pattern = data:toStringList()[1]
 			if pattern == "jink" then
-				if player:askForSkillInvoke("EightDiagram",data) then
+				if player:askForSkillInvoke("eight_diagram") then
 					local judge = sgs.JudgeStruct()
 					judge.pattern = ".|red"
 					judge.good = true
-					judge.reason = self:objectName()
+					judge.reason = "eight_diagram"
 					judge.who = player
-					judge.play_animation = true
-					room:setEmotion(player, "armor/EightDiagram");
 					room:judge(judge)
 					if judge:isGood() then
+						room:setEmotion(player, "armor/eight_diagram");
 						local jink = sgs.Sanguosha:cloneCard("jink", sgs.Card_NoSuit, 0)
-						jink:setSkillName(self:objectName())
+						jink:setSkillName("eight_diagram")
 						room:provide(jink)
 						return true
-					end
-				end
-			end
-			return false
-		end,
-		can_trigger = function(self, target)
-			if target then
-				if target:isAlive() and target:hasSkill(self:objectName()) then
-					if not target:getArmor() then
-						if target:getMark("Armor_Nullified")==0 and not target:hasFlag("WuqianTarget") then
-							if target:getMark("Equips_Nullified_to_Yourself") == 0 then
-								local list = target:getTag("Qinggang"):toStringList()
-								return #list == 0
-							end
-						end
 					end
 				end
 			end
@@ -60,8 +48,8 @@
 ##霸刀
 **相关武将**：智·华雄  
 **描述**：当你成为黑色的【杀】目标后，你可以使用一张【杀】  
-**引用**：LuaBadao  
-**状态**：1217验证通过
+**引用**：LuaBadao   
+**状态**：0405验证通过
 ```lua
 	LuaBadao = sgs.CreateTriggerSkill{
 		name = "LuaBadao" ,
