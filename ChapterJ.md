@@ -74,21 +74,22 @@
 **相关武将**：山·孙策  
 **描述**：每当你使用（指定目标后）或被使用（成为目标后）一张【决斗】或红色的【杀】时，你可以摸一张牌。  
 **引用**：LuaJiang  
-**状态**：1217验证通过  
+**状态**：0405验证通过  
 ```lua
-	LuaJiang = sgs.CreateTriggerSkill{
+	luaJiang = sgs.CreateTriggerSkill{
 		name = "LuaJiang" ,
-		events = {sgs.TargetConfirmed},
-		frequency = sgs.Skill_Frequent,	
-		on_trigger = function(self, event, player, data)
+		events = {sgs.TargetConfirmed, sgs.TargetSpecified},
+		frequency = sgs.Skill_Frequent, 
+		on_trigger = function(self, event, sunce, data)
 			local use = data:toCardUse()
-			if (use.from:objectName() == player:objectName()) or use.to:contains(player) then
+			if event == sgs.TargetSpecified or (event == sgs.TargetConfirmed and use.to:contains(sunce)) then
 				if use.card:isKindOf("Duel") or (use.card:isKindOf("Slash") and use.card:isRed()) then
-					if player:askForSkillInvoke(self:objectName(),data) then
-						player:drawCards(1)
+					if sunce:askForSkillInvoke(self:objectName(), data) then
+						sunce:drawCards(1, self:objectName())
 					end
 				end
 			end
+			return false
 		end
 	}
 ```
