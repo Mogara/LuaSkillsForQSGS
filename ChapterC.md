@@ -510,7 +510,7 @@
 **引用**：LuaChouhai  
 **状态**：0405验证通过
 ```lua
-		LuaChouhai = sgs.CreateTriggerSkill{
+	LuaChouhai = sgs.CreateTriggerSkill{
 		name = "LuaChouhai",
 		events = {sgs.DamageInflicted},
 		frequency = sgs.Skill_Compulsory, 
