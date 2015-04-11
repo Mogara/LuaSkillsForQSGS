@@ -962,27 +962,25 @@
 [返回索引](#技能索引)
 ##烈刃
 **相关武将**：火·祝融、1v1·祝融1v1  
-**描述**：每当你使用【杀】对目标角色造成一次伤害后，你可以与其拼点，若你赢，你获得该角色的一张牌。  
+**描述**：每当你使用【杀】对目标角色造成伤害后，你可以与该角色拼点：若你赢，你获得其一张牌。 
 **引用**：LuaLieren  
-**状态**：1217验证通过（但是和源码稍微有点区别）
+**状态**：0405验证通过
 ```lua
 	LuaLieren = sgs.CreateTriggerSkill{
 		name = "LuaLieren",
-		frequency = sgs.Skill_NotFrequent,
 		events = {sgs.Damage},
-		on_trigger = function(self, event, player, data)
+		on_trigger = function(self, event, zhurong, data)
+			local room = zhurong:getRoom()
 			local damage = data:toDamage()
-			local room = player:getRoom()
 			local target = damage.to
-			if damage.card and damage.card:isKindOf("Slash") and (not player:isKongcheng())
-					and (not target:isKongcheng()) and (target:objectName() ~= player:objectName() and (not damage.chain) and (not damage.transfer)) then
-				if room:askForSkillInvoke(player, self:objectName(), data) then
-					local success = player:pindian(target, "LuaLieren", nil)
+			if damage.card and damage.card:isKindOf("Slash") and (not zhurong:isKongcheng()) and (not target:isKongcheng()) and (not 	target:hasFlag("Global_DebutFlag")) and (not damage.chain) and (not damage.transfer) then
+				if room:askForSkillInvoke(zhurong, self:objectName(), data) then
+					local success = zhurong:pindian(target, "LuaLieren", nil)
 					if not success then return false end
 					if not target:isNude() then
-						local card_id = room:askForCardChosen(player, target, "he", self:objectName())
-						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
-						room:moveCardTo(sgs.Sanguosha:getCard(card_id),player,sgs.Player_PlaceHand,reason)
+						local card_id = room:askForCardChosen(zhurong, target, "he", self:objectName())
+						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, zhurong:objectName())
+						room:obtainCard(zhurong, sgs.Sanguosha:getCard(card_id), reason, room:getCardPlace(card_id) ~= Player_PlaceHand)
 					end
 				end
 			end
