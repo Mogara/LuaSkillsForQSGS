@@ -222,6 +222,19 @@ LuaDanji = sgs.CreateTriggerSkill{
 	描述： 每当你造成伤害后，你可以摸一张牌，然后结束当前回合并结束一切结算。
 	状态：Lua无法实现
 ]]--
+luaNosDanshou = sgs.CreateTriggerSkill{
+	name = "luaNosDanshou" ,
+	events = {sgs.Damage},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local use = data:toCardUse()
+		if room:askForSkillInvoke(player, self:objectName(), data) then
+			player:drawCards(1, self:objectName())
+			room:throwEvent(sgs.TurnBroken)
+		end
+		return false
+	end
+}
 --[[
 	技能名：啖酪
 	相关武将：SP·杨修
