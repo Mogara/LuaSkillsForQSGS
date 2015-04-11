@@ -504,6 +504,33 @@
 ```
 [返回索引](#技能索引)
 
+##仇海
+**相关武将**：SP·孙皓  
+**描述**：**锁定技，**当你受到伤害时，若你没有手牌，你令此伤害+1。 
+**引用**：LuaChouhai  
+**状态**：0405验证通过
+```lua
+		LuaChouhai = sgs.CreateTriggerSkill{
+		name = "LuaChouhai",
+		events = {sgs.DamageInflicted},
+		frequency = sgs.Skill_Compulsory, 
+		can_trigger = function(self, target)
+			return target ~= nil and target:isAlive()
+		end,
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			if player:isKongcheng() then
+				room:sendCompulsoryTriggerLog(player, self:objectName(), true)
+				local damage = data:toDamage()
+				damage.damage = damage.damage + 1
+				data:setValue(damage)
+			end
+			return false
+		end
+	}
+```
+[返回索引](#技能索引)
+
 ##筹粮
 **相关武将**：智·蒋琬  
 **描述**：回合结束阶段开始时，若你手牌少于三张，你可以从牌堆顶亮出4-X张牌（X为你的手牌数），你获得其中的基本牌，把其余的牌置入弃牌堆  
