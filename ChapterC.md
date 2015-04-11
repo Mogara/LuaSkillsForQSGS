@@ -1,7 +1,62 @@
 代码速查手册（C区）
 ==
 #技能索引
-[藏机](#藏机)、[藏匿](#藏匿)、[缠怨](#缠怨)、[超级观星](#超级观星)、[称象](#称象)、[称象-倚天](#称象-倚天)、[持重](#持重)、[冲阵](#冲阵)、[仇海](#仇海)、[筹粮](#筹粮)、[醇醪](#醇醪)、[聪慧](#聪慧)、[存嗣](#存嗣)、[挫锐](#挫锐)
+[残蚀](#残蚀)、[藏机](#藏机)、[藏匿](#藏匿)、[缠怨](#缠怨)、[超级观星](#超级观星)、[称象](#称象)、[称象-倚天](#称象-倚天)、[持重](#持重)、[冲阵](#冲阵)、[仇海](#仇海)、[筹粮](#筹粮)、[醇醪](#醇醪)、[聪慧](#聪慧)、[存嗣](#存嗣)、[挫锐](#挫锐)
+
+
+##残蚀
+**相关武将**：SP·孙皓
+**描述**：摸牌阶段开始时，你可以放弃摸牌，摸X张牌（X为已受伤的角色数），若如此做，当你于此回合内使用基本牌或锦囊牌时，你弃置一张牌。 
+**引用**：LuaCanshi  
+**状态**：0405验证通过
+```lua
+	LuaCanshi = sgs.CreateTriggerSkill{
+		name = "LuaCanshi",
+		events = {sgs.EventPhaseStart, sgs.CardUsed, sgs.CardResponded},
+		can_trigger = function(self, target)
+			return target ~= nil and target:isAlive()
+		end,
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			if event == sgs.EventPhaseStart then
+				if player:isAlive() and player:hasSkill(self:objectName()) and player:getPhase() == sgs.Player_Draw then
+					local n = 0
+					for _, p in sgs.qlist(room:getAlivePlayers()) do
+						if p:isWounded() or (player:hasLordSkill("LuaGuiming") and (not room:correctSkillValidity(player,"LuaGuiming")) and p:getKingdom() == "wu")then
+							n = n + 1
+						end
+					end
+					if n > 0 and player:askForSkillInvoke(self:objectName(), data) then
+						player:setFlags(self:objectName())
+						player:drawCards(n, self:objectName())
+						return true
+					end
+				end
+			else 
+				if player:hasFlag(self:objectName()) then
+					local card = nil
+					if event == CardUsed then
+						card = data:toCardUse().card
+					else 
+						local resp = data:toCardResponse()
+						if resp.m_isUse then
+							card = resp.m_card
+						end
+					end
+					if (card ~= nil and card:isKindOf("BasicCard")) or (card:isKindOf("TrickCard")) then
+						room:sendCompulsoryTriggerLog(player, self:objectName())
+						if not room:askForDiscard(player, self:objectName(), 1, 1, false, true, "@canshi-discard") then
+							local cards = player:getCards("he")
+							local c = cards:at(math.random(0, cards:length() - 1))
+							room:throwCard(c, player)
+						end
+					end
+				end
+			end
+			return false
+		end
+	}
+```
 
 [返回目录](README.md#目录)
 ##藏机
@@ -136,6 +191,7 @@
 		end
 	}
 ```
+
 [返回索引](#技能索引)
 ##藏匿
 **相关武将**：铜雀台·伏皇后  
