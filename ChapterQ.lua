@@ -965,7 +965,7 @@ LuaQinyin = sgs.CreateTriggerSkill{
 		local room = shenzhouyu:getRoom()
 		if event == sgs.CardsMoveOneTime then
 			local move = data:toMoveOneTime()
-			if shenzhouyu:getPhase() == sgs.Player_Discard and move.from:objectName() == shenzhouyu:objectName() and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
+			if shenzhouyu:getPhase() == sgs.Player_Discard and move.from and move.from:objectName() == shenzhouyu:objectName() and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
 				shenzhouyu:addMark("qinyin", move.card_ids:length())
 			end
 		elseif event == sgs.EventPhaseEnd and shenzhouyu:getPhase() == sgs.Player_Discard and shenzhouyu:getMark("qinyin") >= 2 then
