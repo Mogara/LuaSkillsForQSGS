@@ -222,10 +222,32 @@ LuaDawu = sgs.CreateTriggerSkill{
 [返回索引](#技能索引)
 ## 胆守
 **相关武将**：一将成名2013·朱然  
-**描述**： 每当你造成伤害后，你可以摸一张牌，然后结束当前回合并结束一切结算。  
-**状态**：Lua无法实现
+**描述**： 出牌阶段，你可以弃置X张牌并选择攻击范围内的一名角色：若X为1，你弃置该角色的一张牌；若X为2，你令该角色交给你一张牌；若X为3，你对该角色造成一点伤害；若X大于或等于4，你与该角色各摸两张牌。（X为本阶段你已发动“胆守”的次数+1） 
+**状态**：有空再做
 
 [返回索引](#技能索引)
+## 胆守
+**相关武将**：旧-一将成名2013·朱然-旧  
+**描述**： 每当你造成伤害后，你可以摸一张牌，然后结束当前回合并结束一切结算。 
+**状态**：0405验证通过
+```lua
+	luaNosDanshou = sgs.CreateTriggerSkill{
+		name = "luaNosDanshou" ,
+		events = {sgs.Damage},
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			local use = data:toCardUse()
+			if room:askForSkillInvoke(player, self:objectName(), data) then
+				player:drawCards(1, self:objectName())
+				room:throwEvent(sgs.TurnBroken)
+			end
+			return false
+		end
+	}
+
+```
+[返回索引](#技能索引)
+
 ## 啖酪
 **相关武将**：SP·杨修  
 **描述**：当一张锦囊牌指定包括你在内的多名目标后，你可以摸一张牌，若如此做，此锦囊牌对你无效。  
