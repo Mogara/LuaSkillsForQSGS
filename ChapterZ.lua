@@ -689,21 +689,19 @@ LuaZhijianCard = sgs.CreateSkillCard{
 	end,
 	on_effect = function(self, effect)
 		local erzhang = effect.from
-		local room = erzhang:getRoom()
-		room:moveCardTo(self, erzhang, effect.to, sgs.Player_PlaceEquip,
-			sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, erzhang:objectName(), "zhijian", ""))
-		erzhang:drawCards(1)
+		erzhang:getRoom():moveCardTo(self, erzhang, effect.to, sgs.Player_PlaceEquip,sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, erzhang:objectName(), "zhijian", ""))
+		erzhang:drawCards(1, "zhijian")
 	end
 }
 LuaZhijian = sgs.CreateOneCardViewAsSkill{
 	name = "LuaZhijian",	
 	filter_pattern = "EquipCard|.|.|hand",
 	view_as = function(self, card)
-		local vscard = LuaZhijianCard:clone()
-		vscard:addSubcard(card)
-		vscard:setSkillName(self:objectName())
-		return vscard
-	end,	
+		local zhijian_card = LuaZhijianCard:clone()
+		zhijian_card:addSubcard(card)
+		zhijian_card:setSkillName(self:objectName())
+		return zhijian_card
+	end
 }
 --[[
 	技能名：直言
