@@ -704,35 +704,33 @@
 **引用**：LuaZhijian  
 **状态**：0405验证通过  
 ```lua
-		LuaZhijianCard = sgs.CreateSkillCard{
-			name = "LuaZhijianCard",
-			will_throw = false,
-			handling_method = sgs.Card_MethodNone,
-			filter = function(self, targets, to_select, erzhang)
-				if #targets ~= 0 or to_select:objectName() == erzhang:objectName() then return false end
-				local card = sgs.Sanguosha:getCard(self:getSubcards():first())
-				local equip = card:getRealCard():toEquipCard()
-				local equip_index = equip:location()
-				return to_select:getEquip(equip_index) == nil
-			end,
-			on_effect = function(self, effect)
-				local erzhang = effect.from
-				local room = erzhang:getRoom()
-				room:moveCardTo(self, erzhang, effect.to, sgs.Player_PlaceEquip,
-					sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, erzhang:objectName(), "zhijian", ""))
-				erzhang:drawCards(1)
-			end
-		}
-		LuaZhijian = sgs.CreateOneCardViewAsSkill{
-			name = "LuaZhijian",	
-			filter_pattern = "EquipCard|.|.|hand",
-			view_as = function(self, card)
-				local vscard = LuaZhijianCard:clone()
-				vscard:addSubcard(card)
-				vscard:setSkillName(self:objectName())
-				return vscard
-			end,	
-		}
+	LuaZhijianCard = sgs.CreateSkillCard{
+		name = "LuaZhijianCard",
+		will_throw = false,
+		handling_method = sgs.Card_MethodNone,
+		filter = function(self, targets, to_select, erzhang)
+			if #targets ~= 0 or to_select:objectName() == erzhang:objectName() then return false end
+			local card = sgs.Sanguosha:getCard(self:getSubcards():first())
+			local equip = card:getRealCard():toEquipCard()
+			local equip_index = equip:location()
+			return to_select:getEquip(equip_index) == nil
+		end,
+		on_effect = function(self, effect)
+			local erzhang = effect.from
+			erzhang:getRoom():moveCardTo(self, erzhang, effect.to, sgs.Player_PlaceEquip,sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, erzhang:objectName(), "zhijian", ""))
+			erzhang:drawCards(1, "zhijian")
+		end
+	}
+	LuaZhijian = sgs.CreateOneCardViewAsSkill{
+		name = "LuaZhijian",	
+		filter_pattern = "EquipCard|.|.|hand",
+		view_as = function(self, card)
+			local zhijian_card = LuaZhijianCard:clone()
+			zhijian_card:addSubcard(card)
+			zhijian_card:setSkillName(self:objectName())
+			return zhijian_card
+		end
+	}
 ```
 [返回索引](#技能索引)
 
