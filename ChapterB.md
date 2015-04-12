@@ -38,7 +38,8 @@
 			return false
 		end,
 		can_trigger = function(self, target)
-			return target and target:isAlive() and target:hasSkill(self:objectName()) and not target:getArmor() and not target:hasArmorEffect("eight_diagram")
+			return target and target:isAlive() and target:hasSkill(self:objectName()) 
+			and not target:getArmor() and not target:hasArmorEffect("eight_diagram")
 		end
 	}
 ```
