@@ -14,39 +14,30 @@ LuaBazhen = sgs.CreateTriggerSkill{
 	name = "LuaBazhen",
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.CardAsked},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
+	on_trigger = function(self, event, wolong, data)
+		local room = wolong:getRoom()
 		local pattern = data:toStringList()[1]
-		if pattern == "jink" then
-			if player:askForSkillInvoke("EightDiagram", data) then
-				local judge = sgs.JudgeStruct()
-				judge.pattern = ".|red"
-				judge.good = true
-				judge.reason = self:objectName()
-				judge.who = player
-				judge.play_animation = true
-				room:setEmotion(player, "armor/EightDiagram");
-				room:judge(judge)
-				if judge:isGood() then
-					local jink = sgs.Sanguosha:cloneCard("jink", sgs.Card_NoSuit, 0)
-					jink:setSkillName(self:objectName())
-					room:provide(jink)
-					return true
-				end
+		if pattern ~= "jink" then return false end
+		if wolong:askForSkillInvoke("eight_diagram") then
+			local judge = sgs.JudgeStruct()
+			judge.pattern = ".|red"
+			judge.good = true
+			judge.reason = "eight_diagram"
+			judge.who = wolong
+			judge.play_animation = true
+			room:judge(judge)
+			if judge:isGood() then
+				room:setEmotion(wolong, "armor/EightDiagram");
+				local jink = sgs.Sanguosha:cloneCard("jink", sgs.Card_NoSuit, 0)
+				jink:setSkillName(self:objectName())
+				room:provide(jink)
+				return true
 			end
 		end
 		return false
 	end,
 	can_trigger = function(self, target)
-		if target and target:isAlive() and target:hasSkill(self:objectName()) and target:getArmor() then
-			if target:getMark("Armor_Nullified")==0 and not target:hasFlag("WuqianTarget") then
-				if target:getMark("Equips_Nullified_to_Yourself") == 0 then
-					local list = target:getTag("Qinggang"):toStringList()
-					return #list == 0
-				end
-			end
-		end
-		return false
+		return target and target:isAlive() and target:hasSkill(self:objectName()) and not target:getArmor() and not target:hasArmorEffect("eight_diagram")
 	end
 }
 --[[
