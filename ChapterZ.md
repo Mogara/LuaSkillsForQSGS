@@ -1106,29 +1106,27 @@
 
 ##智愚
 **相关武将**：二将成名·荀攸  
-**描述**：每当你受到一次伤害后，你可以摸一张牌，然后展示所有手牌，若颜色均相同，伤害来源弃置一张手牌。  
+**描述**：每当你受到伤害后，你可以摸一张牌：若如此做，你展示所有手牌。若你的手牌均为同一颜色，伤害来源弃置一张手牌。 
 **引用**：LuaZhiyu  
-**状态**：1217验证通过  
+**状态**：0405验证通过  
 ```lua
-		LuaZhiyu = sgs.CreateTriggerSkill{
+		LuaZhiyu = sgs.CreateMasochismSkill{
 			name = "LuaZhiyu" ,
-			events = {sgs.Damaged} ,
-			on_trigger = function(self, event, player, data)
-				if player:askForSkillInvoke(self:objectName(), data) then
-					player:drawCards(1)
-					local room = player:getRoom()
-					if player:isKongcheng() then return false end
-					room:showAllCards(player)
-					local cards = player:getHandcards()
-					local isred = cards:first():isRed()
+			on_damaged = function(self, target, damage)
+				if target:askForSkillInvoke(self:objectName(), sgs.QVariant():setValue(damage)) then
+					target:drawCards(1, self:objectName())
+					local room = target:getRoom()
+					if target:isKongcheng() then return false end
+					room:showAllCards(target)
+					local cards = target:getHandcards()
+					local color = cards:first():isRed()
 					local same_color = true
 					for _, card in sgs.qlist(cards) do
-						if card:isRed() ~= isred then
+						if card:isRed() ~= color then
 							same_color = false
 							break
 						end
 					end
-					local damage = data:toDamage()
 					if same_color and damage.from and damage.from:canDiscard(damage.from, "h") then
 						room:askForDiscard(damage.from, self:objectName(), 1, 1)
 					end
