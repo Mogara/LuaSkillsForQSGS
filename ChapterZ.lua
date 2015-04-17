@@ -1072,8 +1072,8 @@ LuaZhichiClear = sgs.CreateTriggerSkill{
 LuaZhiyu = sgs.CreateMasochismSkill{
 	name = "LuaZhiyu" ,
 	on_damaged = function(self, target, damage)
-		if target:askForSkillInvoke(self:objectName()) then
-			target:drawCards(1, self:objectName(), sgs.QVariant():setValue(damage))
+		if target:askForSkillInvoke(self:objectName(), sgs.QVariant():setValue(damage)) then
+			target:drawCards(1, self:objectName())
 			local room = target:getRoom()
 			if target:isKongcheng() then return false end
 			room:showAllCards(target)
