@@ -962,19 +962,18 @@ LuaXZhiBa = sgs.CreateViewAsSkill{
 --[[
 	技能名：制衡
 	相关武将：标准·孙权
-	描述：出牌阶段限一次，你可以弃置任意数量的牌，然后摸等量的牌。
+	描述：出牌阶段限一次，你可以弃置至少一张牌：若如此做，你摸等量的牌。 
 	引用：LuaZhiheng
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
+
 LuaZhihengCard = sgs.CreateSkillCard{
 	name = "LuaZhihengCard",
-	target_fixed = true,
-	will_throw = false,
+    target_fixed = true,
+    mute = true,
 	on_use = function(self, room, source, targets)
-		room:throwCard(self, source)
 		if source:isAlive() then
-			local count = self:subcardsLength()
-			room:drawCards(source, count)
+			room:drawCards(source, self:subcardsLength(), "zhiheng")
 		end
 	end
 }
@@ -982,20 +981,22 @@ LuaZhiheng = sgs.CreateViewAsSkill{
 	name = "LuaZhiheng",
 	n = 999,
 	view_filter = function(self, selected, to_select)
-		return true
+        return not sgs.Self:isJilei(to_select)
 	end,
 	view_as = function(self, cards)
-		if #cards > 0 then
-			local zhiheng_card = LuaZhihengCard:clone()
-			for _,card in pairs(cards) do
-				zhiheng_card:addSubcard(card)
-			end
-			zhiheng_card:setSkillName(self:objectName())
-			return zhiheng_card
+		if #cards == 0 then return nil end
+		local zhiheng_card = LuaZhihengCard:clone()
+		for _,card in pairs(cards) do
+			zhiheng_card:addSubcard(card)
 		end
+		zhiheng_card:setSkillName(self:objectName())
+		return zhiheng_card
 	end,
 	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaZhihengCard")
+		return not player:hasUsed("#LuaZhihengCard") and player:canDiscard(player, "he")
+	end,
+	enabled_at_response = function(self, target, pattern)
+		return pattern == "@zhiheng"
 	end
 }
 --[[
