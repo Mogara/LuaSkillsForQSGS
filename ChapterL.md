@@ -1,7 +1,7 @@
 代码速查手册（L区）
 ===
 #技能索引
-[狼顾](#狼顾)、[乐学](#乐学)、[雷击](#雷击)、[雷击-旧](#雷击-旧)、[离魂](#离魂)、[离间](#离间)、[离间-旧](#离间-旧)、[离迁](#离迁)、[礼让](#礼让)、[疠火](#疠火)、[连环](#连环)、[连理](#连理)、[连破](#连破)、[连营](#连营)、[烈弓](#烈弓)、[烈弓-1v1](#烈弓-1v1)、[烈刃](#烈刃)、[裂围](#裂围)、[流离](#流离)、[龙胆](#龙胆)、[龙魂](#龙魂)、[龙魂-高达](#龙魂-高达)、[龙吟](#龙吟)、[笼络](#笼络)、[乱击](#乱击)、[乱武](#乱武)、[裸衣](#裸衣)、[裸衣-翼](#裸衣-翼)、[洛神](#洛神)、[落雁](#落雁)、[落英](#落英)
+[狼顾](#狼顾)、[乐学](#乐学)、[雷击](#雷击)、[雷击-旧](#雷击-旧)、[离魂](#离魂)、[离间](#离间)、[离间-旧](#离间-旧)、[离迁](#离迁)、[礼让](#礼让)、[疠火](#疠火)、[连环](#连环)、[连理](#连理)、[连破](#连破)、[连营](#连营)、[连营-旧](#连营-旧)、[烈弓](#烈弓)、[烈弓-1v1](#烈弓-1v1)、[烈刃](#烈刃)、[裂围](#裂围)、[流离](#流离)、[龙胆](#龙胆)、[龙魂](#龙魂)、[龙魂-高达](#龙魂-高达)、[龙吟](#龙吟)、[笼络](#笼络)、[乱击](#乱击)、[乱武](#乱武)、[裸衣](#裸衣)、[裸衣-翼](#裸衣-翼)、[洛神](#洛神)、[落雁](#落雁)、[落英](#落英)
 
 [返回目录](README.md#目录)
 ##狼顾
@@ -834,49 +834,68 @@
 	}
 ```
 [返回索引](#技能索引)
-##连营
-**相关武将**：标准·陆逊、SP·台版陆逊、倚天·陆抗  
-**描述**：当你失去最后的手牌时，你可以摸一张牌。  
-**引用**：LuaLianying、LuaLianyingForZeroMaxCards  
-**状态**：1217验证通过
+##连营-旧
+**相关武将**：界限突破·陆逊  
+**描述**：每当你失去最后的手牌后，你可以令至多X名角色各摸一张牌。（X为你失去的手牌数） 
+**引用**：LuaLianying 
+**状态**：0405验证通过
 ```lua
+	LuaLianyingCard = sgs.CreateSkillCard{
+		name = "LuaLianyingCard",
+		filter = function(self, targets, to_select, erzhang)
+			return #targets < sgs.Self:getMark("lianying")
+		end,
+		on_effect = function(self, effect)
+			effect.to:drawCards(1, "lianying")
+		end
+	}
+	LuaLianyingVS = sgs.CreateZeroCardViewAsSkill{
+		name = "LuaLianying",
+		response_pattern = "@@LuaLianying",
+		view_as = function()
+			return LuaLianyingCard:clone()
+		end
+	}
 	LuaLianying = sgs.CreateTriggerSkill{
-		name = "LuaLianying" ,
-		frequency = sgs.Skill_Frequent ,
-		events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime} ,
-		on_trigger = function(self, event, player, data)
+		name = "LuaLianying",
+		events = {sgs.CardsMoveOneTime},
+		view_as_skill = LuaLianyingVS ,
+		on_trigger = function(self, event, luxun, data)
+			local room = luxun:getRoom()
 			local move = data:toMoveOneTime()
-			if move.from and (move.from:objectName() == player:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
-				if event == sgs.BeforeCardsMove then
-					if player:isKongcheng() then return false end
-					for _, id in sgs.qlist(player:handCards()) do
-						if not move.card_ids:contains(id) then return false end
-					end
-					if (player:getMaxCards() == 0) and (player:getPhase() == sgs.Player_Discard)
-							and (move.reason.m_reason == sgs.CardMoveReason_S_REASON_RULEDISCARD) then
-						player:getRoom():setPlayerFlag(player, "LuaLianyingZeroMaxCards")
-						return false
-					end
-					player:addMark(self:objectName())
-				else
-					if player:getMark(self:objectName()) == 0 then return false end
-					player:removeMark(self:objectName())
-					if player:askForSkillInvoke(self:objectName(), data) then
-						player:drawCards(1)
+			if move.from and move.from:objectName() == luxun:objectName() and move.from_places:contains(sgs.Player_PlaceHand) and move.is_last_handcard then
+				luxun:setTag("LianyingMoveData", data)
+				local count = 0
+				for i = 0, move.from_places:length() - 1, 1 do
+					if move.from_places:at(i) == sgs.Player_PlaceHand then
+						count = count + 1
 					end
 				end
+				room:setPlayerMark(luxun, "lianying", count)
+				room:askForUseCard(luxun, "@@LuaLianying", "@lianying-card:::" .. tostring(count))
 			end
 			return false
 		end
 	}
-	LuaLianyingForZeroMaxCards = sgs.CreateTriggerSkill{
-		name = "#LuaLianyingForZeroMaxcards" ,
-		events = {sgs.EventPhaseChanging} ,
-		on_trigger = function(self, event, player, data)
-			local change = data:toPhaseChange()
-			if (change.from == sgs.Player_Discard) and player:hasFlag("LuaLianyingZeroMaxCards") then
-				player:getRoom():setPlayerFlag(player, "-LuaLianyingZeroMaxCards")
-				if player:askForSkillInvoke("LuaLianying") then player:drawCards(1) end
+```
+[返回索引](#技能索引)
+##连营-旧
+**相关武将**：标准·陆逊、SP·台版陆逊、倚天·陆抗  
+**描述**：每当你失去最后的手牌后，你可以摸一张牌。 
+**引用**：LuaLianying 
+**状态**：0405验证通过
+```lua
+	LuaNosLianying = sgs.CreateTriggerSkill{
+		name = "LuaNosLianying" ,
+		frequency = sgs.Skill_Frequent ,
+		events = {sgs.CardsMoveOneTime} ,
+		on_trigger = function(self, event, luxun, data)
+			local room = luxun:getRoom()
+			local move = data:toMoveOneTime()
+			if move.from and move.from:objectName() == luxun:objectName() and move.from_places:contains(sgs.Player_PlaceHand) and move.is_last_handcard then
+				if room:askForSkillInvoke(luxun, self:objectName(), data) then
+					luxun:drawCards(1, self:objectName())
+				end
 			end
 			return false
 		end
