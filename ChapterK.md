@@ -1,7 +1,7 @@
 代码速查手册（K区）
 ==
 #技能索引
-[看破](#看破)、[慷忾](#慷忾)、[克构](#克构)、[克己](#克己)、[空城](#空城)、[苦肉](#苦肉)、[狂暴](#狂暴)、[狂风](#狂风)、[狂斧](#狂斧)、[狂骨](#狂骨)、[狂骨-1v1](#狂骨-1v1)、[溃围](#溃围)
+[看破](#看破)、[慷忾](#慷忾)、[克构](#克构)、[克己](#克己)、[空城](#空城)、[苦肉](#苦肉)、[苦肉-旧](#苦肉-旧)、[狂暴](#狂暴)、[狂风](#狂风)、[狂斧](#狂斧)、[狂骨](#狂骨)、[狂骨-1v1](#狂骨-1v1)、[溃围](#溃围)
 
 [返回目录](README.md#目录)
 ##看破
@@ -176,27 +176,54 @@
 ```
 [返回索引](#技能索引)
 ##苦肉
-**相关武将**：标准·黄盖、SP·台版黄盖  
-**描述**：出牌阶段，你可以失去1点体力，然后摸两张牌。  
+**相关武将**：界限突破·黄盖  
+**描述**：**出牌阶段限一次，**你可以弃置一张牌：若如此做，你失去1点体力。 
 **引用**：LuaKurou  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaKurouCard = sgs.CreateSkillCard{
 		name = "LuaKurouCard",
 		target_fixed = true,
-		will_throw = true,
-		on_use = function(self, room, player, targets)
-			room:loseHp(player, 1)
-			if player:isAlive() then
-				room:drawCards(player, 2)
+		on_use = function(self, room, source, targets)
+			room:loseHp(source)
+		end
+	}
+	LuaKurou = sgs.CreateOneCardViewAsSkill{
+		name = "LuaKurou",
+		filter_pattern = ".!",
+		enabled_at_play = function(self, player)
+			return not player:hasUsed("#LuaKurouCard")
+		end, 
+		view_as = function(self, originalCard) 
+			local card = LuaKurouCard:clone()
+			card:addSubcard(originalCard)
+			card:setSkillName(self:objectName())
+			return card
+		end
+	}
+```
+[返回索引](#技能索引)
+##苦肉
+**相关武将**：标准·黄盖、SP·台版黄盖  
+**描述**：出牌阶段，出牌阶段，你可以失去1点体力：若如此做，你摸两张牌。  
+**引用**：LuaNosKurou  
+**状态**：0405验证通过
+```lua
+	LuaNosKurouCard = sgs.CreateSkillCard{
+		name = "LuaNosKurouCard",
+		target_fixed = true,
+		on_use = function(self, room, source, targets)
+			room:loseHp(source)
+			if source:isAlive() then
+				room:drawCards(source, 2, "noskurou")
 			end
 		end
 	}
-	LuaKurou = sgs.CreateZeroCardViewAsSkill{
-		name = "LuaKurou",		
-		view_as = function(self, cards)
-			return LuaKurouCard:clone()
-		end,
+	LuaNosKurou = sgs.CreateZeroCardViewAsSkill{
+		name = "LuaNosKurou",
+		view_as = function()
+			return LuaNosKurouCard:clone()
+		end
 	}
 ```
 [返回索引](#技能索引)
