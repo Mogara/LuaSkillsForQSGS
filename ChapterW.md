@@ -252,13 +252,13 @@
 **相关武将**：林·贾诩、SP·贾诩  
 **描述**：**锁定技，**你不能被选择为黑色锦囊牌的目标。  
 **引用**：LuaWeimu  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaWeimu = sgs.CreateProhibitSkill{
 		name = "LuaWeimu" ,
 		is_prohibited = function(self, from, to, card)
-			return to:hasSkill(self:objectName()) and (card:isKindOf("TrickCard") or card:isKindOf("QiceCard"))
-				and card:isBlack() and not string.find(string.lower(card:getSkillName()),"nosguhuo")--特别注意旧蛊惑
+			return to:hasSkill(self:objectName()) and (card:isKindOf("TrickCard") or card:isKindOf("QiceCard")) 
+			and card:isBlack() and card:getSkillName() ~= "nosguhuo" --特别注意旧蛊惑
 		end
 	}
 ```
@@ -266,7 +266,7 @@
 ##伪帝
 **相关武将**：SP·袁术、SP·台版袁术  
 **描述**：**锁定技，**你拥有当前主公的主公技。  
-**状态**：验证失败
+**状态**：0405验证失败--目测永远都实现不了
 
 [返回索引](#技能索引)
 ##温酒
