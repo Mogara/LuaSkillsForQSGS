@@ -51,28 +51,27 @@
 [返回索引](#技能索引) 
 ##安恤
 **相关武将**：二将成名·步练师  
-**描述**：出牌阶段限一次，你可以选择两名手牌数不相等的其他角色，令其中手牌少的角色获得手牌多的角色的一张手牌并展示之，若此牌不为♠，你摸一张牌。  
+**描述**：阶段技。你可以选择手牌数不等的两名其他角色：若如此做，手牌较少的角色正面朝上获得另一名角色的一张手牌。若此牌不为♠，你摸一张牌。
 **引用**：LuaAnxu  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaAnxuCard = sgs.CreateSkillCard{
-		name = "LuaAnxuCard" ,
-		filter = function(self, targets, to_select)
-			if to_select:objectName() == sgs.Self:objectName() then return false end
+		name = "LuaAnxuCard",
+		filter = function(self, targets, to_select, player)
+			if to_select:objectName() == player:objectName() then return false end
 			if #targets == 0 then
 				return true
 			elseif #targets == 1 then
-				return (to_select:getHandcardNum() ~= targets[1]:getHandcardNum())
+				return to_select:getHandcardNum() ~= targets[1]:getHandcardNum()
 			else
 				return false
 			end
-		end ,
+		end,
 		feasible = function(self, targets)
 			return #targets == 2
-		end ,
+		end,
 		on_use = function(self, room, source, targets)
-			local from
-			local to
+			local from, to
 			if targets[1]:getHandcardNum() < targets[2]:getHandcardNum() then
 				from = targets[1]
 				to = targets[2]
@@ -80,24 +79,23 @@
 				from = targets[2]
 				to = targets[1]
 			end
-			local id = room:askForCardChosen(from,to,"h", "LuaAnxu")
+			local id = room:askForCardChosen(from, to, "h", "LuaAnxu")
 			local cd = sgs.Sanguosha:getCard(id)
-			room:obtainCard(from, cd)
+			from:obtainCard(cd)
 			room:showCard(from, id)
 			if cd:getSuit() ~= sgs.Card_Spade then
-				source:drawCards(1)
+				source:drawCards(1, "LuaAnxu")
 			end
-		end 
+		end
 	}
-	LuaAnxu = sgs.CreateViewAsSkill{
-		name = "LuaAnxu" ,
-		n = 0,
-		view_as = function()
+	LuaAnxu = sgs.CreateZeroCardViewAsSkill{
+		name = "LuaAnxu",
+		view_as = function(self) 
 			return LuaAnxuCard:clone()
-		end ,
+		end, 
 		enabled_at_play = function(self, player)
 			return not player:hasUsed("#LuaAnxuCard")
-		end
+		end,
 	}
 ```
 [返回索引](#技能索引) 
