@@ -294,21 +294,20 @@ LuaDangxian = sgs.CreateTriggerSkill{
 --[[
 	技能名：缔盟
 	相关武将：林·鲁肃
-	描述：出牌阶段限一次，你可以选择两名其他角色并弃置X张牌（X为两名目标角色手牌数的差），令这些角色交换手牌。
+	描述：出牌阶段限一次，你可以弃置任意数量的牌并选择两名手牌数差等于该数量的其他角色：若如此做，这两名角色交换他们的手牌。 
 	引用：LuaDimeng
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 local json = require ("json")
 LuaDimengCard = sgs.CreateSkillCard{
 	name = "LuaDimengCard",
-	target_fixed = false,
-	will_throw = true,
 	filter = function(self, targets, to_select)
 		if to_select:objectName() == sgs.Self:objectName() then return false end
 		if #targets == 0 then return true end
 		if #targets == 1 then
 			return math.abs(to_select:getHandcardNum() - targets[1]:getHandcardNum()) == self:subcardsLength()
 		end
+		return false
 	end,
 	feasible = function(self, targets)
 		return #targets == 2
@@ -321,29 +320,18 @@ LuaDimengCard = sgs.CreateSkillCard{
 		local n1 = a:getHandcardNum()
 		local n2 = b:getHandcardNum()
 		for _, p in sgs.qlist(room:getAlivePlayers()) do
-					if p:objectName() ~= a:objectName() and p:objectName() ~= b:objectName() then
-						room:doNotify(p, sgs.CommandType.S_COMMAND_EXCHANGE_KNOWN_CARDS,
-							  				   json.encode({a:objectName(), b:objectName()}))
-				end
+			if p:objectName() ~= a:objectName() and p:objectName() ~= b:objectName() then
+				room:doNotify(p, sgs.CommandType.S_COMMAND_EXCHANGE_KNOWN_CARDS, json.encode({a:objectName(), b:objectName()}))
 			end
-			local exchangeMove = sgs.CardsMoveList()
-			local move1 = sgs.CardsMoveStruct(a:handCards(), b, sgs.Player_PlaceHand,
-					   			  		  sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, a:objectName(), b:objectName(), "LuaDimeng", ""))
-			local move2 = sgs.CardsMoveStruct(b:handCards(), a, sgs.Player_PlaceHand,
-							  sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, b:objectName(), a:objectName(), "LuaDimeng", ""))
-			exchangeMove:append(move1)
-			exchangeMove:append(move2)
-			room:moveCards(exchangeMove, false)
- 		local log = sgs.LogMessage()
-		log.type = "#Dimeng"
-	   		log.from = a
-	   		log.to:append(b)
-	   		log.arg = tostring(n1)
-	   		log.arg2 = tostring(n2)
-	   		room:sendLog(log)
-	   		room:getThread():delay()
-	   		a:setFlags("-DimengTarget")
-	   		b:setFlags("-DimengTarget")
+		end
+		local exchangeMove = sgs.CardsMoveList()
+		local move1 = sgs.CardsMoveStruct(a:handCards(), b, sgs.Player_PlaceHand, sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, a:objectName(), b:objectName(), "dimeng", ""))
+		local move2 = sgs.CardsMoveStruct(b:handCards(), a, sgs.Player_PlaceHand, sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SWAP, b:objectName(), a:objectName(), "dimeng", ""))
+		exchangeMove:append(move1)
+		exchangeMove:append(move2)
+        	room:moveCardsAtomic(exchangeMove, false);
+	   	a:setFlags("-DimengTarget")
+	   	b:setFlags("-DimengTarget")
 	end
 }
 LuaDimeng = sgs.CreateViewAsSkill{
@@ -355,9 +343,9 @@ LuaDimeng = sgs.CreateViewAsSkill{
 	view_as = function(self, cards)
 		local card = LuaDimengCard:clone()
 		for _, c in ipairs(cards) do
-	   			card:addSubcard(c)
+	   		card:addSubcard(c)
 		end
-	   		return card
+	   	return card
 	end ,
 	enabled_at_play = function(self, player)
 		return not player:hasUsed("#LuaDimengCard")
