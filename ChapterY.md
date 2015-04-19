@@ -270,9 +270,9 @@
 [返回索引](#技能索引)
 ##业炎
 **相关武将**：神·周瑜  
-**描述**：**限定技，**出牌阶段，你可以选择一至三名角色，你分别对他们造成最多共3点火焰伤害（你可以任意分配），若你将对一名角色分配2点或更多的火焰伤害，你须先弃置四张不同花色的手牌并失去3点体力。  
+**描述**：**限定技，**出牌阶段，你可以对一至三名角色各造成1点火焰伤害；或你可以弃置四种花色的手牌各一张，失去3点体力并选择一至两名角色：若如此做，你对这些角色造成共计至多3点火焰伤害且对其中一名角色造成至少2点火焰伤害。   
 **引用**：LuaYeyan  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	Fire = function(player,target,damagePoint)
 		local damage = sgs.DamageStruct()
@@ -282,90 +282,137 @@
 		damage.nature = sgs.DamageStruct_Fire
 		player:getRoom():damage(damage)
 	end
-	LuaYeyanCard = sgs.CreateSkillCard{
-		name = "LuaYeyanCard",
+	function toSet(self)
+		local set = {}
+		for _,ele in pairs(self)do
+			if not table.contains(set,ele) then
+				table.insert(set,ele)
+			end
+		end
+		return set
+	end
+	LuaGreatYeyanCard = sgs.CreateSkillCard{
+		name="LuaGreatYeyanCard",
 		will_throw = true,
-		filter = function(self, targets, to_select, player)
-			if self:subcardsLength() == 0 then return #targets < 3 end
-			if self:subcardsLength() == 4 and #targets == 1 then 
-				return to_select:objectName() ~= (targets[1]:objectName() and player:objectName())
-			else 
-				if #targets == 0 then 
-					return to_select:objectName() ~= player:objectName()
+		skill_name = "LuaYeyan",
+		filter = function(self, targets, to_select)
+			local i = 0
+			for _,p in pairs(targets)do
+				if p:objectName() == to_select:objectName() then
+					i = i + 1
+				end
+			end
+			local maxVote = math.max(3-#targets,0)+i
+			return maxVote
+		end,
+		feasible = function(self, targets)
+			if self:getSubcards():length() ~= 4 then return false end
+			local all_suit = {}
+			for _,id in sgs.qlist(self:getSubcards())do
+				local c = sgs.Sanguosha:getCard(id)
+				if not table.contains(all_suit,c:getSuit()) then
+					table.insert(all_suit,c:getSuit())
+				else
+					return false
+				end
+			end
+			if #toSet(targets) == 1 then
+				return true
+			elseif #toSet(targets) == 2 then
+				return #targets == 3
+			end
+			return false
+		end,
+		on_use = function(self, room, source, targets)
+			local criticaltarget = 0
+			local totalvictim = 0
+			local map = {}
+			for _,sp in pairs(targets)do
+				if map[sp:objectName()] then
+					map[sp:objectName()] = map[sp:objectName()] + 1
+				else
+					map[sp:objectName()] = 1
+				end
+			end
+			
+			if #targets == 1 then
+				map[targets[1]:objectName()] = map[targets[1]:objectName()] + 2
+			end
+			local target_table = sgs.SPlayerList()
+			for sp,va in pairs(map)do
+				if va > 1 then criticaltarget = criticaltarget + 1  end
+				totalvictim = totalvictim + 1
+				for _,p in pairs(targets)do
+					if p:objectName() == sp then
+						target_table:append(p)
+						break
+					end
+				end
+			end
+			if criticaltarget > 0 then
+				room:removePlayerMark(source, "@flame")	
+				room:loseHp(source, 3)	
+				room:sortByActionOrder(target_table)
+				for _,sp in sgs.qlist(target_table)do
+					Fire(source, sp, map[sp:objectName()])
 				end
 			end
 		end,
-		about_to_use = function(self,room,card_use)
-			local subcards_length = self:subcardsLength()
-			local targets = sgs.QList2Table(card_use.to)
-			local source = card_use.from
-			source:loseMark("@flame")
-			if subcards_length == 0 then
-				for _,target in ipairs(targets) do
-					room:cardEffect(self, source, target)
-				end
-			else
-				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_THROW, source:objectName(), nil, "LuaYeyan", nil)
-				if #targets == 2 then
-					local choice = room:askForChoice(source, self:objectName(), "2:1+1:2")
-					room:moveCardTo(self, source, nil, sgs.Player_DiscardPile, reason, true)
-					room:loseHp(source,3)
-					if choice == "2:1" then					
-						Fire(source, targets[1], 2)
-						Fire(source, targets[2], 1)
-					elseif choice == "1:2" then
-						Fire(source, targets[1], 1)
-						Fire(source, targets[2], 2)
-					end			
-				elseif #targets == 1 then
-					local choice = room:askForChoice(source, self:objectName(), "2+3")
-					room:moveCardTo(self, source, nil, sgs.Player_DiscardPile, reason, true)
-					room:loseHp(source,3)
-					if choice == "2" then
-						Fire(source, targets[1], 2)
-					else
-						Fire(source, targets[1], 3)
-					end
-				end
-			end		
+	}
+	LuaSmallYeyanCard = sgs.CreateSkillCard{
+		name="LuaSmallYeyanCard",
+		will_throw = true,
+		skill_name = "LuaYeyan",
+		filter = function(self, targets, to_select)
+			return #targets < 3
 		end,
-		on_effect = function(self,effect)
-			Fire(effect.from, effect.to, 1)
+		feasible = function(self, targets)
+			return #targets > 0
+		end,
+		on_use = function(self, room, source, targets)
+			room:removePlayerMark(source, "@flame")
+			for _,sp in sgs.list(targets)do
+				Fire(source, sp, 1)
+			end
 		end,
 	}
-	LuaYeyanViewAsSkill = sgs.CreateViewAsSkill{
-		name = "Luayeyan",
+	LuaYeyanVS = sgs.CreateViewAsSkill{ 
+		name = "LuaYeyan",
 		n = 4,
 		view_filter = function(self, selected, to_select)
-			if #selected >= 4 then return false end
-			if to_select:isEquipped() then return false end
-			for _,card in ipairs(selected) do
-				if card:getSuit() == to_select:getSuit() then return false end
+			if to_select:isEquipped() or sgs.Self:isJilei(to_select) then
+				return false
+			end
+			for _,ca in sgs.list(selected)do
+				if ca:getSuit() == to_select:getSuit() then return false end
 			end
 			return true
 		end,
-		view_as = function(self, cards)
-			if #cards == 0 then return LuaYeyanCard:clone() end
-			if #cards ~= 4 then return nil end
-			local YeyanCard = LuaYeyanCard:clone()
-			for _,card in ipairs(cards) do
-				YeyanCard:addSubcard(card)
+		view_as = function(self,cards) 
+			if #cards == 0 then
+				return LuaSmallYeyanCard:clone()
 			end
-			return YeyanCard
+			if #cards == 4 then
+				local YeyanCard = LuaGreatYeyanCard:clone()
+				for _,card in ipairs(cards) do
+					YeyanCard:addSubcard(card)
+				end
+				return YeyanCard
+			end
 		end,
-		enabled_at_play=function(self, player)
-			return player:getMark("@flame") >= 1
+		enabled_at_play = function(self, player)
+			return player:getMark("@flame") > 0
 		end
 	}
 	LuaYeyan = sgs.CreateTriggerSkill{
-		name = "Luayeyan",
-		frequency = sgs.Skill_Limited,
-		events = {sgs.GameStart},
-		view_as_skill = LuaYeyanViewAsSkill,
-		on_trigger = function(self,event,player,data)
-			player:gainMark("@flame")
-		end
+			name = "LuaYeyan",
+			frequency = sgs.Skill_Limited,
+			limit_mark = "@flame",
+			view_as_skill = LuaYeyanVS ,
+			on_trigger = function() 
+			end
 	}
+
 ```
 [返回索引](#技能索引)
 ##遗计
