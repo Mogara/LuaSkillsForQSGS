@@ -659,33 +659,31 @@
 **相关武将**：阵·蒋琬&费祎  
 **描述**：每当你的出牌阶段结束时，若你于此阶段未造成伤害，你可以摸两张牌。  
 **引用**：LuaShengxi  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaShengxi = sgs.CreateTriggerSkill{
 		name = "LuaShengxi", 
-		frequency = sgs.Skill_Frequency, --Frequent, NotFrequent, Compulsory, Limited, Wake 
-		events = {sgs.DamageDone,sgs.EventPhaseEnd}, 
-		on_trigger = function(self, triggerEvent, player, data)
-			if triggerEvent == sgs.EventPhaseEnd then
-				if player and player:isAlive() and player:hasSkill(self:objectName()) and player:getPhase() == sgs.Player_Play then
-					if (not player:hasFlag("ShengxiDamageInPlayPhase")) and player:askForSkillInvoke(self:objectName()) then
-						player:drawCards(2)
-					end
-				end
+		frequency = sgs.Skill_Frequent, 
+		events = {sgs.PreDamageDone,sgs.EventPhaseEnd}, 
+		global = true, 
+		on_trigger = function(self, event, player, data)
+			if event == sgs.EventPhaseEnd then
+				local can_trigger = true
 				if player:hasFlag("ShengxiDamageInPlayPhase") then
-					player:setFlags("-ShengxiDamageInPlayPhase")
+					can_trigger = false	
+					player:setFlags("-ShengxiDamageInPlayPhase")	
 				end
-			elseif triggerEvent == sgs.DamageDone then
+				if player and player:isAlive() and player:hasSkill(self:objectName()) and player:getPhase() == sgs.Player_Play and can_trigger and player:askForSkillInvoke(self:objectName()) then
+					player:drawCards(2)
+				end
+			elseif event == sgs.PreDamageDone then
 				local damage = data:toDamage()
 				if damage.from and damage.from:getPhase() == sgs.Player_Play and not damage.from:hasFlag("ShengxiDamageInPlayPhase") then
 					damage.from:setFlags("ShengxiDamageInPlayPhase")
 				end
 			end
 			return false
-		end,
-		can_trigger = function(self, target)
-			return target
-		end,
+		end
 	}
 ```
 [返回索引](#技能索引)
