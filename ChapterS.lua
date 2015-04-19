@@ -668,9 +668,6 @@ LuaShengxi = sgs.CreateTriggerSkill{
 			if player and player:isAlive() and player:hasSkill(self:objectName()) and player:getPhase() == sgs.Player_Play and can_trigger and player:askForSkillInvoke(self:objectName()) then
 				player:drawCards(2)
 			end
-			if player:hasFlag("ShengxiDamageInPlayPhase") then
-				player:setFlags("-ShengxiDamageInPlayPhase")
-			end
 		elseif event == sgs.PreDamageDone then
 			local damage = data:toDamage()
 			if damage.from and damage.from:getPhase() == sgs.Player_Play and not damage.from:hasFlag("ShengxiDamageInPlayPhase") then
