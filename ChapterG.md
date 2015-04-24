@@ -1681,36 +1681,29 @@
 [返回索引](#技能索引)
 ##归心
 **相关武将**：神·曹操  
-**描述**：每当你受到1点伤害后，你可以分别从每名其他角色的区域获得一张牌，然后将你的武将牌翻面。  
+**描述**：每当你受到1点伤害后，你可以依次获得所有其他角色区域内的一张牌，然后将武将牌翻面。  
 **引用**：LuaGuixin  
-**状态**：1217验证通过
+**状态**：0405验证通过
 
 ```lua
-	LuaGuixin = sgs.CreateTriggerSkill{
+	LuaGuixin = sgs.CreateMasochismSkill{
 		name = "LuaGuixin" ,
-		events = {sgs.Damaged} ,
-		on_trigger = function(self, event, player, data)
+		on_damaged = function(self, player, damage)
 			local room = player:getRoom()
-			local n = player:getMark("LuaGuixinTimes")
+			local n = player:getMark("LuaGuixinTimes")--这个标记为了ai
 			player:setMark("LuaGuixinTimes", 0)
-			local damage = data:toDamage()
+			local data = sgs.QVariant()
+			data:setValue(damage)
 			local players = room:getOtherPlayers(player)
 			for i = 0, damage.damage - 1, 1 do
-				local can_invoke = false
-				for _, p in sgs.qlist(players) do
-					if not p:isAllNude() then
-						can_invoke = true
-						break
-					end
-				end
-				if not can_invoke then break end
 				player:addMark("LuaGuixinTimes")
 				if player:askForSkillInvoke(self:objectName(), data) then
 					player:setFlags("LuaGuixinUsing")
-					for _, _player in sgs.qlist(players) do
-						if _player:isAlive() and (not _player:isAllNude()) then
-							local card_id = room:askForCardChosen(player, _player, "hej", self:objectName())
-							room:obtainCard(player, sgs.Sanguosha:getCard(card_id), room:getCardPlace(card_id) ~= sgs.Player_PlaceHand)
+					for _, p in sgs.qlist(players) do
+						if p:isAlive() and (not p:isAllNude()) then
+							local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+							local card_id = room:askForCardChosen(player, p, "hej", self:objectName())
+							room:obtainCard(player, sgs.Sanguosha:getCard(card_id), reason, room:getCardPlace(card_id) ~= sgs.Player_PlaceHand)
 						end
 					end
 					player:turnOver()
@@ -1722,6 +1715,7 @@
 			player:setMark("LuaGuixinTimes", n)
 		end
 	}
+
 ```
 [返回索引](#技能索引)
 ##归心-倚天
