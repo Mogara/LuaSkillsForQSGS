@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（J区）
 	代码索引：
-		鸡肋、激昂、激将、极略、急救、急速、急袭、集智、集智、嫉恶、奸雄、坚守、将驰、节命、结姻、竭缘、解烦、解烦、解惑、解围、尽瘁、禁酒、精策、精锐、酒池、酒诗、救援、救主、举荐、举荐、巨象、倨傲、据守、据守、据守、聚武、绝策、绝汲、绝境、绝境、绝情、军威、峻刑
+		鸡肋、激昂、激将、极略、急救、急速、急袭、集智、集智、嫉恶、奸雄、奸雄、坚守、将驰、节命、结姻、竭缘、解烦、解烦、解惑、解围、尽瘁、禁酒、精策、精锐、酒池、酒诗、救援、救主、举荐、举荐、巨象、倨傲、据守、据守、据守、聚武、绝策、绝汲、绝境、绝境、绝情、军威、峻刑
 ]]--
 --[[
 	技能名：鸡肋
@@ -523,28 +523,77 @@ LuaJie = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：奸雄
-	相关武将：标准·曹操、铜雀台·曹操
-	描述：每当你受到一次伤害后，你可以获得对你造成伤害的牌。
+	相关武将：界限突破·曹操
+	描述：每当你受到伤害后，你可以选择一项：获得对你造成伤害的牌，或摸一张牌。 
 	引用：LuaJianxiong
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
-LuaJianxiong = sgs.CreateTriggerSkill{
-	name = "LuaJianxiong",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
-	on_trigger = function(self, event, player, data)
+LuaJianxiong = sgs.CreateMasochismSkill{
+	name = "LuaJianxiong" ,
+	on_damaged = function(self, player, damage)
 		local room = player:getRoom()
-		local damage = data:toDamage()
+		local data = sgs.QVariant()
+		data:setValue(damage)
+		local choices = {"draw+cancel"}
 		local card = damage.card
 		if card then
-			local id = card:getEffectiveId()
-			if room:getCardPlace(id) == sgs.Player_PlaceTable then
-				local card_data = sgs.QVariant()
-				card_data:setValue(card)
-				if room:askForSkillInvoke(player, self:objectName(), card_data) then
-					player:obtainCard(card)
+			local ids = sgs.IntList()
+			if card:isVirtualCard() then
+				ids = card:getSubcards()
+			else
+				ids:append(card:getEffectiveId())
+			end
+			if ids:length() > 0 then
+				local all_place_table = true
+				for _, id in sgs.qlist(ids) do
+					if room:getCardPlace(id) ~= sgs.Player_PlaceTable then
+						all_place_table = false
+						break
+					end
+				end
+				if all_place_table then
+					table.insert(choices, "obtain")
 				end
 			end
+		end
+		local choice = room:askForChoice(player, self:objectName(), table.concat(choices, "+"), data)
+		if choice ~= "cancel" then
+			room:notifySkillInvoked(player, self:objectName())
+			if choice == "obtain" then
+				player:obtainCard(card)
+			else
+				player:drawCards(1, self:objectName())
+			end
+		end
+	end
+}
+--[[
+	技能名：奸雄
+	相关武将：标准·曹操、铜雀台·曹操
+	描述：每当你受到伤害后，你可以获得对你造成伤害的牌。 
+	引用：LuaNosJianxiong
+	状态：0405验证通过
+]]--
+LuaNosJianxiong = sgs.CreateMasochismSkill{
+	name = "LuaNosJianxiong" ,
+	on_damaged = function(self, player, damage)
+		local room = player:getRoom()
+		local card = damage.card
+		if not card then return end
+		local ids = sgs.IntList()
+		if card:isVirtualCard() then
+			ids = card:getSubcards()
+		else
+			ids:append(card:getEffectiveId())
+		end
+		if ids:isEmpty() then return end
+		for _, id in sgs.qlist(ids) do
+			if room:getCardPlace(id) ~= sgs.Player_PlaceTable then return end
+		end
+		local data = sgs.QVariant()
+		data:setValue(damage)
+		if room:askForSkillInvoke(player, self:objectName(), data) then
+			player:obtainCard(card)
 		end
 	end
 }
