@@ -201,18 +201,21 @@
 [返回索引](#技能索引)
 ##飞影
 **相关武将**：神·曹操、倚天·魏武帝  
-**描述**：**锁定技，**其他角色计算的与你的距离+1。  
+**描述**：**锁定技，**其他角色与你的距离+1。
 **引用**：LuaFeiying  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaFeiying = sgs.CreateDistanceSkill{
 		name = "LuaFeiying",
 		correct_func = function(self, from, to)
 			if to:hasSkill("LuaFeiying") then
 				return 1
+			else
+				return 0
 			end
-		end,
+		end
 	}
+
 ```
 [返回索引](#技能索引)
 ##焚城
