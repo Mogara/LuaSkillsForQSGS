@@ -356,30 +356,30 @@ Lua1V1Xiaoji = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：骁果
-	相关武将：国战·乐进
-	描述： 其他角色的结束阶段开始时，你可以弃置一张基本牌，令该角色选择一项：弃置一张装备牌，或受到你对其造成的1点伤害。
+	相关武将：国战·乐进、SP乐进
+	描述：其他角色的结束阶段开始时，你可以弃置一张基本牌：若如此做，该角色选择一项：1.弃置一张装备牌，然后令你摸一张牌；2.受到1点伤害。 
 	引用：LuaXiaoguo
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaXiaoguo = sgs.CreateTriggerSkill{
 	name = "LuaXiaoguo" ,
 	events = {sgs.EventPhaseStart} ,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end ,
 	on_trigger = function(self, event, player, data)
-		if player:getPhase() ~= sgs.Player_Finish then return false end
 		local room = player:getRoom()
+		if player:getPhase() ~= sgs.Player_Finish then return false end
 		local yuejin = room:findPlayerBySkillName(self:objectName())
-		if (not yuejin) or (yuejin:objectName() == player:objectName()) then return false end
-		if yuejin:canDiscard(yuejin, "h") then
-			if room:askForCard(yuejin, ".Basic", "@xiaoguo", sgs.QVariant(), self:objectName()) then
-				if not room:askForCard(player, ".Equip", "@xiaoguo-discard", sgs.QVariant()) then
-					room:damage(sgs.DamageStruct(self:objectName(), yuejin, player))
-				end
+		if not yuejin or yuejin:objectName() == player:objectName() then return false end
+		if yuejin:canDiscard(yuejin, "h") and room:askForCard(yuejin, ".Basic", "@xiaoguo", sgs.QVariant(), self:objectName()) then
+			if not room:askForCard(player, ".Equip", "@xiaoguo-discard", sgs.QVariant()) then
+				room:damage(sgs.DamageStruct(self:objectName(), yuejin, player))
+			else--如果是写国战·骁果的话这一行和下一行删除
+				yuejin:drawCards(1, self:objectName())
 			end
 		end
 		return false
-	end ,
-	can_trigger = function(self, target)
-		return target
 	end
 }
 --[[
