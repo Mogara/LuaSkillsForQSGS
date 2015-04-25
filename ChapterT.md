@@ -727,7 +727,6 @@
 	}
 	LuaTuxiAct = sgs.CreateTriggerSkill{
 		name = "#LuaTuxi" ,
-		priority = 1 ,
 		events = {sgs.AfterDrawNCards} ,
 		can_trigger = function(self, target)
 			return target ~= nil
