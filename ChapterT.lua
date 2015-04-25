@@ -667,42 +667,129 @@ LuaXTuqiDist = sgs.CreateDistanceSkill{
 }
 --[[
 	技能名：突袭
-	相关武将：标准·张辽、SP·台版张辽
-	描述：摸牌阶段开始时，你可以放弃摸牌，改为获得一至两名其他角色的各一张手牌。
-	引用：LuaTuxi
-	状态：1217验证通过
+	相关武将：界限突破·张辽
+	描述：摸牌阶段，你可以少摸至少一张牌并选择等量的有手牌的手牌不少于你的其他角色：若如此做，你依次获得这些角色各一张手牌。 
+	引用：LuaTuxi、LuaTuxiAct
+	状态：0405验证通过
 ]]--
 LuaTuxiCard = sgs.CreateSkillCard{
 	name = "LuaTuxiCard",
-
 	filter = function(self, targets, to_select)
-		if (#targets >= 2) or (to_select:objectName() == sgs.Self:objectName()) then return false end
+		if #targets >= sgs.Self:getMark("LuaTuxi") or to_select:getHandcardNum() < sgs.Self:getHandcardNum() or to_select:objectName() == sgs.Self:objectName() then return false end
 		return not to_select:isKongcheng()
 	end,
 	on_effect = function(self, effect)
-		local room = effect.from:getRoom()
-		if effect.from:isAlive() and not effect.to:isKongcheng() then
-			local card_id = room:askForCardChosen(effect.from, effect.to, "h", "Luatuxi")
-			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, effect.from:objectName())
-			room:moveCardTo(sgs.Sanguosha:getCard(card_id),effect.from,sgs.Player_PlaceHand,reason)
-		end
+		effect.to:setFlags("LuaTuxiTarget")
 	end
 }
 LuaTuxiVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaTuxi",
 	response_pattern = "@@LuaTuxi",
-	
-	view_as = function(self) 
+	view_as = function() 
 		return LuaTuxiCard:clone()
 	end
 }
-LuaTuxi = sgs.CreatePhaseChangeSkill{
+LuaTuxi = sgs.CreateDrawCardsSkill{
 	name = "LuaTuxi" ,
 	view_as_skill = LuaTuxiVS,
-
-	on_phasechange = function(self, player)
+	priority = 1,
+	draw_num_func = function(self, player, n)
 		local room = player:getRoom()
+		local targets = sgs.SPlayerList()
+		for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+			if p:getHandcardNum() >= player:getHandcardNum() then
+				targets:append(p)
+			end
+		end
+		local num = math.min(targets:length(), n)
+		for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+			p:setFlags("-LuaTuxiTarget")
+		end
+		if num > 0 then
+			room:setPlayerMark(player, "LuaTuxi", num)
+			local count = 0
+			if room:askForUseCard(player, "@@LuaTuxi", "@tuxi-card:::" .. tostring(num)) then
+				for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+					if p:hasFlag("LuaTuxiTarget") then
+						count = count + 1
+					end
+				end
+			else 
+				room:setPlayerMark(player, "LuaTuxi", 0)
+			end
+			return n - count
+		else
+			return n
+		end
+	end
+}
+LuaTuxiAct = sgs.CreateTriggerSkill{
+	name = "#LuaTuxi" ,
+	priority = 1 ,
+	events = {sgs.AfterDrawNCards} ,
+	can_trigger = function(self, target)
+		return target ~= nil
+	end ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:getMark("LuaTuxi") == 0 then return false end
+		room:setPlayerMark(player, "LuaTuxi", 0)
+		local targets = sgs.SPlayerList()
+		for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+			if p:hasFlag("LuaTuxiTarget") then
+				p:setFlags("-LuaTuxiTarget")
+				targets:append(p)
+			end
+		end
+		for _, p in sgs.qlist(targets) do
+			if not player:isAlive() then
+				break
+			end
+			if p:isAlive() and not p:isKongcheng() then
+				local card_id = room:askForCardChosen(player, p, "h", "LuaTuxi")
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+				room:obtainCard(player, sgs.Sanguosha:getCard(card_id), reason, false)
+			end
+		end
+		return false
+	end
+}
+--[[
+	技能名：突袭-旧
+	相关武将：标准·张辽、SP·台版张辽
+	描述：摸牌阶段开始时，你可以放弃摸牌并选择一至两名有手牌的其他角色：若如此做，你依次获得这些角色各一张手牌。 
+	引用：LuaTuxi
+	状态：0405验证通过
+]]--
+
+LuaNosTuxiCard = sgs.CreateSkillCard{
+	name = "LuaNosTuxiCard",
+	filter = function(self, targets, to_select)
+		if #targets >= 2 or to_select:objectName() == sgs.Self:objectName() then return false end
+		return not to_select:isKongcheng()
+	end,
+	on_effect = function(self, effect)
+		local room = effect.from:getRoom()
+		if effect.from:isAlive() and not effect.to:isKongcheng() then
+			local card_id = room:askForCardChosen(effect.from, effect.to, "h", "LuaNosTuxi")
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, effect.from:objectName())
+			room:obtainCard(effect.from, sgs.Sanguosha:getCard(card_id), reason, false)
+		end
+	end
+}
+LuaNosTuxiVS = sgs.CreateZeroCardViewAsSkill{
+	name = "LuaNosTuxi",
+	response_pattern = "@@LuaNosTuxi",
+	view_as = function(self) 
+		return LuaNosTuxiCard:clone()
+	end
+}
+LuaNosTuxi = sgs.CreatePhaseChangeSkill{
+	name = "LuaNosTuxi" ,
+	view_as_skill = LuaNosTuxiVS,
+	on_phasechange = function(self, player)
 		if player:getPhase() == sgs.Player_Draw then
+			local room = player:getRoom()
 			local can_invoke = false
 			local other_players = room:getOtherPlayers(player)
 			for _, player in sgs.qlist(other_players) do
@@ -711,13 +798,13 @@ LuaTuxi = sgs.CreatePhaseChangeSkill{
 					break
 				end
 			end
-			if can_invoke and room:askForUseCard(player, "@@LuaTuxi", "@tuxi-card") then
+			if can_invoke and room:askForUseCard(player, "@@LuaNosTuxi", "@nostuxi-card") then
 				return true
 			end
 		end
+		return false
 	end
 }
-
 --[[
 	技能名：突袭
 	相关武将：1v1·张辽1v1
