@@ -806,20 +806,24 @@ LuaXYicai = sgs.CreateTriggerSkill{
 --[[
 	技能名：毅重（锁定技）
 	相关武将：一将成名·于禁
-	描述： 若你的装备区没有防具牌，黑色的【杀】对你无效。
+	描述：若你的装备区没有防具牌，黑色【杀】对你无效。 
 	引用：LuaYizhong
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
+
 LuaYizhong = sgs.CreateTriggerSkill{
 	name = "LuaYizhong",
 	frequency = sgs.Skill_Compulsory,
 	events = {sgs.SlashEffected},
 	on_trigger = function(self, event, player, data)
 		local effect = data:toSlashEffect()
-			return effect.slash:isBlack()
+		if effect.slash:isBlack() then
+			player:getRoom():notifySkillInvoked(player, self:objectName())
+			return true
+		end
 	end,
 	can_trigger = function(self, target)
-		return target and target:isAlive() and target:hasSkill(self:objectName()) and (target:getArmor() == nil)
+		return target ~= nil and target:isAlive() and target:hasSkill(self:objectName()) and (target:getArmor() == nil)
 	end
 }
 --[[
