@@ -6,47 +6,54 @@
 [返回目录](README.md#目录)
 ##安娴  
 **相关武将**：☆SP·大乔  
-**描述**：每当你使用【杀】对目标角色造成伤害时，你可以防止此次伤害，令其弃置一张手牌，然后你摸一张牌；当你成为【杀】的目标时，你可以弃置一张手牌使之无效，然后该【杀】的使用者摸一张牌。  
+**描述**：每当你使用【杀】对目标角色造成伤害时，你可以防止此伤害：若如此做，该角色弃置一张手牌，然后你摸一张牌。每当你成为【杀】的目标时，你可以弃置一张手牌：若如此做，此【杀】的使用者摸一张牌，此【杀】对你无效。  
 **引用**：LuaAnxian  
-**状态**：1217验证通过  
+**状态**：0405验证通过  
 ```lua
-	LuaAnxian = sgs.CreateTriggerSkill{	 
-		name = "LuaAnxian" ,   
-		events = {sgs.DamageCaused, sgs.TargetConfirming,  sgs.SlashEffected} ,   
-		on_trigger = function(self, event, player, data)  
-			local room = player:getRoom()  
-			if event == sgs.DamageCaused then  
-				local damage = data:toDamage()  
+	LuaAnxian = sgs.CreateTriggerSkill{
+		name = "LuaAnxian",
+		frequency = sgs.Skill_NotFrequent,
+		events = {sgs.DamageCaused, sgs.TargetConfirming},
+		on_trigger = function(self, event, daqiao, data)
+			local room = daqiao:getRoom()
+			if event == sgs.DamageCaused then
+				local damage = data:toDamage()
 				if damage.card and damage.card:isKindOf("Slash")
-					and damage.by_user and (not damage.chain) and (not damage.transfer) then  
-					if player:askForSkillInvoke(self:objectName(), data) then  
-						if damage.to:canDiscard(damage.to, "h") then  
-							room:askForDiscard(damage.to, "LuaAnxian", 1, 1)  
-						end  
-						player:drawCards(1)  
-						return true  
-					end  
-				end  
-			elseif event == sgs.TargetConfirming then  
-				local use = data:toCardUse()  
-				if (not use.to:contains(player)) or (not player:canDiscard(player, "h")) then return false end   
-				if use.card and use.card:isKindOf("Slash") then  
-					player:setMark("LuaAnxian", 0)  
-					if room:askForCard(player, ".", "@anxian-discard", data, self:objectName()) then  
-						player:addMark("LuaAnxian")  
-						use.from:drawCards(1)  
-					end  
-				end  
-			elseif event == sgs.SlashEffected then  
-				local effect = data:toSlashEffect()  
-				if player:getMark("LuaAnxian") > 0 then  
-					player:removeMark("LuaAnxian")  
-					return true  
-				end  
-			end  
-			return false  
-		end  
-	} 
+					and damage.by_user and (not damage.chain) and (not damage.transfer)
+					and daqiao:askForSkillInvoke(self:objectName(), data) then
+					local log = sgs.LogMessage()
+					log.type = "#Anxian"
+					log.from = daqiao
+					log.arg = self:objectName()
+					room:sendLog(log)
+					if damage.to:canDiscard(damage.to, "h") then
+						room:askForDiscard(damage.to, "LuaAnxian", 1, 1)
+					end
+					daqiao:drawCards(1, self:objectName())
+					return true
+				end
+			elseif event == sgs.TargetConfirming then
+				local use = data:toCardUse()
+				if (not use.to:contains(daqiao)) or (not daqiao:canDiscard(daqiao, "h")) then
+					return false 
+				end
+				if use.card:isKindOf("Slash") then
+					daqiao:setFlags("-AnxianTarget")
+					if room:askForCard(daqiao, ".", "@anxian-discard", data, self:objectName()) then
+						daqiao:setFlags("AnxianTarget")
+						use.from:drawCards(1, self:objectName())
+						if daqiao:isAlive() and daqiao:hasFlag("AnxianTarget") then
+							daqiao:setFlags("-AnxianTarget")
+							local nullified_list = use.nullified_list
+							table.insert(nullified_list, daqiao:objectName())
+							use.nullified_list = nullified_list
+							data:setValue(use)
+						end
+					end
+				end
+			end
+		end
+	}
 ``` 
 [返回索引](#技能索引) 
 ##安恤
