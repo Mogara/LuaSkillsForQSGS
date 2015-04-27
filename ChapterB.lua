@@ -202,8 +202,43 @@ LuaBaobian = sgs.CreateTriggerSkill{
 	相关武将：TW一将成名·夏侯霸
 	描述：当你使用【杀】或【决斗】对目标角色造成伤害时，若其势力与你：相同，你可以防止此伤害，令其将手牌补至X张（X为其体力上限）；不同且其手牌数大于其体力值，你可以弃置其Y张手牌（Y为其手牌数与体力值的差）。 
 	引用：LuaTWBaobian
-	状态：
+	状态：0405验证通过
 ]]--
+LuaTWBaobian = sgs.CreateTriggerSkill{
+	name = "LuaTWBaobian",
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.DamageCaused},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local damage = data:toDamage()
+		if damage.card and (damage.card:isKindOf("Slash") or damage.card:isKindOf("Duel"))
+			and (not damage.chain) and (not damage.transfer) and damage.by_user then
+			if damage.to:getKingdom() == player:getKingdom() then
+				if player:askForSkillInvoke(self:objectName(), data) then
+					if damage.to:getHandcardNum() < damage.to:getMaxHp() then
+						local n = damage.to:getMaxHp() - damage.to:getHandcardNum()
+						room:drawCards(damage.to, n, self:objectName())
+					end
+					return true
+				end
+			elseif damage.to:getHandcardNum() > math.max(damage.to:getHp(), 0) and player:canDiscard(damage.to, "h") then
+				if player:askForSkillInvoke(self:objectName(), data) then
+					local hc = damage.to:handCards()
+					local n = damage.to:getHandcardNum() - math.max(damage.to:getHp(), 0)
+					local dummy = sgs.Sanguosha:cloneCard("slash")
+					math.randomseed(os.time())
+					while n > 0 do
+						local id = hc:at(math.random(0, hc:length() - 1))--取随机手牌代替askForCardChosen
+						hc:removeOne(id)
+						dummy:addSubcard(id)
+						n = n - 1
+					end
+					room:throwCard(dummy, damage.to, player)
+				end
+			end
+		end
+	end
+}
 --[[
 	技能名：暴敛（锁定技）
 	相关武将：闯关模式·牛头，闯关模式·白无常

@@ -2,7 +2,7 @@
 代码速查手册（B区）
 ==
 #技能索引
-[八阵](#八阵)、[霸刀](#霸刀)、[霸王](#霸王)、[拜印](#拜印)、[豹变](#豹变)、[暴虐](#暴虐)、[悲歌](#悲歌)、[北伐](#北伐)、[崩坏](#崩坏)、[笔伐](#笔伐)、[闭月](#闭月)、[补益](#补益)、[不屈](#不屈)、[不屈-旧风](#不屈-旧风) 
+[八阵](#八阵)、[霸刀](#霸刀)、[霸王](#霸王)、[拜印](#拜印)、[豹变](#豹变)、[豹变](#豹变)、[暴虐](#暴虐)、[悲歌](#悲歌)、[北伐](#北伐)、[崩坏](#崩坏)、[笔伐](#笔伐)、[闭月](#闭月)、[补益](#补益)、[不屈](#不屈)、[不屈-旧风](#不屈-旧风) 
 
 [返回目录](README.md#目录)
 ##八阵
@@ -215,6 +215,50 @@
 		end ,
 		can_trigger = function(self, target)
 			return target ~= nil
+		end
+	}
+```
+[返回索引](#技能索引) 
+
+##豹变
+**相关武将**：TW一将成名·夏侯霸  
+**描述**：当你使用【杀】或【决斗】对目标角色造成伤害时，若其势力与你：相同，你可以防止此伤害，令其将手牌补至X张（X为其体力上限）；不同且其手牌数大于其体力值，你可以弃置其Y张手牌（Y为其手牌数与体力值的差）。  
+**引用**：LuaTWBaobian  
+**状态**：0405验证通过
+```lua
+	LuaTWBaobian = sgs.CreateTriggerSkill{
+		name = "LuaTWBaobian",
+		frequency = sgs.Skill_NotFrequent,
+		events = {sgs.DamageCaused},
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			local damage = data:toDamage()
+			if damage.card and (damage.card:isKindOf("Slash") or damage.card:isKindOf("Duel"))
+				and (not damage.chain) and (not damage.transfer) and damage.by_user then
+				if damage.to:getKingdom() == player:getKingdom() then
+					if player:askForSkillInvoke(self:objectName(), data) then
+						if damage.to:getHandcardNum() < damage.to:getMaxHp() then
+							local n = damage.to:getMaxHp() - damage.to:getHandcardNum()
+							room:drawCards(damage.to, n, self:objectName())
+						end
+						return true
+					end
+				elseif damage.to:getHandcardNum() > math.max(damage.to:getHp(), 0) and player:canDiscard(damage.to, "h") then
+					if player:askForSkillInvoke(self:objectName(), data) then
+						local hc = damage.to:handCards()
+						local n = damage.to:getHandcardNum() - math.max(damage.to:getHp(), 0)
+						local dummy = sgs.Sanguosha:cloneCard("slash")
+						math.randomseed(os.time())
+						while n > 0 do
+							local id = hc:at(math.random(0, hc:length() - 1))--取随机手牌代替askForCardChosen
+							hc:removeOne(id)
+							dummy:addSubcard(id)
+							n = n - 1
+						end
+						room:throwCard(dummy, damage.to, player)
+					end
+				end
+			end
 		end
 	}
 ```
