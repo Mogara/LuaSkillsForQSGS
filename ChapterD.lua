@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（D区）
 	技能索引：
-		大喝、大雾、单骑、胆守、啖酪、当先、缔盟、洞察、毒士、毒医、黩武、短兵、断肠、断粮、断指、度势、夺刀
+		大喝、大雾、单骑、胆守、啖酪、当先、缔盟、定品、洞察、毒士、毒医、黩武、短兵、断肠、断粮、断指、度势、夺刀
 ]]--
 --[[
 	技能名：大喝
@@ -351,6 +351,117 @@ LuaDimeng = sgs.CreateViewAsSkill{
 		return not player:hasUsed("#LuaDimengCard")
 	end
 }
+--[[
+	技能名：定品
+	相关武将：四将·陈群
+	描述：出牌阶段，你可以弃置一张与你本回合已使用或弃置的牌类别均不同的手牌，然后令一名已受伤的角色进行判定：若结果为黑色，该角色摸X张牌，且你本阶段不能对该角色发动“定品”；红色，你将武将牌翻面。（X为该角色已损失的体力值）
+	引用：LuaDingpin
+	状态：0428验证通过
+]]--
+LuaDingpinCard = sgs.CreateSkillCard{
+    name = "LuaDingpinCard" ,
+    filter = function(self, targets, to_select, Self)
+        return #targets == 0 and to_select:isWounded() and (not to_select:hasFlag("LuaDingpin"))
+    end ,
+    on_effect = function(self, effect) 
+        local room = effect.from:getRoom()
+        
+        local judge = sgs.JudgeStruct()
+        judge.who = effect.to
+        judge.good = true
+        judge.pattern = ".|black"
+        judge.reason = "LuaDingpin"
+        
+        room:judge(judge)
+        
+        if (judge:isGood()) then
+            room:setPlayerFlag(effect.to, "LuaDingpin")
+            effect.to:drawCards(effect.to:getLostHp(), "LuaDingpin")
+        else
+            effect.from:turnOver()
+        end
+    end ,
+}
+
+LuaDingpinVS = sgs.CreateOneCardViewAsSkill{
+    name = "LuaDingpin" ,
+    enabled_at_play = function(self, player)
+        if (not player:canDiscard(player, "h")) or (player:getMark("LuaDingpin") == 14) then return false end
+        if (not player:hasFlag("LuaDingpin")) and player:isWounded() then return true end
+        for _, p in sgs.qlist(player:getAliveSiblings()) do
+            if (not p:hasFlag("LuaDingpin")) and p:isWounded() then return true end
+        end
+        
+        return false
+    end ,
+    view_filter = function(self, card)
+        return (not card:isEquipped()) and (bit32.band(sgs.Self:getMark("LuaDingpin"), bit32.lshift(1, card:getTypeId())) == 0)
+    end ,
+    view_as = function(self, card)
+        local dp = LuaDingpinCard:clone()
+        dp:addSubcard(card)
+        return dp
+    end ,
+}
+
+function recordLuaDingpinCardType(room, player, card)
+    if player:getMark("LuaDingpin") == 14 then return end
+    local typeid = bit32.lshift(1, card:getTypeId())
+    local mark = player:getMark("LuaDingpin")
+    if (bit32.band(mark, typeid) == 0) then
+        room:setPlayerMark(player, "LuaDingpin", bit32.bor(mark, typeid))
+    end
+end
+
+LuaDingpin = sgs.CreateTriggerSkill{
+    name = "LuaDingpin" ,
+    events = {sgs.EventPhaseChanging, sgs.PreCardUsed, sgs.CardResponded, sgs.BeforeCardsMove} ,
+    view_as_skill = LuaDingpinVS ,
+    global = true ,
+    on_trigger = function(self, event, player, data) 
+        local room = player:getRoom()
+        if (event == sgs.EventPhaseChanging) then
+            local change = data:toPhaseChange()
+            if (change.to == sgs.Player_NotActive) then
+                for _, p in sgs.qlist(room:getAllPlayers()) do
+                    if p:hasFlag("LuaDingpin") then
+                        room:setPlayerFlag(p, "-LuaDingpin")
+                    end
+                end
+                if (player:getMark("LuaDingpin") > 0) then
+                    player:speak(player:getMark("LuaDingpin"))
+                    room:setPlayerMark(player, "LuaDingpin", 0)
+                end
+            end
+        else
+            if (not player:isAlive()) or (player:getPhase() == sgs.Player_NotActive) then return false end
+            if (event == sgs.PreCardUsed) or (event == sgs.CardResponded) then
+                local card = nil
+                if (event == sgs.PreCardUsed) then
+                    card = data:toCardUse().card
+                else
+                    local resp = data:toCardResponse()
+                    if (resp.m_isUse) then
+                        card = resp.m_card
+                    end
+                end
+                if (not card) or (card:getTypeId() == sgs.Card_TypeSkill) then return false end
+                recordLuaDingpinCardType(room, player, card)
+            elseif event == sgs.BeforeCardsMove then
+                local move = data:toMoveOneTime()
+                if (not move.from) or (player:objectName() ~= move.from:objectName()) or (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) ~= sgs.CardMoveReason_S_REASON_DISCARD) then
+                    return false
+                end
+                for _, id in sgs.qlist(move.card_ids) do
+                    local c = sgs.Sanguosha:getCard(id)
+                    recordLuaDingpinCardType(room, player, c)
+                end
+            end
+        end
+        return false
+    end ,
+}
+
 --[[
 	技能名：洞察
 	相关武将：倚天·贾文和
