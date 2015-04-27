@@ -349,49 +349,39 @@ LuaBaonue = sgs.CreateTriggerSkill{
 	相关武将：山·蔡文姬、SP·蔡文姬
 	描述：每当一名角色受到【杀】造成的一次伤害后，你可以弃置一张牌，令其进行一次判定，判定结果为：红桃 该角色回复1点体力；方块 该角色摸两张牌；梅花 伤害来源弃置两张牌；黑桃 伤害来源将其武将牌翻面。
 	引用：LuaBeige
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
-LuaBeige = sgs.CreateMasochismSkill{
+LuaBeige = sgs.CreateTriggerSkill{
 	name = "LuaBeige",
-	on_damaged = function(self, player, damage)
-		local card = damage.card
-		if card and card:isKindOf("Slash") then
-			local victim = damage.to
-			if not victim:isDead() then
-				local room = player:getRoom()
-				local list = room:findPlayersBySkillName(self:objectName())
-				for _,p in sgs.qlist(list) do
-					if not p:isNude() and p:askForSkillInvoke(self:objectName(), data) then
-						room:askForDiscard(p, self:objectName(), 1, 1, false, true)
-						local judge = sgs.JudgeStruct()
-						judge.pattern = "."
-						judge.good = true
-						judge.who = victim
-						judge.reason = self:objectName()
-						room:judge(judge)
-						local suit = judge.card:getSuit()
-						local source = damage.from
-						if suit == sgs.Card_Spade then
-							if source and source:isAlive() then
-								source:turnOver()
-							end
-						elseif suit == sgs.Card_Heart then
-							local recover = sgs.RecoverStruct()
-							recover.who = p
-							room:recover(victim, recover)
-						elseif suit == sgs.Card_Club then
-							if source and source:isAlive() then
-								local count = source:getCardCount(true)
-								if count > 2 then
-									count = 2
-								end
-								if count > 0 then
-									room:askForDiscard(source, self:objectName(), count, count, false, true)
-								end
-							end
-						elseif suit == sgs.Card_Diamond then
-							victim:drawCards(2)
-						end
+	frequency = sgs.Skill_NotFrequent,
+	events = {sgs.Damaged},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local damage = data:toDamage()
+		if damage.card == nil or (not damage.card:isKindOf("Slash")) or damage.to:isDead() then
+			return false
+		end
+		for _, caiwenji in sgs.qlist(room:findPlayersBySkillName(self:objectName())) do
+			if caiwenji:canDiscard(caiwenji, "he") and room:askForCard(caiwenji, "..", "@beige", data, self:objectName()) then
+				local judge = sgs.JudgeStruct()
+				judge.pattern = "."
+				judge.good = true
+				judge.play_animation = false
+				judge.who = player
+				judge.reason = self:objectName()
+				room:judge(judge)
+				local suit = judge.card:getSuit()
+				if suit == sgs.Card_Heart then
+					room:recover(player, sgs.RecoverStruct(caiwenji))
+				elseif suit == sgs.Card_Diamond then
+					player:drawCards(2, self:objectName())
+				elseif suit == sgs.Card_Club then
+					if damage.from and damage.from:isAlive() then
+						room:askForDiscard(damage.from, "beige", 2, 2, false, true)
+					end
+				elseif suit == sgs.Card_Spade then
+					if damage.from and damage.from:isAlive() then
+						damage.from:turnOver()
 					end
 				end
 			end
