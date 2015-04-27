@@ -429,7 +429,6 @@ LuaDingpin = sgs.CreateTriggerSkill{
                     end
                 end
                 if (player:getMark("LuaDingpin") > 0) then
-                    player:speak(player:getMark("LuaDingpin"))
                     room:setPlayerMark(player, "LuaDingpin", 0)
                 end
             end
