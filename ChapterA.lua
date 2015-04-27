@@ -107,9 +107,9 @@ LuaAnxu = sgs.CreateZeroCardViewAsSkill{
 --[[
 	技能名：暗箭（锁定技）
 	相关武将：一将成名2013·潘璋&马忠
-	描述：每当你使用【杀】对目标角色造成伤害时，若你不在其攻击范围内，此伤害+1。
+	描述：锁定技。每当你使用【杀】对目标角色造成伤害时，若你不在其攻击范围内，此伤害+1。
 	引用：LuaAnjian
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaAnjian = sgs.CreateTriggerSkill{
 	name = "LuaAnjian",
@@ -119,18 +119,20 @@ LuaAnjian = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local damage = data:toDamage()
 		if damage.chain or damage.transfer or not damage.by_user then return false end
-		if not (damage.card and damage.card:isKindOf("Slash")) then return false end
-		if damage.from and not damage.to:inMyAttackRange(damage.from) then
-			damage.damage = damage.damage + 1
-			data:setValue(damage)
-		end
+		if damage.from and (not damage.to:inMyAttackRange(damage.from))
+			and damage.card and damage.card:isKindOf("Slash") then
+			room:notifySkillInvoked(damage.from, self:objectName())
+            damage.damage = damage.damage + 1
+            data:setValue(damage)
+        end
+        return false
 	end
 }
 --[[
 	技能名：傲才
 	相关武将：SP·诸葛恪
 	描述：你的回合外，每当你需要使用或打出一张基本牌时，你可以观看牌堆顶的两张牌，然后使用或打出其中一张该类别的基本牌。
-	状态：1217验证通过[与源码略有区别]
+	状态：0405验证通过[与源码略有区别]
 	引用：LuaAocai、LuaAocaiFakeMove
 	备注：此技能需要Json库，请将json.lua放置于神杀目录下或者lua\lib中。
 ]]--
@@ -153,7 +155,7 @@ function view(room, player, ids, enabled, disabled)
 			false,
 			sgs.QList2Table(ids)
 		}
-		room:doNotify(player,sgs.CommandType.S_COMMAND_SHOW_ALL_CARDS, json.encode(jsonValue));
+		room:doNotify(player,sgs.CommandType.S_COMMAND_SHOW_ALL_CARDS, json.encode(jsonValue))
 	else
 		room:fillAG(ids, player, disabled)
 		local id = room:askForAG(player, enabled, true, "LuaAocai");
@@ -163,27 +165,14 @@ function view(room, player, ids, enabled, disabled)
 		end
 		room:clearAG(player)
 	end
-	--源码各种可恶，竟然用引用……
-	--用这种方法应该也可以解决问题。
-	local dummy = sgs.Sanguosha:cloneCard("jink")
-	local moves = {}
-	if ids:length() > 0 then
-		for _, id in sgs.qlist(ids) do table.insert(moves, id) end
-		local unmoves = sgs.reverse(moves)
-		for _, id in ipairs(unmoves) do dummy:addSubcard(id) end
-		room:setPlayerFlag(player,"LuaAocai_InTempMoving")
-		player:addToPile("#LuaAocai", dummy, false) --只能强制移到特殊区域再移动到摸牌堆
-		room:moveCardTo(dummy, nil, sgs.Player_DrawPile, false)
-		room:setPlayerFlag(player,"-LuaAocai_InTempMoving")
-	end
+	room:returnToTopDrawPile(ids)--用这个函数将牌放回牌堆顶
 	if result == -1 then
 		room:setPlayerFlag(player, "Global_LuaAocaiFailed")
 	end
 	return result
 end
-LuaAocaiVS = sgs.CreateViewAsSkill{
+LuaAocaiVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaAocai",
-	n = 0,
 	enabled_at_play = function()
 		return false
 	end,
@@ -234,19 +223,6 @@ LuaAocai = sgs.CreateTriggerSkill{
 				return true
 			end
 		end
-	end,
-}
-LuaAocaiFakeMove = sgs.CreateTriggerSkill{
-	name = "#LuaAocai-fake-move",
-	events = {sgs.BeforeCardsMove,sgs.CardsMoveOneTime},
-	priority = 10,
-	on_trigger = function(self, event, player, data)
-		if player:hasFlag("LuaAocai_InTempMoving") then
-			return true
-		end
-	end,
-	can_trigger = function(self, target)
-		return target
 	end,
 }
 LuaAocaiCard=sgs.CreateSkillCard{
