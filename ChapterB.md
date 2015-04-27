@@ -264,6 +264,28 @@
 ```
 [返回索引](#技能索引) 
 
+##暴敛
+**相关武将**：闯关模式·牛头，闯关模式·白无常  
+**描述**：结束阶段开始时，你摸两张牌。  
+**引用**：LuaBossBaolian  
+**状态**：0405验证通过
+```lua
+	LuaBossBaolian = sgs.CreatePhaseChangeSkill{
+		name = "LuaBossBaolian",
+		frequency = sgs.Skill_Compulsory,
+		priority = 4,
+		on_phasechange = function(self, target)
+			if target:getPhase() ~= sgs.Player_Finish then return false end
+			local room = target:getRoom()
+			room:broadcastSkillInvoke(self:objectName())
+			room:sendCompulsoryTriggerLog(target, self:objectName())
+			target:drawCards(2, self:objectName())
+			return false
+		end
+	}
+```
+[返回索引](#技能索引) 
+
 ##暴虐
 **相关武将**：林·董卓  
 **描述**：**主公技，**每当其他群雄角色造成一次伤害后，该角色可以进行一次判定，若判定结果为黑桃，你回复1点体力。  

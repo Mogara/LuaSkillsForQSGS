@@ -244,8 +244,21 @@ LuaTWBaobian = sgs.CreateTriggerSkill{
 	相关武将：闯关模式·牛头，闯关模式·白无常
 	描述：结束阶段开始时，你摸两张牌。 
 	引用：LuaBossBaolian
-	状态：
+	状态：0405验证通过
 ]]--
+LuaBossBaolian = sgs.CreatePhaseChangeSkill{
+	name = "LuaBossBaolian",
+	frequency = sgs.Skill_Compulsory,
+	priority = 4,
+	on_phasechange = function(self, target)
+		if target:getPhase() ~= sgs.Player_Finish then return false end
+		local room = target:getRoom()
+		room:broadcastSkillInvoke(self:objectName())
+		room:sendCompulsoryTriggerLog(target, self:objectName())
+		target:drawCards(2, self:objectName())
+		return false
+	end
+}
 --[[
 	技能名：暴凌（觉醒技）
 	相关武将：势·董卓
