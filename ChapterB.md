@@ -157,15 +157,15 @@
 
 ##豹变
 **相关武将**：SP·夏侯霸  
-**描述**：**锁定技，**若你的体力值为3或更少，你视为拥有技能“挑衅”;若你的体力值为2或更少;你视为拥有技能“咆哮”;若你的体力值为1，你视为拥有技能“神速”。  
+**描述**：**锁定技。**若你的体力值为：3或更低，你拥有“挑衅”；2或更低，你拥有“咆哮”；1或更低，你拥有“神速”。  
 **引用**：LuaBaobian  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	function BaobianChange(room, player, hp, skill_name)
-		local baobian_skills = player:getTag("LuaBaobianSkills"):toString():split("+")	
+		local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")	
 		if player:getHp() <= hp then		
 			if not table.contains(baobian_skills, skill_name) then			
-				room:notifySkillInvoked(player, "baobian")
+				room:notifySkillInvoked(player, "LuaBaobian")
 				if player:getHp() == hp then				
 					room:broadcastSkillInvoke("baobian", 4 - hp)
 				end			
@@ -178,7 +178,7 @@
 				table.removeOne(baobian_skills, skill_name)
 			end
 		end
-		player:setTag("LuaBaobianSkills", sgs.QVariant(table.concat(baobian_skills, "+")))	
+		player:setTag("BaobianSkills", sgs.QVariant(table.concat(baobian_skills, "+")))	
 	end
 	LuaBaobian = sgs.CreateTriggerSkill{
 		name = "LuaBaobian" ,
@@ -189,28 +189,28 @@
 			if event == sgs.TurnStart then			
 				local xiahouba = room:findPlayerBySkillName(self:objectName())
 				if not xiahouba or not xiahouba:isAlive() then return false end
-				BaobianChange(room, xiahouba, 1, "shensu")
-				BaobianChange(room, xiahouba, 2, "paoxiao")
-				BaobianChange(room, xiahouba, 3, "tiaoxin")
-			end
+					BaobianChange(room, xiahouba, 1, "shensu")
+					BaobianChange(room, xiahouba, 2, "paoxiao")
+					BaobianChange(room, xiahouba, 3, "tiaoxin")
+				end
 			if event == sgs.EventLoseSkill then
 				if data:toString() == self:objectName() then
-					local baobian_skills = player:getTag("LuaBaobianSkills"):toString():split("+")
+					local baobian_skills = player:getTag("BaobianSkills"):toString():split("+")
 					local detachList = {}
 					for _, skill_name in ipairs(baobian_skills) do
 						table.insert(detachList,"-"..skill_name)
 					end
 					room:handleAcquireDetachSkills(player, table.concat(detachList,"|"))
-					player:setTag("LuaBaobianSkills", sgs.QVariant())
+					player:setTag("BaobianSkills", sgs.QVariant())
 				end
 				return false
 			elseif event == sgs.EventAcquireSkill then
 				if data:toString() ~= self:objectName() then return false end
 			end
 			if not player:isAlive() or not player:hasSkill(self:objectName(), true) then return false end		
-			BaobianChange(room, player, 1, "shensu")
-			BaobianChange(room, player, 2, "paoxiao")
-			BaobianChange(room, player, 3, "tiaoxin")		
+				BaobianChange(room, player, 1, "shensu")
+				BaobianChange(room, player, 2, "paoxiao")
+				BaobianChange(room, player, 3, "tiaoxin")		
 			return false
 		end ,
 		can_trigger = function(self, target)
