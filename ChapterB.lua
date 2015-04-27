@@ -263,34 +263,70 @@ LuaBossBaolian = sgs.CreatePhaseChangeSkill{
 	技能名：暴凌（觉醒技）
 	相关武将：势·董卓
 	描述：出牌阶段结束时，若你本局游戏发动过“横征”，你增加3点体力上限，回复3点体力，然后获得“崩坏”。
+	引用：LuaBaoling
+	状态：0405验证通过
 ]]--
+LuaBaoling = sgs.CreateTriggerSkill{
+	name = "LuaBaoling",
+	frequency = sgs.Skill_Wake,
+	events = {sgs.EventPhaseEnd},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		room:notifySkillInvoked(player, self:objectName())
+		local log = sgs.LogMessage()
+		log.type = "#BaolingWake"
+		log.from = player
+		log.arg = self:objectName()
+		log.arg2 = "hengzheng"
+		room:sendLog(log)
+		room:setPlayerMark(player, "baoling", 1)
+		if room:changeMaxHpForAwakenSkill(player, 3) then
+			room:recover(player, sgs.RecoverStruct(player, nil, 3))
+			if player:getMark("baoling") == 1 then
+				room:acquireSkill(player, "benghuai")
+			end
+		end
+	end,
+	can_trigger = function(self, target)
+		return target:getPhase() == sgs.Player_Play and target:getMark("baoling") == 0
+			and target:getMark("HengzhengUsed") >= 1
+	end
+}
 --[[
 	技能名：暴虐（主公技）
 	相关武将：林·董卓
-	描述：每当其他群雄角色造成一次伤害后，该角色可以进行一次判定，若判定结果为黑桃，你回复1点体力。
-	引用：LuaBaonve
-	状态：1217验证通过
+	描述：主公技。其他群雄角色造成伤害后，该角色可以进行判定：若结果为黑桃，你回复1点体力。
+	引用：LuaBaonue
+	状态：0405验证通过
 ]]--
-LuaBaonve = sgs.CreateTriggerSkill{
-	name = "LuaBaonve$",
+LuaBaonue = sgs.CreateTriggerSkill{
+	name = "LuaBaonue$",
 	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.Damage, sgs.PreDamageDone},
+	global = true,
 	on_trigger = function(self, event, player, data)
-		local damage = data:toDamage()
 		local room = player:getRoom()
-		if (event == sgs.PreDamageDone) and damage.from then
-			damage.from:setTag("InvokeLuaBaonve", sgs.QVariant(damage.from:getKingdom() == "qun"))
-		elseif (event == sgs.Damage) and player:getTag("InvokeLuaBaonve"):toBool() and player:isAlive() then
+		local damage = data:toDamage()
+		if event == sgs.PreDamageDone and damage.from then
+			damage.from:setTag("InvokeBaonue", sgs.QVariant(damage.from:getKingdom() == "qun"))
+		elseif event == sgs.Damage and player:getTag("InvokeBaonue"):toBool() and player:isAlive() then
 			local dongzhuos = sgs.SPlayerList()
 			for _, p in sgs.qlist(room:getOtherPlayers(player)) do
 				if p:hasLordSkill(self:objectName()) then
 					dongzhuos:append(p)
 				end
 			end
-			while not dongzhuos:isEmpty() do
-				local dongzhuo = room:askForPlayerChosen(player, dongzhuos, self:objectName(), "@baonve-to", true)
+			while (not dongzhuos:isEmpty()) do
+				local dongzhuo = room:askForPlayerChosen(player, dongzhuos, self:objectName(), "@baonue-to", true)
 				if dongzhuo then
 					dongzhuos:removeOne(dongzhuo)
+					local log = sgs.LogMessage()
+					log.type = "#InvokeOthersSkill"
+					log.from = player
+					log.to:append(dongzhuo)
+					log.arg = self:objectName()
+					room:sendLog(log)
+					room:notifySkillInvoked(dongzhuo, self:objectName())
 					local judge = sgs.JudgeStruct()
 					judge.pattern = ".|spade"
 					judge.good = true
@@ -298,9 +334,7 @@ LuaBaonve = sgs.CreateTriggerSkill{
 					judge.who = player
 					room:judge(judge)
 					if judge:isGood() then
-						recover = sgs.RecoverStruct()
-						recover.who = player
-						room:recover(dongzhuo, recover)
+						room:recover(dongzhuo, sgs.RecoverStruct(player))
 					end
 				else
 					break
@@ -309,9 +343,6 @@ LuaBaonve = sgs.CreateTriggerSkill{
 		end
 		return false
 	end,
-	can_trigger = function(self, target)
-		return target
-	end
 }
 --[[
 	技能名：悲歌
