@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（T区）
 	技能索引：
-		抬榇、贪婪、探虎、探囊、天妒、天命、天香、天义、挑衅、铁骑、同疾、同心、偷渡、突骑、突袭、突袭、突袭、屯田
+		抬榇、贪婪、探虎、探囊、替巾、天妒、天命、天香、天义、挑衅、铁骑、同疾、同心、偷渡、突骑、突袭、突袭、突袭、屯田
 ]]--
 --[[
 	技能名：抬榇
@@ -173,6 +173,57 @@ LuaXTannang = sgs.CreateDistanceSkill{
 	end
 }
 
+--[[
+	技能名：替巾
+	相关武将：TWYJ·祖茂
+	描述：当其他角色使用【杀】指定目标时，若你在其攻击范围内且目标数为1，你可以将之转移给自己，若如此做，当此【杀】结算结束后，你弃置其一张牌。 
+	引用：LuaTijin
+	状态：0428验证通过
+]]--
+LuaTijinMap = {}
+LuaTijin = sgs.CreateTriggerSkill{
+    name = "LuaTijin" ,
+    events = {sgs.TargetSpecifying, sgs.CardFinished} ,
+    can_trigger = function(self, target)
+        return target and target:isAlive()
+    end ,
+    on_trigger = function(self, event, player, data)
+        local room = player:getRoom()
+        local use = data:toCardUse()
+        if (event == sgs.TargetSpecifying) then
+            if (use.from and use.card and use.card:isKindOf("Slash") and (use.to:length() == 1)) then
+                local zumao = room:findPlayerBySkillName(self:objectName())
+                if (not zumao) or (not (zumao:isAlive() and zumao:hasSkill(self))) or (use.from:objectName() == zumao:objectName()) or (not use.from:inMyAttackRange(zumao)) then
+                    return false
+                end
+                
+                if (zumao:askForSkillInvoke(self, data)) then
+                    use.to:first():removeQinggangTag(use.card)
+                    while not use.to:isEmpty() do
+                        use.to:removeAt(0)
+                    end
+                    use.to:append(zumao)
+                    
+                    data:setValue(use)
+                    
+                    LuaTijinMap[use.card:toString()] = zumao
+                end
+            end
+        else
+            if (use.from and use.card) then
+                if (LuaTijinMap[use.card:toString()]) then
+                    local zumao = LuaTijinMap[use.card:toString()]
+                    if (zumao and zumao:isAlive() and zumao:canDiscard(use.from, "he")) then
+                        local id = room:askForCardChosen(zumao, use.from, "he", self:objectName(), false, sgs.Card_MethodDiscard)
+                        room:throwCard(id, use.from, zumao)
+                    end
+                end
+                LuaTijinMap[use.card:toString()] = nil
+            end
+        end
+        return false
+    end ,
+}
 --[[
 	技能名：天妒
 	相关武将：标准·郭嘉、SP·台版郭嘉
