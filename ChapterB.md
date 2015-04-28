@@ -426,48 +426,39 @@
 
 ##北伐
 **相关武将**：智·姜维  
-**描述**：**锁定技，**当你失去最后的手牌时，视为你对一名其他角色使用了一张【杀】，若不能如此做，则视为你对自己使用了一张【杀】  
+**描述**：**锁定技。**当你失去最后的手牌时，视为你对一名其他角色使用了一张【杀】，若不能如此做，则视为你对自己使用了一张【杀】  
 **引用**：LuaBeifa  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaBeifa = sgs.CreateTriggerSkill{
 		name = "LuaBeifa" ,
 		frequency = sgs.Skill_Compulsory ,
-		events = {sgs.BeforeCardsMove, sgs.CardsMoveOneTime} ,
-		on_trigger = function(self, event, player, data)
+		events = {sgs.CardsMoveOneTime} ,
+		on_trigger = function(self, event, jiangwei, data)
+			local room = jiangwei:getRoom()
 			local move = data:toMoveOneTime()
-			if move.from and (move.from:objectName() == player:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) then
-				if event == sgs.BeforeCardsMove then
-					if player:isKongcheng() then return false end
-					for _, id in sgs.qlist(player:handCards()) do
-						if not move.card_ids:contains(id) then return false end
+			if move.from and (move.from:objectName() == jiangwei:objectName()) and move.from_places:contains(sgs.Player_PlaceHand) and move.is_last_handcard then
+				local players = sgs.SPlayerList()
+				local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+				slash:setSkillName(self:objectName())
+				for _, player in sgs.qlist(room:getOtherPlayers(jiangwei)) do
+					if jiangwei:canSlash(player, slash, false) then
+						players:append(player)
 					end
-					player:addMark(self:objectName())
-				else
-					local room = player:getRoom()
-					if player:getMark(self:objectName()) == 0 then return false end
-					player:removeMark(self:objectName())
-					local players = sgs.SPlayerList()
-					local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
-					slash:setSkillName(self:objectName())
-					for _, _player in sgs.qlist(room:getOtherPlayers(player)) do
-						if player:canSlash(_player, slash) then
-							players:append(_player)
-						end
-					end
-					local target = nil
-					if not players:isEmpty() then
-						target = room:askForPlayerChosen(player, players, self:objectName()) --没有处理TarMod
-					end
-					if (not target) and (not player:isProhibited(player, slash)) then
-						target = player
-					end
-					local use = sgs.CardUseStruct()
-					use.card = slash
-					use.from = player
-					use.to:append(target)
-					room:useCard(use)
 				end
+				local target = nil
+				if not players:isEmpty() then
+					target = room:askForPlayerChosen(jiangwei, players, self:objectName())--没有处理TarMod
+				end
+				if (not target) and (not jiangwei:isProhibited(jiangwei, slash)) then
+					target = jiangwei
+				end
+				if not target then return false end
+				local use = sgs.CardUseStruct()
+				use.card = slash
+				use.from = jiangwei
+				use.to:append(target)
+				room:useCard(use)
 			end
 			return false
 		end
@@ -475,6 +466,61 @@
 ```
 [返回索引](#技能索引) 
 
+##贲育
+**相关武将**：SP·程昱  
+**描述**：每当你受到有来源的伤害后，若伤害来源存活，若你的手牌数：小于X，你可以将手牌补至X（至多为5）张；大于X，你可以弃置至少X+1张手牌，然后对伤害来源造成1点伤害。（X为伤害来源的手牌数）  
+**引用**：LuaBenyu  
+**状态**：0405验证通过
+```lua
+	LuaBenyuCard = sgs.CreateSkillCard{
+		name = "LuaBenyuCard",
+		will_throw = true,
+		target_fixed = true
+	}
+	LuaBenyuVs = sgs.CreateViewAsSkill{
+		name = "LuaBenyu",
+		n = 998,
+		response_pattern = "@@LuaBenyu",
+		view_filter = function(self, selected, to_select)
+			return not to_select:isEquipped()
+		end,
+		view_as = function(self, cards)
+			if #cards < sgs.Self:getMark("LuaBenyu") then
+				return nil
+			end
+			local vscard = LuaBenyuCard:clone()
+			for _, i in ipairs(cards) do
+				vscard:addSubcard(i)
+			end
+			return vscard
+		end
+	}
+	LuaBenyu = sgs.CreateMasochismSkill{
+		name = "LuaBenyu",
+		view_as_skill = LuaBenyuVs,
+		on_damaged = function(self, target, damage)
+			if (not damage.from) or damage.from:isDead() then
+				return false
+			end
+			local room = target:getRoom()
+			local from_handcard_num, handcard_num = damage.from:getHandcardNum(), target:getHandcardNum()
+			local data = sgs.QVariant()
+			data:setValue(damage)
+			if handcard_num == from_handcard_num then
+				return false
+			elseif handcard_num < from_handcard_num and handcard_num < 5 and room:askForSkillInvoke(target, self:objectName(), data) then
+				room:drawCards(target, math.min(5, from_handcard_num) - handcard_num, self:objectName())
+			elseif handcard_num > from_handcard_num then
+				room:setPlayerMark(target, "LuaBenyu", from_handcard_num + 1)
+				if room:askForUseCard(target, "@@LuaBenyu", "@benyu-discard::"..damage.from:objectName()..":"..tostring(from_handcard_num+1), -1, sgs.Card_MethodDiscard) then
+					room:damage(sgs.DamageStruct(self:objectName(), target, damage.from))
+				end
+			end
+			return false
+		end
+	}
+```
+[返回索引](#技能索引) 
 
 ##崩坏
 **相关武将**：林·董卓  
