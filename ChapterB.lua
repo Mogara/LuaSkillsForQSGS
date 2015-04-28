@@ -653,8 +653,51 @@ LuaBiyue = sgs.CreatePhaseChangeSkill{
 	相关武将：一将成名2014·顾雍
 	描述：结束阶段开始时，若你有手牌，你可以展示所有手牌：若均为同一颜色，你可以令至多X名角色各摸一张牌。（X为你的手牌数）
 	引用：LuaBingyi
-	状态：0405验证失败
+	状态：0405验证通过
 ]]--
+LuaBingyiCard = sgs.CreateSkillCard{
+	name = "LuaBingyiCard",
+	will_throw = false,
+	handling_method = sgs.Card_MethodNone,
+	filter = function(self, targets, to_select, player)
+		local handcard = player:getHandcards()
+		for _, cd in sgs.qlist(handcard) do
+			if handcard:first():sameColorWith(cd) then continue end
+			return false
+		end
+		return #targets < player:getHandcardNum()
+	end,
+	feasible = function(self, targets, player)
+		local handcard = player:getHandcards()
+		for _, cd in sgs.qlist(handcard) do
+			if handcard:first():sameColorWith(cd) then continue end
+			return #targets == 0
+		end
+		return #targets <= player:getHandcardNum()
+	end,
+	on_use = function(self, room, source, targets)
+		room:showAllCards(source)
+		for _, p in ipairs(targets) do
+			room:drawCards(p, 1, "LuaBingyi")
+		end
+	end
+}
+LuaBingyiVs = sgs.CreateZeroCardViewAsSkill{
+	name = "LuaBingyi",
+	response_pattern = "@@LuaBingyi",
+	view_as = function()
+		return LuaBingyiCard:clone()
+	end
+}
+LuaBingyi = sgs.CreatePhaseChangeSkill{
+	name = "LuaBingyi",
+	view_as_skill = LuaBingyiVs,
+	on_phasechange = function(self, target)
+		if target:getPhase() ~= sgs.Player_Finish or target:isKongcheng() then return false end
+		target:getRoom():askForUseCard(target, "@@LuaBingyi", "@bingyi-card")
+		return false
+	end
+}
 --[[
 	技能名：补益
 	相关武将：一将成名·吴国太
