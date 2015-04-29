@@ -674,7 +674,7 @@ LuaBifaCard = sgs.CreateSkillCard{
 		local tag = sgs.QVariant()
 		tag:setValue(source)
 		target:setTag("BifaSource"..tostring(self:getEffectiveId()), tag)
-+		target:addToPile("bifa", self, false)
+		target:addToPile("bifa", self, false)
 	end
 }
 LuaBifaVS = sgs.CreateOneCardViewAsSkill{
