@@ -522,6 +522,111 @@
 ```
 [返回索引](#技能索引) 
 
+##奔袭
+**相关武将**：一将成名2014·吴懿  
+**描述**：**锁定技。**你的回合内，你与其他角色的距离-X。你的回合内，若你与所有其他角色距离均为1，其他角色的防具无效，你使用【杀】可以额外选择一个目标。（X为本回合你已使用结算完毕的牌数）  
+**引用**：LuaBenxi、LuaBenxiTargetMod、LuaBenxiDistance  
+**状态**：0405验证通过
+```lua
+	function isAllAdjacent(from, card)
+		local rangefix = 0
+		if card then
+			if card:isVirtualCard() and from:getOffensiveHorse()
+				and card:getSubcards():contains(from:getOffensiveHorse():getEffectiveId()) then
+				rangefix = 1
+			end
+		end
+		for _, p in sgs.qlist(from:getAliveSiblings()) do
+			if from:distanceTo(p, rangefix) ~= 1 then
+				return false
+			end
+		end
+		return true
+	end
+	LuaBenxi = sgs.CreateTriggerSkill{
+		name = "LuaBenxi",
+		frequency = sgs.Skill_Compulsory,
+		global = true,
+		events = {sgs.EventPhaseChanging, sgs.CardFinished, sgs.EventAcquireSkill, sgs.EventLoseSkill},
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			if event == sgs.EventPhaseChanging then
+				local change = data:toPhaseChange()
+				if change.to == sgs.Player_NotActive then
+					room:setPlayerMark(player, "@LuaBenxi", 0)
+					room:setPlayerMark(player, "LuaBenxi", 0)
+					if player:hasFlag("LuaBenxiArmor") then
+						room:setPlayerFlag(player, "-LuaBenxiArmor")
+						for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+							room:removePlayerMark(p, "Armor_Nullified")
+						end
+					end
+				end
+			elseif event == sgs.CardFinished then
+				local use = data:toCardUse()
+				if use.card:getTypeId() ~= sgs.Card_TypeSkill
+					and player:isAlive() and player:getPhase() ~= sgs.Player_NotActive then
+					room:addPlayerMark(player, "LuaBenxi")
+					if player:hasSkill("LuaBenxi") then
+						room:setPlayerMark(player, "@LuaBenxi", player:getMark("LuaBenxi"))
+						if isAllAdjacent(player, nil) and not player:hasFlag("LuaBenxiArmor") then
+							room:setPlayerFlag(player, "LuaBenxiArmor")
+							for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+								room:addPlayerMark(p, "Armor_Nullified")
+							end
+						end
+					end
+				end
+			elseif event == sgs.EventAcquireSkill or event == sgs.EventLoseSkill then
+				if data:toString() ~= "LuaBenxi" then return false end
+				local num = 0
+				if event == sgs.EventAcquireSkill then
+					num = player:getMark("LuaBenxi")
+					if isAllAdjacent(player, nil) and player:getPhase() ~= sgs.Player_NotActive then
+						room:setPlayerFlag(player, "LuaBenxiArmor")
+						for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+							room:addPlayerMark(p, "Armor_Nullified")
+						end
+					end
+				else
+					if player:hasFlag("LuaBenxiArmor") then
+						room:setPlayerFlag(player, "-LuaBenxiArmor")
+						for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+							room:removePlayerMark(p, "Armor_Nullified")
+						end
+					end
+				end
+				room:setPlayerMark(player, "@LuaBenxi", num)
+			end
+			return false
+		end,
+		can_trigger = function(self, target)
+			return target ~= nil
+		end
+	}
+	LuaBenxiTargetMod = sgs.CreateTargetModSkill{
+		name = "#LuaBenxiTargetMod",
+		pattern = "Slash",
+		extra_target_func = function(self, from, card)
+			if from:hasSkill("LuaBenxi") and isAllAdjacent(from, card) then
+				return 1
+			else
+				return 0
+			end
+		end,
+	}
+	LuaBenxiDistance = sgs.CreateDistanceSkill{
+		name = "#LuaBenxiDistance",
+		correct_func = function(self, from, to)
+			if from:hasSkill("LuaBenxi") and from:getPhase() ~= sgs.Player_NotActive then
+				return -from:getMark("LuaBenxi")
+			end
+			return 0
+		end,
+	}
+```
+[返回索引](#技能索引) 
+
 ##崩坏
 **相关武将**：林·董卓  
 **描述**：**锁定技，**回合结束阶段开始时，若你不是当前的体力值最少的角色之一，你须失去1点体力或减1点体力上限。  
