@@ -392,12 +392,12 @@ LuaBeige = sgs.CreateTriggerSkill{
 	end
 }
  --[[
-+	技能名：悲鸣（锁定技）
-+	相关武将：闯关模式·魅
-+	描述：你死亡时，杀死你的其他角色弃置其所有手牌。
-+	引用：LuaBossBeiming
-+	状态：0405验证通过
-+]]--
+	技能名：悲鸣（锁定技）
+	相关武将：闯关模式·魅
+	描述：你死亡时，杀死你的其他角色弃置其所有手牌。
+	引用：LuaBossBeiming
+	状态：0405验证通过
+]]--
 LuaBossBeiming = sgs.CreateTriggerSkill{
 	name = "LuaBossBeiming" ,
 	events = {sgs.Death} ,
@@ -521,7 +521,6 @@ LuaBenyu = sgs.CreateMasochismSkill{
 	相关武将：守卫剑阁·机雷白虎
 	描述：准备阶段开始时，攻城器械受到1点雷电伤害。 
 ]]--
-
 --[[
 	技能名：奔袭（锁定技）
 	相关武将：一将成名2014·吴懿
