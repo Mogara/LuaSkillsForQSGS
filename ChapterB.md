@@ -754,7 +754,7 @@
 **相关武将**：一将成名·吴国太  
 **描述**：当一名角色进入濒死状态时，你可以展示该角色的一张手牌，若此牌不为基本牌，该角色弃置之，然后回复1点体力。  
 **引用**：LuaBuyi  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaBuyi = sgs.CreateTriggerSkill{
 		name = "LuaBuyi",
@@ -793,51 +793,44 @@
 ##不屈
 **相关武将**：风·周泰  
 **描述**：**锁定技，**每当你处于濒死状态时，你将牌堆顶的一张牌置于武将牌上：若无同点数的“不屈牌”，你回复至1点体力；否则你将该牌置入弃牌堆。若你有“不屈牌”，你的手牌上限等于“不屈牌”的数量。   
-**引用**：LuaBuqu、LuaBuquRemove  
+**引用**：LuaBuqu、LuaBuquMaxCards  
 **状态**：1217验证通过
 ```lua
 	LuaBuqu = sgs.CreateTriggerSkill{
-		name = "LuaBuqu" ,
-		events = {sgs.AskForPeaches} ,
-		frequency = sgs.Skill_Compulsory ,
-		on_trigger = function(self, event, player, data)
-			local room = player:getRoom()
-			local dying_data = data:toDying()
-			if dying_data.who:objectName() ~= player:objectName() then
+		name = "LuaBuqu",
+		frequency = sgs.Skill_Compulsory,
+		events = {sgs.AskForPeaches},
+		on_trigger = function(self, event, zhoutai, data)
+			local room = zhoutai:getRoom()
+			local dying = data:toDying()
+			if dying.who:objectName() ~= zhoutai:objectName() then
 				return false
 			end
-			if player:getHp() > 0 then return false end
-			local log = sgs.LogMessage()
-			log.type = "#TriggerSkill"
-			log.from = player
-			log.arg = self:objectName()
-			room:sendLog(log)
+			if zhoutai:getHp() > 0 then return false end
+			room:sendCompulsoryTriggerLog(zhoutai, self:objectName())
 			local id = room:drawCard()
 			local num = sgs.Sanguosha:getCard(id):getNumber()
 			local duplicate = false
-			for _, card_id in sgs.qlist(player:getPile("buqu")) do
+			for _, card_id in sgs.qlist(zhoutai:getPile("luabuqu")) do
 				if sgs.Sanguosha:getCard(card_id):getNumber() == num then
 					duplicate = true
 					break
 				end
 			end
-			player:addToPile("buqu", id)
+			zhoutai:addToPile("luabuqu", id)
 			if duplicate then
 				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(), "")
 				room:throwCard(sgs.Sanguosha:getCard(id), reason, nil)
 			else
-				local recover = sgs.RecoverStruct()
-				recover.who = player
-				recover.recover = 1 - player:getHp()
-				room:recover(player, recover)
+				room:recover(zhoutai, sgs.RecoverStruct(zhoutai, nil, 1 - zhoutai:getHp()))
 			end
 			return false
 		end
 	}
 	LuaBuquMaxCards = sgs.CreateMaxCardsSkill{
-		name = "#LuaBuqu" ,
+		name = "#LuaBuqu",
 		fixed_func = function(self, target)
-			local len = target:getPile("buqu"):length()
+			local len = target:getPile("luabuqu"):length()
 			if len > 0 then
 				return len
 			else
