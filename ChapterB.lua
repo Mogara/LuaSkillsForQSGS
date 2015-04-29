@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（B区）
 	技能索引：
-		八阵、霸刀、霸王、拜印、豹变、豹变、暴敛、暴凌、暴虐、悲歌、北伐、賁育、奔雷、奔袭、崩坏、笔伐、闭月、变天、秉壹、补益、不屈、不屈
+		八阵、霸刀、霸王、拜印、豹变、豹变、暴敛、暴凌、暴虐、悲歌、悲鸣、北伐、賁育、奔雷、奔袭、崩坏、笔伐、闭月、变天、秉壹、补益、不屈、不屈
 ]]--
 --[[
 	技能名：八阵（锁定技）
@@ -391,6 +391,37 @@ LuaBeige = sgs.CreateTriggerSkill{
 		return target ~= nil
 	end
 }
+ --[[
++	技能名：悲鸣（锁定技）
++	相关武将：闯关模式·魅
++	描述：你死亡时，杀死你的其他角色弃置其所有手牌。
++	引用：LuaBossBeiming
++	状态：0405验证通过
++]]--
+LuaBossBeiming = sgs.CreateTriggerSkill{
+	name = "LuaBossBeiming" ,
+	events = {sgs.Death} ,
+	frequency = sgs.Skill_Compulsory ,
+	can_trigger = function(self, player)
+		return target and target:hasSkill(self:objectName())
+	end ,
+	on_trigger = function(self, event, player, data)
+		local death = data:toDeath()
+		if death.who:objectName() ~= player:objectName() then return false end
+		local killer = death.damage and death.damage.from
+		if killer and killer:objectName() ~= player:objectName() then
+            	local log = sgs.LogMessage()
+            	log.type = "#BeimingThrow"
+            	log.from = player
+            	log.to:append(killer)
+            	log.arg = self:objectName()
+            	room:sendLog(log);
+            	room:notifySkillInvoked(player, self:objectName())
+		room:broadcastSkillInvoke(self:objectName())
+		killer:throwAllHandCards()
+		return false
+        end
+}
 --[[
 	技能名：北伐（锁定技）
 	相关武将：智·姜维
@@ -490,6 +521,7 @@ LuaBenyu = sgs.CreateMasochismSkill{
 	相关武将：守卫剑阁·机雷白虎
 	描述：准备阶段开始时，攻城器械受到1点雷电伤害。 
 ]]--
+
 --[[
 	技能名：奔袭（锁定技）
 	相关武将：一将成名2014·吴懿
@@ -600,7 +632,7 @@ LuaBenxiDistance = sgs.CreateDistanceSkill{
 	引用：LuaBenghuai
 	状态：0405验证通过
 ]]--
-LuaBenghuai = sgs.CreatePhaseSkill{
+LuaBenghuai = sgs.CreatePhaseChangeSkill{
 	name = "LuaBenghuai",
 	frequency = sgs.Skill_Compulsory,
 	on_phasechange = function(self, player)
@@ -634,28 +666,22 @@ LuaBenghuai = sgs.CreatePhaseSkill{
 LuaBifaCard = sgs.CreateSkillCard{
 	name = "LuaBifa",
 	will_throw = false,
+	handling_method = sgs.Card_MethodNone,
 	filter = function(self, targets, to_select)
-		if #targets == 0 then
-			local bifalist = to_select:getPile("bifa")
-			if bifalist:isEmpty() then
-				return to_select:objectName() ~= sgs.Self:objectName()
-			end
-		end
-		return false
+		return #targets == 0 and to_select:getPile("bifa"):isEmpty() and to_select:objectName() ~= sgs.Self:objectName()
 	end,
 	on_use = function(self, room, source, targets)
 		local target = targets[1]
-		local keystr = string.format("BifaSource%d", self:getEffectiveId())
 		local tag = sgs.QVariant()
 		tag:setValue(source)
-		room:setTag(keystr, tag)
-		target:addToPile("bifa", self:getSubcards(), false)
+		target:setTag("BifaSource"..tostring(self:getEffectiveId()), tag)
++		target:addToPile("bifa", self, false)
 	end
 }
 LuaBifaVS = sgs.CreateOneCardViewAsSkill{
 	name = "LuaBifa",
 	response_pattern = "@@LuaBifa" ,
-	filter_pattern = ".!" ,
+	filter_pattern = ".|.|.|hand" ,
 	view_as = function(self, cd)
 		local card = LuaBifaCard:clone()
 		card:addSubcard(cd)
@@ -667,55 +693,50 @@ LuaBifa = sgs.CreatePhaseChangeSkill{
 	view_as_skill = LuaBifaVS,
 	on_phasechange = function(self, player)
 		local room = player:getRoom()
-		if player:isAlive() and player:hasSkill(self:objectName()) then
-			if player:getPhase() == sgs.Player_Finish then
-				if not player:isKongcheng() then
-					room:askForUseCard(player, "@@LuaBifa", "@bifa-remove")
-					return false
-				end
+		if player:isAlive() and player:hasSkill(self:objectName()) and player:getPhase() == sgs.Player_Finish and not player:isKongcheng() then
+			room:askForUseCard(player, "@@LuaBifa", "@bifa-remove")
+			return false
+		elseif player:getPhase() == sgs.Player_RoundStart and player:getPile("bifa"):length() > 0 then
+			local card_id = player:getPile("bifa"):first()
+			local chenlin = player:getTag("BifaSource"..tostring(card_id)):toPlayer()
+			local ids = sgs.IntList()
+			ids:append(card_id)
+			 local log = sgs.LogMessage()
+			log.type = "$BifaView"
+			log.from = player
+			log.card_str = tostring(card_id)
+			log.arg = self:objectName()
+			room:sendLog(log, player)
+			room:fillAG(ids, player)
+			local cd = sgs.Sanguosha:getCard(card_id)
+			local pattern
+			if cd:isKindOf("BasicCard") then
+				pattern = "BasicCard"
+			elseif cd:isKindOf("TrickCard") then
+				pattern = "TrickCard"
+			elseif cd:isKindOf("EquipCard") then
+				pattern = "EquipCard"
 			end
-		end
-		if player:getPhase() == sgs.Player_RoundStart then
-			local bifa_list = player:getPile("bifa")
-			if bifa_list:length() > 0 then
-				while not bifa_list:isEmpty() do
-					local card_id = bifa_list:first()
-					local keystr = string.format("BifaSource%d", card_id)
-					local tag = room:getTag(keystr)
-					local chenlin = tag:toPlayer()
-					local ids = sgs.IntList()
-					ids:append(card_id)
-					room:fillAG(ids, player)
-					local cd = sgs.Sanguosha:getCard(card_id)
-					local pattern
-					if cd:isKindOf("BasicCard") then
-						pattern = "BasicCard"
-					elseif cd:isKindOf("TrickCard") then
-						pattern = "TrickCard"
-					elseif cd:isKindOf("EquipCard") then
-						pattern = "EquipCard"
-					end
-					local data_for_ai = sgs.QVariant(pattern)
-					pattern = string.format("%s|.|.|hand", pattern)
-					local to_give = nil
-					if not player:isKongcheng() and chenlin and chenlin:isAlive() then
-						to_give = room:askForCard(player, pattern, "@bifa-give", data_for_ai, sgs.NonTrigger, chenlin)
-					end
-					if to_give then						
-						local reasonG = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GIVE, player:objectName(), chenlin:objectName(),self:objectName(), "")
-						room:moveCardTo(to_give, player, chenlin, sgs.Player_PlaceHand, reasonG, false)
-						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXCHANGE_FROM_PILE, player:objectName(), self:objectName(), "")
-						room:moveCardTo(cd, nil, player, sgs.Player_PlaceHand, reason, false)						
-					else
-						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(), "")
-						room:throwCard(cd, reason, nil)
-						room:loseHp(player)
-					end
-					bifa_list:removeOne(card_id)
-					player:invoke("clearAG")
-					room:removeTag(keystr)
-				end
+			local data_for_ai = sgs.QVariant(pattern)
+			pattern = pattern.."|.|.|hand"
+			local to_give = nil
+			if not player:isKongcheng() and chenlin and chenlin:isAlive() then
+				to_give = room:askForCard(player, pattern, "@bifa-give", data_for_ai, sgs.Card_MethodNone, chenlin)
+ 			end
+			if chenlin and to_give then
+				room:broadcastSkillInvoke(self:objectName(), 2)
+				local reasonG = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GIVE, player:objectName(), chenlin:objectName(), self:objectName(), "")
+				room:obtainCard(chenlin, to_give, reasonG, false)
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXCHANGE_FROM_PILE, player:objectName(), self:objectName(), "")
+				room:obtainCard(player, cd, reason, false)					
+			else
+				room:broadcastSkillInvoke(self:objectName(), 3)
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", self:objectName(), "")
+				room:throwCard(cd, reason, nil)
+				room:loseHp(player)
 			end
+			room:clearAG(player)
+			player:removeTag("BifaSource"..tostring(card_id))
 		end
 		return false
 	end ,
@@ -734,8 +755,11 @@ LuaBiyue = sgs.CreatePhaseChangeSkill{
 	name = "LuaBiyue",
 	frequency = sgs.Skill_Frequent,
 	on_phasechange = function(self, player)
-		if player:getPhase() == sgs.Player_Finish and player:askForSkillInvoke(player, self:objectName()) then
-			player:drawCards(1)
+		if player:getPhase() == sgs.Player_Finish then
+			if player:askForSkillInvoke(self:objectName()) then
+				player:getRoom():broadcastSkillInvoke(self:objectName())
+				player:drawCards(1, self:objectName())
+			end
 		end
 	end
 }
@@ -780,7 +804,7 @@ LuaBingyiCard = sgs.CreateSkillCard{
 		end
 	end
 }
-LuaBingyiVs = sgs.CreateZeroCardViewAsSkill{
+LuaBingyiVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaBingyi",
 	response_pattern = "@@LuaBingyi",
 	view_as = function()
@@ -789,7 +813,7 @@ LuaBingyiVs = sgs.CreateZeroCardViewAsSkill{
 }
 LuaBingyi = sgs.CreatePhaseChangeSkill{
 	name = "LuaBingyi",
-	view_as_skill = LuaBingyiVs,
+	view_as_skill = LuaBingyiVS,
 	on_phasechange = function(self, target)
 		if target:getPhase() ~= sgs.Player_Finish or target:isKongcheng() then return false end
 		target:getRoom():askForUseCard(target, "@@LuaBingyi", "@bingyi-card")
@@ -811,24 +835,21 @@ LuaBuyi = sgs.CreateTriggerSkill{
 		local dying = data:toDying()
 		local _player = dying.who
 		if _player:isKongcheng() then return false end
-		if _player:getHp() < 1 then
-			if room:askForSkillInvoke(player, self:objectName(), data) then
-				local card
-				if player:objectName() == _player:objectName() then
-					card = room:askForCardShow(_player, player, "LuaBuyi")
-				else
-					local id = room:askForCardChosen(player, _player, "h", self:objectName())
-					card = sgs.Sanguosha:getCard(id)
+		if _player:getHp() < 1 and player:askForSkillInvoke(self:objectName(), data) then
+			local card
+			if player:objectName() == _player:objectName() then
+				card = room:askForCardShow(_player, player, "LuaBuyi")
+			else
+				local id = room:askForCardChosen(player, _player, "h", self:objectName())
+				card = sgs.Sanguosha:getCard(id)
+			end
+			room:showCard(_player, card:getEffectiveId())
+			if card:getTypeId() ~= sgs.Card_TypeBasic then
+				if not _player:isJilei(card) then
+					room:throwCard(card, _player)
 				end
-				room:showCard(_player, card:getEffectiveId())
-				if card:getTypeId() ~= sgs.Card_TypeBasic then
-					if not _player:isJilei(card) then
-						room:throwCard(card, _player)
-					end
-					local recover = sgs.RecoverStruct()
-					recover.who = player
-					room:recover(_player, recover)
-				end
+				room:broadcastSkillInvoke(self:objectName())
+				room:recover(_player, sgs.RecoverStruct(player))
 			end
 		end
 		return false
