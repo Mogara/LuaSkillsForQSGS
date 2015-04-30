@@ -495,38 +495,38 @@ LuaNosQianxi = sgs.CreateTriggerSkill{
 --[[
 	技能名：强袭
 	相关武将：火·典韦
-	描述：出牌阶段限一次，你可以失去1点体力或弃置一张武器牌，并选择你攻击范围内的一名其他角色，对其造成1点伤害。
+	描述：出牌阶段限一次，你可以失去1点体力或弃置一张武器牌，并选择攻击范围内的一名角色：若如此做，你对该角色造成1点伤害。  
 	引用：LuaQiangxi
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
+
 LuaQiangxiCard = sgs.CreateSkillCard{
 	name = "LuaQiangxiCard", 
-	target_fixed = false, 
-	will_throw = true,
 	filter = function(self, targets, to_select) 
-		if #targets ~= 0 then return false end
-		if to_select:objectName() == sgs.Self:objectName() then return false end
+		if #targets ~= 0 or to_select:objectName() == sgs.Self:objectName() then return false end--根据描述应该可以选择自己才对
 		local rangefix = 0
-		if (not self:getSubcards():isEmpty()) and sgs.Self:getWeapon() and (sgs.Self:getWeapon():getId() == self:getSubcards():first()) then
+		if not self:getSubcards():isEmpty() and sgs.Self:getWeapon() and sgs.Self:getWeapon():getId() == self:getSubcards():first() then
 			local card = sgs.Self:getWeapon():getRealCard():toWeapon()
-			rangefix = rangefix + card:getRange() - 1
+			rangefix = rangefix + card:getRange() - sgs.Self:getAttackRange(false)
 		end
-		return sgs.Self:distanceTo(to_select, rangefix) <= sgs.Self:getAttackRange()
+		return sgs.Self:inMyAttackRange(to_select, rangefix);
 	end,
 	on_effect = function(self, effect)
 		local room = effect.to:getRoom()
-		if self:getSubcards():isEmpty() then room:loseHp(effect.from) end
-		room:damage(sgs.DamageStruct("LuaQiangxi", effect.from, effect.to))
+		if self:getSubcards():isEmpty() then 
+			room:loseHp(effect.from)
+		end
+		room:damage(sgs.DamageStruct(self:objectName(), effect.from, effect.to))
 	end
 }
 LuaQiangxi = sgs.CreateViewAsSkill{
 	name = "LuaQiangxi", 
 	n = 1, 
+	enabled_at_play = function(self, player)
+		return not player:hasUsed("#LuaQiangxiCard")
+	end,
 	view_filter = function(self, selected, to_select)
-		if #selected == 0 then
-			return to_select:isKindOf("Weapon")
-		end
-		return false
+		return #selected == 0 and to_select:isKindOf("Weapon") and not sgs.Self:isJilei(to_select)
 	end, 
 	view_as = function(self, cards) 
 		if #cards == 0 then
@@ -535,10 +535,9 @@ LuaQiangxi = sgs.CreateViewAsSkill{
 			local card = LuaQiangxiCard:clone()
 			card:addSubcard(cards[1])
 			return card
+		else 
+			return nil
 		end
-	end, 
-	enabled_at_play = function(self, player)
-		return not player:hasUsed("#LuaQiangxiCard")
 	end
 }
 --[[
@@ -1331,4 +1330,3 @@ LuaQuanjiRemove = sgs.CreateTriggerSkill{
 		return target
 	end
 }
-
