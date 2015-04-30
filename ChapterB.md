@@ -547,7 +547,7 @@
 		name = "LuaBenxi",
 		frequency = sgs.Skill_Compulsory,
 		global = true,
-		events = {sgs.EventPhaseChanging, sgs.CardFinished, sgs.EventAcquireSkill, sgs.EventLoseSkill},
+		events = {sgs.EventPhaseChanging, sgs.CardEffected, sgs.CardFinished, sgs.EventAcquireSkill, sgs.EventLoseSkill},
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			if event == sgs.EventPhaseChanging then
@@ -562,6 +562,21 @@
 						end
 					end
 				end
+			elseif event == sgs.CardEffected then
+				local from = data:toCardEffect().from
+				if from:isAlive() and data:toCardEffect().to:objectName() ~= from:objectName() and from:hasSkill("LuaBenxi") and from:getPhase() ~= sgs.Player_NotActive then
+					if from:hasFlag("LuaBenxiArmor") and not isAllAdjacent(from, nil) then
+						room:setPlayerFlag(from, "-LuaBenxiArmor")
+						for _, p in sgs.qlist(room:getOtherPlayers(from)) do
+							room:removePlayerMark(p, "Armor_Nullified")
+						end
+					elseif isAllAdjacent(from, nil) and not from:hasFlag("LuaBenxiArmor") then
+						room:setPlayerFlag(from, "LuaBenxiArmor")
+						for _, p in sgs.qlist(room:getOtherPlayers(from)) do
+							room:addPlayerMark(p, "Armor_Nullified")
+						end
+					end
+				end
 			elseif event == sgs.CardFinished then
 				local use = data:toCardUse()
 				if use.card:getTypeId() ~= sgs.Card_TypeSkill
@@ -569,7 +584,12 @@
 					room:addPlayerMark(player, "LuaBenxi")
 					if player:hasSkill("LuaBenxi") then
 						room:setPlayerMark(player, "@LuaBenxi", player:getMark("LuaBenxi"))
-						if isAllAdjacent(player, nil) and not player:hasFlag("LuaBenxiArmor") then
+						if player:hasFlag("LuaBenxiArmor") and not isAllAdjacent(player, nil) then
+							room:setPlayerFlag(player, "-LuaBenxiArmor")
+							for _, p in sgs.qlist(room:getOtherPlayers(player)) do
+								room:removePlayerMark(p, "Armor_Nullified")
+							end
+						elseif isAllAdjacent(player, nil) and not player:hasFlag("LuaBenxiArmor") then
 							room:setPlayerFlag(player, "LuaBenxiArmor")
 							for _, p in sgs.qlist(room:getOtherPlayers(player)) do
 								room:addPlayerMark(p, "Armor_Nullified")
