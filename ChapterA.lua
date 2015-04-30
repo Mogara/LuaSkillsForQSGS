@@ -19,7 +19,7 @@ LuaAnxian = sgs.CreateTriggerSkill{
 		if event == sgs.DamageCaused then
 			local damage = data:toDamage()
 			if damage.card and damage.card:isKindOf("Slash")
-				and damage.by_user and (not damage.chain) and (not damage.transfer)
+				and damage.by_user and not damage.chain and not damage.transfer
 				and daqiao:askForSkillInvoke(self:objectName(), data) then
 				local log = sgs.LogMessage()
 				log.type = "#Anxian"
@@ -34,7 +34,7 @@ LuaAnxian = sgs.CreateTriggerSkill{
 			end
 		elseif event == sgs.TargetConfirming then
 			local use = data:toCardUse()
-			if (not use.to:contains(daqiao)) or (not daqiao:canDiscard(daqiao, "h")) then
+			if not use.to:contains(daqiao) or not daqiao:canDiscard(daqiao, "h") then
 				return false 
 			end
 			if use.card:isKindOf("Slash") then
@@ -97,7 +97,7 @@ LuaAnxuCard = sgs.CreateSkillCard{
 }
 LuaAnxu = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaAnxu",
-	view_as = function(self) 
+	view_as = function() 
 		return LuaAnxuCard:clone()
 	end, 
 	enabled_at_play = function(self, player)
@@ -119,13 +119,13 @@ LuaAnjian = sgs.CreateTriggerSkill{
 		local room = player:getRoom()
 		local damage = data:toDamage()
 		if damage.chain or damage.transfer or not damage.by_user then return false end
-		if damage.from and (not damage.to:inMyAttackRange(damage.from))
+		if damage.from and not damage.to:inMyAttackRange(damage.from)
 			and damage.card and damage.card:isKindOf("Slash") then
 			room:notifySkillInvoked(damage.from, self:objectName())
-            damage.damage = damage.damage + 1
-            data:setValue(damage)
-        end
-        return false
+			damage.damage = damage.damage + 1
+			data:setValue(damage)
+        	end
+        	return false
 	end
 }
 --[[
@@ -133,10 +133,9 @@ LuaAnjian = sgs.CreateTriggerSkill{
 	相关武将：SP·诸葛恪
 	描述：你的回合外，每当你需要使用或打出一张基本牌时，你可以观看牌堆顶的两张牌，然后使用或打出其中一张该类别的基本牌。
 	状态：0405验证通过[与源码略有区别]
-	引用：LuaAocai、LuaAocaiFakeMove
-	备注：此技能需要Json库，请将json.lua放置于神杀目录下或者lua\lib中。
+	引用：LuaAocai
 ]]--
-local json = require ("json")
+local json = require("json")
 function view(room, player, ids, enabled, disabled)
 	local result = -1;
 	local jsonLog = {
@@ -147,8 +146,8 @@ function view(room, player, ids, enabled, disabled)
 		"",
 		""
 	}
-	room:doNotify(player,sgs.CommandType.S_COMMAND_LOG_SKILL, json.encode(jsonLog))
-	room:notifySkillInvoked(player, "LuaAocai");
+	room:doNotify(player, sgs.CommandType.S_COMMAND_LOG_SKILL, json.encode(jsonLog))
+	room:notifySkillInvoked(player, "LuaAocai")
 	if enabled:isEmpty() then
 		local jsonValue = {
 			".",
@@ -159,7 +158,7 @@ function view(room, player, ids, enabled, disabled)
 	else
 		room:fillAG(ids, player, disabled)
 		local id = room:askForAG(player, enabled, true, "LuaAocai");
-		if (id ~= -1) then
+		if id ~= -1 then
 			ids:removeOne(id)
 			result = id
 		end
@@ -175,37 +174,37 @@ LuaAocaiVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaAocai",
 	enabled_at_play = function()
 		return false
-	end,
-	enabled_at_response=function(self, player, pattern)
-		 if (player:getPhase() ~= sgs.Player_NotActive or player:hasFlag("Global_LuaAocaiFailed")) then return end
-		 if pattern == "slash" then
-			 	return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE
-			elseif (pattern == "peach") then
-				 return not player:hasFlag("Global_PreventPeach")
-			elseif string.find(pattern, "analeptic") then
+	end ,
+	enabled_at_response = function(self, player, pattern)
+		if player:getPhase() ~= sgs.Player_NotActive or player:hasFlag("Global_LuaAocaiFailed") then return end
+		if pattern == "slash" then
+			return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE
+		elseif pattern == "peach" then
+			return not player:hasFlag("Global_PreventPeach")
+		elseif string.find(pattern, "analeptic") then
 			return true
 		end
-			return false
-		end,
-	view_as = function(self, cards)
+		return false
+	end,
+	view_as = function(self)
 		local acard = LuaAocaiCard:clone()
 		local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
 		if pattern == "peach+analeptic" and sgs.Self:hasFlag("Global_PreventPeach") then
 			pattern = "analeptic"
 		end
 		acard:setUserString(pattern)
-			return acard
-		end,
+		return acard
+	end
 }
 LuaAocai = sgs.CreateTriggerSkill{
 	name = "LuaAocai",
 	view_as_skill = LuaAocaiVS,
-	events={sgs.CardAsked},
-	on_trigger=function(self,event,player,data)
+	events = {sgs.CardAsked},
+	on_trigger = function(self,event,player,data)
 		if player:getPhase() ~= sgs.Player_NotActive then return end
 		local room = player:getRoom()
 		local pattern = data:toStringList()[1]
-		if (pattern == "slash" or pattern == "jink")
+		if pattern == "slash" or pattern == "jink"
 			and room:askForSkillInvoke(player, self:objectName(), data) then
 			local ids = room:getNCards(2, false)
 			local enabled, disabled = sgs.IntList(), sgs.IntList()
@@ -225,9 +224,9 @@ LuaAocai = sgs.CreateTriggerSkill{
 		end
 	end,
 }
-LuaAocaiCard=sgs.CreateSkillCard{
-	name="LuaAocaiCard",
-	will_throw = false,
+LuaAocaiCard = sgs.CreateSkillCard{
+	name = "LuaAocaiCard",
+	will_throw = false ,
 	filter = function(self, targets, to_select)
 		local name = ""
 		local card
@@ -282,8 +281,8 @@ LuaAocaiCard=sgs.CreateSkillCard{
 		local aocaistring = self:getUserString()
 		local names = aocaistring:split("+")
 		if table.contains(names, "slash") then
-			table.insert(names,"fire_slash")
-			table.insert(names,"thunder_slash")
+			table.insert(names, "fire_slash")
+			table.insert(names, "thunder_slash")
 		end
 		local enabled, disabled = sgs.IntList(), sgs.IntList()
 		for _,id in sgs.qlist(ids) do
