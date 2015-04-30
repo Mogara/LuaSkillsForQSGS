@@ -63,13 +63,15 @@
 **相关武将**：1v1·黄月英1v1  
 **描述**：你死亡时，你可以将装备区的所有装备牌移出游戏：若如此做，你的下个武将登场时，将这些牌置于装备区。  
 **引用**：LuaCangji,LuaCangjiInstall  
-**状态**：1217验证通过(KOF2013模式)
+**状态**：0405验证通过(KOF2013模式)
 ```lua
 	LuaCangjiCard = sgs.CreateSkillCard{
 		name = "LuaCangjiCard",
 		will_throw = false,
-		filter = function(self,targets,to_select)
-			if #targets>0 or to_select:objectName() == sgs.Self:objectName() then return false end
+		filter = function(self, targets, to_select, player)
+			if #targets>0 or to_select:objectName() == player:objectName() then
+				return false
+			end
 			local equip_loc = sgs.IntList()
 			for _,id in sgs.qlist(self:getSubcards()) do
 				local card = sgs.Sanguosha:getCard(id)
@@ -85,14 +87,14 @@
 			end
 			return true
 		end,
-		on_effect = function(self,effect)
+		on_effect = function(self, effect)
 			local room = effect.from:getRoom()
 			local move = sgs.CardsMoveStruct(self:getSubcards(), effect.from, effect.to, sgs.Player_PlaceUnknown, sgs.Player_PlaceEquip, sgs.CardMoveReason())
 			room:moveCardsAtomic(move, true)
 			if effect.from:getEquips():isEmpty() then
 				return
 			end
-			local loop = false;
+			local loop = false
 			for i = 0,3,1 do
 				if effect.from:getEquip(i) then
 					for _,p in sgs.qlist(room:getOtherPlayers(effect.from)) do
@@ -105,53 +107,48 @@
 				end
 			end
 			if loop then
-				room:askForUseCard(effect.from, "@@cangji", "@cangji-install", -1, sgs.Card_MethodNone)
+				room:askForUseCard(effect.from, "@@LuaCangji", "@cangji-install", -1, sgs.Card_MethodNone)
 			end
 		end
-	}	
+	}
 	LuaCangjiVS = sgs.CreateViewAsSkill{
 		name = "LuaCangji",
 		n = 4,
-		view_filter = function(self,selected,to_select)
+		response_pattern = "@@LuaCangji"
+		view_filter = function(self, selected, to_select)
 			return to_select:isEquipped()
 		end,
-		view_as = function(self,cards)
+		view_as = function(self, cards)
 			if #cards == 0 then return nil end
 			local card = LuaCangjiCard:clone()
 			for _,c in ipairs(cards) do
 				card:addSubcard(c)
 			end
 			return card
-		end,
-		enabled_at_play = function(self,player)
-			return false
-		end,
-		enabled_at_response = function(self,player,pattern)
-			return pattern == "@@LuaCangji"
 		end
-	}	
+	}
 	LuaCangji = sgs.CreateTriggerSkill {
 		name = "LuaCangji",
 		events = {sgs.Death},
 		view_as_skill = LuaCangjiVS,
-		on_trigger = function(self,event,player,data)
-			local death = data:toDeath()
+		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
-			if death.who:objectName() ~= player:objectName() or not player:hasSkill(self:objectName()) or player:getEquips():isEmpty() then
+			local death = data:toDeath()
+			if death.who:objectName() ~= player:objectName() or (not player:hasSkill(self:objectName())) or player:getEquips():isEmpty() then
 				return false
 			end
 			if room:getMode() == "02_1v1" then
-				if room:askForSkillInvoke(player,self:objectName(),data) then
-					local d = {}
+				if room:askForSkillInvoke(player, self:objectName(), data) then
+					local equip_list = {}
 					local move = sgs.CardsMoveStruct()
 					move.from = player
 					move.to = nil
 					move.to_place = sgs.Player_PlaceTable
-					for _,equip in sgs.qlist(player:getEquips()) do
-						table.insert(d,equip:getEffectiveId())
+					for _, equip in sgs.qlist(player:getEquips()) do
+						table.insert(equip_list,equip:getEffectiveId())
 						move.card_ids:append(equip:getEffectiveId())
 					end				
-					player:setTag(self:objectName(),sgs.QVariant(table.concat(d,"+")))
+					player:setTag(self:objectName(), sgs.QVariant(table.concat(equip_list, "+")))
 					room:moveCardsAtomic(move,true)
 				end
 			else
@@ -162,7 +159,7 @@
 		can_trigger = function(self,target)
 			return target ~= nil
 		end   
-	}	
+	}
 	LuaCangjiInstall = sgs.CreateTriggerSkill {
 		name = "#LuaCangjiInstall",
 		events = {sgs.Debut},
@@ -173,7 +170,7 @@
 		on_trigger = function(self,event,player, data)
 			local room = player:getRoom()
 			local equip_list = sgs.IntList()
-			for _,id in ipairs(player:getTag("LuaCangji"):toString():split("+")) do
+			for _, id in ipairs(player:getTag("LuaCangji"):toString():split("+")) do
 				local card_id = tonumber(id)
 				if sgs.Sanguosha:getCard(card_id):getTypeId() == sgs.Card_TypeEquip then
 					equip_list:append(card_id)
@@ -184,9 +181,9 @@
 			local log = sgs.LogMessage()
 			log.from = player
 			log.type = "$Install"
-			log.card_str = table.concat(sgs.QList2Table(equip_list),"+")
+			log.card_str = table.concat(sgs.QList2Table(equip_list), "+")
 			room:sendLog(log)
-			room:moveCardsAtomic(sgs.CardsMoveStruct(equip_list,player,sgs.Player_PlaceEquip,sgs.CardMoveReason()),true)
+			room:moveCardsAtomic(sgs.CardsMoveStruct(equip_list, player, sgs.Player_PlaceEquip, sgs.CardMoveReason()), true)
 			return false
 		end
 	}
