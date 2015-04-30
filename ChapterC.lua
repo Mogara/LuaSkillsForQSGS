@@ -190,54 +190,55 @@ LuaCangjiInstall = sgs.CreateTriggerSkill {
 	相关武将：铜雀台·伏皇后
 	描述：弃牌阶段开始时，你可以回复1点体力或摸两张牌，然后将你的武将牌翻面；其他角色的回合内，当你获得（每回合限一次）/失去一次牌时，若你的武将牌背面朝上，你可以令该角色摸/弃置一张牌。
 	引用：LuaCangni
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaCangni = sgs.CreateTriggerSkill{
 	name = "LuaCangni" ,
 	events = {sgs.EventPhaseStart, sgs.CardsMoveOneTime} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if (event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_Discard) then
-			if player:askForSkillInvoke(self:objectName()) then
-				local choices = {}
-				table.insert(choices, "draw")
-				if player:isWounded() then
-					table.insert(choices, recover)
-				end
-				local choice
-				if #choices == 1 then
-					choice = choices[1]
-				else
-					choice = room:askForChoice(player, self:objectName(), table.concat(choices, "+"))
-				end
-				if choice == "recover" then
-					local recover = sgs.RecoverStruct()
-					recover.who = player
-					room:recover(player, recover)
-				else
-					player:drawCards(2)
-				end
-				player:turnOver()
+		if event == sgs.EventPhaseStart and player:getPhase() == sgs.Player_Discard and player:askForSkillInvoke(self:objectName()) then
+			local choices = {}
+			table.insert(choices, "draw")
+			if player:isWounded() then
+				table.insert(choices, "recover")
+			end
+			local choice
+			if #choices == 1 then
+				choice = choices[1]
+			else
+				choice = room:askForChoice(player, self:objectName(), table.concat(choices, "+"))
+			end
+			if choice == "recover" then
+				local recover = sgs.RecoverStruct()
+				recover.who = player
+				room:recover(player, recover)
+			else
+				player:drawCards(2)
+			end
+			player:turnOver()
+			return false
+		elseif event == sgs.CardsMoveOneTime and not player:faceUp() then
+			if (player:getPhase() ~= sgs.Player_NotActive) then
 				return false
 			end
-		elseif (event == sgs.CardsMoveOneTime) and (not player:faceUp()) then
-			if (player:getPhase() ~= sgs.Player_NotActive) then return false end
 			local move = data:toMoveOneTime()
 			local target = room:getCurrent()
-			if target:isDead() then return false end
-			if (move.from and (move.from:objectName() == player:objectName())) and ((not move.to) or (move.to:objectName() ~= player:objectName())) then
+			if target:isDead() then
+				return false
+			end
+			if (move.from and move.from:objectName() == player:objectName()) and ((not move.to) or (move.to:objectName() ~= player:objectName())) then
 				local invoke = false
 				for i = 0, move.card_ids:length() - 1, 1 do
-					if (move.from_places:at(i) == sgs.Player_PlaceHand) or (move.from_places:at(i) == sgs.Player_PlaceEquip) then
+					if move.from_places:at(i) == sgs.Player_PlaceHand or move.from_places:at(i) == sgs.Player_PlaceEquip then
 						invoke = true
 						break
 					end
 				end
 				room:setPlayerFlag(player, "LuaCangniLose")
-				if invoke and (not target:isNude()) then
-					if player:askForSkillInvoke(self:objectName()) then
-						room:askForDiscard(target, self:objectName(), 1, 1, false, true)
-					end
+				if invoke and (not target:isNude()) and player:askForSkillInvoke(self:objectName()) then
+					room:doAnimate(1, player:objectName(), target:objectName())
+					room:askForDiscard(target, self:objectName(), 1, 1, false, true)
 				end
 				room:setPlayerFlag(player, "-LuaCangniLose")
 				return false
@@ -247,6 +248,7 @@ LuaCangni = sgs.CreateTriggerSkill{
 					room:setPlayerFlag(player, "LuaCangniGet")
 					if (not target:hasFlag("LuaCangni_Used")) then
 						if player:askForSkillInvoke(self:objectName()) then
+							room:doAnimate(1, player:objectName(), target:objectName())
 							room:setPlayerFlag(target, "LuaCangni_Used")
 							target:drawCards(1)
 						end
@@ -258,7 +260,6 @@ LuaCangni = sgs.CreateTriggerSkill{
 		return false
 	end
 }
-
 --[[
 	技能名：缠怨（锁定技）
 	相关武将：风·于吉
