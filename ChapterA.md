@@ -179,8 +179,8 @@
 			return false
 		end,
 		enabled_at_response=function(self, player, pattern)
-			 if (player:getPhase() ~= sgs.Player_NotActive or player:hasFlag("Global_LuaAocaiFailed")) then return end
-			 if pattern == "slash" then
+			if (player:getPhase() ~= sgs.Player_NotActive or player:hasFlag("Global_LuaAocaiFailed")) then return end
+			if pattern == "slash" then
 					return sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE
 				elseif (pattern == "peach") then
 					 return not player:hasFlag("Global_PreventPeach")
