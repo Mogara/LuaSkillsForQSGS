@@ -1316,15 +1316,19 @@ LuaHuangtian = sgs.CreateTriggerSkill{
 --[[
 	技能名：挥泪（锁定技）
 	相关武将：一将成名·马谡
-	描述：当你被其他角色杀死时，该角色弃置其所有的牌。
+	描述：你死亡时，杀死你的其他角色弃置其所有牌。 
 	引用：LuaHuilei
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaHuilei = sgs.CreateTriggerSkill{
 	name = "LuaHuilei",
 	events = {sgs.Death} ,
 	frequency = sgs.Skill_Compulsory ,
+	can_trigger = function(self, target)
+		return target ~= nil and target:hasSkill(self:objectName())
+	end ,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local death = data:toDeath()
 		if death.who:objectName() ~= player:objectName() then return false end
 		local killer
@@ -1333,39 +1337,11 @@ LuaHuilei = sgs.CreateTriggerSkill{
 		else
 			killer = nil
 		end
-		if killer then
+		if killer and killer:objectName() ~= player:objectName() then
+			room:notifySkillInvoked(player, self:objectName())
 			killer:throwAllHandCardsAndEquips()
 		end
 		return false
-	end ,
-	can_trigger = function(self, target)
-		return target and target:hasSkill(self:objectName())
-	end
-}
---[[
-	技能名：魂姿（觉醒技）
-	相关武将：山·孙策
-	描述：回合开始阶段开始时，若你的体力为1，你须减1点体力上限，并获得技能“英姿”和“英魂”。
-	引用：LuaHunzi
-	状态：1217验证通过
-]]--
-LuaHunzi = sgs.CreateTriggerSkill{
-	name = "LuaHunzi" ,
-	events = {sgs.EventPhaseStart} ,
-	frequency = sgs.Skill_Wake ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		room:addPlayerMark(player, "LuaHunzi")
-		if room:changeMaxHpForAwakenSkill(player) then
-			room:handleAcquireDetachSkills(player, "yingzi|yinghun")
-		end
-		return false
-	end ,
-	can_trigger = function(self, target)
-		return (target and target:isAlive() and target:hasSkill(self:objectName()))
-				and (target:getMark("LuaHunzi") == 0)
-				and (target:getPhase() == sgs.Player_Start)
-				and (target:getHp() == 1)
 	end
 }
 --[[
