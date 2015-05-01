@@ -1318,15 +1318,19 @@
 [返回索引](#技能索引)
 ##挥泪
 **相关武将**：一将成名·马谡  
-**描述**：**锁定技，**当你被其他角色杀死时，该角色弃置其所有的牌。  
+**描述**：**锁定技，**你死亡时，杀死你的其他角色弃置其所有牌。   
 **引用**：LuaHuilei  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaHuilei = sgs.CreateTriggerSkill{
 		name = "LuaHuilei",
 		events = {sgs.Death} ,
 		frequency = sgs.Skill_Compulsory ,
+		can_trigger = function(self, target)
+			return target ~= nil and target:hasSkill(self:objectName())
+		end ,
 		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
 			local death = data:toDeath()
 			if death.who:objectName() ~= player:objectName() then return false end
 			local killer
@@ -1335,15 +1339,14 @@
 			else
 				killer = nil
 			end
-			if killer then
+			if killer and killer:objectName() ~= player:objectName() then
+				room:notifySkillInvoked(player, self:objectName())
 				killer:throwAllHandCardsAndEquips()
 			end
 			return false
-		end ,
-		can_trigger = function(self, target)
-			return target and target:hasSkill(self:objectName())
 		end
 	}
+
 ```
 [返回索引](#技能索引)
 ##魂姿
