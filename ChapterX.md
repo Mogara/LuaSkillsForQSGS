@@ -284,10 +284,11 @@
 [返回索引](#技能索引)
 
 ##枭姬
-**相关武将**：标准·孙尚香、SP·孙尚香  
-**描述**：当你失去装备区里的一张牌时，你可以摸两张牌。  
+**相关武将**：标准·孙尚香、SP·孙尚香、JSP·孙尚香  
+**描述**：每当你失去一张装备区的装备牌后，你可以摸两张牌。 
+ 
 **引用**：LuaXiaoji  
-**状态**：1217验证通过  
+**状态**：0405证通过  
 ```lua
 	LuaXiaoji = sgs.CreateTriggerSkill{
 		name = "LuaXiaoji" ,
@@ -296,7 +297,7 @@
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			local move = data:toMoveOneTime()
-			if move.from and (move.from:objectName() == player:objectName()) and move.from_places:contains(sgs.Player_PlaceEquip) then
+			if move.from and move.from:objectName() == player:objectName() and move.from_places:contains(sgs.Player_PlaceEquip) then
 				for i = 0, move.card_ids:length() - 1, 1 do
 					if not player:isAlive() then return false end
 					if move.from_places:at(i) == sgs.Player_PlaceEquip then
@@ -311,6 +312,7 @@
 			return false
 		end
 	}
+
 ```
 [返回索引](#技能索引)
 
