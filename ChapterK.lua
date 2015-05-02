@@ -117,24 +117,27 @@ LuaKegou = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：克己
-	相关武将：标准·吕蒙
-	描述：若你于出牌阶段未使用或打出过【杀】，你可以跳过此回合的弃牌阶段。
+	相关武将：标准·吕蒙、界限突破·吕蒙、☆SP·吕蒙
+	描述：若你未于出牌阶段内使用或打出【杀】，你可以跳过弃牌阶段。 
 	引用：LuaKeji
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaKeji = sgs.CreateTriggerSkill{
 	name = "LuaKeji" ,
 	frequency = sgs.Skill_Frequent ,
-	events = {sgs.PreCardUsed,sgs.CardResponded,sgs.EventPhaseChanging} ,	
+	global = true ,
+	events = {sgs.PreCardUsed, sgs.CardResponded, sgs.EventPhaseChanging} ,   
 	on_trigger = function(self, event, player, data)
 		if event == sgs.EventPhaseChanging then
+			local can_trigger = true
+			if player:hasFlag("KejiSlashInPlayPhase") then
+				can_trigger = false
+				player:setFlags("-KejiSlashInPlayPhase")
+			end
 			local change = data:toPhaseChange()
-			if change.to == sgs.Player_Discard and player and player:isAlive() and player:hasSkill(self:objectName()) then
-				if not player:hasFlag("LuaKejiSlashInPlayPhase") and player:askForSkillInvoke(self:objectName()) then
+			if change.to == sgs.Player_Discard and player:isAlive() and player:hasSkill(self:objectName()) then
+				if can_trigger and player:askForSkillInvoke(self:objectName()) then
 					player:skip(sgs.Player_Discard)
-				end
-				if player:hasFlag("LuaKejiSlashInPlayPhase") then
-					player:setFlags("-LuaKejiSlashInPlayPhase")
 				end
 			end
 		else
@@ -143,7 +146,7 @@ LuaKeji = sgs.CreateTriggerSkill{
 				if event == sgs.PreCardUsed then
 					card = data:toCardUse().card
 				else
-					card = data:toCardResponse().m_card				
+					card = data:toCardResponse().m_card			 
 				end
 				if card:isKindOf("Slash") then
 					player:setFlags("LuaKejiSlashInPlayPhase")
@@ -151,9 +154,6 @@ LuaKeji = sgs.CreateTriggerSkill{
 			end
 		end
 		return false
-	end,
-	can_trigger = function(self, target)
-		return target ~= nil 
 	end
 }
 --[[
