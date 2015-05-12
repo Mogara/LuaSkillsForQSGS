@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（F区）
 	技能索引：
-		反间、反间、反馈、放权、放逐、飞影、焚城、焚心、奋激、奋迅、愤勇、奉印、伏枥、扶乱、辅佐、父魂、父魂
+		反间、反间、反馈、反馈、放权、放逐、飞影、焚城、焚心、奋激、奋迅、愤勇、奉印、伏枥、扶乱、辅佐、父魂、父魂
 ]]--
 --[[
 	技能名：反间
@@ -92,28 +92,47 @@ LuaXNeoFanjian = sgs.CreateViewAsSkill{
 }
 --[[
 	技能名：反馈
-	相关武将：标准·司马懿
-	描述：每当你受到一次伤害后，你可以获得伤害来源的一张牌。
+	相关武将：界限突破·司马懿
+	描述：每当你受到1点伤害后，你可以获得伤害来源的一张牌。 
 	引用：LuaFankui
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
-LuaFankui = sgs.CreateTriggerSkill{
+LuaFankui = sgs.CreateMasochismSkill{
 	name = "LuaFankui",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
-	on_trigger = function(self, event, player, data)
+	on_damaged = function(self, player, damage)
+		local from = damage.from
 		local room = player:getRoom()
-		local damage = data:toDamage()
-		local source = damage.from
-		local source_data = sgs.QVariant()
-		source_data:setValue(source)
-		if source then
-			if not source:isNude() then
-				if room:askForSkillInvoke(player, self:objectName(), source_data) then
-					local card_id = room:askForCardChosen(player, source, "he", self:objectName())
-					room:obtainCard(player, card_id)
-				end
+		for i = 0, damage.damage - 1, 1 do
+			local data = sgs.QVariant()
+			data:setValue(from)
+			if from and not from:isNude() and room:askForSkillInvoke(player, self:objectName(), data) then
+				local card_id = room:askForCardChosen(player, from, "he", self:objectName())
+				local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+				room:obtainCard(player, sgs.Sanguosha:getCard(card_id), reason, room:getCardPlace(card_id) ~= sgs.Player_PlaceHand)
+			else
+				break
 			end
+		end
+	end
+}
+--[[
+	技能名：反馈
+	相关武将：标准·司马懿
+	描述：每当你受到伤害后，你可以获得伤害来源的一张牌。   
+	引用：LuaNosFankui
+	状态：0405验证通过
+]]--
+LuaNosFankui = sgs.CreateMasochismSkill{
+	name = "LuaNosFankui",
+	on_damaged = function(self, player, damage)
+		local from = damage.from
+		local room = player:getRoom()
+		local data = sgs.QVariant()
+		data:setValue(from)
+		if from and not from:isNude() and room:askForSkillInvoke(player, self:objectName(), data) then
+			local card_id = room:askForCardChosen(player, from, "he", self:objectName())
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+			room:obtainCard(player, sgs.Sanguosha:getCard(card_id), reason, room:getCardPlace(card_id) ~= sgs.Player_PlaceHand)
 		end
 	end
 }
