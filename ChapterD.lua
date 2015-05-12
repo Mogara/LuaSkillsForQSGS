@@ -742,30 +742,26 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 --[[
 	技能名：断粮
 	相关武将：林·徐晃
-	描述：你可以将一张黑色牌当【兵粮寸断】使用，此牌必须为基本牌或装备牌；你可以对距离2以内的一名其他角色使用【兵粮寸断】。
+	描述：你可以将一张黑色的基本牌或黑色的装备牌当【兵粮寸断】使用。你使用【兵粮寸断】的距离限制为2。 
 	引用：LuaDuanliangTargetMod，LuaDuanliang
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
-
-LuaDuanliang = sgs.CreateViewAsSkill{
+LuaDuanliang = sgs.CreateOneCardViewAsSkill{
 	name = "LuaDuanliang",
-	n = 1,
-	view_filter = function(self, selected, to_select)
-		return to_select:isBlack() and (to_select:isKindOf("BasicCard") or to_select:isKindOf("EquipCard"))
-	end,
-	view_as = function(self, cards)
-		if #cards ~= 1 then return nil end
-		local shortage = sgs.Sanguosha:cloneCard("supply_shortage",cards[1]:getSuit(),cards[1]:getNumber())
+	filter_pattern = "BasicCard,EquipCard|black",
+	response_or_use = true,
+	view_as = function(self, card)
+		local shortage = sgs.Sanguosha:cloneCard("supply_shortage",card:getSuit(),card:getNumber())
 		shortage:setSkillName(self:objectName())
-		shortage:addSubcard(cards[1])
+		shortage:addSubcard(card)
 		return shortage
 	end
 }
 LuaDuanliangTargetMod = sgs.CreateTargetModSkill{
 	name = "#LuaDuanliang-target",
 	pattern = "SupplyShortage",
-	distance_limit_func = function(self, player)
-		if player:hasSkill(self:objectName()) then
+	distance_limit_func = function(self, from)
+		if from:hasSkill("LuaDuanliang") then
 			return 1
 		else
 			return 0
