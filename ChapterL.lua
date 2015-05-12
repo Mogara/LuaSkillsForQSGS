@@ -752,14 +752,16 @@ LuaLianliClear = sgs.CreateTriggerSkill{
 --[[
 	技能名：连破
 	相关武将：神·司马懿
-	描述：若你在一回合内杀死了至少一名角色，此回合结束后，你可以进行一个额外的回合。
-	引用：LuaLianpoCount、LuaLianpo、LuaLianpoDo
-	状态：1217验证通过
+	描述：每当一名角色的回合结束后，若你于本回合杀死至少一名角色，你可以进行一个额外的回合。   
+	引用：LuaLianpoCount、LuaLianpo
+	状态：0405验证通过
 ]]--
 LuaLianpoCount = sgs.CreateTriggerSkill{
 	name = "#LuaLianpo-count" ,
-	events = {sgs.Death, sgs.EventPhaseStart} ,
+	events = {sgs.Death, sgs.TurnStart} ,
+	global = true ,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		if event == sgs.Death then
 			local death = data:toDeath()
 			if death.who:objectName() ~= player:objectName() then return false end
@@ -769,59 +771,33 @@ LuaLianpoCount = sgs.CreateTriggerSkill{
 			else
 				killer = nil
 			end
-			local current = player:getRoom():getCurrent()
-			if killer and current and current:isAlive() and (current:getPhase() ~= sgs.Playr_NotActive) then
+			local current = room:getCurrent()
+			if killer and current and (current:isAlive() or current:objectName() == death.who:objectName()) and current:getPhase() ~= sgs.Playr_NotActive then
 				killer:addMark("LuaLianpo")
 			end
-		elseif player:getPhase() == sgs.Player_NotActive then
-			for _, p in sgs.qlist(player:getRoom():getAlivePlayers()) do
+		else
+			for _, p in sgs.qlist(room:getAlivePlayers()) do
 				p:setMark("LuaLianpo", 0)
 			end
 		end
-	end,
-	can_trigger = function(self,target)
-		return target
+		return false
 	end
 }
-LuaLianpo = sgs.CreateTriggerSkill{
+LuaLianpo = sgs.CreatePhaseChangeSkill{
 	name = "LuaLianpo" ,
-	events = {sgs.EventPhaseChanging} ,
-	--frequency = sgs.Skill_Frequent , 这句话源代码没有，但是我感觉应该加上，毕竟连破一点副作用都没有
-	priority = 1,
-	on_trigger = function(self, event, player, data)
-		local change = data:toPhaseChange()
-		if change.to ~= sgs.Player_NotActive then return false end
-		local shensimayi = player:getRoom():findPlayerBySkillName("LuaLianpo")
-		if (not shensimayi) or (shensimayi:getMark("LuaLianpo") <= 0) then return false end
-		local n = shensimayi:getMark("LuaLianpo")
-		shensimayi:setMark("LuaLianpo",0)
-		if not shensimayi:askForSkillInvoke("LuaLianpo") then return false end
-		local p = shensimayi
-		local playerdata = sgs.QVariant()
-		playerdata:setValue(p)
-		player:getRoom():setTag("LuaLianpoInvoke", playerdata)
+	frequency = sgs.Skill_Frequent ,
+	priority = 1 ,
+	on_phasechange = function(self, player)
+		local room = player:getRoom()
+		if player:getPhase() == sgs.Player_NotActive then
+			local shensimayi = player:getRoom():findPlayerBySkillName(self:objectName())
+			if not shensimayi or shensimayi:getMark("LuaLianpo") <= 0 or not shensimayi:askForSkillInvoke(self:objectName()) then return false end
+			shensimayi:gainAnExtraTurn()
+		end
 		return false
 	end ,
 	can_trigger = function(self, target)
 		return target
-	end
-}
-LuaLianpoDo = sgs.CreateTriggerSkill{
-	name = "LuaLianpo-do" ,
-	events = {sgs.EventPhaseStart},
-	priority = 1 ,
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-		if room:getTag("LuaLianpoInvoke") then
-			local target = room:getTag("LuaLianpoInvoke"):toPlayer()
-			room:removeTag("LuaLianpoInvoke")
-			if target and target:isAlive() then
-				target:gainAnExtraTurn()
-			end
-		end
-	end,
-	can_trigger = function(self, target)
-		return target and (target:getPhase() == sgs.Player_NotActive)
 	end
 }
 --[[
