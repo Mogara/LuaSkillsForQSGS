@@ -1,7 +1,7 @@
 代码速查手册（G区）
 ===
 # 技能索引
-[甘露](#甘露)、[感染](#感染)、[刚烈](#刚烈)、[刚烈-3v3](#刚烈-3v3)、[刚烈-翼](#刚烈-翼)、[弓骑](#弓骑)、[弓骑-旧](#弓骑-旧)、[攻心](#攻心)、[共谋](#共谋)、[蛊惑](#蛊惑)、[蛊惑-旧](#蛊惑-旧)、[固守](#固守)、[固政](#固政)、[观星](#观星)、[归命](#归命)、[归汉](#归汉)、[归心](#归心)、[归心-倚天](#归心-倚天)、[闺秀](#闺秀)、[鬼才](#鬼才)、[鬼道](#鬼道)、[国色](#国色)
+[甘露](#甘露)、[感染](#感染)、[刚烈](#刚烈)、[刚烈-3v3](#刚烈-3v3)、[刚烈-翼](#刚烈-翼)、[弓骑](#弓骑)、[弓骑-旧](#弓骑-旧)、[攻心](#攻心)、[共谋](#共谋)、[蛊惑](#蛊惑)、[蛊惑-旧](#蛊惑-旧)、[固守](#固守)、[固政](#固政)、[观星](#观星)、[归命](#归命)、[归汉](#归汉)、[归心](#归心)、[归心-倚天](#归心-倚天)、[闺秀](#闺秀)、[鬼才](#鬼才)、[鬼才-旧](#鬼才-旧)、[鬼道](#鬼道)、[国色](#国色)
 
 [返回目录](README.md#目录)
 ## 甘露
@@ -1833,10 +1833,10 @@
 ```
 [返回索引](#技能索引)
 ##鬼才
-**相关武将**：标准·司马懿  
-**描述**：在一名角色的判定牌生效前，你可以打出一张手牌代替之。  
+**相关武将**：界限突破·司马懿  
+**描述**： 每当一名角色的判定牌生效前，你可以打出一张牌代替之。     
 **引用**：LuaGuicai  
-**状态**：1217验证通过
+**状态**：0405验证通过
 
 ```lua
 	LuaGuicai = sgs.CreateTriggerSkill{
@@ -1844,21 +1844,25 @@
 		events = {sgs.AskForRetrial} ,
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
-			if player:isKongcheng() then return false end
+			if player:isNude() then return false end
 			local judge = data:toJudge()
 			local prompt_list = {
 				"@guicai-card" ,
 				judge.who:objectName() ,
 				self:objectName() ,
 				judge.reason ,
-				string.format("%d", judge.card:getEffectiveId())
+				tostring(judge.card:getEffectiveId())
 			}
 			local prompt = table.concat(prompt_list, ":")
 			local forced = false
-			if player:getMark("JilveEvent") == sgs.AskForRetrial then forced = true end
-			local askforcardpattern = "."
-			if forced then askforcardpattern = ".!" end
-			local card = room:askForCard(player, askforcardpattern, prompt, data, sgs.Card_MethodResponse, judge.who, true)
+			if player:getMark("JilveEvent") == sgs.AskForRetrial then 
+				forced = true 
+			end
+			local rcard = ".."
+			if forced then 
+				rcard = "..!" 
+			end
+			local card = room:askForCard(player, rcard, prompt, data, sgs.Card_MethodResponse, judge.who, true)
 			if forced and (card == nil) then
 				card = player:getRandomHandCard()
 			end
@@ -1870,33 +1874,47 @@
 	}
 ```
 [返回索引](#技能索引)
+##鬼才-旧
+**相关武将**：标准·司马懿  
+**描述**： 每当一名角色的判定牌生效前，你可以打出一张手牌代替之。     
+**引用**：LuaNosGuicai  
+**状态**：0405验证通过
+
+```lua
+	LuaNosGuicai = sgs.CreateTriggerSkill{
+		name = "LuaNosGuicai" ,
+		events = {sgs.AskForRetrial} ,
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			if player:isKongcheng() then return false end
+			local judge = data:toJudge()
+			local prompt_list = {
+				"@nosguicai-card" ,
+				judge.who:objectName() ,
+				self:objectName() ,
+				judge.reason ,
+				tostring(judge.card:getEffectiveId())
+			}
+			local prompt = table.concat(prompt_list, ":")
+			local card = room:askForCard(player, ".", prompt, data, sgs.Card_MethodResponse, judge.who, true)
+			if card then
+				room:retrial(card, player, judge, self:objectName())
+			end
+			return false
+		end
+	}
+```
+[返回索引](#技能索引)
 ##鬼道
-**相关武将**：风·张角  
-**描述**：在一名角色的判定牌生效前，你可以打出一张黑色牌替换之。  
+**相关武将**：风·张角、旧风·张角  
+**描述**：每当一名角色的判定牌生效前，你可以打出一张黑色牌替换之。  
 **引用**：LuaGuidao  
-**状态**：1217验证通过
+**状态**：0405验证通过
 
 ```lua
 	LuaGuidao = sgs.CreateTriggerSkill{
 		name = "LuaGuidao" ,
 		events = {sgs.AskForRetrial} ,
-		on_trigger = function(self, event, player, data)
-			local judge = data:toJudge()
-			local prompt_list = {
-				"@guidao-card" ,
-				judge.who:objectName() ,
-				self:objectName() ,
-				judge.reason ,
-				string.format("%d", judge.card:getEffectiveId())
-			}
-			local prompt = table.concat(prompt_list, ":")
-			local room = player:getRoom()
-			local card = room:askForCard(player, ".|black", prompt, data, sgs.Card_MethodResponse, judge.who, true)
-			if card then
-				room:retrial(card, player, judge, self:objectName(), true)
-			end
-			return false
-		end ,
 		can_trigger = function(self, target)
 			if not (target and target:isAlive() and target:hasSkill(self:objectName())) then return false end
 			if target:isKongcheng() then
@@ -1912,6 +1930,23 @@
 			else
 				return true
 			end
+		end ,
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			local judge = data:toJudge()
+			local prompt_list = {
+				"@guidao-card" ,
+				judge.who:objectName() ,
+				self:objectName() ,
+				judge.reason ,
+				tostring(judge.card:getEffectiveId())
+			}
+			local prompt = table.concat(prompt_list, ":")
+			local card = room:askForCard(player, ".|black", prompt, data, sgs.Card_MethodResponse, judge.who, true)
+			if card then
+				room:retrial(card, player, judge, self:objectName(), true)
+			end
+			return false
 		end
 	}
 ```
