@@ -1923,30 +1923,13 @@ LuaNosGuicai = sgs.CreateTriggerSkill{
 --[[
 	技能名：鬼道
 	相关武将：风·张角
-	描述：在一名角色的判定牌生效前，你可以打出一张黑色牌替换之。
+	描述：每当一名角色的判定牌生效前，你可以打出一张黑色牌替换之。
 	引用：LuaGuidao
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaGuidao = sgs.CreateTriggerSkill{
 	name = "LuaGuidao" ,
 	events = {sgs.AskForRetrial} ,
-	on_trigger = function(self, event, player, data)
-		local judge = data:toJudge()
-		local prompt_list = {
-			"@guidao-card" ,
-			judge.who:objectName() ,
-			self:objectName() ,
-			judge.reason ,
-			string.format("%d", judge.card:getEffectiveId())
-		}
-		local prompt = table.concat(prompt_list, ":")
-		local room = player:getRoom()
-		local card = room:askForCard(player, ".|black", prompt, data, sgs.Card_MethodResponse, judge.who, true)
-		if card then
-			room:retrial(card, player, judge, self:objectName(), true)
-		end
-		return false
-	end ,
 	can_trigger = function(self, target)
 		if not (target and target:isAlive() and target:hasSkill(self:objectName())) then return false end
 		if target:isKongcheng() then
@@ -1962,9 +1945,25 @@ LuaGuidao = sgs.CreateTriggerSkill{
 		else
 			return true
 		end
+	end ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		local judge = data:toJudge()
+		local prompt_list = {
+			"@guidao-card" ,
+			judge.who:objectName() ,
+			self:objectName() ,
+			judge.reason ,
+			tostring(judge.card:getEffectiveId())
+		}
+		local prompt = table.concat(prompt_list, ":")
+		local card = room:askForCard(player, ".|black", prompt, data, sgs.Card_MethodResponse, judge.who, true)
+		if card then
+			room:retrial(card, player, judge, self:objectName(), true)
+		end
+		return false
 	end
 }
-
 --[[
 	技能名：国色
 	相关武将：标准·大乔、SP·台版大乔、SP·王战大乔
