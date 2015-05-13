@@ -192,25 +192,19 @@ LuaFangquanGive = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：放逐
-	相关武将：林·曹丕、铜雀台·曹丕
-	描述：每当你受到一次伤害后，你可以令一名其他角色摸X张牌（X为你已损失的体力值），然后该角色将其武将牌翻面。
+	相关武将：林·曹丕、铜雀台·曹丕、神·司马懿
+	描述：每当你受到伤害后，你可以令一名其他角色摸X张牌，然后将其武将牌翻面。（X为你已损失的体力值）   
 	引用：LuaFangzhu
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
-LuaFangzhu = sgs.CreateTriggerSkill{
+LuaFangzhu = sgs.CreateMasochismSkill{
 	name = "LuaFangzhu",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
-	on_trigger = function(self, event, player, data)
+	on_damaged = function(self, player)
 		local room = player:getRoom()
-		if room:askForSkillInvoke(player, self:objectName(), data) then
-			local list = room:getOtherPlayers(player)
-			local target = room:askForPlayerChosen(player, list, self:objectName())
-			if target then
-				local count = player:getLostHp()
-				room:drawCards(target, count, self:objectName())
-				target:turnOver()
-			end
+		local to = room:askForPlayerChosen(player, room:getOtherPlayers(player), self:objectName(), "fangzhu-invoke", player:getMark("JilveEvent") ~= 35, true)
+		if to then
+			to:drawCards(player:getLostHp(), self:objectName())
+			to:turnOver()
 		end
 	end
 }
