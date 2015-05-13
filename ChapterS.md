@@ -1390,20 +1390,22 @@
 [返回索引](#技能索引)
 ##颂威
 **相关武将**：林·曹丕、铜雀台·曹丕  
-**描述**：**主公技，**其他魏势力角色的判定牌为黑色且生效后，该角色可以令你摸一张牌。  
+**描述**：**主公技，**其他魏势力角色的黑色判定牌生效后，该角色可以令你摸一张牌。   
 **引用**：LuaSongwei  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaSongwei = sgs.CreateTriggerSkill{
 		name = "LuaSongwei$",
-		frequency = sgs.Skill_NotFrequent,
 		events = {sgs.FinishJudge},
+		can_trigger = function(self, target)
+			return target and target:getKingdom() == "wei"
+		end,
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			local judge = data:toJudge()
 			local card = judge.card
-			local caopis = sgs.SPlayerList()
 			if card:isBlack() then
+				local caopis = sgs.SPlayerList()
 				for _, p in sgs.qlist(room:getOtherPlayers(player)) do
 					if p:hasLordSkill(self:objectName()) then
 						caopis:append(p)
@@ -1413,16 +1415,14 @@
 			while not caopis:isEmpty() do
 				local caopi = room:askForPlayerChosen(player, caopis, self:objectName(), "@LuaSongwei-to", true)
 				if caopi then
-					caopi:drawCards(1)
+					room:notifySkillInvoked(caopi, self:objectName())
+					caopi:drawCards(1, self:objectName())
 					caopis:removeOne(caopi)
 				else
 					break
 				end
 			end
 			return false
-		end,
-		can_trigger = function(self, target)
-			return target and (target:getKingdom() == "wei")
 		end
 	}
 ```
