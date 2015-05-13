@@ -191,15 +191,15 @@ LuaJijiang = sgs.CreateTriggerSkill{
 --[[
 	技能名：极略
 	相关武将：神·司马懿
-	描述：弃一枚“忍”标记发动下列一项技能——“鬼才”、“放逐”、“完杀”、“制衡”、“集智”。
+	描述：你可以弃一枚“忍”并发动以下技能之一：“鬼才”、“放逐”、“集智”、“制衡”、“完杀”。   
 	引用：LuaJilve、LuaJilveClear
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaJilveCard = sgs.CreateSkillCard{
-	name = "LuaJilveCard" ,
-	target_fixed = true ,
-	about_to_use = function(self, room,card_use)
-		local shensimayi = card_use.from
+	name = "LuaJilveCard",
+	target_fixed = true,
+	about_to_use = function(self, room, use)
+		local shensimayi = use.from
 		local choices = {}
 		if not shensimayi:hasFlag("LuaJilveZhiheng") and shensimayi:canDiscard(shensimayi, "he") then
 			table.insert(choices,"zhiheng")
@@ -207,84 +207,82 @@ LuaJilveCard = sgs.CreateSkillCard{
 		if not shensimayi:hasFlag("LuaJilveWansha") then
 			table.insert(choices,"wansha")
 		end
-			table.insert(choices,"cancel")
+		table.insert(choices,"cancel")
 		if #choices == 1 then return end
-		local choice = room:askForChoice(shensimayi,"LuaJilve",table.concat(choices,"+"))
+		local choice = room:askForChoice(shensimayi, "LuaJilve", table.concat(choices,"+"))
 		if choice == "cancel" then
-			room:addPlayerHistory(shensimayi,"#LuaJilveCard",-1)
-		else
+			room:addPlayerHistory(shensimayi, "#LuaJilveCard", -1)
+			return
+		end
+		shensimayi:loseMark("@bear")
+		room:notifySkillInvoked(shensimayi, "LuaJilve")
 		if choice == "wansha" then
 			room:setPlayerFlag(shensimayi, "LuaJilveWansha")
 			room:acquireSkill(shensimayi, "wansha")
-		elseif choice == "zhiheng" then
+		else
 			room:setPlayerFlag(shensimayi, "LuaJilveZhiheng")
 			room:askForUseCard(shensimayi, "@zhiheng", "@jilve-zhiheng", -1, sgs.Card_MethodDiscard)
 		end
-			shensimayi:loseMark("@bear")
-			room:notifySkillInvoked(shensimayi,"LuaJilve")
-	end
 	end
 }
-LuaJilveVS = sgs.CreateZeroCardViewAsSkill{
-	name = "LuaJilve" ,
-
-	view_as = function()
-		return LuaJilveCard:clone()
-	end,
-
+LuaJilveVS = sgs.CreateZeroCardViewAsSkill{--完杀和制衡
+	name = "LuaJilve",
 	enabled_at_play = function(self,player)
 		return player:usedTimes("#LuaJilveCard") < 2 and player:getMark("@bear") > 0
+	end,
+	view_as = function()
+		return LuaJilveCard:clone()
 	end
 }
 LuaJilve = sgs.CreateTriggerSkill{
 	name = "LuaJilve",
-	events = {sgs.CardUsed,sgs.AskForRetrial,sgs.Damaged},
+	events = {sgs.CardUsed, sgs.AskForRetrial, sgs.Damaged},--分别为集智、鬼才、放逐
 	view_as_skill = LuaJilveVS,
-
+	can_trigger = function(self, target)
+		return target and target:isAlive() and target:hasSkill(self:objectName()) and target:getMark("@bear") > 0
+	end,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		player:setMark("JilveEvent",tonumber(event))
 		if event == sgs.CardUsed then
 			local jizhi = sgs.Sanguosha:getTriggerSkill("jizhi")
 			local use = data:toCardUse()
-			if jizhi and use.card and use.card:getTypeId() == sgs.Card_TypeTrick and player:askForSkillInvoke(self:objectName(),data) then
-				room:notifySkillInvoked(player,self:objectName())
+			if jizhi and use.card and use.card:getTypeId() == sgs.Card_TypeTrick and player:askForSkillInvoke(self:objectName(), data) then
+				room:notifySkillInvoked(player, self:objectName())
 				player:loseMark("@bear")
-				jizhi:trigger(event,room,player,data)
+				jizhi:trigger(event, room, player, data)
 			end
 		elseif event == sgs.AskForRetrial then
 			local guicai = sgs.Sanguosha:getTriggerSkill("guicai")
-			if guicai and not player:isKongcheng() and player:askForSkillInvoke(self:objectName(),data) then
-				room:notifySkillInvoked(player,self:objectName())
+			if guicai and not player:isKongcheng() and player:askForSkillInvoke(self:objectName(), data) then
+				room:notifySkillInvoked(player, self:objectName())
 				player:loseMark("@bear")
-				guicai:trigger(event,room,player,data)
+				guicai:trigger(event, room, player, data)
 			end
 		elseif event == sgs.Damaged then
 			local fangzhu = sgs.Sanguosha:getTriggerSkill("fangzhu")
-			if fangzhu and player:askForSkillInvoke(self:objectName(),data) then
-				room:notifySkillInvoked(player,self:objectName())
+			if fangzhu and player:askForSkillInvoke(self:objectName(), data) then
+				room:notifySkillInvoked(player, self:objectName())
 				player:loseMark("@bear")
-				fangzhu:trigger(event,room,player,data)
+				fangzhu:trigger(event, room, player, data)
 			end
 		end
-	end,
-	can_trigger = function(self, target)
-		return target and target:isAlive() and target:hasSkill(self:objectName()) and target:getMark("@bear") > 0
+		player:setMark("JilveEvent", 0)
+		return false
 	end
 }
 LuaJilveClear = sgs.CreateTriggerSkill{
-	name = "LuaJilveClear",
+	name = "#LuaJilve-clear",
 	events = {sgs.EventPhaseChanging},
-
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local change = data:toPhaseChange()
 		if change.to ~= sgs.Player_NotActive then return false end
-			room:detachSkillFromPlayer(player,"wansha",false, true)
-		end,
-
+		room:detachSkillFromPlayer(player, "wansha", false, true)
+		return false
+	end,
 	can_trigger = function(self, target)
-		return target ~= nil and target:hasFlag("LuaJilveWansha")
+		return target and target:hasFlag("LuaJilveWansha")
 	end
 }
 --[[
