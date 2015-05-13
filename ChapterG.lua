@@ -1857,10 +1857,10 @@ LuaGuixiuDetach = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：鬼才
-	相关武将：标准·司马懿
-	描述：在一名角色的判定牌生效前，你可以打出一张手牌代替之。
+	相关武将：界限突破·司马懿
+	描述：每当一名角色的判定牌生效前，你可以打出一张牌代替之。 
 	引用：LuaGuicai
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaGuicai = sgs.CreateTriggerSkill{
 	name = "LuaGuicai" ,
@@ -1885,6 +1885,35 @@ LuaGuicai = sgs.CreateTriggerSkill{
 		if forced and (card == nil) then
 			card = player:getRandomHandCard()
 		end
+		if card then
+			room:retrial(card, player, judge, self:objectName())
+		end
+		return false
+	end
+}
+--[[
+	技能名：鬼才
+	相关武将：标准·司马懿
+	描述：每当一名角色的判定牌生效前，你可以打出一张手牌代替之。
+	引用：LuaNosGuicai
+	状态：0405验证通过
+]]--
+LuaNosGuicai = sgs.CreateTriggerSkill{
+	name = "LuaNosGuicai" ,
+	events = {sgs.AskForRetrial} ,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if player:isKongcheng() then return false end
+		local judge = data:toJudge()
+		local prompt_list = {
+			"@nosguicai-card" ,
+			judge.who:objectName() ,
+			self:objectName() ,
+			judge.reason ,
+			tostring(judge.card:getEffectiveId())
+		}
+		local prompt = table.concat(prompt_list, ":")
+        local card = room:askForCard(player, ".", prompt, data, sgs.Card_MethodResponse, judge.who, true)
 		if card then
 			room:retrial(card, player, judge, self:objectName())
 		end
