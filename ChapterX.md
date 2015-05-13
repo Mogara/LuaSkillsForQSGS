@@ -630,7 +630,6 @@
 	}
 ```
 [返回索引](#技能索引)
-
 ##星舞
 **相关武将**：SP·大乔&小乔  
 **描述**：弃牌阶段开始时，你可以将一张与你本回合使用的牌颜色均不同的手牌置于武将牌上。  
@@ -716,54 +715,37 @@
 	}
 ```
 [返回索引](#技能索引)
-
 ##行殇
 **相关武将**：林·曹丕、铜雀台·曹丕  
-**描述**：其他角色死亡时，你可以获得其所有牌。  
+**描述**：每当一名其他角色死亡时，你可以获得该角色的牌。        
 **引用**：LuaXingshang  
-**状态**：1217验证通过  
+**状态**：0405验证通过  
 ```lua
-	LuaXingshangDummyCard = sgs.CreateSkillCard{
-		name = "LuaXingshangDummyCard"
-	}
 	LuaXingshang = sgs.CreateTriggerSkill{
 		name = "LuaXingshang",
-		frequency = sgs.Skill_NotFrequent,
 		events = {sgs.Death},
 		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
 			local death = data:toDeath()
-			if death.who:objectName() ~= player:objectName() then return false end
-			if not player:isNude() then
-				local room = player:getRoom()
-				local alives = room:getAlivePlayers()
-				for _,caopi in sgs.qlist(alives) do
-					if caopi:isAlive() and caopi:hasSkill(self:objectName()) then
-						if room:askForSkillInvoke(caopi, self:objectName(), data) then
-							local cards = player:getCards("he")
-							if cards:length() > 0 then
-								local allcard = LuaXingshangDummyCard:clone()
-								for _,card in sgs.qlist(cards) do
-									allcard:addSubcard(card)
-								end
-								room:obtainCard(caopi, allcard)
-							end
-							break
-						end
-					end
+			local splayer = death.who
+			if splayer:objectName() == player:objectName() or player:isNude() then return false end
+			if player:isAlive() and room:askForSkillInvoke(player, self:objectName(), data) then
+				local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+				local cards = splayer:getCards("he")
+				for _,card in sgs.qlist(cards) do
+					dummy:addSubcard(card)
 				end
-			end
-			return false
-		end,
-		can_trigger = function(self, target)
-			if target then
-				return not target:hasSkill(self:objectName())
+				if cards:length() > 0 then
+					local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_RECYCLE, player:objectName())
+					room:obtainCard(player, dummy, reason, false)
+				end
+				dummy:deleteLater()
 			end
 			return false
 		end
 	}
 ```
 [返回索引](#技能索引)
-
 ##雄异
 **相关武将**：国战·马腾  
 **描述**：**限定技，**出牌阶段，你可以令你与任意数量的角色摸三张牌：若以此法摸牌的角色数不大于全场角色数的一半，你回复1点体力。  
