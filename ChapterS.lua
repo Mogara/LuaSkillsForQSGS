@@ -1364,9 +1364,9 @@ LuaSongci = sgs.CreateTriggerSkill{
 --[[
 	技能名：颂威（主公技）
 	相关武将：林·曹丕、铜雀台·曹丕
-	描述：其他魏势力角色的判定牌为黑色且生效后，该角色可以令你摸一张牌。
+	描述：其他魏势力角色的黑色判定牌生效后，该角色可以令你摸一张牌。 
 	引用：LuaSongwei
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaSongwei = sgs.CreateTriggerSkill{
 	name = "LuaSongwei$",
