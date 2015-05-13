@@ -2,7 +2,7 @@
 代码速查手册（Z区）
 ==
 #技能索引
-[灾变](#灾变)、[再起](#再起)、[凿险](#凿险)、[早夭](#早夭)、[战神](#战神)、[昭烈](#昭烈)、[昭心](#昭心)、[贞烈](#贞烈)、[贞烈-旧](#贞烈-旧)、[鸩毒](#鸩毒)、[镇威](#镇威)、[镇卫](#镇卫)、[争锋](#争锋)、[争功](#争功)、[争功-0610版](#争功-0610版)、[整军](#整军)、[直谏](#直谏)、[直言](#直言)、[志继](#志继)、[制霸](#制霸)、[制衡-制霸孙权](#制衡-制霸孙权)、[制衡](#制衡)、[智迟](#智迟)、[智愚](#智愚)、[忠义](#忠义)、[咒缚](#咒缚)、[筑楼](#筑楼)、[追忆](#追忆)、[惴恐](#惴恐)、[资粮](#资粮)、[自立](#自立)、[自守](#自守)、[宗室](#宗室)、[纵火](#纵火)、[纵适](#纵适)、[纵玄](#纵玄)、[醉乡](#醉乡)
+[灾变](#灾变)、[再起](#再起)、[凿险](#凿险)、[早夭](#早夭)、[战神](#战神)、[昭烈](#昭烈)、[昭心](#昭心)、[贞烈](#贞烈)、[贞烈-旧](#贞烈-旧)、[鸩毒](#鸩毒)、[镇威](#镇威)、[镇卫](#镇卫)、[争锋](#争锋)、[争功](#争功)、[争功-0610版](#争功-0610版)、[征服](#征服)、[整军](#整军)、[直谏](#直谏)、[直言](#直言)、[志继](#志继)、[制霸](#制霸)、[制衡-制霸孙权](#制衡-制霸孙权)、[制衡](#制衡)、[智迟](#智迟)、[智愚](#智愚)、[忠义](#忠义)、[咒缚](#咒缚)、[筑楼](#筑楼)、[追忆](#追忆)、[惴恐](#惴恐)、[资粮](#资粮)、[自立](#自立)、[自守](#自守)、[宗室](#宗室)、[纵火](#纵火)、[纵适](#纵适)、[纵玄](#纵玄)、[醉乡](#醉乡)
 
 [返回目录](README.md#目录)
 ##灾变
@@ -695,6 +695,50 @@
 				return target and not target:hasSkill(self:objectName())
 			end
 		}
+```
+[返回索引](#技能索引)
+
+##征服
+**相关武将**：E.SP 凯撒  
+**描述**：当你使用【杀】指定一个目标后，你可以选择一种牌的类别，令其选择一项：1．将一张此类别的牌交给你，若如此做，此次对其结算的此【杀】对其无效；2．不能使用【闪】响应此【杀】。  
+**引用**：LuaConqueror  
+**状态**：0425验证通过  
+```lua
+	LuaConqueror = sgs.CreateTriggerSkill{
+		name = "LuaConqueror" ,
+		events = {sgs.TargetConfirmed} ,
+		on_trigger = function(self, event, player, data)
+			local use = data:toCardUse()
+			if (use.card and use.card:isKindOf("Slash")) then
+				local n = 0
+				for _, target in sgs.qlist(use.to) do
+					local _target = sgs.QVariant()
+					_target:setValue(target)
+					if (player:askForSkillInvoke(self, _target)) then
+						local room = player:getRoom()
+						local choice = room:askForChoice(player, self:objectName(), "BasicCard+EquipCard+TrickCard", _target)
+						local c = room:askForCard(target, choice, "@conqueror-exchange:" .. player:objectName() .. "::" .. choice, sgs.QVariant(choice), sgs.Card_MethodNone)
+						if c then
+							local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GIVE, target:objectName(), player:objectName(), self:objectName(), nil)
+							room:obtainCard(player, c, reason)
+							local nullified_list = use.nullified_list
+							table.insert(nullified_list, target:objectName())
+							use.nullified_list = nullified_list
+							data:setValue(use)
+						else
+							local jink_list = player:getTag("Jink_" .. use.card:toString()):toIntList()
+							jink_list:replace(n, 0)
+							local _jink_list = sgs.QVariant()
+							_jink_list:setValue(jink_list)
+							player:setTag("Jink_" .. use.card:toString(), _jink_list)
+						end
+					end
+					n = n + 1
+				end
+			end
+			return false
+		end ,
+	}
 ```
 [返回索引](#技能索引)
 
