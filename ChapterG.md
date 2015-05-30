@@ -1,7 +1,7 @@
 代码速查手册（G区）
 ===
 # 技能索引
-[甘露](#甘露)、[感染](#感染)、[刚烈](#刚烈)、[刚烈-3v3](#刚烈-3v3)、[刚烈-翼](#刚烈-翼)、[弓骑](#弓骑)、[弓骑-旧](#弓骑-旧)、[攻心](#攻心)、[共谋](#共谋)、[蛊惑](#蛊惑)、[蛊惑-旧](#蛊惑-旧)、[固守](#固守)、[固政](#固政)、[观星](#观星)、[归命](#归命)、[归汉](#归汉)、[归心](#归心)、[归心-倚天](#归心-倚天)、[闺秀](#闺秀)、[鬼才](#鬼才)、[鬼才-旧](#鬼才-旧)、[鬼道](#鬼道)、[国色](#国色)
+[甘露](#甘露)、[感染](#感染)、[刚烈](#刚烈)、[刚烈-旧](#刚烈-旧)、[刚烈-3v3](#刚烈-3v3)、[刚烈-翼](#刚烈-翼)、[弓骑](#弓骑)、[弓骑-旧](#弓骑-旧)、[攻心](#攻心)、[共谋](#共谋)、[蛊惑](#蛊惑)、[蛊惑-旧](#蛊惑-旧)、[固守](#固守)、[固政](#固政)、[观星](#观星)、[归命](#归命)、[归汉](#归汉)、[归心](#归心)、[归心-倚天](#归心-倚天)、[闺秀](#闺秀)、[鬼才](#鬼才)、[鬼才-旧](#鬼才-旧)、[鬼道](#鬼道)、[国色](#国色)
 
 [返回目录](README.md#目录)
 ## 甘露
@@ -91,20 +91,66 @@
 ```
 [返回索引](#技能索引)
 ##刚烈
-**相关武将**：标准·夏侯惇  
-**描述**：每当你受到一次伤害后，你可以进行一次判定，若判定结果不为红桃，则伤害来源选择一项：弃置两张手牌，或受到你对其造成的1点伤害。  
+**相关武将**：界限突破·夏侯惇  
+**描述**：每当你受到1点伤害后，你可以进行判定：若结果为红色，你对伤害来源造成1点伤害；黑色，你弃置伤害来源一张牌。   
 **引用**：LuaGanglie  
-**状态**：1217验证通过
+**状态**：0405验证通过
 
 ```lua
 	LuaGanglie = sgs.CreateTriggerSkill{
 		name = "LuaGanglie",
-		frequency = sgs.Skill_NotFrequent,
-		events = {sgs.Damaged},
+		events = {sgs.Damaged, sgs.FinishJudge},
+		can_trigger = function(self, target)
+			return target
+		end,
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
-			local damage = data:toDamage()
+			if event == sgs.Damaged and player:isAlive() and player:hasSkill(self:objectName()) then
+				local damage = data:toDamage()
+				local from = damage.from
+				for i = 0, damage.damage - 1, 1 do
+					if room:askForSkillInvoke(player, self:objectName(), data) then
+						local judge = sgs.JudgeStruct()
+						judge.pattern = "."
+						judge.play_animation = false
+						judge.reason = self:objectName()
+						judge.who = player
+						room:judge(judge)
+						if (not from) or from:isDead() then return end
+						if judge.card:isRed() then
+							room:damage(sgs.DamageStruct(self:objectName(), player, from))
+						elseif judge.card:isBlack() then
+							if player:canDiscard(from, "he") then
+								local id = room:askForCardChosen(player, from, "he", self:objectName(), false, sgs.Card_MethodDiscard)
+								room:throwCard(id, from, player)
+							end
+						end
+					end
+				end
+			elseif event == sgs.FinishJudge then
+				local judge = sgs.JudgeStruct()
+				if judge.reason ~= self:objectName() then return false end
+				judge.pattern = tostring(judge.card:getSuit())
+			end
+			return false
+		end
+	}
+```
+[返回索引](#技能索引)
+##刚烈-旧
+**相关武将**：标准·夏侯惇  
+**描述**：每当你受到伤害后，你可以进行判定：若结果不为♥，则伤害来源选择一项：弃置两张手牌，或受到1点伤害。   
+**引用**：LuaNosGanglie  
+**状态**：0405验证通过
+
+```lua
+	LuaNosGanglie = sgs.CreateMasochismSkill{
+		name = "LuaNosGanglie" ,
+		on_damaged = function(self, player, damage)
 			local from = damage.from
+			local room = player:getRoom()
+			local data = sgs.QVariant()
+			data:setValue(damage)
 			if room:askForSkillInvoke(player, self:objectName(), data) then
 				local judge = sgs.JudgeStruct()
 				judge.pattern = ".|heart"
@@ -114,12 +160,8 @@
 				room:judge(judge)
 				if (not from) or from:isDead() then return end
 				if judge:isGood() then
-					if from:getHandcardNum() < 2 then
+					if from:getHandcardNum() < 2 or not room:askForDiscard(from, self:objectName(), 2, 2, true) then
 						room:damage(sgs.DamageStruct(self:objectName(), player, from))
-					else
-						if not room:askForDiscard(from, self:objectName(), 2, 2, true) then
-							room:damage(sgs.DamageStruct(self:objectName(), player, from))
-						end
 					end
 				end
 			end
