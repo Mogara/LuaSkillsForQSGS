@@ -144,7 +144,7 @@
 **描述**：觉醒技，当你进入濒死状态时，你减1点体力上限并将体力值恢复至2点，然后获得技能“挑衅”，将技能“困奋”改为非锁定技    
 **引用**：LuaFengliang  
 **状态**：0504验证通过  
-**备注**：zy：要和手册里的困奋配合使用、或者将获得的标记改为“fengliang”  
+**备注**：zy：要和手册里的困奋配合使用、或者将获得的标记改为“fengliang”并将“LuaKunfen”改为“kunfen”  
 ```lua
 	LuaFengliang = sgs.CreateTriggerSkill{
 		name = "LuaFengliang" ,
@@ -160,8 +160,8 @@
 				local recover = 2 - player:getHp()
 				room:recover(player, sgs.RecoverStruct(nil, nil, recover))
 				room:handleAcquireDetachSkills(player, "tiaoxin")
-				if player:hasSkill("kunfen", true) then
-					room:doNotify(player, 86, sgs.QVariant("kunfen"))
+				if player:hasSkill("LuaKunfen", true) then
+					room:doNotify(player, 86, sgs.QVariant("LuaKunfen"))
 				end
 			end
 			return false
