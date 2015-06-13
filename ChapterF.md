@@ -1,7 +1,7 @@
 代码速查手册（F区）
 ==
 #技能索引
-[反间](#反间)、[反间-翼](#反间-翼)、[反馈](#反馈)、[反馈-旧](#反馈-旧)、[放权](#放权)、[放逐](#放逐)、[飞影](#飞影)、[焚城](#焚城)、[焚心](#焚心)、[奋激](#奋激)、[奋迅](#奋迅)、[愤勇](#愤勇)、[奉印](#奉印)、[伏枥](#伏枥)、[扶乱](#扶乱)、[辅佐](#辅佐)、[父魂](#父魂)、[父魂-旧](#父魂-旧)
+[反间](#反间)、[反间-翼](#反间-翼)、[反馈](#反馈)、[反馈-旧](#反馈-旧)、[逢亮](#逢亮)、[放权](#放权)、[放逐](#放逐)、[飞影](#飞影)、[焚城](#焚城)、[焚心](#焚心)、[奋激](#奋激)、[奋迅](#奋迅)、[愤勇](#愤勇)、[奉印](#奉印)、[伏枥](#伏枥)、[扶乱](#扶乱)、[辅佐](#辅佐)、[父魂](#父魂)、[父魂-旧](#父魂-旧)
 
 [返回目录](README.md#目录)
 
@@ -115,7 +115,6 @@
 			end
 		end
 	}
-
 ```
 [返回索引](#技能索引)
 ##反馈-旧
@@ -138,7 +137,36 @@
 			end
 		end
 	}
-
+```
+[返回索引](#技能索引)
+##逢亮
+**相关武将**：界限突破SP·姜维  
+**描述**：觉醒技，当你进入濒死状态时，你减1点体力上限并将体力值恢复至2点，然后获得技能“挑衅”，将技能“困奋”改为非锁定技    
+**引用**：LuaFengliang  
+**状态**：0504验证通过  
+**备注**：zy：要和手册里的困奋配合使用、或者将获得的标记改为“fengliang”  
+```lua
+	LuaFengliang = sgs.CreateTriggerSkill{
+		name = "LuaFengliang" ,
+		events = {sgs.EnterDying} ,
+		frequency = sgs.Skill_Wake ,
+		can_trigger = function(self, target)
+			return target and target:hasSkill(self:objectName()) and target:isAlive() and target:getMark(self:objectName()) == 0
+		end ,
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			room:addPlayerMark(player, self:objectName(), 1)
+			if room:changeMaxHpForAwakenSkill(player) and player:getMark(self:objectName()) > 0 then
+				local recover = 2 - player:getHp()
+				room:recover(player, sgs.RecoverStruct(nil, nil, recover))
+				room:handleAcquireDetachSkills(player, "tiaoxin")
+				if player:hasSkill("kunfen", true) then
+					room:doNotify(player, 86, sgs.QVariant("kunfen"))
+				end
+			end
+			return false
+		end
+	}
 ```
 [返回索引](#技能索引)
 ##放权
