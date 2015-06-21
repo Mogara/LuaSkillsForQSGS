@@ -354,23 +354,24 @@ LuaNosGongqiTargetMod = sgs.CreateTargetModSkill{
 	相关武将：神·吕蒙，界·吕蒙
 	描述：出牌阶段限一次，你可以观看一名其他角色的手牌，然后选择其中一张♥牌并选择一项：弃置之，或将之置于牌堆顶。
 	引用：LuaGongxin
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
+
 LuaGongxinCard = sgs.CreateSkillCard{
 	name = "LuaGongxinCard" ,
 	filter = function(self, targets, to_select)
-		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName()) and not to_select:isKongcheng()
+		return #targets == 0 and to_select:objectName() ~= sgs.Self:objectName() --and not to_select:isKongcheng() 如果不想选择没有手牌的角色就加上这一句，源码是没有这句的
 	end ,
 	on_effect = function(self, effect)
 		local room = effect.from:getRoom()
-		if not effect.to:isKongcheng() then
+		if not effect.to:isKongcheng() then--如果加上了上面的那句，这句和对应的end可以删除
 			local ids = sgs.IntList()
 			for _, card in sgs.qlist(effect.to:getHandcards()) do
 				if card:getSuit() == sgs.Card_Heart then
 					ids:append(card:getEffectiveId())
 				end
 			end
-			local card_id = room:doGongxin(effect.from, effect.to, ids, "LuaGongxin")
+			local card_id = room:doGongxin(effect.from, effect.to, ids)
 			if (card_id == -1) then return end
 			local result = room:askForChoice(effect.from, "LuaGongxin", "discard+put")
 			effect.from:removeTag("LuaGongxin")
@@ -385,10 +386,9 @@ LuaGongxinCard = sgs.CreateSkillCard{
 			end
 		end
 	end
-}
-LuaGongxin = sgs.CreateViewAsSkill{
+}	
+LuaGongxin = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaGongxin" ,
-	n = 0 ,
 	view_as = function()
 		return LuaGongxinCard:clone()
 	end ,
