@@ -5,16 +5,18 @@
 
 [返回目录](README.md#目录)
 ##技能名：马术
-**相关武将**：标准·马超、火·庞德、SP·庞德、SP·关羽、SP·最强神话、SP·暴怒战神、SP·马超、一将成名2012·马岱、怀旧-一将2·马岱-旧、国战·马腾、2013-3v3·吕布、SP·台版马超  
+**相关武将**：标准·马超、火·庞德、SP·庞德、SP·关羽、SP·最强神话、SP·暴怒战神、SP·马超、一将成名2012·马岱、一将成名2012·马岱-旧、国战·马腾、3v3·吕布、SP·台版马超、界限突破·马超、JSP·关羽  
 **描述**：**锁定技，**你计算的与其他角色的距离-1。  
 **引用**：LuaMashu  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaMashu = sgs.CreateDistanceSkill{
 		name = "LuaMashu",
-		correct_func = function(self, from, to)
-			if from:hasSkill("LuaMashu") then
+		correct_func = function(self, from)
+			if from:hasSkill(self:objectName()) then
 				return -1
+			else
+				return 0	
 			end
 		end,
 	}
