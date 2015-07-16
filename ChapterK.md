@@ -229,39 +229,28 @@
 ```
 [返回索引](#技能索引)
 ##狂暴
-**相关武将**：神·吕布  
-**描述**：**锁定技，**游戏开始时，你获得2枚“暴怒”标记；每当你造成或受到1点伤害后，你获得1枚“暴怒”标记。  
-**引用**：LuaKuangbao、LuaWrath2、LuaKuangbaoClear  
-**状态**：1217验证通过
+**相关武将**：神·吕布、SP·神吕布  
+**描述**：**锁定技，**游戏开始时，你获得两枚“暴怒”标记。每当你造成或受到1点伤害后，你获得一枚“暴怒”标记。 
+**引用**：LuaKuangbao  
+**状态**：0405验证通过
 ```lua
 	LuaKuangbao = sgs.CreateTriggerSkill{
 		name = "LuaKuangbao" ,
-		events = {sgs.Damage, sgs.Damaged} ,
+		events = {sgs.GameStart, sgs.Damage, sgs.Damaged} ,
 		frequency = sgs.Skill_Compulsory ,
 		on_trigger = function(self, event, player, data)
-			local damage = data:toDamage()
-			player:getRoom():addPlayerMark(player,"@wrath",damage.damage)
-		end
-	}
-	LuaWrath2 = sgs.CreateTriggerSkill{
-		name = "#@wrath-Lua-2" ,
-		events = {sgs.GameStart} ,
-		on_trigger = function(self, event, player, data)
-			player:getRoom():addPlayerMark(player,"@wrath",2)
-		end
-	}
-	LuaKuangbaoClear = sgs.CreateTriggerSkill{
-		name = "LuaKuangbao-clear" ,
-		events = {sgs.EventLoseSkill} ,
-		on_trigger = function(self, event, player, data)
-			if data:toString() == "LuaKuangbao" then
-				player:loseAllMarks("@wrath")
+			local room = player:getRoom()
+			if event == sgs.GameStart then
+				player:gainMark("@wrath", 2)
+				room:notifySkillInvoked(player, self:objectName())
+			else
+				local damage = data:toDamage()
+				player:gainMark("@wrath", damage.damage)
+				room:notifySkillInvoked(player, self:objectName())
 			end
-		end ,
-		can_trigger = function(self, target)
-			return target
 		end
 	}
+
 ```
 [返回索引](#技能索引)
 ##狂风
