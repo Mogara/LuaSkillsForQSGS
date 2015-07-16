@@ -268,48 +268,41 @@ LuaWenjiu = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：无谋（锁定技）
-	相关武将：神·吕布
-	描述：当你使用一张非延时类锦囊牌选择目标后，你须弃1枚“暴怒”标记或失去1点体力。
+	相关武将：神·吕布、SP·神吕布
+	描述：每当你使用一张非延时锦囊牌时，你须选择一项：失去1点体力，或弃一枚“暴怒”标记。 
 	引用：LuaWumou
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaWumou = sgs.CreateTriggerSkill{
 	name = "LuaWumou" ,
 	frequency = sgs.Skill_Compulsory ,
-	events = {sgs.CardUsed, sgs.CardResponded} ,
+	events = {sgs.CardUsed} ,
 	on_trigger = function(self, event, player, data)
-		local card
-		if event == sgs.CardUsed then
-			local use = data:toCardUse()
-			card = use.card
-		elseif event == sgs.CardResponded then
-			card = data:toCardResponse().m_card
-		end
-		if card:isNDTrick() then
+		local room = player:getRoom()
+		local use = data:toCardUse()
+		if use.card:isNDTrick() then
+			room:sendCompulsoryTriggerLog(player, self:objectName())
 			local num = player:getMark("@wrath")
-			if num >= 1 then
-				if player:getRoom():askForChoice(player, self:objectName(), "discard+losehp") == "discard" then
-					player:loseMark("@wrath")
-				else
-					player:getRoom():loseHp(player)
-				end
+			if num >= 1 and room:askForChoice(player, self:objectName(), "discard+losehp") == "discard" then
+				player:loseMark("@wrath")
 			else
-				player:getRoom():loseHp(player)
+				room:loseHp(player)
 			end
 		end
+		return false
 	end
 }
 --[[
 	技能名：无前
-	相关武将：神·吕布
-	描述：出牌阶段，你可以弃2枚“暴怒”标记并选择一名其他角色，该角色的防具无效且你获得技能“无双”，直到回合结束。
+	相关武将：神·吕布、SP·神吕布
+	描述：出牌阶段，你可以弃两枚“暴怒”标记并选择一名其他角色：若如此做，你拥有“无双”且该角色防具无效，直到回合结束。
 	引用：LuaWuqian
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaWuqianCard = sgs.CreateSkillCard{
 	name = "LuaWuqianCard" ,
 	filter = function(self, targets, to_select)
-		return (#targets == 0) and (to_select:objectName() ~= sgs.Self:objectName())
+		return #targets == 0 and to_select:objectName() ~= sgs.Self:objectName()
 	end ,
 	on_effect = function(self, effect)
 		local room = effect.to:getRoom()
@@ -320,7 +313,7 @@ LuaWuqianCard = sgs.CreateSkillCard{
 		room:addPlayerMark(effect.to, "Armor_Nullified")
 	end
 }
-LuaWuqianVS = sgs.CreateViewAsSkill{
+LuaWuqianVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaWuqian" ,
 	view_as = function()
 		return LuaWuqianCard:clone()
@@ -333,7 +326,11 @@ LuaWuqian = sgs.CreateTriggerSkill{
 	name = "LuaWuqian" ,
 	events = {sgs.EventPhaseChanging, sgs.Death} ,
 	view_as_skill = LuaWuqianVS ,
+	can_trigger = function(self, target)
+		return target and target:hasFlag("LuaWuqianSource")
+	end,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		if event == sgs.EventPhaseChanging then
 			local change = data:toPhaseChange()
 			if change.to ~= sgs.Player_NotActive then
@@ -350,15 +347,12 @@ LuaWuqian = sgs.CreateTriggerSkill{
 			if p:hasFlag("WuqianTarget") then
 				p:setFlags("-WuqianTarget")
 				if p:getMark("Armor_Nullified") then
-					player:getRoom():removePlayerMark(p, "Armor_Nullified")
+					room:removePlayerMark(p, "Armor_Nullified")
 				end
 			end
 		end
-		player:getRoom():detachSkillFromPlayer(player, "wushuang")
+		room:detachSkillFromPlayer(player, "wushuang", false, true)
 		return false
-	end,
-	can_trigger = function(self, target)
-		return target and target:hasFlag("LuaWuqianSource")
 	end
 }
 --[[
