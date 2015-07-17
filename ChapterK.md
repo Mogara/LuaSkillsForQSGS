@@ -133,9 +133,9 @@
 		on_trigger = function(self, event, player, data)
 			if event == sgs.EventPhaseChanging then
 				local can_trigger = true
-				if player:hasFlag("KejiSlashInPlayPhase") then
+				if player:hasFlag("LuaKejiSlashInPlayPhase") then
 					can_trigger = false
-					player:setFlags("-KejiSlashInPlayPhase")
+					player:setFlags("-LuaKejiSlashInPlayPhase")
 				end
 				local change = data:toPhaseChange()
 				if change.to == sgs.Player_Discard and player:isAlive() and player:hasSkill(self:objectName()) then
