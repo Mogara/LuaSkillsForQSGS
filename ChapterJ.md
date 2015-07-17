@@ -1712,9 +1712,9 @@
 [返回索引](#技能索引)
 ##绝境
 **相关武将**：神·赵云  
-**描述**：**锁定技，**摸牌阶段，你摸牌的数量改为你已损失的体力值+2；你的手牌上限+2。  
+**描述**：**锁定技，**摸牌阶段，你额外摸X张牌。你的手牌上限+2。（X为你已损失的体力值）   
 **引用**：LuaJuejing、LuaJuejingDraw  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaJuejing = sgs.CreateMaxCardsSkill{
 		name = "LuaJuejing" ,
@@ -1726,11 +1726,14 @@
 			end
 		end
 	}
-	LuaJuejingDraw = sgs.CreateTriggerSkill{
+	LuaJuejingDraw = sgs.CreateDrawCardsSkill{
 		name = "#LuaJuejing-draw" ,
-		events = {sgs.DrawNCards} ,
-		on_trigger = function(self, event, player, data)
-			data:setValue(data:toInt() + player:getLostHp())
+		frequency = sgs.Skill_Compulsory ,
+		draw_num_func = function(self, player, n)
+			if player:isWounded() then
+				player:getRoom():sendCompulsoryTriggerLog(player, "LuaJuejing")
+			end
+			return n + player:getLostHp()
 		end
 	}
 ```
