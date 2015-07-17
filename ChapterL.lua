@@ -1142,44 +1142,44 @@ LuaLongdan = sgs.CreateViewAsSkill{
 --[[
 	技能名：龙魂
 	相关武将：神·赵云
-	描述：你可以将同花色的X张牌按下列规则使用或打出：红桃当【桃】，方块当具火焰伤害的【杀】，梅花当【闪】，黑桃当【无懈可击】（X为你当前的体力值且至少为1）。
+	描述：你可以将X张同花色的牌按以下规则使用或打出：红桃当【桃】；方块当火【杀】；黑桃当【无懈可击】；梅花当【闪】。（X为你的体力值且至少为1） 
 	引用：LuaLonghun
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaLonghun = sgs.CreateViewAsSkill{
 	name = "LuaLonghun" ,
+	response_or_use = true ,
 	n = 999 ,
-	view_filter = function(self, selected, to_select)
+	view_filter = function(self, selected, card)
 		local n = math.max(1, sgs.Self:getHp())
-		if (#selected >= n) or to_select:hasFlag("using") then return false end
-		if (n > 1) and (not (#selected == 0)) then
+		if #selected >= n or card:hasFlag("using") then
+			return false 
+		end
+		if n > 1 and not #selected == 0 then
 			local suit = selected[1]:getSuit()
-			return to_select:getSuit() == suit
+			return card:getSuit() == suit
 		end
 		if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
-			if sgs.Self:isWounded() and (to_select:getSuit() == sgs.Card_Heart) then
+			if sgs.Self:isWounded() and card:getSuit() == sgs.Card_Heart then
 				return true
-			elseif sgs.Slash_IsAvailable(sgs.Self) and (to_select:getSuit() == sgs.Card_Diamond) then
-				if sgs.Self:getWeapon() and (to_select:getEffectiveId() == sgs.Self:getWeapon():getId())
-						and to_select:isKindOf("Crossbow") then
-					return sgs.Self:canSlashWithoutCrossbow()
-				else
-					return true
-				end
+			elseif card:getSuit() == sgs.Card_Diamond then
+				local slash = sgs.Sanguosha:cloneCard("fire_slash", sgs.Card_SuitToBeDecided, -1)
+				slash:addSubcard(card:getEffectiveId())
+				slash:deleteLater()
+				return slash:isAvailable(sgs.Self)
 			else
 				return false
 			end
-		elseif (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE)
-				or (sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE) then
+		elseif sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE or sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE then
 			local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
 			if pattern == "jink" then
-				return to_select:getSuit() == sgs.Card_Club
+				return card:getSuit() == sgs.Card_Club
 			elseif pattern == "nullification" then
-				return to_select:getSuit() == sgs.Card_Spade
+				return card:getSuit() == sgs.Card_Spade
 			elseif string.find(pattern, "peach") then
-				return to_select:getSuit() == sgs.Card_Heart
+				return card:getSuit() == sgs.Card_Heart
 			elseif pattern == "slash" then
-				return to_select:getSuit() == sgs.Card_Diamond
+				return card:getSuit() == sgs.Card_Diamond
 			end
 			return false
 		end
@@ -1187,7 +1187,9 @@ LuaLonghun = sgs.CreateViewAsSkill{
 	end ,
 	view_as = function(self, cards)
 		local n = math.max(1, sgs.Self:getHp())
-		if #cards ~= n then return nil end
+		if #cards ~= n then 
+			return nil 
+		end
 		local card = cards[1]
 		local new_card = nil
 		if card:getSuit() == sgs.Card_Spade then
@@ -1211,10 +1213,7 @@ LuaLonghun = sgs.CreateViewAsSkill{
 		return player:isWounded() or sgs.Slash_IsAvailable(player)
 	end ,
 	enabled_at_response = function(self, player, pattern)
-		return (pattern == "slash")
-				or (pattern == "jink")
-				or (string.find(pattern, "peach") and (not player:hasFlag("Global_PreventPeach")))
-				or (pattern == "nullification")
+		return pattern == "slash" or pattern == "jink" or (string.find(pattern, "peach") and player:getMark("Global_PreventPeach") == 0) or (pattern == "nullification")
 	end ,
 	enabled_at_nullification = function(self, player)
 		local n = math.max(1, player:getHp())
@@ -1227,6 +1226,7 @@ LuaLonghun = sgs.CreateViewAsSkill{
 			if card:getSuit() == sgs.Card_Spade then count = count + 1 end
 			if count >= n then return true end
 		end
+		return false
 	end
 }
 --[[
