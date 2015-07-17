@@ -129,29 +129,28 @@
 
 ##拜印
 **相关武将**：神·司马懿  
-**描述**：**觉醒技，**回合开始阶段开始时，若你拥有4枚或更多的“忍”标记，你须减1点体力上限，并获得技能“极略”。  
+**描述**：**觉醒技，**准备阶段开始时，若你拥有四枚或更多的“忍”，你失去1点体力上限，然后获得“极略”。  
 **引用**：LuaBaiyin  
-**状态**：1217验证通过
+**状态**：0405证通过
 ```lua
-	LuaBaiyin = sgs.CreateTriggerSkill{
+	LuaBaiyin = sgs.CreatePhaseChangeSkill{
 		name = "LuaBaiyin" ,
 		frequency = sgs.Skill_Wake ,
-		events = {sgs.EventPhaseStart} ,
-		on_trigger = function(self, event, player, data)
+		on_phasechange = function(self, player)
 			local room = player:getRoom()
-			room:setPlayerMark(player,"LuaBaiyin",1)
+			room:setPlayerMark(player,"LuaBaiyin", 1)
 			if room:changeMaxHpForAwakenSkill(player) then
 				room:acquireSkill(player, "jilve")
 			end
 			return false
 		end ,
 		can_trigger = function(self,target)
-			return (target and target:isAlive() and target:hasSkill(self:objectName()))
-					and (target:getPhase() == sgs.Player_Start)
-					and (target:getMark("LuaBaiyin") == 0)
-					and (target:getMark("@bear") >= 4)
+			return target and target:isAlive() and target:hasSkill(self:objectName()) 
+			and target:getPhase() == sgs.Player_Start and target:getMark("LuaBaiyin") == 0 
+			and target:getMark("@bear") >= 4
 		end
 	}
+
 ```
 [返回索引](#技能索引) 
 
