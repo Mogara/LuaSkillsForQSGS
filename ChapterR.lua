@@ -335,43 +335,33 @@ LuaRenxin = sgs.CreateZeroCardViewAsSkill{
 --[[
 	技能名：忍戒（锁定技）
 	相关武将：神·司马懿
-	描述：每当你受到一次伤害后或于弃牌阶段弃置手牌后，你获得等同于受到伤害或弃置手牌数量的“忍”标记。
-	引用：LuaRenjie、LuaRenjieClear
-	状态：1217验证通过
+	描述：每当你受到1点伤害后或于弃牌阶段因你的弃置而失去一张牌后，你获得一枚“忍”。 
+	引用：LuaRenjie
+	状态：0405验证通过
 ]]--
 LuaRenjie = sgs.CreateTriggerSkill{
 	name = "LuaRenjie" ,
 	events = {sgs.Damaged, sgs.CardsMoveOneTime} ,
 	frequency = sgs.Skill_Compulsory ,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		if event == sgs.CardsMoveOneTime then
 			if player:getPhase() == sgs.Player_Discard then
 				local move = data:toMoveOneTime()
-				if (move.from:objectName() == player:objectName())
-						and (bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD) then
+				if move.from:objectName() == player:objectName() and bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_DISCARD then
 					local n = move.card_ids:length()
 					if n > 0 then
+						room:notifySkillInvoked(player, self:objectName())
 						player:gainMark("@bear", n)
 					end
 				end
 			end
 		elseif event == sgs.Damaged then
+			room:notifySkillInvoked(player, self:objectName())
 			local damage = data:toDamage()
 			player:gainMark("@bear",damage.damage)
 		end
 		return false
-	end
-}
-LuaRenjieClear = sgs.CreateTriggerSkill{
-	name = "#LuaRenjie-clear" ,
-	events = {sgs.EventLoseSkill} ,
-	on_trigger = function(self, event, player, data)
-		if data:toString() == "LuaRenjie" then
-			player:loseAllMarks("@bear")
-		end
-	end ,
-	can_trigger = function(self, target)
-		return target
 	end
 }
 --[[
