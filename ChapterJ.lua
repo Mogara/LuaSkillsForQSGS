@@ -6,71 +6,73 @@
 --[[
 	技能名：鸡肋
 	相关武将：SP·杨修
-	描述：每当你受到伤害时，你可以说出一种牌的类别，令伤害来源不能使用、打出或弃置其此类别的手牌，直到回合结束。
+	描述：每当你受到伤害后，你可以选择一种牌的类别，伤害来源不能使用、打出或弃置其该类别的手牌，直到回合结束。 
 	引用：LuaJilei、LuaJileiClear
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaJilei = sgs.CreateTriggerSkill{
 	name = "LuaJilei",
-	events = {sgs.DamageInflicted},
+	events = {sgs.Damaged},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local damage = data:toDamage()
-		local cur = room:getCurrent()
-		local source = damage.from
-		if (not cur or cur:getPhase()==sgs.Player_NotActive or cur:isDead() or not source) then
-			return
+		local current  = room:getCurrent()
+		if not current or current:getPhase()==sgs.Player_NotActive or current:isDead() or not damage.from then
+			return false
 		end
 		if room:askForSkillInvoke(player, self:objectName(), data) then
 			local choice = room:askForChoice(player, self:objectName(), "BasicCard+EquipCard+TrickCard")
-			local jileis = source:getTag(self:objectName()):toString():split("+")
-			if table.contains(jileis, choice) then return end
+			local jileis = damage.from:getTag(self:objectName()):toString():split("+")
+			if table.contains(jileis, choice) then return false end
 			table.insert(jileis,choice)
-			source:setTag(self:objectName(), sgs.QVariant(table.concat(jileis, "+")))
-			local type_i = choice.."|.|.|hand"
-			room:setPlayerCardLimitation(source, "use,response,discard", type_i, true)
+			damage.from:setTag(self:objectName(), sgs.QVariant(table.concat(jileis, "+")))
+			local _type = choice.."|.|.|hand" --只是手牌
+			room:setPlayerCardLimitation(damage.from, "use,response,discard", _type, true)
 			local typename = string.lower(string.gsub(choice,"Card",""))
-			if source:getMark("@jilei_"..typename) == 0 then
-				room:addPlayerMark(source, "@jilei_"..typename)
+			if damage.from:getMark("@jilei_"..typename) == 0 then
+				room:addPlayerMark(damage.from, "@jilei_"..typename)
 			end
 		end
 	end
 }
 LuaJileiClear = sgs.CreateTriggerSkill{
-	name = "#LuaJileiClear",
+	name = "#LuaJilei-clear",
 	events = {sgs.EventPhaseChanging,sgs.Death},
+	priority = 5,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.EventPhaseChanging then
 			local change = data:toPhaseChange()
-			 if change.to ~= sgs.Player_NotActive then return end
+			if change.to ~= sgs.Player_NotActive then 
+				return false 
+			end
 		elseif event == sgs.Death then
 			local death = data:toDeath()
-			if death.who:objectName() ~= player:objectName()
-				or player:objectName() ~= room:getCurrent():objectName() then
-					return
+			if death.who:objectName() ~= player:objectName() or player:objectName() ~= room:getCurrent():objectName() then
+				return false
 			end
 		end
-		local list = room:getAllPlayers()
-			for _,p in sgs.qlist(list) do
-				local jileis = p:getTag("LuaJilei"):toString():split("+")
-				if #jileis > 0 then
-					for _,jileity in ipairs(jileis) do
-						room:removePlayerCardLimitation(p, "use,response,discard", jileity.."|.|.|hand$1")
-						local typename = string.lower(string.gsub(jileity,"Card",""))
-						room:setPlayerMark(p, "@jilei_"..typename, 0)
-					end
-					p:removeTag("LuaJilei")
+		local players = room:getAllPlayers()
+		for _,p in sgs.qlist(players) do
+			local jilei_list = p:getTag("LuaJilei"):toString():split("+")
+			if #jilei_list > 0 then
+				for _,jileity in ipairs(jilei_list) do
+					room:removePlayerCardLimitation(p, "use,response,discard", jileity.."|.|.|hand$1")
+					local typename = string.lower(string.gsub(jileity,"Card",""))
+					room:setPlayerMark(p, "@jilei_"..typename, 0)
 				end
+				p:removeTag("LuaJilei")
 			end
+		end
+		return false
 	end,
 	can_trigger = function(self, target)
-		return (target ~= nil)
+		return target
 	end
 }
 --[[
 	技能名：激昂
-	相关武将：山·孙策，星SP·吕蒙
+	相关武将：山·孙策，☆SP·吕蒙
 	描述：每当你指定或成为红色【杀】或【决斗】的目标后，你可以摸一张牌。 
 	引用：LuaJiang
 	状态：0405验证通过
