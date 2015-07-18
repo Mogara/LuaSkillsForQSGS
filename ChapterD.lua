@@ -238,29 +238,29 @@ luaNosDanshou = sgs.CreateTriggerSkill{
 --[[
 	技能名：啖酪
 	相关武将：SP·杨修
-	描述：当一张锦囊牌指定包括你在内的多名目标后，你可以摸一张牌，若如此做，此锦囊牌对你无效。
+	描述： 每当你受到伤害后，你可以选择一种牌的类别，伤害来源不能使用、打出或弃置其该类别的手牌，直到回合结束。  
 	引用：LuaDanlao
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaDanalao = sgs.CreateTriggerSkill{
 	name = "LuaDanlao" ,
-	events = {sgs.TargetConfirmed, sgs.CardEffected} ,
+	events = {sgs.TargetConfirmed} ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if event == sgs.TargetConfirmed then
-			local use = data:toCardUse()
-			if (use.to:length() <= 1) or (not use.to:contains(player)) or (not use.card:isKindOf("TrickCard")) then
-				return false
-			end
-			if not room:askForSkillInvoke(player, self:objectName(), data) then return false end
-			player:setTag("LuaDanlao", sgs.QVariant(use.card:toString()))
-			player:drawCards(1)
-		else
-			if (not player:isAlive()) or (not player:hasSkill(self:objectName())) then return false end
-			local effect = data:toCardEffect()
-			if player:getTag("LuaDanlao") == nil or (player:getTag("LuaDanlao"):toString() ~= effect.card:toString()) then return false end
-			player:setTag("LuaDanlao", sgs.QVariant(""))
-			return true
+		local use = data:toCardUse()
+		if use.to:length() <= 1 or not use.to:contains(player) or not use.card:isKindOf("TrickCard") 
+			or not room:askForSkillInvoke(player, self:objectName(), data) then
+			return false
+		end
+		player:setFlags("-LuaDanlaoTarget")
+		player:setFlags("LuaDanlaoTarget")
+		player:drawCards(1, self:objectName())
+		if player:isAlive() and player:hasFlag("LuaDanlaoTarget") then
+			player:setFlags("-LuaDanlaoTarget")
+			local nullified_list = use.nullified_list
+			table.insert(nullified_list, player:objectName())
+			use.nullified_list = nullified_list
+			data:setValue(use)
 		end
 		return false
 	end
