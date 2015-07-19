@@ -706,9 +706,9 @@ LuaXDuanbing = sgs.CreateTriggerSkill{
 --[[
 	技能名：断肠（锁定技）
 	相关武将：山·蔡文姬、SP·蔡文姬
-	描述：你死亡时，杀死你的角色失去其所有武将技能。
+	描述：杀死你的角色失去所有武将技能。 
 	引用：LuaDuanchang
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaDuanchang = sgs.CreateTriggerSkill{
 	name = "LuaDuanchang",
@@ -716,27 +716,27 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 	events = {sgs.Death},
 	on_trigger = function(self, event, player, data)
 		local death = data:toDeath()
-		if death.who:objectName() == player:objectName() then
-			local damage = death.damage
-			if damage then
-				local murderer = damage.from
-				if murderer then
-					local room = player:getRoom()
-					local skill_list = murderer:getVisibleSkillList()
-					for _,skill in sgs.qlist(skill_list) do
-						if skill:getLocation() == sgs.Skill_Right then
-							room:detachSkillFromPlayer(murderer, skill:objectName())
-						end
-					end
+		local room = player:getRoom()
+		if death.who:objectName() ~= player:objectName() then
+			return false
+		end
+		if death.damage and death.damage.from then
+			room:sendCompulsoryTriggerLog(player, self:objectName())
+			local skills = death.damage.from:getVisibleSkillList()
+			local detachList = {}
+			for _,skill in sgs.qlist(skills) do
+				if not skill:inherits("SPConvertSkill") and not skill:isAttachedLordSkill() then
+					table.insert(detachList,"-"..skill:objectName())
 				end
+			end
+			room:handleAcquireDetachSkills(death.damage.from, table.concat(detachList,"|"))
+			if death.damage.from:isAlive() then
+                death.damage.from:gainMark("@duanchang")
 			end
 		end
 	end,
 	can_trigger = function(self, target)
-		if target then
-			return target:hasSkill(self:objectName())
-		end
-		return false
+		return target and target:hasSkill(self:objectName())
 	end
 }
 --[[
