@@ -323,7 +323,7 @@
 **相关武将**：测试·五星诸葛  
 **描述**：回合开始阶段，你可以观看牌堆顶的5张牌，将其中任意数量的牌以任意顺序置于牌堆顶，其余则以任意顺序置于牌堆底  
 **引用**：LuaXSuperGuanxing  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaXSuperGuanxing = sgs.CreateTriggerSkill{
 		name = "LuaXSuperGuanxing",
