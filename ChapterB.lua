@@ -353,38 +353,44 @@ LuaBaonue = sgs.CreateTriggerSkill{
 ]]--
 LuaBeige = sgs.CreateTriggerSkill{
 	name = "LuaBeige",
-	frequency = sgs.Skill_NotFrequent,
-	events = {sgs.Damaged},
+	events = {sgs.Damaged, sgs.FinishJudge},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		local damage = data:toDamage()
-		if damage.card == nil or (not damage.card:isKindOf("Slash")) or damage.to:isDead() then
-			return false
-		end
-		for _, caiwenji in sgs.qlist(room:findPlayersBySkillName(self:objectName())) do
-			if caiwenji:canDiscard(caiwenji, "he") and room:askForCard(caiwenji, "..", "@beige", data, self:objectName()) then
-				local judge = sgs.JudgeStruct()
-				judge.pattern = "."
-				judge.good = true
-				judge.play_animation = false
-				judge.who = player
-				judge.reason = self:objectName()
-				room:judge(judge)
-				local suit = judge.card:getSuit()
-				if suit == sgs.Card_Heart then
-					room:recover(player, sgs.RecoverStruct(caiwenji))
-				elseif suit == sgs.Card_Diamond then
-					player:drawCards(2, self:objectName())
-				elseif suit == sgs.Card_Club then
-					if damage.from and damage.from:isAlive() then
-						room:askForDiscard(damage.from, "beige", 2, 2, false, true)
-					end
-				elseif suit == sgs.Card_Spade then
-					if damage.from and damage.from:isAlive() then
-						damage.from:turnOver()
+		if event == sgs.Damaged then
+			local damage = data:toDamage()
+			if damage.card == nil or not damage.card:isKindOf("Slash") or damage.to:isDead() then
+				return false
+			end
+			for _, caiwenji in sgs.qlist(room:getAllPlayers()) do
+				if not caiwenji or caiwenji:isDead() or not caiwenji:hasSkill(self:objectName()) then continue end
+				if caiwenji:canDiscard(caiwenji, "he") and room:askForCard(caiwenji, "..", "@LuaBeige", data, self:objectName()) then
+					local judge = sgs.JudgeStruct()
+					judge.pattern = "."
+					judge.good = true
+					judge.play_animation = false
+					judge.who = player
+					judge.reason = self:objectName()
+					room:judge(judge)
+					local suit = judge.card:getSuit()
+					if suit == sgs.Card_Heart then
+						room:recover(player, sgs.RecoverStruct(caiwenji))
+					elseif suit == sgs.Card_Diamond then
+						player:drawCards(2, self:objectName())
+					elseif suit == sgs.Card_Club then
+						if damage.from and damage.from:isAlive() then
+							room:askForDiscard(damage.from, self:objectName(), 2, 2, false, true)
+						end
+					elseif suit == sgs.Card_Spade then
+						if damage.from and damage.from:isAlive() then
+							damage.from:turnOver()
+						end
 					end
 				end
 			end
+		else
+			local judge = data:toJudge()
+			if judge.reason ~= self:objectName() then return false end
+			judge.pattern = tostring(judge.card:getEffectiveId())
 		end
 	end,
 	can_trigger = function(self, target)
