@@ -238,7 +238,7 @@ luaNosDanshou = sgs.CreateTriggerSkill{
 --[[
 	技能名：啖酪
 	相关武将：SP·杨修
-	描述： 每当你受到伤害后，你可以选择一种牌的类别，伤害来源不能使用、打出或弃置其该类别的手牌，直到回合结束。  
+	描述：每当至少两名角色成为锦囊牌的目标后，若你为目标角色，你可以摸一张牌，然后该锦囊牌对你无效。   
 	引用：LuaDanlao
 	状态：0405验证通过
 ]]--
@@ -731,7 +731,7 @@ LuaDuanchang = sgs.CreateTriggerSkill{
 			end
 			room:handleAcquireDetachSkills(death.damage.from, table.concat(detachList,"|"))
 			if death.damage.from:isAlive() then
-                death.damage.from:gainMark("@duanchang")
+				death.damage.from:gainMark("@duanchang")
 			end
 		end
 	end,
