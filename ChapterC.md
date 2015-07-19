@@ -486,20 +486,20 @@
 ##持重
 **相关武将**：铜雀台·伏完  
 **描述**：**锁定技，**你的手牌上限等于你的体力上限；其他角色死亡时，你加1点体力上限。  
-**引用**：LuaChizhong、LuaChizhong2  
-**状态**：1217验证通过
+**引用**：LuaChizhongKeep、LuaChizhong  
+**状态**：0405验证通过
 ```lua
-	LuaChizhong = sgs.CreateMaxCardsSkill{
-		name = "LuaChizhong" ,
-		extra_func = function(self, target)
+	LuaChizhongKeep = sgs.CreateMaxCardsSkill{
+		name = "LuaChizhong",
+		fixed_func = function(self, target)
 			if target:hasSkill(self:objectName()) then
-				return target:getLostHp()
-			else
-				return 0
+            			return target:getMaxHp()
+        		else
+            			return -1
 			end
 		end
 	}
-	LuaChizhong2 = sgs.CreateTriggerSkill{
+	LuaChizhong = sgs.CreateTriggerSkill{
 		name = "#LuaChizhong" ,
 		events = {sgs.Death} ,
 		on_trigger = function(self, event, player, data)
