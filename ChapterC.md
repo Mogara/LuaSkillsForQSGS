@@ -748,11 +748,11 @@
 ##聪慧
 **相关武将**：倚天·曹冲  
 **描述**：**锁定技，**你将永远跳过你的弃牌阶段  
-**引用**：LuaCongHui  
+**引用**：LuaConghui  
 **状态**：0405验证通过
 ```lua
-	LuaCongHui = sgs.CreateTriggerSkill{
-		name = "LuaCongHui" ,
+	LuaConghui = sgs.CreateTriggerSkill{
+		name = "LuaConghui" ,
 		frequency = sgs.Skill_Compulsory ,
 		events = {sgs.EventPhaseChanging} ,
 		on_trigger = function(self, event, player, data)
