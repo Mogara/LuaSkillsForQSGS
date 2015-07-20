@@ -591,38 +591,58 @@
 ##筹粮
 **相关武将**：智·蒋琬  
 **描述**：回合结束阶段开始时，若你手牌少于三张，你可以从牌堆顶亮出4-X张牌（X为你的手牌数），你获得其中的基本牌，把其余的牌置入弃牌堆  
-**引用**：LuaXChouliang  
-**状态**：1217验证通过
+**引用**：LuaChouliang  
+**状态**：0405验证通过
 ```lua
-	LuaXChouliang = sgs.CreateTriggerSkill{
-		name = "LuaXChouliang",
+	LuaChouliang = sgs.CreateTriggerSkill{
+		name = "LuaChouliang",
 		frequency = sgs.Skill_Frequent,
 		events = {sgs.EventPhaseStart},
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
-			local handcardnum = player:getHandcardNum()
-			if player:getPhase() == sgs.Player_Finish then
-				if handcardnum < 3 then
-					if room:askForSkillInvoke(player, self:objectName()) then
-						for i=1, 4-handcardnum, 1 do
-							local card_id = room:drawCard()
-							local card = sgs.Sanguosha:getCard(card_id)
-							local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_SHOW, player:objectName(), "", self:objectName(), "")
-							room:moveCardTo(card, player, sgs.Player_PlaceTable, reason, true)
-							room:getThread():delay()
-							if not card:isKindOf("BasicCard") then
-								room:throwCard(card_id, nil)
-								room:setEmotion(player, "bad")
-							else
-								room:obtainCard(player, card_id)
-								room:setEmotion(player, "good")
-							end
-						end
+		        local handcardnum = player:getHandcardNum()
+		        if player:getPhase() == sgs.Player_Finish and handcardnum < 3
+				and room:askForSkillInvoke(player, self:objectName()) then
+		        	local x = 4 - handcardnum
+		        	local ids = room:getNCards(x, false)
+		        	local move = sgs.CardsMoveStruct()
+		        	move.card_ids = ids
+		        	move.to = player
+		        	move.to_place = sgs.Player_PlaceTable
+		        	move.reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_TURNOVER, player:objectName(), self:objectName(), "")
+		        	room:moveCardsAtomic(move, true)
+		        	room:getThread():delay()
+		
+		        	local card_to_throw = sgs.IntList()
+		        	local card_to_gotback = sgs.IntList()
+		        	for i = 0, x - 1, 1 do
+			                if not sgs.Sanguosha:getCard(ids:at(i)):isKindOf("BasicCard") then
+			                    card_to_throw:append(ids:at(i))
+			                else
+			                    card_to_gotback:append(ids:at(i))
 					end
 				end
+		        	if not card_to_gotback:isEmpty() then
+			        	local dummy2 = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+					for _, id in sgs.qlist(card_to_gotback) do
+			                	dummy2:addSubcard(id)
+					end
+			                local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GOTBACK, player:objectName())
+			                room:obtainCard(player, dummy2, reason)
+			                dummy2:deleteLater()
+		        	end
+		        	if not card_to_throw:isEmpty() then
+			                local dummy = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+					for _, id in sgs.qlist(card_to_throw) do
+			                	dummy:addSubcard(id)
+					end
+			                local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NATURAL_ENTER, player:objectName(), self:objectName(), "")
+			                room:throwCard(dummy, reason, nil)
+			                dummy:deleteLater()
+				end
 			end
-			return false
-		end
+	        return false
+	    end
 	}
 ```
 [返回索引](#技能索引)
