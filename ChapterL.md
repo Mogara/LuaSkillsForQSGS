@@ -342,86 +342,73 @@
 [返回索引](#技能索引)
 ##离间
 **相关武将**：标准·貂蝉  
-**描述**：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】。  
+**描述**：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色：若如此做，视为其中一名角色对另一名角色使用一张【决斗】。    
 **引用**：LuaLijian  
-**状态**：1217验证通过  
-**注**：仅需将旧版离间的 "duel:toTrick():setCancelable(false)" 那一行去掉即可
-
-[返回索引](#技能索引)
-##离间-旧
-**相关武将**：怀旧-标准·貂蝉-旧、SP·貂蝉、SP·台版貂蝉  
-**描述**：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色，令其中一名男性角色视为对另一名男性角色使用一张【决斗】（不能使用【无懈可击】对此【决斗】进行响应）。  
-**引用**：LuaLijian   
-**状态**：1217验证通过
+**状态**：0405验证通过  
 ```lua
-	newDuel = function()
-		return sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
-	end
 	LuaLijianCard = sgs.CreateSkillCard{
 		name = "LuaLijianCard" ,
-		target_fixed = false ,
-		will_throw = true ,
 		filter = function(self, targets, to_select)
-			if not to_select:isMale() then return false end
-			if #targets == 0 then
-				return true
-			elseif #targets == 1 then
-				local duel = newDuel()
-				if to_select:isProhibited(targets[1], duel, targets[1]:getSiblings()) then return false end
-				if to_select:isCardLimited(duel, sgs.Card_MethodUse) then return false end
-				return true
-			elseif #targets == 2 then
+			if not to_select:isMale() then
 				return false
 			end
+			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
+			duel:deleteLater()
+			if #targets == 0 and to_select:isProhibited(to_select, duel) then
+				return false
+			elseif #targets == 1 and to_select:isCardLimited(duel, sgs.Card_MethodUse) then 
+				return false 
+			end
+			return #targets < 2 and to_select:objectName() ~= sgs.Self:objectName()
 		end ,
 		feasible = function(self, targets)
 			return #targets == 2
 		end ,
-		about_to_use = function(self, room, cardUse)
-			local diaochan = cardUse.from
-			local logg = sgs.LogMessage()
-			logg.from = diaochan
-			logg.to = cardUse.to
-			logg.type = "#UseCard"
-			logg.card_str = self:toString()
-			room:sendLog(logg)
+		about_to_use = function(self, room, card_use)
+			local use = card_use
 			local data = sgs.QVariant()
-			data:setValue(cardUse)
+			data:setValue(card_use)
 			local thread = room:getThread()
-			thread:trigger(sgs.PreCardUsed, room, diaochan, data)
-			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_THROW, diaochan:objectName(), nil, "LuaLijian", nil)
-			room:moveCardTo(self, diaochan, nil, sgs.Player_DiscardPile, reason, true)
-			thread:trigger(sgs.CardUsed, room, diaochan, data)
-			thread:trigger(sgs.CardFinished, room, diaochan, data)
+			thread:trigger(sgs.PreCardUsed, room, card_use.from, data)
+			use = data:toCardUse()
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_THROW, card_use.from:objectName(), "", "LuaLijian", "")
+			room:moveCardTo(self, card_use.from, nil, sgs.Player_DiscardPile, reason, true)
+			thread:trigger(sgs.CardUsed, room, card_use.from, data)
+			thread:trigger(sgs.CardFinished, room, card_use.from, data)
 		end ,
 		on_use = function(self, room, source, targets)
 			local to = targets[1]
 			local from = targets[2]
-			local duel = newDuel()
-			duel:toTrick():setCancelable(false)
+			local duel = sgs.Sanguosha:cloneCard("duel", sgs.Card_NoSuit, 0)
+			duel:toTrick():setCancelable(true)-- 这里true改为false 就是旧版技能
 			duel:setSkillName(self:objectName())
-			if (not from:isCardLimited(duel, sgs.Card_MethodUse)) and (not from:isProhibited(to, duel)) then
+			if not from:isCardLimited(duel, sgs.Card_MethodUse) and not from:isProhibited(to, duel) then
 				room:useCard(sgs.CardUseStruct(duel, from, to))
+			else
+				duel:deleteLater()
 			end
 		end
 	}
-	LuaLijian = sgs.CreateViewAsSkill{
+	LuaLijian = sgs.CreateOneCardViewAsSkill{
 		name = "LuaLijian" ,
-		n = 1 ,
-		view_filter = function(self, cards, to_select)
-			return (#cards == 0) and (not sgs.Self:isJilei(to_select))
+		filter_pattern = ".!" ,
+		view_as = function(self, card)
+			local lijian_card = LuaLijianCard:clone()
+			lijian_card:addSubcard(card:getId())
+			return lijian_card
 		end ,
-		view_as = function(self, cards)
-			if #cards ~= 1 then return nil end
-			local card = LuaLijianCard:clone()
-			card:addSubcard(cards[1])
-			return card
-		end ,
-		enabled_at_play = function(self, target)
-			return target:canDiscard(target, "he") and (not target:hasUsed("#LuaLijianCard"))
+		enabled_at_play = function(self, player)
+			return player:canDiscard(player, "he") and not player:hasUsed("#LuaLijianCard") and player:getAliveSiblings():length() > 1
 		end
 	}
 ```
+[返回索引](#技能索引)
+##离间-旧
+**相关武将**：怀旧-标准·貂蝉-旧、SP·貂蝉、SP·台版貂蝉  
+**描述**：出牌阶段限一次，你可以弃置一张牌并选择两名男性角色：若如此做，视为其中一名角色对另一名角色使用一张【决斗】，此【决斗】不能被【无懈可击】响应。   
+**引用**：LuaLijian   
+**状态**：0405验证通过
+**注**：仅需将新版离间的 "duel:toTrick():setCancelable(false)" 那一行改掉即可
 [返回索引](#技能索引)
 ##离迁
 **相关武将**：倚天·夏侯涓  
