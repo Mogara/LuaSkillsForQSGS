@@ -781,11 +781,12 @@ LuaBiyue = sgs.CreatePhaseChangeSkill{
 	frequency = sgs.Skill_Frequent,
 	on_phasechange = function(self, player)
 		if player:getPhase() == sgs.Player_Finish then
-			if player:askForSkillInvoke(self:objectName()) then
-				player:getRoom():broadcastSkillInvoke(self:objectName())
+			local room = player:getRoom()
+			if room:askForSkillInvoke(player, self:objectName()) then
 				player:drawCards(1, self:objectName())
 			end
 		end
+		return false
 	end
 }
 --[[
