@@ -519,41 +519,43 @@
 **相关武将**：☆SP·赵云  
 **描述**：每当你发动“龙胆”使用或打出一张手牌时，你可以立即获得对方的一张手牌。  
 **引用**：LuaChongzhen  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaChongzhen = sgs.CreateTriggerSkill{
 		name = "LuaChongzhen" ,
-		events = {sgs.CardResponded, sgs.TargetConfirmed} ,
+		events = {sgs.CardResponded, sgs.TargetSpecified} ,
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			if event == sgs.CardResponded then
-				local resp = data:toCardResponse()
-				if (resp.m_card:getSkillName() == "longdan") and resp.m_who and (not resp.m_who:isKongcheng()) then
-					local _data = sgs.QVariant()
+		        	local resp = data:toCardResponse()
+		        	if resp.m_card:getSkillName() == "longdan" and resp.m_who and (not resp.m_who:isKongcheng()) then
+			            	local _data = sgs.QVariant()
 					_data:setValue(resp.m_who)
-					if player:askForSkillInvoke(self:objectName(), _data) then
-						local card_id = room:askForCardChosen(player, resp.m_who, "h", self:objectName())
-						room:obtainCard(player, sgs.Sanguosha:getCard(card_id), false)
-					end
-				end
-			else
-				local use = data:toCardUse()
-				if (use.from:objectName() == player:objectName()) and (use.card:getSkillName() == "longdan") then
-					for _, p in sgs.qlist(use.to) do
-						if p:isKongcheng() then continue end
-						local _data = sgs.QVariant()
-						_data:setValue(p)
-						p:setFlags("LuaChongzhenTarget")
-						local invoke = player:askForSkillInvoke(self:objectName(), _data)
-						p:setFlags("-LuaChongzhenTarget")
-						if invoke then
-							local card_id = room:askForCardChosen(player,p,"h",self:objectName())
-							room:obtainCard(player,sgs.Sanguosha:getCard(card_id), false)
-						end
-					end
-				end
-			end
-			return false
+			                if player:askForSkillInvoke(self:objectName(), _data) then
+			                	local card_id = room:askForCardChosen(player, resp.m_who, "h", self:objectName())
+			                	local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+			                	room:obtainCard(player, sgs.Sanguosha:getCard(card_id), reason, false)
+			                end
+		        	end
+		        else
+		            local use = data:toCardUse()
+		            if use.card:getSkillName() == "longdan" then
+		                for _, p in sgs.qlist(use.to) do
+		                	if p:isKongcheng() then continue end
+		                	local _data = sgs.QVariant()
+					_data:setValue(p)
+					p:setFlags("LuaChongzhenTarget")
+		                	local invoke = player:askForSkillInvoke(self:objectName(), _data)
+		                	p:setFlags("-LuaChongzhenTarget")
+		                	if invoke then
+		                        	local card_id = room:askForCardChosen(player, p, "h", self:objectName())
+		                        	local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_EXTRACTION, player:objectName())
+		                        	room:obtainCard(player, sgs.Sanguosha:getCard(card_id), reason, false)
+		                    	end
+		                end
+		            end
+		        end
+		        return false
 		end
 	}
 ```
