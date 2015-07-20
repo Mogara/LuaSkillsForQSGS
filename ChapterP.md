@@ -61,19 +61,21 @@
 ```
 [返回索引](#技能索引)
 ##咆哮
-**相关武将**：标准·张飞、翼·张飞  
-**描述**：**锁定技，**你在出牌阶段内使用【杀】时无次数限制。  
+**相关武将**：界限突破·张飞、标准·张飞-旧、翼·张飞、夏侯霸、关兴&张苞  
+**描述**：**锁定技，**出牌阶段，你使用【杀】无次数限制。 
 **引用**：LuaPaoxiao  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaPaoxiao = sgs.CreateTargetModSkill{
 		name = "LuaPaoxiao",
-		pattern = "Slash",
+		frequency = sgs.Skill_NotCompulsory,
 		residue_func = function(self, player)
 			if player:hasSkill(self:objectName()) then
 				return 1000
+			else
+				return 0
 			end
-		end,
+		end
 	}
 ```
 [返回索引](#技能索引)
