@@ -810,19 +810,19 @@
 **相关武将**：标准·貂蝉、SP貂蝉、☆SP貂蝉、1v1·貂蝉1v1、怀旧-标准·貂蝉-旧、SP·台版貂蝉  
 **描述**：结束阶段开始时，你可以摸一张牌。  
 **引用**：LuaBiyue  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
-	LuaBiyue = sgs.CreateTriggerSkill{
+	LuaBiyue = sgs.CreatePhaseChangeSkill{
 		name = "LuaBiyue",
 		frequency = sgs.Skill_Frequent,
-		events = {sgs.EventPhaseStart},
-		on_trigger = function(self, event, player, data)
+		on_phasechange = function(self, player)
 			if player:getPhase() == sgs.Player_Finish then
 				local room = player:getRoom()
 				if room:askForSkillInvoke(player, self:objectName()) then
-					player:drawCards(1)
+					player:drawCards(1, self:objectName())
 				end
 			end
+			return false
 		end
 	}
 ```
