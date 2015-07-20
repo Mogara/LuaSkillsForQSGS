@@ -188,33 +188,26 @@ LuaDawu = sgs.CreateTriggerSkill{
 	相关武将：SP·关羽
 	描述：准备阶段开始时，若你的手牌数大于体力值，且本局游戏主公为曹操，你减1点体力上限，然后获得技能“马术”。
 	引用：LuaDanji
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaDanji = sgs.CreateTriggerSkill{
 	name = "LuaDanji",
 	frequency = sgs.Skill_Wake,
-	events = {sgs.TurnStart},
+	events = {sgs.EventPhaseStart},
+	can_trigger = function(self, target)
+		return target:isAlive() and target:hasSkill(self:objectName()) and target:getPhase() == sgs.Player_Start
+			and target:getMark("danji") == 0 and target:getHandcardNum() > target:getHp()
+	end,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local lord = room:getLord()
-		if lord then
-			if string.find(lord:getGeneralName(),"caocao") or string.find(lord:getGeneral2Name(),"caocao") then
-				player:setMark("danji", 1)
-				player:gainMark("@waked")
-				if room:changeMaxHpForAwakenSkill(player)then
-					room:acquireSkill(player, "mashu")
-				end
+		if lord and (string.find(lord:getGeneralName(), "caocao") or string.find(lord:getGeneral2Name(), "caocao")) then
+			room:setPlayerMark(player, "danji", 1)
+			if room:changeMaxHpForAwakenSkill(player) and player:getMark("danji") == 1 then
+				room:acquireSkill(player, "mashu")
 			end
 		end
 	end,
-	can_trigger = function(self, target)
-		if target:getMark("danji") == 0 then
-			if target:hasSkill(self:objectName()) then
-				return target:getHandcardNum() > target:getHp()
-			end
-		end
-		return false
-	end
 }
 --[[
 	技能名：胆守
