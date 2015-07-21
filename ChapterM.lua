@@ -136,28 +136,22 @@ LuaManjuan = sgs.CreateTriggerSkill{
 	相关武将：火·庞德、SP·庞德
 	描述：当你使用的【杀】被目标角色的【闪】抵消时，你可以弃置其一张牌。
 	引用：LuaMengjin
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaMengjin = sgs.CreateTriggerSkill{
 	name = "LuaMengjin",
-	frequency = sgs.Skill_NotFrequent,
 	events = {sgs.SlashMissed},
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local effect = data:toSlashEffect()
-		local dest = effect.to
-		if dest:isAlive() then
-			if not dest:isNude() then
-				if player:askForSkillInvoke(self:objectName(), data) then
-					local room = player:getRoom()
-					local to_throw = room:askForCardChosen(player, dest, "he", self:objectName())
-					local card = sgs.Sanguosha:getCard(to_throw)
-					room:throwCard(card, dest, player);
-				end
+		if effect.to:isAlive() and player:canDiscard(effect.to, "he") then
+			if player:askForSkillInvoke(self:objectName(), data) then
+				local to_throw = room:askForCardChosen(player, effect.to, "he", self:objectName(), false, sgs.Card_MethodDiscard)
+				room:throwCard(sgs.Sanguosha:getCard(to_throw), effect.to, player)
 			end
 		end
 		return false
 	end,
-	priority = 2
 }
 --[[
 	技能名：秘计
