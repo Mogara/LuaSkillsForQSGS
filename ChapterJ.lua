@@ -685,18 +685,16 @@ LuaJieming = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：结姻
-	相关武将：标准·孙尚香、SP·孙尚香
+	相关武将：界限突破·孙尚香、标准·孙尚香、SP·孙尚香
 	描述：出牌阶段限一次，你可以弃置两张手牌并选择一名已受伤的男性角色，你和该角色各回复1点体力。
 	引用：LuaJieyin
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaJieyinCard = sgs.CreateSkillCard{
 	name = "LuaJieyinCard" ,
-	target_fixed = false ,
-	will_throw = true ,
 	filter = function(self, targets, to_select)
 		if #targets ~= 0 then return false end
-		return to_select:isMale() and to_select:isWounded() and (to_select:objectName() ~= sgs.Self:objectName())
+		return to_select:isMale() and to_select:isWounded() and to_select:objectName() ~= sgs.Self:objectName()
 	end ,
 	on_effect = function(self, effect)
 		local room = effect.from:getRoom()
@@ -711,7 +709,7 @@ LuaJieyin = sgs.CreateViewAsSkill{
 	name = "LuaJieyin" ,
 	n = 2 ,
 	view_filter = function(self, selected, to_select)
-		if (#selected > 1) or sgs.Self:isJilei(to_select) then return false end
+		if #selected > 1 or sgs.Self:isJilei(to_select) then return false end
 		return not to_select:isEquipped()
 	end ,
 	view_as = function(self, cards)
@@ -722,7 +720,7 @@ LuaJieyin = sgs.CreateViewAsSkill{
 		return jieyin_card
 	end ,
 	enabled_at_play = function(self, target)
-		return (target:getHandcardNum() >= 2) and (not target:hasUsed("#LuaJieyinCard"))
+		return target:getHandcardNum() >= 2 and not target:hasUsed("#LuaJieyinCard")
 	end
 }
 --[[
