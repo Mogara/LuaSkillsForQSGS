@@ -1069,24 +1069,17 @@
 [返回索引](#技能索引)
 ##庸肆
 **相关武将**：SP·袁术、SP·台版袁术  
-**描述**：**锁定技，**摸牌阶段，你额外摸等同于现存势力数的牌；弃牌阶段开始时，你须弃置等同于现存势力数的牌。  
+**描述**：**锁定技，**摸牌阶段，你额外摸X张牌。弃牌阶段开始时，你须弃置X张牌。（X为现存势力数）   
 **引用**：LuaYongsi  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
-	getKingdomsYongsi = function(yuanshu)
-		local kingdoms = {}
+	getKingdoms = function(yuanshu)
+		local kingdom_set = {}
 		local room = yuanshu:getRoom()
 		for _, p in sgs.qlist(room:getAlivePlayers()) do
-			local flag = true
-			for _, k in ipairs(kingdoms) do
-				if p:getKingdom() == k then
-					flag = false
-					break
-				end
-			end
-			if flag then table.insert(kingdoms, p:getKingdom()) end
+			table.insert(kingdom_set, p:getKingdom())
 		end
-		return #kingdoms
+		return #kingdom_set
 	end
 	LuaYongsi = sgs.CreateTriggerSkill{
 		name = "LuaYongsi" ,
@@ -1094,12 +1087,14 @@
 		events = {sgs.DrawNCards, sgs.EventPhaseStart},
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
-			local x = getKingdomsYongsi(player)
+			local x = getKingdoms(player)
 			if event == sgs.DrawNCards then
+				room:sendCompulsoryTriggerLog(player, self:objectName())
 				data:setValue(data:toInt() + x)
-			elseif (event == sgs.EventPhaseStart) and (player:getPhase() == sgs.Player_Discard) then
+			elseif event == sgs.EventPhaseStart and player:getPhase() == sgs.Player_Discard then
+				room:sendCompulsoryTriggerLog(player, self:objectName())
 				if x > 0 then
-					room:askForDiscard(player, "LuaYongsi", x, x, false, true)
+					room:askForDiscard(player, self:objectName(), x, x, false, true)
 				end
 			end
 			return false
