@@ -481,18 +481,17 @@ LuaJizhi = sgs.CreateTriggerSkill{
 	相关武将：怀旧-标准·黄月英-旧、1v1·黄月英1v1、SP·台版黄月英
 	描述：每当你使用非延时类锦囊牌选择目标后，你可以摸一张牌。
 	引用：LuaNosJizhi
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaNosJizhi = sgs.CreateTriggerSkill{
 	name = "LuaNosJizhi" ,
 	frequency = sgs.Skill_Frequent ,
 	events = {sgs.CardUsed} ,
 	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
 		local use = data:toCardUse()
-		if use.card:isNDTrick() then
-			if player:askForSkillInvoke(self:objectName()) then
-				player:drawCards(1)
-			end
+		if use.card:isNDTrick() and room:askForSkillInvoke(player, self:objectName()) then
+			player:drawCards(1, self:objectName())
 		end
 		return false
 	end
