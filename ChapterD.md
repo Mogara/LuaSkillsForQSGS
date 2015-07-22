@@ -409,28 +409,28 @@ LuaDawu = sgs.CreateTriggerSkill{
 **相关武将**：倚天·贾文和  
 **描述**：**锁定技，**杀死你的角色获得崩坏技能直到游戏结束  
 **引用**：LuaDushi  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaDushi = sgs.CreateTriggerSkill{
-		name = "LuaDushi" ,
-		events = {sgs.Death} ,
-		frequency = sgs.Skill_Compulsory ,
+		name = "LuaDushi",
+		events = {sgs.Death},
+		frequency = sgs.Skill_Compulsory,
+		can_trigger = function(self, target)
+			return target and target:hasSkill(self:objectName())
+		end,
 		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
 			local death = data:toDeath()
 			local killer = nil
 			if death.damage then killer = death.damage.from end
-			if (death.who:objectName() == player:objectName()) and killer then
-				local room = killer:getRoom()
-				if (killer:objectName() ~= player:objectName()) and (not killer:hasSkill("benghuai")) then
+			if death.who:objectName() == player:objectName() and killer then
+				if killer:objectName() ~= player:objectName() then
 					killer:gainMark("@collapse")
 					room:acquireSkill(killer, "benghuai")
 				end
 			end
 			return false
-		end ,
-		can_trigger = function(self, target)
-			return target and target:hasSkill(self:objectName())
-		end
+		end,
 	}
 ```
 [返回索引](#技能索引)
