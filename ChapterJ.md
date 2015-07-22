@@ -732,8 +732,9 @@
 		view_as = function(self, cards)
 			if #cards ~= 2 then return nil end
 			jieyin_card = LuaJieyinCard:clone()
-			jieyin_card:addSubcard(cards[1])
-			jieyin_card:addSubcard(cards[2])
+			for _,card in pairs(cards) do
+				jieyin_card:addSubcard(card)
+			end
 			return jieyin_card
 		end ,
 		enabled_at_play = function(self, target)
