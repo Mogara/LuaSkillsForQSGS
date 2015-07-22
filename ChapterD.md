@@ -738,20 +738,25 @@ LuaDawu = sgs.CreateTriggerSkill{
 **相关武将**：一将成名2013·潘璋&马忠  
 **描述**：每当你受到一次【杀】造成的伤害后，你可以弃置一张牌，获得伤害来源装备区的武器牌。  
 **引用**：LuaDuodao  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaDuodao = sgs.CreateTriggerSkill{
 		name = "LuaDuodao" ,
-		events = {sgs.Damaged} ,	
+		events = {sgs.Damaged} ,
 		on_trigger = function(self, event, player, data)
 			local damage = data:toDamage()
-			if not damage.card or not damage.card:isKindOf("Slash") or player:isNude() then return false end
-			if player:getRoom():askForCard(player, "..", "@duodao-get",data, self:objectName()) then
-			if damage.from and damage.from:getWeapon() then
-				player:obtainCard(damage.from:getWeapon())
+			if not damage.card or not damage.card:isKindOf("Slash") or not player:canDiscard(player, "he") then
+				return
+			end
+			local _data = sgs.QVariant()
+			_data:setValue(damage)
+			local room = player:getRoom()
+			if room:askForCard(player, "..", "@duodao-get", _data, self:objectName()) then
+				if damage.from and damage.from:getWeapon() then
+					player:obtainCard(damage.from:getWeapon())
+				end
 			end
 		end
-	end
 	}
 ```
 [返回索引](#技能索引)
