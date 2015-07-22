@@ -762,13 +762,14 @@ LuaWushenTargetMod = sgs.CreateTargetModSkill{
 }
 --[[
 	技能名：武圣
-	相关武将：标准·关羽、翼·关羽、2013-3v3·关羽、1v1·关羽1v1
+	相关武将：界限突破·关羽、JSP·关羽、SP·关羽、标准·关羽、翼·关羽、2013-3v3·关羽、1v1·关羽1v1
 	描述：你可以将一张红色牌当【杀】使用或打出。
 	引用：LuaWusheng
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaWusheng = sgs.CreateOneCardViewAsSkill{
 	name = "LuaWusheng",
+	response_or_use = true,
 	view_filter = function(self, card)
 		if not card:isRed() then return false end
 		if sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
@@ -779,9 +780,9 @@ LuaWusheng = sgs.CreateOneCardViewAsSkill{
 		end
 		return true
 	end,
-	view_as = function(self, originalCard)
-		local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())
-		slash:addSubcard(originalCard:getId())
+	view_as = function(self, card)
+		local slash = sgs.Sanguosha:cloneCard("slash", card:getSuit(), card:getNumber())
+		slash:addSubcard(card:getId())
 		slash:setSkillName(self:objectName())
 		return slash
 	end,
