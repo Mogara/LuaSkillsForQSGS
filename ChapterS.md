@@ -416,7 +416,7 @@
 **相关武将**：SP·暴怒战神、2013-3v3·吕布  
 **描述**：若你的装备区没有武器牌，当你使用【杀】时，你可以额外选择至多两个目标。  
 **引用**：LuaShenji  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaShenji = sgs.CreateTargetModSkill{
 		name = "LuaShenji" ,
