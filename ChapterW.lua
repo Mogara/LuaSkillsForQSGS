@@ -357,10 +357,11 @@ LuaWuqian = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：无双（锁定技）
-	相关武将：标准·吕布、SP·最强神话、SP·暴怒战神、SP·台版吕布
+	相关武将：界限突破·吕布、标准·吕布、SP·最强神话、SP·暴怒战神、SP·台版吕布
 	描述：当你使用【杀】指定一名角色为目标后，该角色需连续使用两张【闪】才能抵消；与你进行【决斗】的角色每次需连续打出两张【杀】。
 	引用：LuaWushuang
-	状态：1217验证通过
+	状态：0405验证通过
+	备注：与源码略有不同，体验感稍差
 ]]--
 Table2IntList = function(theTable)
 	local result = sgs.IntList()
@@ -372,26 +373,26 @@ end
 LuaWushuang = sgs.CreateTriggerSkill{
 	name = "LuaWushuang" ,
 	frequency = sgs.Skill_Compulsory ,
-	events = {sgs.TargetConfirmed,sgs.CardEffected } ,
+	events = {sgs.TargetSpecified,sgs.CardEffected } ,
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-		if event == sgs.TargetConfirmed then
+		if event == sgs.TargetSpecified then
 			local use = data:toCardUse()
-			local can_invoke = false
-			if use.card:isKindOf("Slash") and (player and player:isAlive() and player:hasSkill(self:objectName())) and (use.from:objectName() == player:objectName()) then
-				can_invoke = true
-				local jink_table = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
+			if use.card:isKindOf("Slash") and player and player:isAlive() and player:hasSkill(self:objectName()) then
+				room:sendCompulsoryTriggerLog(player, self:objectName())
+				local jink_list = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
 				for i = 0, use.to:length() - 1, 1 do
-					if jink_table[i + 1] == 1 then
-						jink_table[i + 1] = 2 --只要设置出两张闪就可以了，不用两次askForCard
+					if jink_list[i + 1] == 1 then
+						jink_list[i + 1] = 2
 					end
 				end
 				local jink_data = sgs.QVariant()
-				jink_data:setValue(Table2IntList(jink_table))
+				jink_data:setValue(Table2IntList(jink_list))
 				player:setTag("Jink_" .. use.card:toString(), jink_data)
 			end
 		elseif event == sgs.CardEffected then
 			local effect = data:toCardEffect()
+			local can_invoke = false
 			if effect.card:isKindOf("Duel") then				
 				if effect.from and effect.from:isAlive() and effect.from:hasSkill(self:objectName()) then
 					can_invoke = true
@@ -450,8 +451,7 @@ LuaWushuang = sgs.CreateTriggerSkill{
 	end ,
 	can_trigger = function(self, target)
 		return target
-	end,
-	priority = 1,
+	end
 }
 --[[
 	技能名：无言（锁定技）
