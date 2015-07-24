@@ -77,24 +77,24 @@
 **相关武将**：怀旧·法正  
 **描述**：**锁定技，**其他角色每令你回复1点体力，该角色摸一张牌；其他角色每对你造成一次伤害后，需交给你一张红桃手牌，否则该角色失去1点体力。  
 **引用**：LuaNosEnyuan  
-**状态**：1217验证通过  
+**状态**：0405验证通过  
 ```lua
 	LuaNosEnyuan = sgs.CreateTriggerSkill{
-		name = "LuaNosWuyan" ,
+		name = "LuaNosEnyuan" ,
 		events = {sgs.HpRecover, sgs.Damaged} ,
 		frequency = sgs.Skill_Compulsory ,
 		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
 			if event == sgs.HpRecover then
 				local recover = data:toRecover()
 				if recover.who and (recover.who:objectName() ~= player:objectName()) then
-					recover.who:drawCards(recover.recover)
+					recover.who:drawCards(recover.recover, self:objectName())
 				end
-			else
+			elseif event == sgs.Damaged then
 				local damage = data:toDamage()
 				local source = damage.from
 				if source and (source:objectName() ~= player:objectName()) then
-					local room = player:getRoom()
-					local card = room:askForCard(source, ".|heart|.|hand", "@enyuanheart", data, sgs.Card_MethodNone)
+					local card = room:askForCard(source, ".|heart|.|hand", "@nosenyuan-heart", data, sgs.Card_MethodNone)
 					if card then
 						player:obtainCard(card)
 					else
