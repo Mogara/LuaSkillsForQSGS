@@ -785,9 +785,9 @@ LuaXiongyi = sgs.CreateTriggerSkill{
 --[[
 	技能名：修罗
 	相关武将：SP·暴怒战神
-	描述：准备阶段开始时，你可以弃置一张与判定区内延时类锦囊牌花色相同的手牌，然后弃置该延时类锦囊牌。
+	描述：准备阶段开始时，你可以弃置一张与判定区内延时锦囊牌花色相同的手牌：若如此做，你弃置该延时锦囊牌。 
 	引用：LuaXiuluo
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 hasDelayedTrickXiuluo = function(target)
 	for _, card in sgs.qlist(target:getJudgingArea()) do
@@ -801,10 +801,9 @@ containsTable = function(t, tar)
 	end
 	return false
 end
-LuaXiuluo = sgs.CreateTriggerSkill{
+LuaXiuluo = sgs.CreatePhaseChangeSkill{
 	name = "LuaXiuluo" ,
-	events = {sgs.EventPhaseStart} ,
-	on_trigger = function(self, event, player, data)
+	on_phasechange = function(self, player)
 		local room = player:getRoom()
 		while hasDelayedTrickXiuluo(player) and player:canDiscard(player, "h") do
 			local suits = {}
@@ -814,18 +813,18 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 				end
 			end
 			local card = room:askForCard(player, ".|" .. table.concat(suits, ",") .. "|.|hand", "@xiuluo", sgs.QVariant(), self:objectName())
-			if (not card) or (not hasDelayedTrickXiuluo(player)) then break end
+			if not card or not hasDelayedTrickXiuluo(player) then break end
 			local avail_list = sgs.IntList()
 			local other_list = sgs.IntList()
+			local all_list = sgs.IntList()
 			for _, jcard in sgs.qlist(player:getJudgingArea()) do
-				if jcard:isKindOf("SkillCard") then
-				elseif jcard:getSuit() == card:getSuit() then
+				if jcard:isKindOf("SkillCard") then continue end
+				if jcard:getSuit() == card:getSuit() then
 					avail_list:append(jcard:getEffectiveId())
 				else
 					other_list:append(jcard:getEffectiveId())
 				end
 			end
-			local all_list = sgs.IntList()
 			for _, l in sgs.qlist(avail_list) do
 				all_list:append(l)
 			end
@@ -840,10 +839,8 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 		return false
 	end ,
 	can_trigger = function(self, target)
-		return (target and target:isAlive() and target:hasSkill(self:objectName()))
-				and (target:getPhase() == sgs.Player_Start)
-				and target:canDiscard(target, "h")
-				and hasDelayedTrickXiuluo(target)
+		return target and target:isAlive() and target:hasSkill(self:objectName())and target:getPhase() == sgs.Player_Start
+		and target:canDiscard(target, "h") and hasDelayedTrickXiuluo(target)
 	end
 }
 --[[
@@ -853,7 +850,6 @@ LuaXiuluo = sgs.CreateTriggerSkill{
 	引用：LuaXuanfeng
 	状态：1217验证通过
 ]]--
-
 LuaXuanfengCard = sgs.CreateSkillCard{
 	name = "LuaXuanfengCard" ,
 	filter = function(self, targets, to_select)
