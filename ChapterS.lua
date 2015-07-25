@@ -597,14 +597,14 @@ LuaShensuSlash = sgs.CreateTargetModSkill{
 	相关武将：SP·暴怒战神
 	描述：摸牌阶段，你额外摸两张牌；你的手牌上限+2。
 	引用：LuaShenwei、LuaShenweiDraw
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
-LuaShenweiDraw = sgs.CreateTriggerSkill{
+LuaShenweiDraw = sgs.CreateDrawCardsSkill{
 	name = "#LuaShenwei-draw" ,
-	events = {sgs.DrawNCards} ,
 	frequency = sgs.Skill_Compulsory ,
-	on_trigger = function(self, event, player, data)
-		data:setValue(data:toInt() + 2)
+	draw_num_func = function(self, player, n)
+		player:getRoom():sendCompulsoryTriggerLog(player, "LuaShenwei")
+		return n + 2
 	end
 }
 LuaShenwei = sgs.CreateMaxCardsSkill{
