@@ -1216,23 +1216,21 @@ LuaXuehenFakeMove = sgs.CreateTriggerSkill{
 --[[
 	技能名：血祭
 	相关武将：SP·关银屏
-	描述：出牌阶段限一次，你可以弃置一张红色牌并选择你攻击范围内的至多X名其他角色，对这些角色各造成1点伤害（X为你已损失的体力值），然后这些角色各摸一张牌。
+	描述：出牌阶段限一次，你可以弃置一张红色牌并选择你攻击范围内的至多X名角色：若如此做，你对这些角色各造成1点伤害，然后这些角色各摸一张牌。（X为你已损失的体力值） 
 	引用：LuaXueji
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaXuejiCard = sgs.CreateSkillCard{
 	name = "LuaXuejiCard" ,
 	filter = function(self, targets, to_select)
 		if #targets >= sgs.Self:getLostHp() then return false end
 		if to_select:objectName() == sgs.Self:objectName() then return false end
-		local range_fix = 0
-		if sgs.Self:getWeapon() and (sgs.Self:getWeapon():getEffectiveId() == self:getEffectiveId()) then
-			local weapon = sgs.Self:getWeapon():getRealCard():toWeapon()
-			range_fix = range_fix + weapon:getRange() - 1
-		elseif sgs.Self:getOffensiveHorse() and (sgs.Self:getOffensiveHorse():getEffectiveId() == self:getEffectiveId()) then
-			range_fix = range_fix + 1
+		local rangefix = 0
+		if not self:getSubcards():isEmpty() and sgs.Self:getWeapon() and sgs.Self:getWeapon():getId() == self:getSubcards():first() then
+			local card = sgs.Self:getWeapon():getRealCard():toWeapon()
+			rangefix = rangefix + card:getRange() - sgs.Self:getAttackRange(false)
 		end
-		return sgs.Self:distanceTo(to_select, range_fix) <= sgs.Self:getAttackRange()
+		return sgs.Self:inMyAttackRange(to_select, rangefix)
 	end ,
 	on_use = function(self, room, source, targets)
 		local damage = sgs.DamageStruct()
@@ -1244,27 +1242,22 @@ LuaXuejiCard = sgs.CreateSkillCard{
 		end
 		for _, p in ipairs(targets) do
 			if p:isAlive() then
-				p:drawCards(1)
+				p:drawCards(1, "LuaXueji")
 			end
 		end
 	end
 }
-LuaXueji = sgs.CreateViewAsSkill{
+LuaXueji = sgs.CreateOneCardViewAsSkill{
 	name = "LuaXueji" ,
-	n = 1 ,
-	view_filter = function(self, selected, to_select)
-		if #selected >= 1 then return false end
-		return to_select:isRed() and (not sgs.Self:isJilei(to_select))
-	end ,
-	view_as = function(self, cards)
-		if #cards ~= 1 then return nil end
+	filter_pattern = ".|red!" ,
+	view_as = function(self, card)
 		local first = LuaXuejiCard:clone()
-		first:addSubcard(cards[1]:getId())
+		first:addSubcard(card:getId())
 		first:setSkillName(self:objectName())
 		return first
 	end ,
 	enabled_at_play = function(self, player)
-		return (player:getLostHp() > 0) and player:canDiscard(player, "he") and (not player:hasUsed("#LuaXuejiCard"))
+		return player:getLostHp() > 0 and player:canDiscard(player, "he") and not player:hasUsed("#LuaXuejiCard")
 	end
 }
 --[[
