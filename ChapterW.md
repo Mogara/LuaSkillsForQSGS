@@ -50,17 +50,16 @@
 **相关武将**：1v1·大乔  
 **描述**：每当你成为【杀】的目标后，你可以摸一张牌。   
 **引用**：LuaWanrong  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaWanrong = sgs.CreateTriggerSkill{
 		name = "LuaWanrong",
 		events = {sgs.TargetConfirmed},
 		frequency = sgs.Skill_Frequent,
-			on_trigger=function(self, event, player, data)
-			local room = player:getRoom()
+		on_trigger = function(self, event, player, data)
 			local use = data:toCardUse()
-			if (use.card:isKindOf("Slash") and use.to:contains(player) and room:askForSkillInvoke(player, self:objectName(), data)) then
-				player:drawCards(1)
+			if use.card:isKindOf("Slash") and use.to:contains(player) and player:getRoom():askForSkillInvoke(player, self:objectName(), data) then
+				player:drawCards(1, self:objectName())
 			end
 			return false
 		end
@@ -385,7 +384,7 @@
 					return false
 				end
 			end
-			for _, p in sgs.qlist(player:getRoom():getAllPlayers()) do
+			for _, p in sgs.qlist(room:getAllPlayers()) do
 				if p:hasFlag("WuqianTarget") then
 					p:setFlags("-WuqianTarget")
 					if p:getMark("Armor_Nullified") then
