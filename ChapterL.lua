@@ -1423,14 +1423,13 @@ LuaLuanji = sgs.CreateViewAsSkill{
 --[[
 	技能名：乱武（限定技）
 	相关武将：林·贾诩、SP·贾诩
-	描述：出牌阶段，你可以令所有其他角色各选择一项：对距离最近的另一名角色使用一张【杀】，或失去1点体力。
+	描述：出牌阶段，你可以令所有其他角色对距离最近的另一名角色使用一张【杀】，否则该角色失去1点体力。 
 	引用：LuaLuanwu
-	状态：1217验证通过	
+	状态：0405验证通过	
 ]]--
 LuaLuanwuCard = sgs.CreateSkillCard{
 	name = "LuaLuanwuCard",
 	target_fixed = true,
-	will_throw = true,
 	on_use = function(self, room, source, targets)
 		room:removePlayerMark(source, "@chaos")
 		local players = room:getOtherPlayers(source)
@@ -1438,6 +1437,7 @@ LuaLuanwuCard = sgs.CreateSkillCard{
 			if p:isAlive() then
 				room:cardEffect(self, source, p)
 			end
+			room:getThread():delay()
 		end
 	end,
 	on_effect = function(self, effect)
@@ -1451,24 +1451,18 @@ LuaLuanwuCard = sgs.CreateSkillCard{
 			nearest = math.min(nearest, distance)
 		end
 		local luanwu_targets = sgs.SPlayerList()
-		local count = distance_list:length()
-		for i = 0, count - 1, 1 do
-			if (distance_list:at(i) == nearest) and effect.to:canSlash(players:at(i), nil, false) then
+		for i = 0, distance_list:length() - 1, 1 do
+			if distance_list:at(i) == nearest and effect.to:canSlash(players:at(i), nil, false) then
 				luanwu_targets:append(players:at(i))
 			end
 		end
-		if luanwu_targets:length() > 0 then
-			if not room:askForUseSlashTo(effect.to, luanwu_targets, "@luanwu-slash") then
-				room:loseHp(effect.to)
-			end
-		else
+		if luanwu_targets:length() == 0 or not room:askForUseSlashTo(effect.to, luanwu_targets, "@luanwu-slash") then
 			room:loseHp(effect.to)
 		end
 	end
 }
-LuaLuanwuVS = sgs.CreateViewAsSkill{
+LuaLuanwuVS = sgs.CreateZeroCardViewAsSkill{
 	name = "LuaLuanwu",
-	n = 0,
 	view_as = function(self, cards)
 		return LuaLuanwuCard:clone()
 	end,
@@ -1479,13 +1473,11 @@ LuaLuanwuVS = sgs.CreateViewAsSkill{
 LuaLuanwu = sgs.CreateTriggerSkill{
 	name = "LuaLuanwu" ,
 	frequency = sgs.Skill_Limited ,
-	events = {sgs.GameStart} ,
 	view_as_skill = LuaLuanwuVS ,
-	on_trigger = function(self, event, player, data)
-		player:gainMark("@chaos", 1)
+	limit_mark = "@chaos" ,
+	on_trigger = function()
 	end
 }
-
 --[[
 	技能名：裸衣
 	相关武将：标准·许褚
