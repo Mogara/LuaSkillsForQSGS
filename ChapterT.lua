@@ -505,10 +505,10 @@ LuaTiaoxin = sgs.CreateViewAsSkill{
 }
 --[[
 	技能名：铁骑
-	相关武将：标准·马超、SP·马超、1v1·马超1v1、SP·台版马超
-	描述：当你使用【杀】指定一名角色为目标后，你可以进行一次判定，若判定结果为红色，该角色不可以使用【闪】对此【杀】进行响应。
+	相关武将：标准·马超-旧、SP·马超、1v1·马超1v1、SP·台版马超
+	描述： 每当你指定【杀】的目标后，你可以进行判定：若结果为红色，该角色不能使用【闪】响应此【杀】。 
 	引用：LuaTieji
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 Table2IntList = function(theTable)
 	local result = sgs.IntList()
@@ -517,19 +517,20 @@ Table2IntList = function(theTable)
 	end
 	return result
 end
-LuaTieji = sgs.CreateTriggerSkill{
-	name = "LuaTieji" ,
-	events = {sgs.TargetConfirmed} ,
+LuaNosTieji = sgs.CreateTriggerSkill{
+	name = "LuaNosTieji" ,
+	events = {sgs.TargetSpecified} ,
 	on_trigger = function(self, event, player, data)
 		local use = data:toCardUse()
-		if (player:objectName() ~= use.from:objectName()) or (not use.card:isKindOf("Slash")) then return false end
+		if not use.card:isKindOf("Slash") then return false end
 		local jink_table = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
 		local index = 1
 		for _, p in sgs.qlist(use.to) do
+			if not player:isAlive() then break end
 			local _data = sgs.QVariant()
 			_data:setValue(p)
 			if player:askForSkillInvoke(self:objectName(), _data) then
-				p:setFlags("LuaTiejiTarget")
+				p:setFlags("LuaNosTiejiTarget")
 				local judge = sgs.JudgeStruct()
 				judge.pattern = ".|red"
 				judge.good = true
@@ -539,7 +540,7 @@ LuaTieji = sgs.CreateTriggerSkill{
 				if judge:isGood() then
 					jink_table[index] = 0
 				end
-				p:setFlags("-LuaTiejiTarget")
+				p:setFlags("-LuaNosTiejiTarget")
 			end
 			index = index + 1
 		end
@@ -805,7 +806,7 @@ LuaTuxiAct = sgs.CreateTriggerSkill{
 	end
 }
 --[[
-	技能名：突袭-旧
+	技能名：突袭
 	相关武将：标准·张辽、SP·台版张辽
 	描述：摸牌阶段开始时，你可以放弃摸牌并选择一至两名有手牌的其他角色：若如此做，你依次获得这些角色各一张手牌。 
 	引用：LuaNosTuxi
