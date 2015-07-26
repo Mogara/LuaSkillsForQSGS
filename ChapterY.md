@@ -1269,88 +1269,62 @@
 [返回索引](#技能索引)
 ##援护
 **相关武将**：SP·曹洪  
-**描述**：结束阶段开始时，你可以将一张装备牌置于一名角色的装备区里，根据此牌的类别执行相应效果：武器牌——你弃置该角色距离为1的一名角色的区域里的一张牌；防具牌——该角色摸一张牌；坐骑牌——该角色回复1点体力。  
+**描述**：结束阶段开始时，你可以将一张装备牌置于一名角色装备区内：若此牌为武器牌，你弃置该角色距离1的一名角色区域内的一张牌；若此牌为防具牌，该角色摸一张牌；若此牌为坐骑牌，该角色回复1点体力。   
 **引用**：LuaYuanhu  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaYuanhuCard = sgs.CreateSkillCard{
 		name = "LuaYuanhuCard",
-		target_fixed = false,
-		will_throw = false,
+		will_throw = false ,
+		handling_method = sgs.Card_MethodNone ,
 		filter = function(self, targets, to_select)
-			if #targets == 0 then
-				local id = self:getEffectiveId()
-				local card = sgs.Sanguosha:getCard(id)
-				local equip = card:getRealCard():toEquipCard()
-				local index = equip:location()
-				return to_select:getEquip(index) == nil
-			end
-			return false
+			if #targets ~= 0 then return false end
+			local card = sgs.Sanguosha:getCard(self:getSubcards():first())
+			local equip = card:getRealCard():toEquipCard()
+			local equip_index = equip:location()
+			return to_select:getEquip(equip_index) == nil
 		end,
 		on_effect = function(self, effect)
 			local source = effect.from
-			local target = effect.to
 			local room = source:getRoom()
-			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, source:objectName(), "LuaYuanhu", "")
-			room:moveCardTo(self, source, target, sgs.Player_PlaceEquip, reason)
-			local card = sgs.Sanguosha:getCard(self:getEffectiveId())
+			room:moveCardTo(self, source, effect.to, sgs.Player_PlaceEquip, sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_PUT, source:objectName(), "LuaYuanhu", ""))
+			local card = sgs.Sanguosha:getCard(self:getSubcards():first())
 			if card:isKindOf("Weapon") then
 				local targets = sgs.SPlayerList()
-				local allplayers = room:getAllPlayers()
-				for _,p in sgs.qlist(allplayers) do
-					if target:distanceTo(p) == 1 then
-						if not p:isAllNude() then
-							targets:append(p)
-						end
+				for _,p in sgs.qlist(room:getAllPlayers()) do
+					if effect.to:distanceTo(p) == 1 and source:canDiscard(p, "hej") then
+						targets:append(p)
 					end
 				end
 				if not targets:isEmpty() then
-					local to_dismantle = room:askForPlayerChosen(source, targets, "LuaYuanhu")
-					local card_id = room:askForCardChosen(source, to_dismantle, "hej", "LuaYuanhu")
-					local to_throw = sgs.Sanguosha:getCard(card_id)
-					room:throwCard(to_throw, to_dismantle, source)
+					local to_dismantle = room:askForPlayerChosen(source, targets, "LuaYuanhu", "@yuanhu-discard:"..effect.to:objectName())
+					local card_id = room:askForCardChosen(source, to_dismantle, "hej", "LuaYuanhu", false, sgs.Card_MethodDiscard)
+					room:throwCard(sgs.Sanguosha:getCard(card_id), to_dismantle, source)
 				end
 			elseif card:isKindOf("Armor") then
-				target:drawCards(1)
+				effect.to:drawCards(1, "LuaYuanhu")
 			elseif card:isKindOf("Horse") then
-				local recover = sgs.RecoverStruct()
-				recover.who = source
-				room:recover(target, recover)
+				room:recover(effect.to, sgs.RecoverStruct(source))
 			end
 		end
 	}
-	LuaYuanhuVS = sgs.CreateViewAsSkill{
+	LuaYuanhuVS = sgs.CreateOneCardViewAsSkill{
 		name = "LuaYuanhu",
-		n = 1,
-		view_filter = function(self, selected, to_select)
-			return to_select:isKindOf("EquipCard")
-		end,
-		view_as = function(self, cards)
-			if #cards == 1 then
-				local first = LuaYuanhuCard:clone()
-				first:addSubcard(cards[1]:getId())
-				first:setSkillName(self:objectName())
-				return first
-			end
-		end,
-		enabled_at_play = function(self, player)
-			return true
-		end,
-		enabled_at_response = function(self, player, pattern)
-			return pattern == "@@LuaYuanhu"
+		filter_pattern = "EquipCard",
+		response_pattern = "@@LuaYuanhu",
+		view_as = function(self, card)
+			local first = LuaYuanhuCard:clone()
+			first:addSubcard(card:getId())
+			first:setSkillName(self:objectName())
+			return first
 		end
 	}
-	LuaYuanhu = sgs.CreateTriggerSkill{
+	LuaYuanhu = sgs.CreatePhaseChangeSkill{
 		name = "LuaYuanhu",
-		frequency = sgs.Skill_NotFrequent,
-		events = {sgs.EventPhaseStart},
 		view_as_skill = LuaYuanhuVS,
-		on_trigger = function(self, event, player, data)
-			local room = player:getRoom()
-			if player:getPhase() == sgs.Player_Finish then
-				if not player:isNude() then
-					room:askForUseCard(player, "@@LuaYuanhu", "@yuanhu-equip")
-				end
+		on_phasechange = function(self, player)
+			if player:getPhase() == sgs.Player_Finish and not player:isNude() then
+				player:getRoom():askForUseCard(player, "@@LuaYuanhu", "@yuanhu-equip", -1, sgs.Card_MethodNone)
 			end
 			return false
 		end
