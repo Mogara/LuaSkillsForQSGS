@@ -1,7 +1,7 @@
 代码速查手册（T区）
 ==
 #技能索引：
-[抬榇](#抬榇)、[贪婪](#贪婪)、[探虎](#探虎)、[探囊](#探囊)、[天妒](#天妒)、[天命](#天命)、[天香](#天香)、[天义](#天义)、[挑衅](#挑衅)、[铁骑](#铁骑)、[同疾](#同疾)、[同心](#同心)、[偷渡](#偷渡)、[突骑](#突骑)、[突袭](#突袭)、[突袭-旧](#突袭-旧)、[突袭-1v1](#突袭-1v1)、[屯田](#屯田)
+[抬榇](#抬榇)、[贪婪](#贪婪)、[探虎](#探虎)、[探囊](#探囊)、[天妒](#天妒)、[天命](#天命)、[天香](#天香)、[天义](#天义)、[挑衅](#挑衅)、[铁骑-旧](#铁骑-旧)、[同疾](#同疾)、[同心](#同心)、[偷渡](#偷渡)、[突骑](#突骑)、[突袭](#突袭)、[突袭-旧](#突袭-旧)、[突袭-1v1](#突袭-1v1)、[屯田](#屯田)
 
 [返回目录](README.md#目录)
 ##抬榇
@@ -459,11 +459,11 @@
 	}
 ```
 [返回索引](#技能索引)
-##铁骑
-**相关武将**：标准·马超、SP·马超、1v1·马超1v1、SP·台版马超  
+##铁骑-旧
+**相关武将**：标准·马超-旧、SP·马超、1v1·马超1v1、SP·台版马超  
 **描述**：当你使用【杀】指定一名角色为目标后，你可以进行一次判定，若判定结果为红色，该角色不可以使用【闪】对此【杀】进行响应。  
 **引用**：LuaTieji  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	Table2IntList = function(theTable)
 		local result = sgs.IntList()
@@ -472,19 +472,20 @@
 		end
 		return result
 	end
-	LuaTieji = sgs.CreateTriggerSkill{
-		name = "LuaTieji" ,
-		events = {sgs.TargetConfirmed} ,
+	LuaNosTieji = sgs.CreateTriggerSkill{
+		name = "LuaNosTieji" ,
+		events = {sgs.TargetSpecified} ,
 		on_trigger = function(self, event, player, data)
 			local use = data:toCardUse()
-			if (player:objectName() ~= use.from:objectName()) or (not use.card:isKindOf("Slash")) then return false end
+			if not use.card:isKindOf("Slash") then return false end
 			local jink_table = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
 			local index = 1
 			for _, p in sgs.qlist(use.to) do
+				if not player:isAlive() then break end
 				local _data = sgs.QVariant()
 				_data:setValue(p)
 				if player:askForSkillInvoke(self:objectName(), _data) then
-					p:setFlags("LuaTiejiTarget")
+					p:setFlags("LuaNosTiejiTarget")
 					local judge = sgs.JudgeStruct()
 					judge.pattern = ".|red"
 					judge.good = true
@@ -494,7 +495,7 @@
 					if judge:isGood() then
 						jink_table[index] = 0
 					end
-					p:setFlags("-LuaTiejiTarget")
+					p:setFlags("-LuaNosTiejiTarget")
 				end
 				index = index + 1
 			end
