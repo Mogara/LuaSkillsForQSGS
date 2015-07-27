@@ -291,20 +291,19 @@ LuaTianfu = sgs.CreateTriggerSkill{
 --[[
 	技能名：天命
 	相关武将：铜雀台·汉献帝、SP·刘协
-	描述：当你成为【杀】的目标时，你可以弃置两张牌（不足则全弃，无牌则不弃），然后摸两张牌；若此时全场体力值最多的角色仅有一名（且不是你），该角色也可如此做
-	引用：LuaXTianming
-	状态：1217验证通过
+	描述： 每当你被指定为【杀】的目标时，你可以弃置两张牌，然后摸两张牌。若全场唯一的体力值最多的角色不是你，该角色也可以弃置两张牌，然后摸两张牌。 
+	引用：LuaTianming
+	状态：0405验证通过
 ]]--
-LuaXTianming = sgs.CreateTriggerSkill{
-	name = "LuaXTianming",
-	frequency = sgs.Skill_NotFrequent,
+LuaTianming = sgs.CreateTriggerSkill{
+	name = "LuaTianming",
 	events = {sgs.TargetConfirming},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		local use = data:toCardUse()
 		if use.card:isKindOf("Slash") and room:askForSkillInvoke(player,self:objectName()) then
 			room:askForDiscard(player, self:objectName(), 2, 2, false, true)
-			player:drawCards(2)
+			player:drawCards(2, self:objectName())
 			local max = -1000
 			for _,p in sgs.qlist(room:getAllPlayers()) do
 				if p:getHp() > max then
@@ -321,10 +320,12 @@ LuaXTianming = sgs.CreateTriggerSkill{
 			end
 			local mosthp = maxs:first()
 			if room:askForSkillInvoke(mosthp, self:objectName()) then
+				room:doAnimate(sgs.QSanProtocol_S_ANIMATE_INDICATE, player:objectName(), mosthp:objectName())
 				room:askForDiscard(mosthp, self:objectName(), 2, 2, false, true)
 				mosthp:drawCards(2)
 			end
 		end
+		return false
 	end
 }
 --[[
