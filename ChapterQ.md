@@ -1130,39 +1130,45 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 [返回索引](#技能索引)
 ##倾国
 **相关武将**：标准·甄姬、SP·甄姬、SP·台版甄姬  
-**描述**：你可以将一张黑色手牌当【闪】使用或打出。  
+**描述**：你可以将一张黑色手牌当【闪】使用或打出。   
 **引用**：LuaQingguo  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaQingguo = sgs.CreateOneCardViewAsSkill{
 		name = "LuaQingguo", 
 		response_pattern = "jink",
 		filter_pattern = ".|black|.|hand",
+		response_or_use = true,
 		view_as = function(self, card) 
 			local jink = sgs.Sanguosha:cloneCard("jink",card:getSuit(),card:getNumber())
-			jink:setSkillName(self:objectName());
-			jink:addSubcard(card:getId());
+			jink:setSkillName(self:objectName())
+			jink:addSubcard(card:getId())
 			return jink
-		end, 
+		end
 	}
 ```
 [返回索引](#技能索引)
 ##倾国-1V1
 **相关武将**：1v1·甄姬1v1  
-**描述**：你可以将一张装备区的装备牌当【闪】使用或打出。  
-**引用**：Lua1V1Qingguo  
-**状态**：1217验证通过
+**描述**：你可以将一张装备区的牌当【闪】使用或打出。  
+**引用**：LuaKOFQingguo  
+**状态**：0405验证通过
 ```lua
-	Lua1v1Qingguo = sgs.CreateOneCardViewAsSkill{
-		name = "Lua1v1Qingguo", 
-		response_pattern = "jink",
+	LuaKOFQingguo = sgs.CreateOneCardViewAsSkill{
+		name = "LuaKOFQingguo", 
 		filter_pattern = ".|.|.|equipped",
 		view_as = function(self, card) 
 			local jink = sgs.Sanguosha:cloneCard("jink",card:getSuit(),card:getNumber())
 			jink:setSkillName(self:objectName());
 			jink:addSubcard(card:getId());
 			return jink
-		end, 
+		end,
+		enabled_at_play = function(self, target)
+			return false
+		end,
+		enabled_at_response = function(self, target, pattern)
+			return pattern == "jink" and target:getEquips():length() > 0
+		end
 	}
 ```
 [返回索引](#技能索引)
