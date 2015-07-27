@@ -667,12 +667,12 @@
 [返回索引](#技能索引)
 ##虎啸
 **相关武将**：SP·关银屏  
-**描述**：你于出牌阶段每使用一张【杀】被【闪】抵消，此阶段你可以额外使用一张【杀】。  
+**描述**：每当你于出牌阶段使用【杀】被【闪】抵消后，本阶段你可以额外使用一张【杀】。   
 **引用**：LuaHuxiaoCount、LuaHuxiao、LuaHuxiaoClear  
-**状态**：1217验证通过  
+**状态**：0405证通过  
 ```lua
 	LuaHuxiao = sgs.CreateTargetModSkill{
-		name = "LuaHuxiao",		
+		name = "LuaHuxiao",
 		residue_func = function(self, from)
 			if from:hasSkill(self:objectName()) then
 				return from:getMark(self:objectName())
@@ -683,7 +683,7 @@
 	}
 	LuaHuxiaoCount = sgs.CreateTriggerSkill{
 		name = "#LuaHuxiao-count" ,
-		events = {sgs.SlashMissed,sgs.EventPhaseChanging},	
+		events = {sgs.SlashMissed,sgs.EventPhaseChanging},
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			if event == sgs.SlashMissed then
