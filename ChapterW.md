@@ -723,54 +723,25 @@
 [返回索引](#技能索引)
 ##武继
 **相关武将**：SP·关银屏  
-**描述**：**觉醒技，**结束阶段开始时，若你于此回合内已造成3点或更多伤害，你加1点体力上限，回复1点体力，然后失去技能“虎啸”。  
-**引用**：LuaWujiCount、LuaWuji  
-**状态**：1217验证通过
+**描述**：**觉醒技，**结束阶段开始时，若你于本回合造成了至少3点伤害，你增加1点体力上限，回复1点体力，然后失去“虎啸”。 
+**引用**：LuaWuji  
+**状态**：0405验证通过
 ```lua
-	LuaWujiCount = sgs.CreateTriggerSkill{
-		name = "#LuaWuji-count" ,
-		events = {sgs.PreDamageDone, sgs.EventPhaseChanging} ,
-		on_trigger = function(self, event, player, data)
-			local room = player:getRoom()
-			if event == sgs.PreDamageDone then
-				local damage = data:toDamage()
-				if damage.from and damage.from:isAlive() and (damage.from:objectName() == room:getCurrent():objectName()) and (damage.from:getMark("LuaWuji") == 0) then
-					room:addPlayerMark(damage.from, "LuaWuji_damage", damage.damage)
-				end
-			elseif event == sgs.EventPhaseChanging then
-				local change = data:toPhaseChange()
-				if change.to == sgs.Player_NotActive then
-					if player:getMark("LuaWuji_damage") > 0 then
-						room:setPlayerMark(player, "LuaWuji_damage", 0)
-					end
-				end
-			end
-			return false
-		end ,
-		can_trigger = function(self, target)
-			return target
-		end
-	}
-	LuaWuji = sgs.CreateTriggerSkill{
+	LuaWuji = sgs.CreatePhaseChangeSkill{
 		name = "LuaWuji",
 		frequency = sgs.Skill_Wake,
-		events = {sgs.EventPhaseStart} ,
-		on_trigger = function(self, event, player, data)
+		on_phasechange = function(self, player)
 			local room = player:getRoom()
-			room:addPlayerMark(player, "LuaWuji")
+			room:setPlayerMark(player, self:objectName(), 1)
 			if room:changeMaxHpForAwakenSkill(player, 1) then
-				local recover = sgs.RecoverStruct()
-				recover.who = player
-				room:recover(player, recover)
+				room:recover(player, sgs.RecoverStruct(player))
 				room:detachSkillFromPlayer(player, "huxiao")
 			end
 			return false
 		end ,
 		can_trigger = function(self, target)
-			return (target and target:isAlive() and target:hasSkill(self:objectName()))
-					and (target:getPhase() == sgs.Player_Finish)
-					and (target:getMark("LuaWuji") == 0)
-					and (target:getMark("LuaWuji_damage") >= 3)
+			return target and target:isAlive() and target:hasSkill(self:objectName()) and target:getPhase() == sgs.Player_Finish 
+			and target:getMark(self:objectName()) == 0 and target:getMark("damage_point_round") >= 3
 		end
 	}
 ```
