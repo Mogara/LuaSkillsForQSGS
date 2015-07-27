@@ -367,24 +367,32 @@
 **相关武将**：风·周泰  
 **描述**：每当一名角色的手牌因另一名角色的弃置或获得为手牌而失去后，你可以失去1点体力：若如此做，该角色摸两张牌。   
 **引用**：LuaFenji  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaFenji = sgs.CreateTriggerSkill{
 		name = "LuaFenji",
-		events = {sgs.CardsMoveOneTime},	
+		events = {sgs.CardsMoveOneTime},
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
 			local move = data:toMoveOneTime()
-			if not move.from then return false end
-			if player:getHp() > 0 and move.from:isAlive() and move.from_places:contains(sgs.Player_PlaceHand) 
-				and move.reason.m_reason == sgs.CardMoveReason_S_REASON_DISMANTLE
-					and move.reason.m_playerId ~= move.reason.m_targetId
-					or (move.to and move.to:objectName() ~= move.from:objectName() and move.to_place == sgs.Player_PlaceHand) then
-				if room:askForSkillInvoke(player, self:objectName(), data) then
+			if player:getHp() > 0 and move.from and move.from:isAlive() and move.from_places:contains(sgs.Player_PlaceHand)
+				and ((move.reason.m_reason == sgs.CardMoveReason_S_REASON_DISMANTLE
+				and move.reason.m_playerId ~= move.reason.m_targetId)
+				or (move.to and move.to:objectName() ~= move.from:objectName() and move.to_place == sgs.Player_PlaceHand
+					and move.reason.m_reason ~= sgs.CardMoveReason_S_REASON_GIVE
+					and move.reason.m_reason ~= sgs.CardMoveReason_S_REASON_SWAP)) then
+				move.from:setFlags("LuaFenjiMoveFrom") --For AI
+				local invoke = room:askForSkillInvoke(player, self:objectName(), data)
+				move.from:setFlags("-LuaFenjiMoveFrom")
+				if invoke then
 					room:loseHp(player)
 					if move.from:isAlive() then
-						local from = room:findPlayer(move.from:getGeneralName())
-						room:drawCards(from,2)
+						for _,p in sgs.qlist(room:getAllPlayers()) do
+							if p:objectName() == move.from:objectName() then
+								room:drawCards(p, 2, "LuaFenji")
+								break
+							end
+						end
 					end
 				end
 			end
