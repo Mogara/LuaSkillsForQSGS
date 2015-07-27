@@ -745,9 +745,9 @@
 [返回索引](#技能索引)
 ##竭缘
 **相关武将**：铜雀台·灵雎、SP·灵雎  
-**描述**：当你对一名其他角色造成伤害时，若其体力值大于或等于你的体力值，你可弃置一张黑色手牌令此伤害+1；当你受到一名其他角色造成的伤害时，若其体力值大于或等于你的体力值，你可弃置一张红色手牌令此伤害-1  
+**描述**：每当你对一名其他角色造成伤害时，若其体力值大于或等于你的体力值，你可以弃置一张黑色手牌：若如此做，此伤害+1。每当你受到一名其他角色造成的伤害时，若其体力值大于或等于你的体力值，你可以弃置一张红色手牌：若如此做，此伤害-1。   
 **引用**：LuaJieyuan  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaJieyuan = sgs.CreateTriggerSkill{
 		name = "LuaJieyuan" ,
@@ -756,21 +756,15 @@
 			local room = player:getRoom()
 			local damage = data:toDamage()
 			if event == sgs.DamageCaused then
-				if damage.to and damage.to:isAlive() and (damage.to:getHp() >= player:getHp())
-						and (damage.to:objectName() ~= player:objectName()) and player:canDiscard(player, "h") then
-					if room:askForCard(player, ".black", "@jieyuan-increase:" .. damage.to:objectName(), data, self:objectName()) then
-						damage.damage = damage.damage + 1
-						data:setValue(damage)
-					end
+				if damage.to and damage.to:isAlive() and damage.to:getHp() >= player:getHp() and damage.to:objectName() ~= player:objectName() and player:canDiscard(player, "h") and room:askForCard(player, ".black", "@jieyuan-increase:" .. damage.to:objectName(), data, self:objectName()) then
+					damage.damage = damage.damage + 1
+					data:setValue(damage)
 				end
 			elseif event == sgs.DamageInflicted then
-				if damage.from and damage.from:isAlive() and (damage.from:getHp() >= player:getHp())
-						and (damage.from:objectName() ~= player:objectName()) and player:canDiscard(player, "h") then
-					if room:askForCard(player, ".red", "@jieyuan-decrease:" .. damage.from:objectName(), data, self:objectName()) then
-						damage.damage = damage.damage - 1
-						data:setValue(damage)
-						if damage.damage < 1 then return true end
-					end
+				if damage.from and damage.from:isAlive() and damage.from:getHp() >= player:getHp() and damage.from:objectName() ~= player:objectName() and player:canDiscard(player, "h") and room:askForCard(player, ".red", "@jieyuan-decrease:" .. damage.from:objectName(), data, self:objectName()) then
+					damage.damage = damage.damage - 1
+					data:setValue(damage)
+					if damage.damage < 1 then return true end
 				end
 			end
 			return false
