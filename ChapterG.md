@@ -64,27 +64,21 @@
 **相关武将**：僵尸·僵尸  
 **描述**：**锁定技，**你的装备牌都视为铁锁连环。  
 **引用**：LuaXGanran  
-**状态**：1217验证通过
+**状态**：0405验证通过
 
 ```lua
-	LuaXGanran = sgs.CreateFilterSkill{
-		name = "LuaXGanran",
+	LuaGanran = sgs.CreateFilterSkill{
+		name = "LuaGanran",
 		view_filter = function(self, to_select)
 			local room = sgs.Sanguosha:currentRoom()
 			local place = room:getCardPlace(to_select:getEffectiveId())
-			if place == sgs.Player_PlaceHand then
-				return to_select:isKindOf("EquipCard")
-			end
-			return false
+			return place == sgs.Player_PlaceHand and to_select:getTypeId() == sgs.Card_TypeEquip
 		end,
 		view_as = function(self, card)
-			local id = card:getId()
-			local suit = card:getSuit()
-			local point = card:getNumber()
-			local chain = sgs.Sanguosha:cloneCard("iron_chain", suit, point)
-			chain:setSkillName(self:objectName())
-			local vs_card = sgs.Sanguosha:getWrappedCard(id)
-			vs_card:takeOver(chain)
+			local ironchain = sgs.Sanguosha:cloneCard("iron_chain", card:getSuit(), card:getNumber())
+			ironchain:setSkillName(self:objectName())
+			local vs_card = sgs.Sanguosha:getWrappedCard(card:getEffectiveId())
+			vs_card:takeOver(ironchain)
 			return vs_card
 		end,
 	}
