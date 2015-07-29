@@ -2,7 +2,7 @@
 代码速查手册（Z区）
 ==
 #技能索引
-[灾变](#灾变)、[再起](#再起)、[凿险](#凿险)、[早夭](#早夭)、[战神](#战神)、[昭烈](#昭烈)、[昭心](#昭心)、[贞烈](#贞烈)、[贞烈-旧](#贞烈-旧)、[鸩毒](#鸩毒)、[镇威](#镇威)、[镇卫](#镇卫)、[争锋](#争锋)、[争功](#争功)、[争功-0610版](#争功-0610版)、[征服](#征服)、[整军](#整军)、[直谏](#直谏)、[直言](#直言)、[志继](#志继)、[制霸](#制霸)、[制衡-制霸孙权](#制衡-制霸孙权)、[制衡](#制衡)、[智迟](#智迟)、[智愚](#智愚)、[忠义](#忠义)、[咒缚](#咒缚)、[筑楼](#筑楼)、[追忆](#追忆)、[惴恐](#惴恐)、[资粮](#资粮)、[自立](#自立)、[自守](#自守)、[宗室](#宗室)、[纵火](#纵火)、[纵适](#纵适)、[纵玄](#纵玄)、[醉乡](#醉乡)
+[灾变](#灾变)、[再起](#再起)、[凿险](#凿险)、[早夭](#早夭)、[战神](#战神)、[昭烈](#昭烈)、[昭心](#昭心)、[贞烈](#贞烈)、[贞烈-旧](#贞烈-旧)、[鸩毒](#鸩毒)、[镇威](#镇威)、[镇卫](#镇卫)、[争锋](#争锋)、[争功](#争功)、[争功-0610版](#争功-0610版)、[征服](#征服)、[整军](#整军)、[直谏](#直谏)、[直言](#直言)、[志继](#志继)、[制霸](#制霸)、[制衡-制霸孙权](#制衡-制霸孙权)、[制衡](#制衡)、[智迟](#智迟)、[智愚](#智愚)、[忠义](#忠义)、[咒缚](#咒缚)、[筑楼](#筑楼)、[追忆](#追忆)、[惴恐](#惴恐)、[资粮](#资粮)、[自立](#自立)、[自守](#自守)、[宗室](#宗室)、[纵火](#纵火)、[纵适](#纵适)、[诈降](#诈降)、[纵玄](#纵玄)、[醉乡](#醉乡)
 
 [返回目录](README.md#目录)
 ##灾变
@@ -1644,6 +1644,88 @@
 				return target
 			end
 		}
+```
+[返回索引](#技能索引)
+
+##诈降
+**相关武将**：界限突破·黄盖  
+**描述**：**锁定技，**每当你失去1点体力后，你摸三张牌，若此时为你的回合，本回合，你可以额外使用一张【杀】，你使用红色【杀】无距离限制且此【杀】指定目标后，目标角色不能使用【闪】响应此【杀】。     
+**引用**：LuaZhaxiang、LuaZhaxiangRedSlash、LuaZhaxiangTargetMod  
+**状态**：0405验证通过  
+```lua
+	LuaZhaxiang = sgs.CreateTriggerSkill {
+		name = "LuaZhaxiang",
+		events = {sgs.HpLost, sgs.EventPhaseChanging},
+		frequency = sgs.Skill_Compulsory,
+		priority = function(self, event, priority)
+			if event == sgs.EventPhaseChanging then
+				return priority == 8
+			end
+			return self:getPriority(event)
+		end,
+		can_trigger = function(self, target)
+			return target
+		end,
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			if event == sgs.HpLost and player and player:isAlive() and player:hasSkill(self:objectName()) then
+				local lose = data:toInt()
+				for i = 1, lose, 1 do
+					room:sendCompulsoryTriggerLog(player, self:objectName())
+					player:drawCards(3)
+					if player:getPhase() == sgs.Player_Play then
+						room:addPlayerMark(player, self:objectName())
+					end
+				end
+			elseif event == sgs.EventPhaseChanging then
+				local change = data:toPhaseChange()
+				if change.to == sgs.Player_NotActive or change.to == sgs.Player_RoundStart then
+					room:setPlayerMark(player, self:objectName(), 0)
+				end
+			end
+			return false
+		end
+	}
+	LuaZhaxiangRedSlash = sgs.CreateTriggerSkill {
+		name = "#LuaZhaxiang",
+		events = {sgs.TargetSpecified},
+		frequency = sgs.Skill_Compulsory,
+		can_trigger = function(self, target)
+			return target and target:isAlive() and target:getMark("LuaZhaxiang") > 0
+		end,
+		on_trigger = function(self, event, player, data)
+			local use = data:toCardUse()
+			if not use.card:isKindOf("Slash") or not use.card:isRed() then return end
+			local jink_list = sgs.QList2Table(player:getTag("Jink_"..use.card:toString()):toIntList())
+			local index = 1
+			local new_jink_list = sgs.IntList()
+			for _, p in sgs.qlist(use.to) do
+				jink_list[index] = 0
+				index = index + 1
+			end
+			local result = sgs.IntList()
+			for i = 1, #jink_list, 1 do
+				result:append(jink_list[i])
+			end
+			local d = sgs.QVariant()
+			d:setValue(result)
+			player:setTag("Jink_"..use.card:toString(), d)
+			return false
+		end
+	}		
+	LuaZhaxiangTargetMod = sgs.CreateTargetModSkill{
+		name = "#LuaZhaxiang-target",
+		distance_limit_func = function(self, from, card)
+			if from:getMark("LuaZhaxiang") > 0 and card:isRed() then
+				return 1000
+			else
+				return 0
+			end
+		end,
+		residue_func = function(self, from)
+			return from:getMark("LuaZhaxiang")
+		end
+	}
 ```
 [返回索引](#技能索引)
 
