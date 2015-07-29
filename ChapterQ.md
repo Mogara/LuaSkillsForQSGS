@@ -1267,27 +1267,26 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 [返回索引](#技能索引)
 ##权计
 **相关武将**：一将成名·钟会  
-**描述**：每当你受到1点伤害后，你可以摸一张牌，然后将一张手牌置于你的武将牌上，称为“权”；每有一张“权”，你的手牌上限便+1。  
-**引用**：LuaQuanji、LuaQuanjiKeep、LuaQuanjiRemove  
-**状态**：1217验证通过
+**描述**：每当你受到1点伤害后，你可以摸一张牌，然后将一张手牌置于武将牌上，称为“权”。每有一张“权”，你的手牌上限+1。  
+**引用**：LuaQuanji、LuaQuanjiKeep  
+**状态**：0405验证通过
 ```lua
-	LuaQuanji = sgs.CreateTriggerSkill{
+	LuaQuanji = sgs.CreateMasochismSkill{
 		name = "LuaQuanji",
 		frequency = sgs.Skill_Frequent,
-		events = {sgs.Damaged},
-		on_trigger = function(self, event, player, data)
-			local damage = data:toDamage()
+		on_damaged = function(self, player, damage)
 			local room = player:getRoom()
 			local x = damage.damage
 			for i = 0, x - 1, 1 do
 				if player:askForSkillInvoke(self:objectName()) then
-					room:drawCards(player, 1)
+					room:drawCards(player, 1, self:objectName())
 					if not player:isKongcheng() then
-						local card_id
+						local card_id = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
 						if player:getHandcardNum() == 1 then
 							card_id = player:handCards():first()
+							room:getThread():delay()
 						else
-							card_id = room:askForExchange(player, self:objectName(), 1, false, "QuanjiPush"):getSubcards():first()
+							card_id = room:askForExchange(player, self:objectName(), 1, 1, false, "QuanjiPush"):getSubcards():first()
 						end
 						player:addToPile("power", card_id)
 					end
@@ -1297,26 +1296,13 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 	}
 	LuaQuanjiKeep = sgs.CreateMaxCardsSkill{
 		name = "#LuaQuanji-keep",
+		frequency = sgs.Skill_Frequent,
 		extra_func = function(self, target)
 			if target:hasSkill(self:objectName()) then
 				return target:getPile("power"):length()
 			else
 				return 0
 			end
-		end
-	}
-	LuaQuanjiRemove = sgs.CreateTriggerSkill{
-		name = "#LuaQuanjiRemove",
-		frequency = sgs.Skill_Frequent,
-		events = {sgs.EventLoseSkill},
-		on_trigger = function(self, event, player, data)
-			if data:toString() == "LuaQuanji" then
-				player:clearOnePrivatePile("power")
-			end
-			return false
-		end,
-		can_trigger = function(self, target)
-			return target
 		end
 	}
 ```
