@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（Z区）
 	技能索引：
-		灾变、再起、凿险、早夭、战神、昭烈、昭心、贞烈、贞烈、鸩毒、镇威、镇卫、争锋、争功、争功、征服、整军、直谏、直言、志继、制霸、制霸、制衡、智迟、智愚、忠义、咒缚、筑楼、追忆、惴恐、资粮、自立、自守、宗室、纵火、纵适、纵玄、醉乡
+		灾变、再起、凿险、早夭、战神、昭烈、昭心、贞烈、贞烈、鸩毒、镇威、镇卫、争锋、争功、争功、征服、整军、直谏、直言、志继、制霸、制霸、制衡、智迟、智愚、忠义、咒缚、筑楼、追忆、惴恐、资粮、自立、自守、宗室、纵火、纵适、诈降、纵玄、醉乡
 ]]--
 --[[
 	技能名：灾变（锁定技）
@@ -1587,6 +1587,86 @@ LuaZongshih = sgs.CreateTriggerSkill{
 	end
 }
 --[[
+	技能名：诈降（锁定技）
+	相关武将：界限突破·黄盖
+	描述：每当你失去1点体力后，你摸三张牌，若此时为你的回合，本回合，你可以额外使用一张【杀】，你使用红色【杀】无距离限制且此【杀】指定目标后，目标角色不能使用【闪】响应此【杀】。 
+	引用：LuaZhaxiang、LuaZhaxiangRedSlash、LuaZhaxiangTargetMod
+	状态：0405验证通过
+]]--
+LuaZhaxiang = sgs.CreateTriggerSkill {
+	name = "LuaZhaxiang",
+	events = {sgs.HpLost, sgs.EventPhaseChanging},
+	frequency = sgs.Skill_Compulsory,
+	priority = function(self, event, priority)
+		if event == sgs.EventPhaseChanging then
+			return priority == 8
+		end
+		return self:getPriority(event)
+	end,
+	can_trigger = function(self, target)
+		return target
+	end,
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		if event == sgs.HpLost and player and player:isAlive() and player:hasSkill(self:objectName()) then
+			local lose = data:toInt()
+			for i = 1, lose, 1 do
+				room:sendCompulsoryTriggerLog(player, self:objectName())
+				player:drawCards(3)
+				if player:getPhase() == sgs.Player_Play then
+					room:addPlayerMark(player, self:objectName())
+				end
+			end
+		elseif event == sgs.EventPhaseChanging then
+			local change = data:toPhaseChange()
+			if change.to == sgs.Player_NotActive or change.to == sgs.Player_RoundStart then
+				room:setPlayerMark(player, self:objectName(), 0)
+			end
+		end
+		return false
+	end
+}
+LuaZhaxiangRedSlash = sgs.CreateTriggerSkill {
+	name = "#LuaZhaxiang",
+	events = {sgs.TargetSpecified},
+	frequency = sgs.Skill_Compulsory,
+	can_trigger = function(self, target)
+		return target and target:isAlive() and target:getMark("LuaZhaxiang") > 0
+	end,
+	on_trigger = function(self, event, player, data)
+		local use = data:toCardUse()
+		if not use.card:isKindOf("Slash") or not use.card:isRed() then return end
+		local jink_list = sgs.QList2Table(player:getTag("Jink_"..use.card:toString()):toIntList())
+		local index = 1
+		local new_jink_list = sgs.IntList()
+		for _, p in sgs.qlist(use.to) do
+			jink_list[index] = 0
+			index = index + 1
+		end
+		local result = sgs.IntList()
+		for i = 1, #jink_list, 1 do
+			result:append(jink_list[i])
+		end
+		local d = sgs.QVariant()
+		d:setValue(result)
+		player:setTag("Jink_"..use.card:toString(), d)
+		return false
+	end
+}		
+LuaZhaxiangTargetMod = sgs.CreateTargetModSkill{
+	name = "#LuaZhaxiang-target",
+	distance_limit_func = function(self, from, card)
+		if from:getMark("LuaZhaxiang") > 0 and card:isRed() then
+			return 1000
+		else
+			return 0
+		end
+	end,
+	residue_func = function(self, from)
+		return from:getMark("LuaZhaxiang")
+	end
+}
+--[[
 	技能名：纵玄
 	相关武将：一将成名2013·虞翻
 	描述：当你的牌因弃置而置入弃牌堆前，你可以将其中任意数量的牌以任意顺序依次置于牌堆顶。
@@ -1689,11 +1769,6 @@ LuaZongxuan = sgs.CreateTriggerSkill{
 		return
 	end,
 }
---[[
-	技能名：醉乡（限定技）
-	相关武将：☆SP·庞统
-	描述：准备阶段开始时，你可以将牌堆顶的三张牌置于你的武将牌上。此后每个准备阶段开始时，你重复此流程，直到你的武将牌上出现同点数的“醉乡牌”，然后你获得所有“醉乡牌”（不能发动“漫卷”）。你不能使用或打出“醉乡牌”中存在的类别的牌，且这些类别的牌对你无效。
-]]--
 --[[
 	技能名：醉乡（限定技）
 	相关武将：☆SP·庞统
