@@ -1472,41 +1472,35 @@
 
 ##自立
 **相关武将**：一将成名·钟会  
-**描述**：觉醒技准备阶段开始时，若“权”大于或等于三张，你减1点体力上限，摸两张牌或回复1点体力，然后获得技能“排异”。  
+**描述**：**觉醒技，**准备阶段开始时，若“权”大于或等于三张，你失去1点体力上限，摸两张牌或回复1点体力，然后获得“排异”。  
 **引用**：LuaZili  
-**状态**：1217验证通过  
-**备注**：觉醒获得的排异为自带技能  
+**状态**：0405验证通过  
 ```lua
-		LuaZili = sgs.CreateTriggerSkill{
-			name = "LuaZili" ,
-			frequency = sgs.Skill_Wake ,
-			events = {sgs.EventPhaseStart} ,
-			on_trigger = function(self, event, player, data)
-				local room = player:getRoom()
-				room:addPlayerMark(player, "LuaZili")
-				if room:changeMaxHpForAwakenSkill(player) then
-					if player:isWounded() then
-						if room:askForChoice(player, self:objectName(), "recover+draw") == "recover" then
-							local recover = sgs.RecoverStruct()
-							recover.who = player
-							room:recover(player, recover)
-						else
-							room:drawCards(player, 2)
-						end
-					else
-						room:drawCards(player, 2)
-					end
+	LuaZili = sgs.CreatePhaseChangeSkill{
+		name = "LuaZili" ,
+		frequency = sgs.Skill_Wake ,
+		events = {sgs.EventPhaseStart} ,
+		on_phasechange = function(self, player)
+			local room = player:getRoom()
+			room:notifySkillInvoked(player, self:objectName())
+			room:setPlayerMark(player, self:objectName(), 1)
+			if room:changeMaxHpForAwakenSkill(player) then
+				if player:isWounded() and room:askForChoice(player, self:objectName(), "recover+draw") == "recover" then
+					room:recover(player, sgs.RecoverStruct(player))
+				else
+					room:drawCards(player, 2)
+				end
+				if player:getMark(self:objectName()) == 1 then
 					room:acquireSkill(player, "paiyi")
 				end
-				return false
-			end ,
-			can_trigger = function(self, target)
-				return (target and target:isAlive() and target:hasSkill(self:objectName()))
-				   and (target:getPhase() == sgs.Player_Start)
-				   and (target:getMark("LuaZili") == 0)
-				   and (target:getPile("power"):length() >= 3)
 			end
-		}
+			return false
+		end ,
+		can_trigger = function(self, target)
+			return target and target:isAlive() and target:hasSkill(self:objectName()) and target:getPhase() == sgs.Player_Start
+			and target:getMark(self:objectName()) == 0 and target:getPile("power"):length() >= 3
+		end
+	}
 ```
 [返回索引](#技能索引)
 
