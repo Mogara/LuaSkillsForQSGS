@@ -1429,7 +1429,6 @@ LuaZiliang = sgs.CreateTriggerSkill{
 LuaZili = sgs.CreatePhaseChangeSkill{
 	name = "LuaZili" ,
 	frequency = sgs.Skill_Wake ,
-	events = {sgs.EventPhaseStart} ,
 	on_phasechange = function(self, player)
 		local room = player:getRoom()
         room:notifySkillInvoked(player, self:objectName())
