@@ -195,17 +195,17 @@ LuaQiluan = sgs.CreateTriggerSkill{
 }
 --[[
 	技能名：奇才（锁定技）
-	相关武将：标准·黄月英
+	相关武将：标准·黄月英、JSP·黄月英
 	描述：你使用锦囊牌无距离限制。你装备区里除坐骑牌外的牌不能被其他角色弃置。
 	状态：尚未完成
-	备注：后半部分被写入源码，详见Player::canDiscard
+	备注：前半部分与奇才一样，后半部分被写入源码，详见Player::canDiscard
 ]]--
 --[[
 	技能名：奇才（锁定技）
 	相关武将：怀旧-标准·黄月英-旧、SP·台版黄月英
 	描述：你使用锦囊牌时无距离限制。
 	引用：LuaNosQicai
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaNosQicai = sgs.CreateTargetModSkill{
 	name = "LuaNosQicai" ,
