@@ -1,9 +1,40 @@
 代码速查手册（N区）
 ==
 #技能索引
-[逆乱](#逆乱)、[鸟翔](#鸟翔)、[涅槃](#涅槃)
+[纳蛮](#纳蛮)、[逆乱](#逆乱)、[鸟翔](#鸟翔)、[涅槃](#涅槃)
 
 [返回目录](README.md#目录)
+##纳蛮  
+**相关武将**：SP·马良  
+**描述**：每当其他角色打出的【杀】因打出而置入弃牌堆时，你可以获得之。  
+**引用**：LuaNaman
+**状态**：0405验证通过
+```lua
+         LuaNaman = sgs.CreateTriggerSkill{
+	name = "LuaNaman",
+	events = {sgs.BeforeCardsMove}, 
+	on_trigger = function(self, event, player, data)
+		local room =  player:getRoom()
+		local move = data:toMoveOneTime()
+		if (move.to_place ~= sgs.Player_DiscardPile) then return end
+		local to_obtain = nil
+		if bit32.band(move.reason.m_reason, sgs.CardMoveReason_S_MASK_BASIC_REASON) == sgs.CardMoveReason_S_REASON_RESPONSE then 
+			if move.from and player:objectName() == move.from:objectName() then return end 
+			to_obtain = move.reason.m_extraData:toCard()
+			if not to_obtain or not to_obtain:isKindOf("Slash") then return end
+		else
+			return 
+		end
+		if to_obtain and room:askForSkillInvoke(player, self:objectName(), data) then 
+			room:obtainCard(player, to_obtain)
+			move:removeCardIds(move.card_ids)
+			data:setValue(move)
+		end
+	return
+	end,
+}
+```
+[返回索引](#技能索引)
 ##逆乱  
 **相关武将**：1v1·韩遂  
 **描述**：对手的结束阶段开始时，若其当前的体力值比你大，或其于此回合内对你使用过【杀】，你可以将一张黑色牌当【杀】对其使用。   

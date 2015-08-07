@@ -49,7 +49,7 @@ If you find BUG in reading, please [click here](https://github.com/DGAH/LuaSkill
 - [Chapter M](ChapterM.md)  
 [马术](ChapterM.md#马术)、[蛮裔](ChapterM.md#蛮裔)、[漫卷](ChapterM.md#漫卷)、[猛进](ChapterM.md#猛进)、[秘计](ChapterM.md#秘计)、[秘计-旧](ChapterM.md#秘计-旧)、[密信](ChapterM.md#密信)、[密诏](ChapterM.md#密诏)、[灭计](ChapterM.md#灭计)、[名士](ChapterM.md#名士)、[名士-国](ChapterM.md#名士-国)、[明策](ChapterM.md#明策)、[明鉴](ChapterM.md#明鉴)、[明哲](ChapterM.md#明哲)、[谋断](ChapterM.md#谋断)、[谋溃](ChapterM.md#谋溃)、[谋诛](ChapterM.md#谋诛)
 - [Chapter N](ChapterN.md)  
-[逆乱](ChapterN.md#逆乱)、[鸟翔](ChapterN.md#鸟翔)、[涅槃](ChapterN.md#涅槃)
+[纳蛮](ChapterN.md#纳蛮)、[逆乱](ChapterN.md#逆乱)、[鸟翔](ChapterN.md#鸟翔)、[涅槃](ChapterN.md#涅槃)
 - Chapter O **暂无技能**
 - [Chapter P](ChapterP.md)  
 [排异](ChapterP.md#排异)、[咆哮](ChapterP.md#咆哮)、[翩仪](ChapterP.md#翩仪)、[破军](ChapterP.md#破军)、[普济](ChapterP.md#普济)

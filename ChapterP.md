@@ -6,56 +6,43 @@
 [返回目录](README.md#目录)
 ##排异
 **相关武将**：一将成名·钟会  
-**描述**：出牌阶段限一次，你可以将一张“权”置入弃牌堆并选择一名角色，该角色摸两张牌。然后若该角色手牌数大于你的手牌数，你对其造成1点伤害。  
+**描述**：出牌阶段限一次，你可以将一张“权”置入弃牌堆并选择一名角色：若如此做，该角色摸两张牌：若其手牌多于你，该角色受到1点伤害。  
 **引用**：LuaPaiyi  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaPaiyiCard = sgs.CreateSkillCard{
 		name = "LuaPaiyiCard",
-		target_fixed = false,
-		will_throw = true,
+		will_throw = false,
+		handling_method = sgs.Card_MethodNone,
 		filter = function(self, targets, to_select)
 			return #targets == 0
 		end,
-		on_use = function(self, room, source, targets)
-			local target = targets[1]
+		on_effect = function(self, effect)
+			local source = effect.from
+			local target = effect.to
+			local room = source:getRoom()
 			local powers = source:getPile("power")
-			if powers:length() > 0 then
-				local id
-				if powers:length() == 1 then
-					id = powers:first()
-				else
-					room:fillAG(powers, source)
-					id = room:askForAG(source, powers, false, self:objectName())
-					room:clearAG(source)
-				end
-				if id ~= -1 then
-					local card = sgs.Sanguosha:getCard(id)
-					room:throwCard(card, nil, nil)
-					room:drawCards(target, 2, self:objectName())
-					if target:getHandcardNum() > source:getHandcardNum() then
-						local damage = sgs.DamageStruct()
-						damage.card = nil
-						damage.from = source
-						damage.to = target
-						room:damage(damage)
-					end
-				end
+			if powers:isEmpty() then return false end
+			local card_id = self:getSubcards():first()
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_REMOVE_FROM_PILE, "", target:objectName(), self:objectName(), "")
+			room:throwCard(sgs.Sanguosha:getCard(card_id), reason, nil)
+			room:drawCards(target, 2, self:objectName())
+			if target:getHandcardNum() > source:getHandcardNum() then
+				room:damage(sgs.DamageStruct(self:objectName(), source, target))
 			end
 		end
 	}
-	LuaPaiyi = sgs.CreateViewAsSkill{
+	LuaPaiyi = sgs.CreateOneCardViewAsSkill{
 		name = "LuaPaiyi",
-		n = 0,
-		view_as = function(self, cards)
-			return LuaPaiyiCard:clone()
+		filter_pattern = ".|.|.|power",
+		expand_pile = "power",
+		view_as = function(self, card)
+			local py = LuaPaiyiCard:clone()
+			py:addSubcard(card)
+			return py
 		end,
 		enabled_at_play = function(self, player)
-			local powers = player:getPile("power")
-			if not powers:isEmpty() then
-				return not player:hasUsed("#LuaPaiyiCard")
-			end
-			return false
+			return not player:hasUsed("#LuaPaiyiCard") and not player:getPile("power"):isEmpty()
 		end
 	}
 ```
