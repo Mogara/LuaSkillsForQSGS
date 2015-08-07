@@ -161,14 +161,13 @@ LuaTanhu = sgs.CreateTriggerSkill{
 	相关武将：翼·张飞
 	描述：你计算的与其他角色的距离-X（X为你已损失的体力值）。
 	引用：LuaXTannang
-	状态：1217验证通过
+	状态：0504验证通过
 ]]--
 LuaXTannang = sgs.CreateDistanceSkill{
 	name = "LuaXTannang",
 	correct_func = function(self, from, to)
 		if from:hasSkill(self:objectName()) then
-			local lost = from:getLostHp()
-			return -lost
+			return -from:getLostHp(
 		end
 	end
 }
