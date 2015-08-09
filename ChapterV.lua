@@ -1658,3 +1658,97 @@ LuaWansha=sgs.CreateTriggerSkill{
 		return target
 	end
 }
+
+--[[
+	技能名：鬼才
+	相关武将：标准·司马懿
+	描述：每当一名角色的判定牌生效前，你可以打出一张牌代替之。 
+	引用：LuaGuicai
+	状态：0810验证通过
+]]--
+LuaGuicai = sgs.CreateRetrialSkill {
+	name = "LuaGuicai",
+	exchange = false,
+	on_retrial = function(self, player, judge)
+		if player:isNude() then return nil end
+		
+		local prompt_list = {}
+		table.insert(prompt_list, "@guicai-card")
+		table.insert(prompt_list, judge.who:objectName())
+		table.insert(prompt_list, self:objectName())
+		table.insert(prompt_list, judge.reason)
+		table.insert(prompt_list, tostring(judge.card:getEffectiveId()))
+		
+		local prompt = table.concat(prompt_list, ":")
+		
+		local forced = (player:getMark("JilveEvent") == sgs.AskForRetrial)
+		
+		local room = player:getRoom()
+		local _data = sgs.QVariant()
+		_data:setValue(judge)
+		local card = room:askForCard(player, forced and "..!" or "..", prompt, _data, sgs.Card_MethodResponse, judge.who, true)
+		if forced and (not card) then
+			local c = player:getCards("he")
+			local i = math.random(0, c:length() - 1)
+			card = c:at(i)
+		end
+		
+		if card then
+			-- play audio effect...ignoring
+		end
+		
+		return card
+	end
+}
+
+--[[
+	技能名：鬼道
+	相关武将：风·张角、怀旧·张角
+	描述：每当一名角色的判定牌生效前，你可以打出一张黑色牌替换之。 
+	引用：LuaGuidao
+	状态：0810验证通过
+]]--
+LuaGuidao = sgs.CreateRetrialSkill {
+	name = "LuaGuidao",
+	exchange = true,
+	can_trigger = function(self, player)
+		if not (player and player:isAlive() and player:hasSkill(self)) then return false end
+		
+		if (player:isKongcheng()) then
+			local has_black = false
+			for i = 0, 4, 1 do
+				local equip = target:getEquip(i)
+				if (equip and equip:isBlack()) then
+					has_black = true
+					break
+				end
+			end
+			return has_black
+		else
+			return true
+		end
+		
+		return false
+	end ,
+	on_retrial = function(self, player, judge)
+		local prompt_list = {}
+		table.insert(prompt_list, "@guidao-card")
+		table.insert(prompt_list, judge.who:objectName())
+		table.insert(prompt_list, self:objectName())
+		table.insert(prompt_list, judge.reason)
+		table.insert(prompt_list, tostring(judge.card:getEffectiveId()))
+		
+		local prompt = table.concat(prompt_list, ":")
+		
+		local room = player:getRoom()
+		local _data = sgs.QVariant()
+		_data:setValue(judge)
+		local card = room:askForCard(player, ".|black", prompt, _data, sgs.Card_MethodResponse, judge.who, true)
+		
+		if card then
+			-- play audio effect...ignoring
+		end
+		
+		return card
+	end
+}
