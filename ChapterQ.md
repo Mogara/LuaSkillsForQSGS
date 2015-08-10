@@ -380,13 +380,13 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 ```
 [返回索引](#技能索引)
 ##谦逊
-**相关武将**：标准·陆逊、国战·陆逊  
+**相关武将**：标准·陆逊-旧、国战·陆逊  
 **描述**：**锁定技，**你不能被选择为【顺手牵羊】和【乐不思蜀】的目标。  
-**引用**：LuaQianxun  
-**状态**：1217验证通过
+**引用**：LuaNosQianxun  
+**状态**：0405验证通过
 ```lua
-	LuaQianxun = sgs.CreateProhibitSkill{
-		name = "LuaQianxun",
+	LuaNosQianxun = sgs.CreateProhibitSkill{
+		name = "LuaNosQianxun",
 		is_prohibited = function(self, from, to, card)
 			return to:hasSkill(self:objectName()) and (card:isKindOf("Snatch") or card:isKindOf("Indulgence"))
 		end
