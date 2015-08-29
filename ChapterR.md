@@ -113,9 +113,9 @@
 [返回索引](#技能索引)
 ##仁德-旧
 **相关武将**：怀旧-标准·刘备-旧  
-**描述**：出牌阶段，你可以将至少一张手牌交给一名其他角色，然后当你以此法交给其他角色的手牌首次达到两张或更多时，你回复1点体力。  
+**描述**：出牌阶段，你可以将至少一张手牌任意分配给其他角色。你于本阶段内以此法给出的手牌首次达到两张或更多后，你回复1点体力。   
 **引用**：LuaNosRende  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaNosRendeCard = sgs.CreateSkillCard{
 		name = "LuaNosRendeCard" ,
@@ -125,16 +125,13 @@
 			return (#selected == 0) and (to_select:objectName() ~= sgs.Self:objectName())
 		end ,
 		on_use = function(self, room, source, targets)
-			local target = targets[1]
-			room:obtainCard(target, self, false)
+			local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_GIVE, source:objectName(), targets[1]:objectName(), "LuaNosRende", "")
+			room:obtainCard(targets[1], self, reason, false)
 			local old_value = source:getMark("LuaNosRende")
 			local new_value = old_value + self:getSubcards():length()
 			room:setPlayerMark(source, "LuaNosRende", new_value)
-			if (old_value < 2) and (new_value >= 2) then
-				local recover = sgs.RecoverStruct()
-				recover.card = self
-				recover.who = source
-				room:recover(source, recover)
+			if old_value < 2 and new_value >= 2 then
+				room:recover(source, sgs.RecoverStruct(source))
 			end
 		end
 	}
@@ -161,14 +158,13 @@
 		events = {sgs.EventPhaseChanging} ,
 		view_as_skill = LuaNosRendeVS ,
 		on_trigger = function(self, event, player, data)
-			local room = player:getRoom()
 			local change = data:toPhaseChange()
 			if change.to ~= sgs.Player_NotActive then return false end
-			room:setPlayerMark(player,"LuaNosRende", 0)
+			player:getRoom():setPlayerMark(player, self:objectName(), 0)
 			return false
 		end ,
 		can_trigger = function(self, target)
-			return target and (target:getMark("LuaNosRende") > 0)
+			return target and target:getMark(self:objectName()) > 0
 		end
 	}
 ```
