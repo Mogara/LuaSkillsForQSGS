@@ -70,7 +70,7 @@
 **相关武将**：智·孙策  
 **描述**：当你使用的【杀】被【闪】抵消时，你可以与目标角色拼点：若你赢，可以视为你对至多两名角色各使用了一张【杀】（此杀不计入每阶段的使用限制）  
 **引用**：LuaBawang  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaBawangCard = sgs.CreateSkillCard{
 		name = "LuaBawangCard" ,
@@ -79,27 +79,17 @@
 			return sgs.Self:canSlash(to_select, false)
 		end ,
 		on_effect = function(self, effect)
-			local room = effect.to:getRoom()
-			local use = sgs.CardUseStruct()
-			local slash = sgs.Sanguosha:cloneCard("slash", sgs.Card_NoSuit, 0)
+			local room = effect.from:getRoom()
+			local slash = sgs.Sanguosha:cloneCard("slash" sgs.Card_NoSuit, 0)
 			slash:setSkillName("LuaBawang")
-			use.card = slash
-			use.from = effect.from
-			use.to:append(effect.to)
-			room:useCard(use, false)
+			room:useCard(sgs.CardUseStruct(slash, effect.from, effect.to), false)
 		end
 	}
-	LuaBawangVS = sgs.CreateViewAsSkill{
+	LuaBawangVS = sgs.CreateZeroCardViewAsSkill{
 		name = "LuaBawang" ,
-		n = 0,
+		response_pattern = "@@LuaBawang" ,
 		view_as = function()
 			return LuaBawangCard:clone()
-		end ,
-		enabled_at_play = function()
-			return false
-		end ,
-		enabled_at_response = function(self, player, pattern)
-			return pattern == "@@LuaBawang"
 		end
 	}
 	LuaBawang = sgs.CreateTriggerSkill{
@@ -116,7 +106,7 @@
 						if player:hasFlag("drank") then
 							room:setPlayerFlag(player, "-drank")
 						end
-						room:askForUseCard(player, "@@bawang", "@bawang")
+						room:askForUseCard(player, "@@LuaBawang", "@bawang")
 					end
 				end
 			end
@@ -125,7 +115,6 @@
 	}
 ```
 [返回索引](#技能索引) 
-
 
 ##拜印
 **相关武将**：神·司马懿  
