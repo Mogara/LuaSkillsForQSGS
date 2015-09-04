@@ -101,7 +101,7 @@ LuaBawang = sgs.CreateTriggerSkill{
 					if player:hasFlag("drank") then
 						room:setPlayerFlag(player, "-drank")
 					end
-					room:askForUseCard(player, "@@bawang", "@bawang")
+					room:askForUseCard(player, "@@LuaBawang", "@bawang")
 				end
 			end
 		end
