@@ -1,7 +1,7 @@
 代码速查手册（Q区）
 ==
 #技能索引
-[七星](#七星)、[戚乱](#戚乱)、[奇才](#奇才)、[奇才-旧](#奇才-旧)、[奇策](#奇策)、[奇袭](#奇袭)、[千幻](#千幻)、[谦逊](#谦逊)、[潜袭](#潜袭)、[潜袭-旧](#潜袭-旧)、[枪舞](#枪舞)、[强袭](#强袭)、[巧变](#巧变)、[巧说](#巧说)、[琴音](#琴音)、[青囊](#青囊)、[倾城](#倾城)、[倾国](#倾国)、[倾国-1V1](#倾国-1v1)、[求援](#求援)、[驱虎](#驱虎)、[权计](#权计)
+[七星](#七星)、[戚乱](#戚乱)、[奇才](#奇才)、[奇才-旧](#奇才-旧)、[奇策](#奇策)、[奇袭](#奇袭)、[千幻](#千幻)、[谦逊](#谦逊)、[潜袭](#潜袭)、[潜袭-旧](#潜袭-旧)、[枪舞](#枪舞)、[强袭](#强袭)、[巧变](#巧变)、[巧说](#巧说)、[琴音](#琴音)、[青囊](#青囊)、[倾城](#倾城)、[倾国](#倾国)、[倾国-1V1](#倾国-1v1)、[清俭](#清俭)、[求援](#求援)、[驱虎](#驱虎)、[权计](#权计)
 
 [返回目录](README.md#目录)
 ##七星
@@ -1168,6 +1168,36 @@ LuaQixingClear = sgs.CreateTriggerSkill{
 		end,
 		enabled_at_response = function(self, target, pattern)
 			return pattern == "jink" and target:getEquips():length() > 0
+		end
+	}
+```
+[返回索引](#技能索引)
+##清俭
+**相关武将**：界限突破·夏侯惇 
+**描述**：每当你于摸牌阶段外获得手牌后，你可以将其中至少一张牌任意分配给其他角色。   
+**引用**：LuaQingjian  
+**状态**：0405验证通过
+```lua
+	LuaQingjian = sgs.CreateTriggerSkill{
+		name = "LuaQingjian",
+		events = {sgs.CardsMoveOneTime},
+		on_trigger = function(self, event, player, data)
+			local move = data:toMoveOneTime()
+			local room = player:getRoom()
+			if not room:getTag("FirstRound"):toBool() and player:getPhase() ~= sgs.Player_Draw and move.to and move.to:objectName() == player:objectName() then
+				local ids = sgs.IntList()
+				for _,id in sgs.qlist(move.card_ids) do
+					if room:getCardOwner(id) == player and room:getCardPlace(id) == sgs.Player_PlaceHand then
+						ids:append(id)
+					end
+				end
+				if ids:isEmpty() then return false end
+				player:setTag("QingjianCurrentMoveSkill", sgs.QVariant(move.reason.m_skillName))
+				while room:askForYiji(player, ids, self:objectName(), false, false, true, -1, sgs.SPlayerList(), sgs.CardMoveReason(), "@LuaQingjian-distribute", true) do
+					if player:isDead() then return false end
+				end
+			end
+			return false
 		end
 	}
 ```
