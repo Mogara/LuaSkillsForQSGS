@@ -728,7 +728,7 @@ LuaGuhuo = sgs.CreateOneCardViewAsSkill{
                 card:setUserString(c:objectName())
             else
 				card:setUserString(sgs.Self:getTag("GuhuoSlash"):toString())
-				--card:setTargetFixed(c:targetFixed() or sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE)
+				card:setTargetFixed(c:targetFixed() or sgs.Sanguosha:getCurrentCardUseReason() == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE)
 			end
 			card:addSubcard(cards)
 			return card
