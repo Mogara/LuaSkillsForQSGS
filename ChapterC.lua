@@ -339,7 +339,7 @@ LuaXSuperGuanxing = sgs.CreateTriggerSkill{
 	相关武将：怀旧一将成名2013·曹冲
 	描述： 每当你受到一次伤害后，你可以展示牌堆顶的四张牌，然后获得其中任意数量点数之和小于13的牌，并将其余的牌置入弃牌堆。
 	引用：LuaChengxiang
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 LuaChengxiang = sgs.CreateTriggerSkill{
 	name = "LuaChengxiang" ,
@@ -358,14 +358,19 @@ LuaChengxiang = sgs.CreateTriggerSkill{
 			for _, id in sgs.qlist(to_get) do
 				sum = sum + sgs.Sanguosha:getCard(id):getNumber()
 			end
+			if sum >= 12 then break end
 			for _, id in sgs.qlist(card_ids) do
 				if sum + sgs.Sanguosha:getCard(id):getNumber() >= 13 then
 					room:takeAG(nil, id, false)
-					card_ids:removeOne(id)
 					to_throw:append(id)
 				end
 			end
-			if card_ids:isEmpty() then break end
+			for _, id in sgs.qlist(card_ids) do
+				if to_throw:contains(id) then
+					card_ids:removeOne(id)
+				end
+			end
+			if to_throw:length() + to_get:length() == 4 then break end
 			local card_id = room:askForAG(player, card_ids, true, self:objectName())
 			if card_id == -1 then break end
 			card_ids:removeOne(card_id)
