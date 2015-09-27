@@ -731,7 +731,7 @@
 		end ,
 		view_as = function(self, cards)
 			if #cards ~= 2 then return nil end
-			jieyin_card = LuaJieyinCard:clone()
+			local jieyin_card = LuaJieyinCard:clone()
 			for _,card in pairs(cards) do
 				jieyin_card:addSubcard(card)
 			end
