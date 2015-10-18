@@ -306,12 +306,14 @@
 				local suit = card:getSuit()
 				room:takeAG(shenlvmeng, card_id, false)
 				local _card_ids = card_ids
-				for _,id in sgs.qlist(_card_ids) do
-					local c = sgs.Sanguosha:getCard(id)
-					if c:getSuit() == suit then
-						card_ids:removeOne(id)
-						room:takeAG(nil, id, false)
-						to_throw:append(id)
+				for i = 0, 150 do	--这一句不加的话，涉猎很多牌可能会bug，150可以改，数值越大，越精准，一般和你涉猎的牌数相等是没有bug的
+					for _,id in sgs.qlist(_card_ids) do
+						local c = sgs.Sanguosha:getCard(id)
+						if c:getSuit() == suit then
+							card_ids:removeOne(id)
+							room:takeAG(nil, id, false)
+							to_throw:append(id)
+						end
 					end
 				end
 			end
