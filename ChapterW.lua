@@ -1,7 +1,7 @@
 --[[
 	代码速查手册（W区）
 	技能索引：
-		完杀、婉容、忘隙、妄尊、危殆、围堰、帷幕、伪帝、温酒、无谋、无前、无双、无言、无言、五灵、武魂、武继、武神、武圣
+		完杀、婉容、忘隙、妄尊、危殆、威重、围堰、帷幕、伪帝、温酒、无谋、无前、无双、无言、无言、五灵、武魂、武继、武神、武圣
 ]]--
 --[[
 	技能名：完杀（锁定技）
@@ -99,6 +99,24 @@ LuaWangzunMaxCards = sgs.CreateMaxCardsSkill{
 		else
 			return 0
 		end
+	end
+}
+--[[
+	技能名：威重（锁定技）
+	相关武将：SP·诸葛诞
+	描述：每当你的体力上限改变后，你摸一张牌。
+	引用：LuaWeizhong
+	状态：0405验证通过
+]]--
+LuaWeiZhong = sgs.CreateTriggerSkill{
+	name = "LuaWeiZhong",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.MaxHpChanged},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+		room:broadcastSkillInvoke(self:objectName(), player)
+        room:sendCompulsoryTriggerLog(player, self:objectName())
+		player:drawCards(1, self:objectName())
 	end
 }
 --[[
