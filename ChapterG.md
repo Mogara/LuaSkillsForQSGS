@@ -1,7 +1,7 @@
 代码速查手册（G区）
 ===
 # 技能索引
-[甘露](#甘露)、[感染](#感染)、[刚烈](#刚烈)、[刚烈-旧](#刚烈-旧)、[刚烈-3v3](#刚烈-3v3)、[刚烈-翼](#刚烈-翼)、[弓骑](#弓骑)、[弓骑-旧](#弓骑-旧)、[攻心](#攻心)、[共谋](#共谋)、[蛊惑](#蛊惑)、[蛊惑-旧](#蛊惑-旧)、[固守](#固守)、[固政](#固政)、[观星](#观星)、[归命](#归命)、[归汉](#归汉)、[归心](#归心)、[归心-倚天](#归心-倚天)、[闺秀](#闺秀)、[鬼才](#鬼才)、[鬼才-旧](#鬼才-旧)、[鬼道](#鬼道)、[国色](#国色)
+[甘露](#甘露)、[感染](#感染)、[刚烈](#刚烈)、[刚烈-旧](#刚烈-旧)、[刚烈-3v3](#刚烈-3v3)、[刚烈-翼](#刚烈-翼)、[功獒](#功獒)、[弓骑](#弓骑)、[弓骑-旧](#弓骑-旧)、[攻心](#攻心)、[共谋](#共谋)、[蛊惑](#蛊惑)、[蛊惑-旧](#蛊惑-旧)、[固守](#固守)、[固政](#固政)、[观星](#观星)、[归命](#归命)、[归汉](#归汉)、[归心](#归心)、[归心-倚天](#归心-倚天)、[闺秀](#闺秀)、[鬼才](#鬼才)、[鬼才-旧](#鬼才-旧)、[鬼道](#鬼道)、[国色](#国色)
 
 [返回目录](README.md#目录)
 ## 甘露
@@ -264,6 +264,33 @@
 			end
 		end
 	}
+```
+[返回索引](#技能索引)
+##功獒
+**相关武将**：SP·诸葛诞  
+**描述**：**锁定技，**每当一名其他角色死亡时，你增加1点体力上限，回复1点体力。   
+**引用**：LuaGongao  
+**状态**：0405验证通过
+```lua
+LuaGongao = sgs.CreateTriggerSkill{
+	name = "LuaGongao",
+	frequency = sgs.Skill_Compulsory,
+	events = {sgs.Death},
+	on_trigger = function(self, event, player, data)
+		local room = player:getRoom()
+        room:sendCompulsoryTriggerLog(player, self:objectName())
+		local log = sgs.LogMessage()
+        log.type = "#GainMaxHp"
+        log.from = player
+        log.arg = "1"
+        room:sendLog(log)
+        room:setPlayerProperty(player, "maxhp", player:getMaxHp() + 1)
+        if player:isWounded() then
+            room:recover(player, RecoverStruct(player))
+        end
+		return false
+	end
+}
 ```
 [返回索引](#技能索引)
 ##弓骑
