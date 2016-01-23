@@ -266,16 +266,16 @@ LuaGongao = sgs.CreateTriggerSkill{
 	events = {sgs.Death},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
-        room:sendCompulsoryTriggerLog(player, self:objectName())
+		room:sendCompulsoryTriggerLog(player, self:objectName())
 		local log = sgs.LogMessage()
-        log.type = "#GainMaxHp"
-        log.from = player
-        log.arg = "1"
-        room:sendLog(log)
-        room:setPlayerProperty(player, "maxhp", player:getMaxHp() + 1)
-        if player:isWounded() then
-            room:recover(player, RecoverStruct(player))
-        end
+		log.type = "#GainMaxHp"
+		log.from = player
+		log.arg = "1"
+		room:sendLog(log)
+		room:setPlayerProperty(player, "maxhp", sgs.QVariant(player:getMaxHp() + 1))
+		if player:isWounded() then
+			room:recover(player, RecoverStruct(player))
+		end
 		return false
 	end
 }
