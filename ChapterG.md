@@ -272,25 +272,25 @@
 **引用**：LuaGongao  
 **状态**：0405验证通过
 ```lua
-LuaGongao = sgs.CreateTriggerSkill{
-	name = "LuaGongao",
-	frequency = sgs.Skill_Compulsory,
-	events = {sgs.Death},
-	on_trigger = function(self, event, player, data)
-		local room = player:getRoom()
-        room:sendCompulsoryTriggerLog(player, self:objectName())
-		local log = sgs.LogMessage()
-        log.type = "#GainMaxHp"
-        log.from = player
-        log.arg = "1"
-        room:sendLog(log)
-        room:setPlayerProperty(player, "maxhp", player:getMaxHp() + 1)
-        if player:isWounded() then
-            room:recover(player, RecoverStruct(player))
-        end
-		return false
-	end
-}
+	LuaGongao = sgs.CreateTriggerSkill{
+		name = "LuaGongao",
+		frequency = sgs.Skill_Compulsory,
+		events = {sgs.Death},
+		on_trigger = function(self, event, player, data)
+			local room = player:getRoom()
+			room:sendCompulsoryTriggerLog(player, self:objectName())
+			local log = sgs.LogMessage()
+			log.type = "#GainMaxHp"
+			log.from = player
+			log.arg = "1"
+			room:sendLog(log)
+			room:setPlayerProperty(player, "maxhp", sgs.QVariant(player:getMaxHp() + 1))
+			if player:isWounded() then
+				room:recover(player, RecoverStruct(player))
+			end
+			return false
+		end
+	}
 ```
 [返回索引](#技能索引)
 ##弓骑
