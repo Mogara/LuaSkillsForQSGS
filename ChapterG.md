@@ -286,7 +286,7 @@
 			room:sendLog(log)
 			room:setPlayerProperty(player, "maxhp", sgs.QVariant(player:getMaxHp() + 1))
 			if player:isWounded() then
-				room:recover(player, RecoverStruct(player))
+				room:recover(player, sgs.RecoverStruct(player))
 			end
 			return false
 		end
