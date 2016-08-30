@@ -874,7 +874,7 @@ LuaQiaoshuiUse = sgs.CreateTriggerSkill{
 					room:setPlayerProperty(jianyong, "extra_collateral_current_targets", sgs.QVariant("+"))
 					for _, p in sgs.qlist(room:getOtherPlayers(jianyong)) do
 						if p:hasFlag("ExtraCollateralTarget") then
-							p:setFlags("-ExtraColllateralTarget")
+							p:setFlags("-ExtraCollateralTarget")
 							extra = p
 							break
 						end
