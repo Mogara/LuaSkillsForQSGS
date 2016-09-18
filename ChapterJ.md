@@ -475,7 +475,7 @@
 						moves:append(move2)
 						room:moveCardsAtomic(moves, false)
 					else
-						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NAUTRAL_ENTER, player:objectName(), self:objectName(), nil)
+						local reason = sgs.CardMoveReason(sgs.CardMoveReason_S_REASON_NATURAL_ENTER, player:objectName(), self:objectName(), nil)
 						room:throwCard(card, reason, nil)
 					end
 				end
