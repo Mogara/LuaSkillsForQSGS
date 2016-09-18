@@ -1077,7 +1077,10 @@
 		local kingdom_set = {}
 		local room = yuanshu:getRoom()
 		for _, p in sgs.qlist(room:getAlivePlayers()) do
-			table.insert(kingdom_set, p:getKingdom())
+			local kingdom = p:getKingdom()
+			if not table.contains(kingdom_set, kingdom) then
+				table.insert(kingdom_set, kingdom)
+			end
 		end
 		return #kingdom_set
 	end
