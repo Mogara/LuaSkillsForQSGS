@@ -26,7 +26,7 @@ LuaShangshi = sgs.CreateTriggerSkill{
 				if move.from and move.from:objectName() == zhangchunhua:objectName() and move.from_places:contains(sgs.Player_PlaceHand) then
 					changed = true
 				end
-				if moce.to and move.to:objectName() == zhangchunhua:objectName() and move.to_place == sgs.Player_PlaceHand then
+				if move.to and move.to:objectName() == zhangchunhua:objectName() and move.to_place == sgs.Player_PlaceHand then
 					changed = true
 				end
 				if changed then
