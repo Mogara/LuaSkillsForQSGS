@@ -1372,7 +1372,7 @@ LuaHuoji = sgs.CreateOneCardViewAsSkill{
 LuaHuoshou = sgs.CreateTriggerSkill{
 	name = "LuaHuoshou",
 	frequency = sgs.Skill_Compulsory,
-	events = {sgs.TargetConfirmed, sgs.ConfirmDamage, sgs.CardFinished},
+	events = {sgs.TargetConfirmed, sgs.DamageInflicted, sgs.CardFinished},
 	on_trigger = function(self, event, player, data)
 		local room = player:getRoom()
 		if event == sgs.TargetConfirmed then
@@ -1388,7 +1388,7 @@ LuaHuoshou = sgs.CreateTriggerSkill{
 					end
 				end
 			end
-		elseif event == sgs.ConfirmDamage then
+		elseif event == sgs.DamageInflicted then
 			local tag = room:getTag("HuoshouSource")
 			if tag then
 				local damage = data:toDamage()
