@@ -1077,21 +1077,19 @@ LuaLiuli = sgs.CreateTriggerSkill{
 
 --[[
 	技能名：龙胆
-	相关武将：标准·赵云、☆SP·赵云、翼·赵云、2013-3v3·赵云、SP·台版赵云
+	相关武将：标准·赵云、☆SP·赵云、翼·赵云、2013-3v3·赵云、SP·台版赵云、界限突破·赵云
 	描述：你可以将一张【杀】当【闪】，一张【闪】当【杀】使用或打出。
 	引用：LuaLongdan
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
-LuaLongdan = sgs.CreateViewAsSkill{
+LuaLongdan = sgs.CreateOneCardViewAsSkill{
 	name = "LuaLongdan" ,
-	n = 1 ,
-	view_filter = function(self, selected, to_select)
-		if #selected > 0 then return false end
-		local card = to_select
+	response_or_use = true,
+	view_filter = function(self, card)
 		local usereason = sgs.Sanguosha:getCurrentCardUseReason()
 		if usereason == sgs.CardUseStruct_CARD_USE_REASON_PLAY then
 			return card:isKindOf("Jink")
-		elseif (usereason == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE) or (usereason == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE) then
+		elseif usereason == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE or usereason == sgs.CardUseStruct_CARD_USE_REASON_RESPONSE_USE then
 			local pattern = sgs.Sanguosha:getCurrentCardUsePattern()
 			if pattern == "slash" then
 				return card:isKindOf("Jink")
@@ -1102,17 +1100,15 @@ LuaLongdan = sgs.CreateViewAsSkill{
 			return false
 		end
 	end ,
-	view_as = function(self, cards)
-		if #cards ~= 1 then return nil end
-		local originalCard = cards[1]
-		if originalCard:isKindOf("Slash") then
-			local jink = sgs.Sanguosha:cloneCard("jink", originalCard:getSuit(), originalCard:getNumber())
-			jink:addSubcard(originalCard)
+	view_as = function(self, card)
+		if card:isKindOf("Slash") then
+			local jink = sgs.Sanguosha:cloneCard("jink", card:getSuit(), card:getNumber())
+			jink:addSubcard(card)
 			jink:setSkillName(self:objectName())
 			return jink
-		elseif originalCard:isKindOf("Jink") then
-			local slash = sgs.Sanguosha:cloneCard("slash", originalCard:getSuit(), originalCard:getNumber())
-			slash:addSubcard(originalCard)
+		elseif card:isKindOf("Jink") then
+			local slash = sgs.Sanguosha:cloneCard("slash", card:getSuit(), card:getNumber())
+			slash:addSubcard(card)
 			slash:setSkillName(self:objectName())
 			return slash
 		else
@@ -1123,7 +1119,7 @@ LuaLongdan = sgs.CreateViewAsSkill{
 		return sgs.Slash_IsAvailable(target)
 	end,
 	enabled_at_response = function(self, target, pattern)
-		return (pattern == "slash") or (pattern == "jink")
+		return pattern == "slash" or pattern == "jink"
 	end
 }
 --[[
