@@ -857,10 +857,9 @@ LuaNosLianying = sgs.CreateTriggerSkill{
 --[[
 	技能名：烈弓
 	相关武将：风·黄忠
-	描述：当你在出牌阶段内使用【杀】指定一名角色为目标后，以下两种情况，你可以令其不可以使用【闪】对此【杀】进行响应：
-		1.目标角色的手牌数大于或等于你的体力值。2.目标角色的手牌数小于或等于你的攻击范围。
+	描述：当你于出牌阶段内使用【杀】指定一个目标后，若其手牌数不小于你的体力值或不大于你的攻击范围，你可以令其不能使用【闪】响应此【杀】。
 	引用：LuaLiegong
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
 Table2IntList = function(theTable)
 	local result = sgs.IntList()
@@ -871,15 +870,14 @@ Table2IntList = function(theTable)
 end
 LuaLiegong = sgs.CreateTriggerSkill{
 	name = "LuaLiegong" ,
-	events = {sgs.TargetConfirmed} ,
+	events = {sgs.TargetSpecified} ,
 	on_trigger = function(self, event, player, data)
 		local use = data:toCardUse()
-		if (player:objectName() ~= use.from:objectName()) or (player:getPhase() ~= sgs.Player_Play) or (not use.card:isKindOf("Slash")) then return false end
+		if player:getPhase() ~= sgs.Player_Play or not use.card:isKindOf("Slash") then return false end
 		local jink_table = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
 		local index = 1
 		for _, p in sgs.qlist(use.to) do
-			local handcardnum = p:getHandcardNum()
-			if (player:getHp() <= handcardnum) or (player:getAttackRange() >= handcardnum) then
+			if player:getHp() <= p:getHandcardNum() or player:getAttackRange() >= p:getHandcardNum() then
 				local _data = sgs.QVariant()
 				_data:setValue(p)
 				if player:askForSkillInvoke(self:objectName(), _data) then
@@ -894,13 +892,15 @@ LuaLiegong = sgs.CreateTriggerSkill{
 		return false
 	end
 }
+zy:addSkill(LuaLiegong)
 --[[
 	技能名：烈弓
 	相关武将：1v1·黄忠1v1
-	描述：每当你于出牌阶段内使用【杀】指定对手为目标后，若对手的手牌数大于或等于你的体力值，你可以令该角色不能使用【闪】对此【杀】进行响应。
+	描述：当你于出牌阶段内使用【杀】指定一个目标后，若其手牌数不小于你的体力值，你可以令其不能使用【闪】响应此【杀】。
 	引用：LuaKOFLiegong
-	状态：1217验证通过
+	状态：0405验证通过
 ]]--
+
 Table2IntList = function(theTable)
 	local result = sgs.IntList()
 	for i = 1, #theTable, 1 do
@@ -910,15 +910,15 @@ Table2IntList = function(theTable)
 end
 LuaKOFLiegong = sgs.CreateTriggerSkill{
 	name = "LuaKOFLiegong" ,
-	events = {sgs.TargetConfirmed} ,
+	events = {sgs.TargetSpecified} ,
 	on_trigger = function(self, event, player, data)
 		local use = data:toCardUse()
-		if player:objectName() ~= use.from:objectName() or player:getPhase() ~= sgs.Player_Play or not use.card:isKindOf("Slash") then return false end
+		if player:getPhase() ~= sgs.Player_Play or not use.card:isKindOf("Slash") then return false end
 		local jink_table = sgs.QList2Table(player:getTag("Jink_" .. use.card:toString()):toIntList())
 		local index = 1
 		for _, p in sgs.qlist(use.to) do
 			local _data = sgs.QVariant()
-				_data:setValue(p)
+			_data:setValue(p)
 			if player:getHp() <= p:getHandcardNum() and player:askForSkillInvoke(self:objectName(), _data) then
 				jink_table[index] = 0
 			end
@@ -927,6 +927,7 @@ LuaKOFLiegong = sgs.CreateTriggerSkill{
 		local jink_data = sgs.QVariant()
 		jink_data:setValue(Table2IntList(jink_table))
 		player:setTag("Jink_" .. use.card:toString(), jink_data)
+		return false
 	end
 }
 --[[
