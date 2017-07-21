@@ -662,6 +662,7 @@ LuaBenghuai = sgs.CreatePhaseChangeSkill{
 	frequency = sgs.Skill_Compulsory,
 	on_phasechange = function(self, player)
 		local room = player:getRoom()
+		local cantrigger = false
 		if player:getPhase() == sgs.Player_Finish then
 			for _,p in sgs.qlist(room:getOtherPlayers(player)) do
 				if p:getHp() > player:getHp() then
