@@ -645,7 +645,7 @@
 **相关武将**：林·董卓  
 **描述**：**锁定技，**回合结束阶段开始时，若你不是当前的体力值最少的角色之一，你须失去1点体力或减1点体力上限。  
 **引用**：LuaBenghuai  
-**状态**：1217验证通过
+**状态**：0405验证通过
 ```lua
 	LuaBenghuai = sgs.CreateTriggerSkill{
 		name = "LuaBenghuai",
@@ -653,8 +653,8 @@
 		events = {sgs.EventPhaseStart},
 		on_trigger = function(self, event, player, data)
 			local room = player:getRoom()
-			local phase = player:getPhase()
-			if phase == sgs.Player_Finish then
+			local cantrigger = false
+			if player:getPhase() == sgs.Player_Finish then
 				local list = room:getOtherPlayers(player)
 				local cantrigger = false
 				for _,p in sgs.qlist(list) do
